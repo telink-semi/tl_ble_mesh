@@ -22,6 +22,7 @@
  *******************************************************************************************************/
 
 #if	1	/*default is open*/
+	#include "../../../vendor/common/version.h"
     .section .vectors, "ax"
 
     //.org  and linker's relaxation (-flto) cannot be used at the same time
@@ -38,6 +39,7 @@
     .align 2
 _RESET_ENTRY:
 	j 		 _START
+	.word	(BUILD_VERSION)
 	//free the 6th ~ 7th byte to store the crc type of the bin file
     .org 0x18
     .word (BIN_SIZE)

@@ -23,22 +23,33 @@
 
 #pragma once
 
+#define	CHIP_TYPE_8266  	1
+#define	CHIP_TYPE_8366  	2
+#define	CHIP_TYPE_8368  	3
+#define	CHIP_TYPE_8267  	4
+#define CHIP_TYPE_8263		5
+#define CHIP_TYPE_8261		6
+#define CHIP_TYPE_8269		7
+#define	CHIP_TYPE_8258		8
+#define	CHIP_TYPE_8278		9
+#define	CHIP_TYPE_B91		10
+#define	CHIP_TYPE_B92		11
 
-#define	CHIP_TYPE_B91		1
-#define	CHIP_TYPE_B92		2
-
+#define	MCU_CORE_8266 		1
+#define	MCU_CORE_8366 		2
+#define MCU_CORE_8368		3
+#define	MCU_CORE_8267 		4
+#define MCU_CORE_8263 		5
+#define MCU_CORE_8261 		6
+#define MCU_CORE_8269 		7
+#define MCU_CORE_8258 		8
+#define MCU_CORE_8278 		9
+#define	MCU_CORE_B91 		10
+#define	MCU_CORE_B92 		11
 
 #ifndef CHIP_TYPE
 #define	CHIP_TYPE 			CHIP_TYPE_B91
 #endif
-
-
-
-
-
-
-#define	MCU_CORE_B91 		1
-#define	MCU_CORE_B92 		2
 
 
 #if(CHIP_TYPE == CHIP_TYPE_B91)

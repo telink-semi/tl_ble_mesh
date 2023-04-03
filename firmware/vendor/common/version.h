@@ -36,10 +36,10 @@
 #include "mesh_config.h"
 
 #if __TLSR_RISCV_EN__
-#define SW_VERSION_SPEC			(3)		// "4" means SIG MESH 1.1.x
-#define SW_VERSION_MAJOR		(1)		// 
+#define SW_VERSION_SPEC			(0)		// "4" means SIG MESH 1.1.x
+#define SW_VERSION_MAJOR		(2)		// 
 #define SW_VERSION_MINOR		(0)		// 
-#define SW_VERSION_2ND_MINOR	(1)		// second minor
+#define SW_VERSION_2ND_MINOR	(0)		// second minor
 #else
 #define SW_VERSION_SPEC			(3)		// "3" means SIG MESH 1.0.x
 #define SW_VERSION_MAJOR		(3)		// 
