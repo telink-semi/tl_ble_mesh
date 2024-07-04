@@ -1,12 +1,12 @@
 /********************************************************************************************************
- * @file     audio.h
+ * @file    audio.h
  *
- * @brief    This is the header file for BLE SDK
+ * @brief   This is the header file for B91
  *
- * @author	 BLE GROUP
- * @date         11,2022
+ * @author  Driver Group
+ * @date    2019
  *
- * @par     Copyright (c) 2022, Telink Semiconductor (Shanghai) Co., Ltd. ("TELINK")
+ * @par     Copyright (c) 2019, Telink Semiconductor (Shanghai) Co., Ltd. ("TELINK")
  *
  *          Licensed under the Apache License, Version 2.0 (the "License");
  *          you may not use this file except in compliance with the License.
@@ -19,8 +19,8 @@
  *          WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  *          See the License for the specific language governing permissions and
  *          limitations under the License.
+ *
  *******************************************************************************************************/
-
 /**	@page AUDIO
  *
  *	Introduction
@@ -34,12 +34,10 @@
 #ifndef audio_H
 #define audio_H
 
-#include "reg_include/register_B91.h"
+#include "reg_include/register.h"
 #include "i2c.h"
 #include "pwm.h"
 #include "compiler.h"
-
-
 
 typedef enum{
 	I2S_BCK_PC3      = GPIO_PC3,
@@ -80,6 +78,11 @@ typedef enum{
 	I2S_I2S_MODE,
 	I2S_DSP_MODE,
 }i2s_mode_select_e;
+
+typedef enum {
+    POWER_DOWN,
+    POWER_ON,
+}power_switch_e;
 
 typedef enum{
 	CODEC_PARALLEL_MODE ,
@@ -192,7 +195,7 @@ typedef struct {
 	unsigned char  out_analog_gain;
 	unsigned char  mic_input_mode_select;
 	unsigned char  dac_output_chn_select;
-}aduio_i2s_codec_config_t;
+}audio_i2s_codec_config_t;
 
 
 typedef struct {
@@ -221,6 +224,7 @@ typedef enum{
 typedef enum{
 	AUDIO_8K,
 	AUDIO_16K=3,
+	AUDIO_24K=5,
 	AUDIO_32K=6,
 	AUDIO_44EP1K,
 	AUDIO_48K,
@@ -399,7 +403,11 @@ CODEC_ADC_WNF_MODE2,
 CODEC_ADC_WNF_MODE3,
 }adc_wnf_mode_sel_e;
 
-
+typedef enum
+{
+    MICBIAS_NORMAL_2V0_MODE,
+    MICBIAS_NORMAL_1V6_MODE,
+} micbias_work_mode_e;
 
 typedef enum
 {
@@ -417,12 +425,12 @@ typedef enum
 }codec_volt_supply_e;
 
 typedef struct {
+	unsigned short   i2s_lrclk_adc_div;
+	unsigned short   i2s_lrclk_dac_div;
 	unsigned char    i2s_clk_step;
 	unsigned char    i2s_clk_mode;
 	unsigned char 	 i2s_bclk_div;
-	unsigned short   i2s_lrclk_adc_div;
-	unsigned short   i2s_lrclk_dac_div;
-}aduio_i2s_clk_config_t;
+}audio_i2s_clk_config_t;
 /**
  * 	@brief      This function serves to set the clock of i2s
  * 	@param[in]  step - the dividing factor of step.
@@ -857,7 +865,20 @@ void audio_codec_dac_config(i2s_codec_m_s_mode_e mode,audio_sample_rate_e rate,c
  */
 void audio_codec_adc_config(i2s_codec_m_s_mode_e mode,audio_input_mode_e in_mode,audio_sample_rate_e rate,codec_data_select_e data_select,codec_wreg_mode_e  wreg_mode);
 
+/**
+ * @brief      This function serves to set codec active, the bias voltage can only be set after setting the codec active.
+ * @return     none
+ */
+void audio_codec_active(void);
 
+/**
+ * @brief      This function serves to set amic micbias.
+ * @param[in]  en               - POWER_DOWN or POWER_ON.
+ * @param[in]  micbias_mode     - micbias output mode.
+ * @return     none
+ * @note       The interface audio_codec_active() must be called before the bias voltage can be set.
+ */
+void audio_codec_set_micbias(power_switch_e en, micbias_work_mode_e micbias_mode);
 
 /**
  * @brief     This function serves to config interface, word length, and m/s .
@@ -885,22 +906,24 @@ void audio_i2s_config(i2s_mode_select_e i2s_format,i2s_data_select_e wl,  i2s_co
 _attribute_ram_code_sec_noinline_ void  audio_set_i2s_clock (audio_sample_rate_e audio_rate,audio_rate_match_e match, unsigned char match_en);
 
 /**
- * @brief     This function serves to config  rx_dma channel.
- * @param[in] chn          - dma channel
- * @param[in] dst_addr     - the dma address of destination
- * @param[in] data_len     - the length of dma rx size by byte
- * @param[in] head_of_list - the head address of dma llp.
- * @return    none
- */
+  * @brief     This function serves to config  rx_dma channel.
+  * @param[in] chn          - dma channel
+  * @param[in] dst_addr     - This parameter is the first address of the received data buffer, which must be 4 bytes aligned, otherwise the program will enter an exception.
+  *                           and the actual buffer size defined by the user needs to be not smaller than the data_len, otherwise there may be an out-of-bounds problem.
+  * @param[in] data_len     - This parameter is used to set the size of the received dma and must be set to a multiple of 4. The maximum value that can be set is 0xFFFFFC.
+  * @param[in] head_of_list - the head address of dma llp.
+  * @return    none
+  */
 void audio_rx_dma_config(dma_chn_e chn,unsigned short * dst_addr,unsigned int data_len,dma_chain_config_t *head_of_list);
 
 /**
  * @brief     This function serves to set rx dma chain transfer
- * @param[in] rx_config - the head of list of llp_pointer.
- * @param[in] llpointer - the next element of llp_pointer.
- * @param[in] dst_addr  -the dma address of destination.
- * @param[in] data_len  -the length of dma size by byte.
- * @return    none
+ * @param[in] config_addr - the head of list of llp_pointer.
+ * @param[in] llpointer   - the next element of llp_pointer.
+ * @param[in] dst_addr    - This parameter is the first address of the received data buffer, which must be 4 bytes aligned, otherwise the program will enter an exception.
+ *                          and the actual buffer size defined by the user needs to be not smaller than the data_len, otherwise there may be an out-of-bounds problem.
+ * @param[in] data_len    - This parameter is used to set the size of the received dma and must be set to a multiple of 4. The maximum value that can be set is 0xFFFFFC.
+ * @return 	  none
  */
 void audio_rx_dma_add_list_element(dma_chain_config_t * rx_config,dma_chain_config_t *llpointer ,unsigned short * dst_addr,unsigned int data_len);
 
@@ -911,6 +934,7 @@ void audio_rx_dma_add_list_element(dma_chain_config_t * rx_config,dma_chain_conf
  * @param[in] data_len     - the length of dma rx size by byte
  * @param[in] head_of_list - the head address of dma llp.
  * @return    none
+ * @note      src_addr : must be aligned by word (4 bytes), otherwise the program will enter an exception
  */
 void audio_tx_dma_config(dma_chn_e chn,unsigned short * src_addr, unsigned int data_len,dma_chain_config_t * head_of_list);
 
@@ -921,6 +945,7 @@ void audio_tx_dma_config(dma_chn_e chn,unsigned short * src_addr, unsigned int d
  * @param[in] src_addr    - the address of source
  * @param[in] data_len    - the length of dma size by byte.
  * @return    none
+ * @note      src_addr : must be aligned by word (4 bytes), otherwise the program will enter an exception
  */
 void audio_tx_dma_add_list_element(dma_chain_config_t *config_addr,dma_chain_config_t *llpointer ,unsigned short * src_addr,unsigned int data_len);
 
@@ -980,11 +1005,12 @@ void audio_init_i2c(audio_flow_mode_e flow_mode,audio_sample_rate_e rate,audio_c
 void audio_i2s_init(pwm_pin_e pwm0_pin, i2c_sda_pin_e sda_pin,i2c_scl_pin_e scl_pin);
 
 /**
- * @brief  This function serves to set audio rx dma chain transfer.
+ * @brief     This function serves to set audio rx dma chain transfer.
  * @param[in] chn       -  dma channel
- * @param[in] in_buff   - the pointer of rx_buff.
- * @param[in] buff_size - the size of rx_buff.
- * @return    none
+ * @param[in] in_buff     - This parameter is the first address of the received data buffer, which must be 4 bytes aligned, otherwise the program will enter an exception.
+ *                          and the actual buffer size defined by the user needs to be not smaller than the buff_size, otherwise there may be an out-of-bounds problem.
+ * @param[in] buff_size   - This parameter is used to set the size of the received dma and must be set to a multiple of 4. The maximum value that can be set is 0xFFFFFC.
+ * @return 	  none
  */
 void audio_rx_dma_chain_init (dma_chn_e chn,unsigned short * in_buff,unsigned int buff_size );
 
@@ -994,6 +1020,7 @@ void audio_rx_dma_chain_init (dma_chn_e chn,unsigned short * in_buff,unsigned in
  * @param[in] out_buff  - the pointer of tx_buff.
  * @param[in] buff_size - the size of tx_buff.
  * @return    none
+ * @note      out_buff : must be aligned by word (4 bytes), otherwise the program will enter an exception
  */
 void audio_tx_dma_chain_init (dma_chn_e chn,unsigned short * out_buff,unsigned int buff_size);
 

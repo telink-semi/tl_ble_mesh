@@ -25,18 +25,9 @@
 #include "tl_common.h"
 #ifdef WIN32
 #include <stdlib.h>
-#else
-#if __TLSR_RISCV_EN__
-#include "watchdog.h"
-#else
-#include "proj/mcu/watchdog_i.h"
 #endif
-#endif 
-#if !__TLSR_RISCV_EN__
-#include "proj_lib/ble/ll/ll.h"
 #include "proj_lib/ble/blt_config.h"
 #include "vendor/common/user_config.h"
-#endif
 #include "app_health.h"
 #include "proj_lib/sig_mesh/app_mesh.h"
 #include "lighting_model.h"
@@ -86,7 +77,7 @@ int mesh_cmd_sig_scheduler_get(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par)
 }
 
 //--
-int mesh_tx_cmd_schd_action_st(u8 ele_idx, u8 schd_idx, u16 ele_adr, u16 dst_adr)
+int mesh_tx_cmd_schd_action_st(u8 ele_idx, u8 schd_idx, u16 ele_adr, u16 dst_adr, u16 op)
 {
 	if(schd_idx >= 16){
 		return 0;
@@ -95,9 +86,17 @@ int mesh_tx_cmd_schd_action_st(u8 ele_idx, u8 schd_idx, u16 ele_adr, u16 dst_adr
 	scheduler_t *p_get = &g_schd_list[ele_idx][schd_idx];
 	scheduler_t rsp;
 	memcpy(&rsp, p_get, sizeof(rsp));
-	rsp.valid_flag_or_idx = schd_idx;
+	u32 rsp_len = SIZE_SCHEDULER;
+
+	if(SCHD_ACTION_GET == op){
+		if(SCHD_ACTION_NONE == rsp.action || 0 == p_get->valid_flag_or_idx){
+			rsp.year = 0; // clear high bit of index.
+			rsp_len = 1;
+		}
+	}
 	
-	return mesh_tx_cmd_rsp(SCHD_ACTION_STATUS, (u8 *)&rsp, SIZE_SCHEDULER, ele_adr, dst_adr, 0, 0);
+	rsp.valid_flag_or_idx = schd_idx;
+	return mesh_tx_cmd_rsp(SCHD_ACTION_STATUS, (u8 *)&rsp, rsp_len, ele_adr, dst_adr, 0, 0);
 }
 
 #if 0	// no need publish for schd_action
@@ -117,7 +116,7 @@ int mesh_schd_action_st_publish(u8 idx)
 int mesh_schd_action_st_rsp(mesh_cb_fun_par_t *cb_par, u8 schd_idx)
 {
 	model_g_light_s_t *p_model = (model_g_light_s_t *)cb_par->model;
-	return mesh_tx_cmd_schd_action_st(cb_par->model_idx, schd_idx, p_model->com.ele_adr, cb_par->adr_src);
+	return mesh_tx_cmd_schd_action_st(cb_par->model_idx, schd_idx, p_model->com.ele_adr, cb_par->adr_src, cb_par->op);
 }
 
 int mesh_cmd_sig_schd_action_get(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par)
@@ -145,7 +144,7 @@ int mesh_cmd_sig_schd_action_set(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par
 	p_save->valid_flag_or_idx = 1;	// save as valid flag
 	mesh_model_store(1, SIG_MD_SCHED_SETUP_S);
 
-	rebulid_schd_nearest_and_check_event(1, get_local_TAI());
+	rebuild_schd_nearest_and_check_event(1, get_local_TAI());
 	
 	if(cb_par->op_rsp != STATUS_NONE){
 		err = mesh_schd_action_st_rsp(cb_par, schd_idx);
@@ -274,19 +273,20 @@ static inline void schd_action_cb(scheduler_t *p_schd, int ele_idx)
 {
     transition_par_t trs_par = {{0}};
     trs_par.transit_t = p_schd->trans_t;
+    u16 addr_dst = ele_adr_primary + ele_idx;
     switch(p_schd->action){
         case SCHD_ACTION_OFF:
-            access_cmd_onoff(ele_adr_primary, 0, 0, 0, &trs_par);
-            //LOG_MSG_INFO(TL_LOG_COMMON,0,0,"SCHD_ACTION_OFF", 0);
+            access_cmd_onoff(addr_dst, 0, 0, 0, &trs_par);
+            //LOG_MSG_INFO(TL_LOG_COMMON,0,0,"SCHD_ACTION_OFF");
             break;
         case SCHD_ACTION_ON:
-            access_cmd_onoff(ele_adr_primary, 0, 1, 0, &trs_par);
-            //LOG_MSG_INFO(TL_LOG_COMMON,0,0,"SCHD_ACTION_ON", 0);
+            access_cmd_onoff(addr_dst, 0, 1, 0, &trs_par);
+            //LOG_MSG_INFO(TL_LOG_COMMON,0,0,"SCHD_ACTION_ON");
             break;
         case SCHD_ACTION_SCENE:
             #if MD_SCENE_EN
-            access_cmd_scene_recall(ele_adr_primary, 0, p_schd->scene_id, 0, &trs_par);
-			//LOG_MSG_INFO(TL_LOG_COMMON,0,0,"SCHD_ACTION_SCENE", 0);
+            access_cmd_scene_recall(addr_dst, 0, p_schd->scene_id, 0, &trs_par);
+			//LOG_MSG_INFO(TL_LOG_COMMON,0,0,"SCHD_ACTION_SCENE");
             #endif
             break;
         default:
@@ -519,7 +519,7 @@ int schd_event_check(u32 TAI_local)
     return act;
 }
 
-void rebulid_schd_nearest_and_check_event(int rebuild, u32 TAI_local)
+void rebuild_schd_nearest_and_check_event(int rebuild, u32 TAI_local)
 {
     if(!g_TAI_sec){
         return ;
@@ -547,7 +547,7 @@ void mesh_scheduler_proc()
         }
     }
 
-    rebulid_schd_nearest_and_check_event(rebuild_nearest, TAI_local);
+    rebuild_schd_nearest_and_check_event(rebuild_nearest, TAI_local);
 }
 #endif
 #endif

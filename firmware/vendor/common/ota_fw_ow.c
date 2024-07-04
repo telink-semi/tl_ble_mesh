@@ -23,19 +23,11 @@
  *
  *******************************************************************************************************/
 #include "tl_common.h"
-#if __TLSR_RISCV_EN__
-#include "watchdog.h"
-#endif
 #include "drivers.h"
-#if !__TLSR_RISCV_EN__
-#include "proj/mcu/watchdog_i.h"
 #include "vendor/common/user_config.h"
-//#include "proj_lib/rf_drv.h"
-#include "proj_lib/pm.h"
 #include "proj_lib/ble/blt_config.h"
-#endif
 
-#if (FLASH_PLUS_ENABLE && PINGPONG_OTA_DISABLE && (0 == FW_START_BY_BOOTLOADER_EN))
+#if (FLASH_PLUS_ENABLE && PINGPONG_OTA_DISABLE && (0 == FW_START_BY_LEGACY_BOOTLOADER_EN))
 static inline void ota_reboot(void){
 #if 0
     static volatile u32 reboot_0key;

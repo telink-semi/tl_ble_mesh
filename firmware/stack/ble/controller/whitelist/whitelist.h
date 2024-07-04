@@ -1,10 +1,10 @@
 /********************************************************************************************************
- * @file     whitelist.h
+ * @file    whitelist.h
  *
- * @brief    This is the header file for BLE SDK
+ * @brief   This is the header file for BLE SDK
  *
- * @author	 BLE GROUP
- * @date         2020.06
+ * @author  BLE GROUP
+ * @date    06,2022
  *
  * @par     Copyright (c) 2022, Telink Semiconductor (Shanghai) Co., Ltd. ("TELINK")
  *
@@ -19,8 +19,8 @@
  *          WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  *          See the License for the specific language governing permissions and
  *          limitations under the License.
+ *
  *******************************************************************************************************/
-
 #ifndef LL_WHITELIST_H_
 #define LL_WHITELIST_H_
 
@@ -29,34 +29,32 @@
 /**
  * @brief      This function is used to clear WhiteList
  * @param[in]  none
- * @return     Status - 0x00: command succeeded; 0x01-0xFF: command failed
+ * @return     Status - 0x00: command succeeded;
+ *  * 			        Others: command failed, refer to definition of "ble_sts_t" to know the reason
  */
 ble_sts_t		blc_ll_clearWhiteList(void);
 
 
 /**
- * @brief      This function is used to add a device form WhiteList
+ * @brief      This function is used to add a device to WhiteList
+ *             attention: maximum device number in Whitelist list is 4 by default. Please contact Telink if this number can not meet your requirement.
  * @param[in]  adr_type - device address type
  * @param[in]  addr - device address
- * @return     Status - 0x00: command succeeded; 0x01-0xFF: command failed
+ * @return     Status - 0x00: command succeeded;
+ * 			            Others: command failed, refer to definition of "ble_sts_t" to know the reason
  */
-ble_sts_t		blc_ll_addDeivceToWhiteList(u8 adr_type, u8 *addr);
+ble_sts_t		blc_ll_addDeviceToWhiteList(u8 adr_type, u8 *addr);
 
 
 /**
  * @brief      This function is used to delete a device from WhiteList
  * @param[in]  adr_type - device address type
  * @param[in]  addr - device address
- * @return     Status - 0x00: command succeeded; 0x01-0xFF: command failed
+ * @return     Status - 0x00: command succeeded;
+ * 			            Others: command failed, refer to definition of "ble_sts_t" to know the reason
  */
-ble_sts_t		blc_ll_removeDeivceFromWhiteList(u8 adr_type, u8 *addr);
+ble_sts_t		blc_ll_removeDeviceFromWhiteList(u8 adr_type, u8 *addr);
 
-
-
-
-#define	ll_whiteList_reset		blc_ll_clearWhiteList
-#define	ll_whiteList_add		blc_ll_addDeivceToWhiteList
-#define	ll_whiteList_delete		blc_ll_removeDeivceFromWhiteList
 
 
 #endif /* LL_WHITELIST_H_ */

@@ -1,10 +1,10 @@
 /********************************************************************************************************
- * @file     usbaud.h
+ * @file    usbaud.h
  *
- * @brief    This is the header file for BLE SDK
+ * @brief   This is the header file for BLE SDK
  *
- * @author	 BLE GROUP
- * @date         2020.06
+ * @author  BLE GROUP
+ * @date    06,2022
  *
  * @par     Copyright (c) 2022, Telink Semiconductor (Shanghai) Co., Ltd. ("TELINK")
  *
@@ -19,8 +19,8 @@
  *          WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  *          See the License for the specific language governing permissions and
  *          limitations under the License.
+ *
  *******************************************************************************************************/
-
 #pragma once
 
 #include <application/usbstd/HIDClassCommon.h>
@@ -95,7 +95,6 @@ u8 usbaud_speaker_vol_get(void);
 u8 usbaud_mic_vol_get(void);
 void usbaud_mic_en(int en);
 u16 usbaud_speaker_curvol_get(void);
-u8 usbaud_speaker_vol_get(void);
 /* Disable C linkage for C++ Compilers: */
 #if defined(__cplusplus)
 }

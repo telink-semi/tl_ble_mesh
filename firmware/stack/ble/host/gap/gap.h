@@ -1,10 +1,10 @@
 /********************************************************************************************************
- * @file     gap.h
+ * @file    gap.h
  *
- * @brief    This is the header file for BLE SDK
+ * @brief   This is the header file for BLE SDK
  *
- * @author	 BLE GROUP
- * @date         2020.06
+ * @author  BLE GROUP
+ * @date    06,2022
  *
  * @par     Copyright (c) 2022, Telink Semiconductor (Shanghai) Co., Ltd. ("TELINK")
  *
@@ -19,8 +19,8 @@
  *          WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  *          See the License for the specific language governing permissions and
  *          limitations under the License.
+ *
  *******************************************************************************************************/
-
 #pragma once
 
 #include "tl_common.h"
@@ -34,8 +34,7 @@ typedef enum {
 	Gap_Role_Central      = 3,
 }gap_role_t;
 
-
-
+// BLE_SRC_TELINK_MESH_EN
 #define GAP_ADTYPE_FLAGS                        0x01 //!< Discovery Mode: @ref GAP_ADTYPE_FLAGS_MODES
 #define GAP_ADTYPE_16BIT_INCOMPLETE             0x02 //!< Incomplete List of 16-bit Service Class UUIDs
 #define GAP_ADTYPE_16BIT_COMPLETE               0x03 //!< Complete List of 16-bit Service Class UUIDs
@@ -75,7 +74,14 @@ typedef enum {
 #define GAP_ADTYPE_LE_GENERAL_DISCOVERABLE_MODE_BIT       0x02
 #define GAP_ADTYPE_LMP_BIT37_BIT                          0x04
 
-#define GAP_APPEARE_UNKNOWN                               0x0000 //!< Unknown
+#define GAP_APPEARANCE_UNKNOWN                               0x0000 //!< Unknown
+#define GAP_APPEARANCE_EARBUD								  0x0941 // Earbud
+#define GAP_APPEARANCE_HEADSET								  0x0942 // Headset
+#define GAP_APPEARANCE_HEADPHONES							  0x0943 // Headphones
+
+#define GAP_APPEARANCE_GENERIC_HID							  0x0300
+#define GAP_APPEARANCE_HID_KEYBOARD						  0x03C1
+#define GAP_APPEARANCE_HID_MOUSE							  0x03C2
 
 
 /*
@@ -112,3 +118,13 @@ void 		blc_gap_init(void);
 
 
 
+
+
+/**
+* @brief      this function is used check if any host initialization incorrect.
+* 			  attention: this function must be called after all host Initialization finished.
+* @param	  none
+* @return     status - 0x00:  succeed, no error
+* 			  		   other: error code
+*/
+ init_err_t	blc_host_checkHostInitialization(void);

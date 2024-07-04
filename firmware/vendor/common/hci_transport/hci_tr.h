@@ -1,10 +1,10 @@
 /********************************************************************************************************
- * @file     hci_tr.h
+ * @file    hci_tr.h
  *
- * @brief    This is the header file for BLE SDK
+ * @brief   This is the header file for BLE SDK
  *
- * @author	 BLE GROUP
- * @date         11,2022
+ * @author  BLE GROUP
+ * @date    06,2022
  *
  * @par     Copyright (c) 2022, Telink Semiconductor (Shanghai) Co., Ltd. ("TELINK")
  *
@@ -19,8 +19,8 @@
  *          WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  *          See the License for the specific language governing permissions and
  *          limitations under the License.
+ *
  *******************************************************************************************************/
-
 #ifndef HCI_TR_H_
 #define HCI_TR_H_
 
@@ -37,8 +37,8 @@
 
 #if(__PROJECT_BQB_CONTROLLER__)
 #include "vendor/BQB_controller/app_buffer.h"
-#elif(__PROJECT_B91M_CONTROLLER__)
-#include "vendor/B91m_controller/app_buffer.h"
+#elif (__PROJECT_BLE_CONTROLLER__)
+#include "vendor/ble_controller/app_buffer.h"
 #endif
 
 #if HCI_TR_EN
@@ -52,14 +52,13 @@
 
 
 /*! HCI ACL data packet max size define. */
+#ifndef HCI_TR_RX_BUF_SIZE
 #define HCI_TR_RX_BUF_SIZE   (760)  // must be larger than IAL length
-#define HCI_TR_TX_BUF_SIZE   (760)
-
-
-/*! HCI UART Configuration */
-#ifndef HCI_TR_UART_ID
-#define HCI_TR_UART_ID       UART0
 #endif
+#ifndef HCI_TR_TX_BUF_SIZE
+#define HCI_TR_TX_BUF_SIZE   (760)
+#endif
+
 
 #ifndef HCI_TR_RX_PIN
 #error "please define UART RX Pin for HCI."
@@ -73,9 +72,6 @@
 #define HCI_TR_BAUDRATE    1000000
 #endif
 
-#ifndef HCI_UART_IRQHandler
-#error "please define UART IRQ handler."
-#endif
 
 #ifndef HCI_UART_SoftwareRxDone_EN   //If the HCI_TR_BAUDRATE is greater than 1m(1000000), you are advised to enable it
 #define HCI_UART_SoftwareRxDone_EN   0
@@ -92,9 +88,6 @@
 #endif
 
 typedef void (*HciH5PacketHandler_t)(u8 *pPacket, u32 len);
-
-extern _attribute_data_retention_ u32 uart_txDone_tick;
-extern _attribute_data_retention_ u8  isUartTxDone;
 
 /*! HCI transport layer API. */
 

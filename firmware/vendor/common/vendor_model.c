@@ -23,18 +23,8 @@
  *
  *******************************************************************************************************/
 #include "tl_common.h"
-#if !WIN32
-#if __TLSR_RISCV_EN__
-#include "watchdog.h"
-#else
-#include "proj/mcu/watchdog_i.h"
-#endif
-#endif 
-#if !__TLSR_RISCV_EN__
-#include "proj_lib/ble/ll/ll.h"
 #include "proj_lib/ble/blt_config.h"
 #include "vendor/common/user_config.h"
-#endif
 #include "app_health.h"
 #include "proj_lib/sig_mesh/app_mesh.h"
 #include "vendor_model.h"
@@ -48,6 +38,9 @@
 #if AUDIO_MESH_EN
 #include "chip_adapt_layer/app_audio.h"
 #endif
+#if PAIR_PROVISION_ENABLE
+#include "pair_provision.h"
+#endif
 
 #if (VENDOR_MD_NORMAL_EN)
 model_vd_light_t       	model_vd_light;
@@ -55,9 +48,9 @@ model_vd_light_t       	model_vd_light;
 #if (DUAL_VENDOR_EN)
 STATIC_ASSERT((VENDOR_MD_LIGHT_S && 0xffff) != VENDOR_ID_MI);
 #if 1   // if not equal, please modify id value in traversal_cps_reset_vendor_id();
-STATIC_ASSERT((VENDOR_MD_LIGHT_S && 0xffff0000) == (MIOT_SEPC_VENDOR_MODEL_SER && 0xffff0000));
+STATIC_ASSERT((VENDOR_MD_LIGHT_S && 0xffff0000) == (MIOT_SEPC_VENDOR_MODEL_SRV && 0xffff0000));
 STATIC_ASSERT((VENDOR_MD_LIGHT_C && 0xffff0000) == (MIOT_SEPC_VENDOR_MODEL_CLI && 0xffff0000));
-STATIC_ASSERT((VENDOR_MD_LIGHT_S2 && 0xffff0000) == (MIOT_VENDOR_MD_SER && 0xffff0000));
+STATIC_ASSERT((VENDOR_MD_LIGHT_S2 && 0xffff0000) == (MIOT_VENDOR_MD_SRV && 0xffff0000));
 #endif
 #endif
 /*
@@ -130,6 +123,24 @@ int vd_group_g_tx_lpn_gatt_ota_mode_st(u8 light_idx, u8 sub_op, u16 ele_adr, u16
 }
 #endif
 
+#if VENDOR_SUB_OP_USER_DEMO_EN
+int vd_rx_group_g_sub_op_user_demo_set(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par)
+{
+    vd_group_sub_op_demo_user_set_t *p_set = (vd_group_sub_op_demo_user_set_t *)par;
+    model_vd_light.sno_sub_op_user_demo = p_set->sno;
+    //mesh_common_store(FLASH_ADR_MD_VD_LIGHT); // mesh_model_store(); // just for sample, not save now.
+	
+    return 0;
+}
+
+int vd_rx_group_g_sub_op_user_demo_st(u8 light_idx, u8 sub_op, u16 ele_adr, u16 dst_adr, u8 *uuid, model_common_t *pub_md)
+{
+	vd_group_sub_op_demo_user_st_t rsp;
+	rsp.sub_op = sub_op;
+	rsp.sno = model_vd_light.sno_sub_op_user_demo;
+	return mesh_tx_cmd_rsp(VD_GROUP_G_STATUS, (u8 *)&rsp, sizeof(rsp), ele_adr, dst_adr, uuid, pub_md);
+}
+#endif
 
 // --------- vendor sub op code end  --------
 int cb_vd_group_g_get(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par)
@@ -192,14 +203,17 @@ vd_group_g_func_t vd_group_g_func[] = {
     /* telink use sub op from 0x00 to 0x7f*/
     {VD_GROUP_G_OFF, vd_group_g_light_onoff, vd_light_tx_cmd_onoff_st},
     {VD_GROUP_G_ON, vd_group_g_light_onoff, vd_light_tx_cmd_onoff_st},
-#if AUDIO_MESH_EN
-    {VD_GROUP_G_MIC_TX_REQ,cb_vd_group_g_mic_tx_req, 0},
-#endif
 #if FEATURE_LOWPOWER_EN
     {VD_GROUP_G_LPN_GATT_OTA_MODE, vd_group_g_lpn_gatt_ota_mode_set, vd_group_g_tx_lpn_gatt_ota_mode_st},
 #endif
+#if AUDIO_MESH_EN
+    {VD_GROUP_G_MIC_TX_REQ,cb_vd_group_g_mic_tx_req, 0},
+#endif
 
     /* user use sub op from 0x80 to 0xff*/
+#if VENDOR_SUB_OP_USER_DEMO_EN
+	{VD_GROUP_G_SUB_OP_USER_DEMO, vd_rx_group_g_sub_op_user_demo_set, vd_rx_group_g_sub_op_user_demo_st}
+#endif
     //{VD_GROUP_G_USER_START, , , },
 };
 
@@ -222,21 +236,67 @@ u8 * search_vd_group_g_func(u32 sub_op, int type)
 }
 #endif
 
+#if VENDOR_OP_USER_DEMO_EN
+
+#if (LPN_VENDOR_SENSOR_EN && VENDOR_OP_USER_DEMO_EN)
+STATIC_ASSERT(VD_LPN_SENSOR_GET != VD_MESH_USER_DEMO_SET); // user should change the value of VD_MESH_USER_DEMO_SET.
+#endif
+
+
+int cb_vd_user_demo_set(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par)
+{
+	int err = -1;
+	vd_user_demo_set_t *p_set = (vd_user_demo_set_t *)par;
+    model_vd_light.sno_vd_user_demo = p_set->sno;
+	if(VD_MESH_USER_DEMO_SET_NOACK != cb_par->op)
+	{
+		model_g_light_s_t *p_model = (model_g_light_s_t *)cb_par->model;
+		vd_user_demo_st_t rsp;
+		rsp.sno = model_vd_light.sno_vd_user_demo;
+		err = mesh_tx_cmd_rsp(VD_MESH_USER_DEMO_STATUS, (u8 *)&rsp, sizeof(rsp), p_model->com.ele_adr, cb_par->adr_src, 0, 0);
+	}else{
+		err = 0;
+	}
+	
+    // mesh_common_store(FLASH_ADR_MD_VD_LIGHT); // mesh_model_store(); // just for sample, not save now.
+    
+    return err;
+}
+
+int cb_vd_user_demo_get(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par)
+{
+	model_g_light_s_t *p_model = (model_g_light_s_t *)cb_par->model;
+	vd_user_demo_st_t rsp;
+	rsp.sno = model_vd_light.sno_vd_user_demo;
+	
+	return mesh_tx_cmd_rsp(VD_MESH_USER_DEMO_STATUS, (u8 *)&rsp, sizeof(rsp), p_model->com.ele_adr, cb_par->adr_src, 0, 0);
+}
+
+int cb_vd_user_demo_status(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par)
+{
+	int err = 0;
+	return err;
+}
+#endif
+
+#if SPIRIT_PRIVATE_LPN_EN
+//note:there is 1.2s response delay after receive reliable command, refer to MESH_RSP_BASE_DELAY_STEP
+//user should use bls_ll_setAdvParam(...) to set lseep time(adv interval) in soft timer mode.
+//user can set gatt_adv_send_flag = 0 to stop gatt adv and save current
+#define RUN_TIME_US			(20*1000)	// should > 10*1000, because the tx transmit interval of gateway is usually 10ms.
+
+mesh_sleep_pre_t		mesh_sleep_time={0, RUN_TIME_US};
+#endif
+
 #if SPIRIT_VENDOR_EN
+#define INDICATE_RETRY_CNT 	6
+
 vd_msg_attr_t vd_msg_attr[ATTR_TYPE_MAX_NUM]={
 	{ATTR_TARGET_TEMP},
 	{ATTR_CURRENT_TEMP},
 };
 
-//note:there is 1.2s response delay after receive reliable command, refer to MESH_RSP_BASE_DELAY_STEP
-//user should use bls_ll_setAdvParam(...) to set lseep time(adv interval) in soft timer mode, SLEEP_TIME_US is useless.
-//user can set gatt_adv_send_flag = 0 to stop gatt adv and save current
-#define SLEEP_TIME_US 		ADV_INTERVAL_MIN 
-#define RUN_TIME_US			(20*1000)
-#define INDICATE_RETRY_CNT 	6
-
 mesh_tx_indication_t mesh_indication_retry;
-mesh_sleep_pre_t		mesh_sleep_time={0, RUN_TIME_US, SLEEP_TIME_US};
 
 void vd_msg_attr_indica_retry_start(u16 interval_ms)
 {
@@ -260,7 +320,7 @@ int mesh_tx_cmd_indica_retry(u16 op, u8 *par, u32 par_len, u16 adr_src, u16 adr_
 	mesh_match_type_t match_type;
 	u8 nk_array_idx = get_nk_arr_idx_first_valid();
 	u8 ak_array_idx = get_ak_arr_idx_first_valid(nk_array_idx);
-	set_material_tx_cmd(&mat, op, par, par_len, adr_src, adr_dst, g_reliable_retry_cnt_def, rsp_max, 0, nk_array_idx, ak_array_idx, 0, 1, 0);
+	set_material_tx_cmd(&mat, op, par, par_len, adr_src, adr_dst, g_reliable_retry_cnt_def, rsp_max, 0, nk_array_idx, ak_array_idx, 0, BLS_HANDLE_MIN, 1, 0);
     mesh_match_group_mac(&match_type, mat.adr_dst, mat.op, 1, mat.adr_src);
 	
 	memcpy(&mesh_indication_retry.mat, &mat, sizeof(material_tx_cmd_t));
@@ -425,7 +485,7 @@ int cb_vd_msg_attr_set(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par)
 	
 	if(!cb_par->retransaction){
 		if(ATTR_TYPE_NOT_EXIST != attr_index){
-			LOG_MSG_LIB(TL_LOG_NODE_SDK,0, 0,"attr_type exist",0);
+			LOG_MSG_LIB(TL_LOG_NODE_SDK,0, 0,"attr_type exist");
 			if(attr_type) // for err_code test
 			memcpy(vd_msg_attr[attr_index].attr_par, p_set->attr_par,attr_len);
 		}
@@ -491,7 +551,6 @@ int cb_vd_msg_attr_upd_time_rsp(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par)
 }
 
 #endif
-
 #endif
 #else
 #define cb_vd_group_g_get           (0)
@@ -557,6 +616,7 @@ int cb_vd_msg_attr_indication(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par)
 #endif
 
 #if (DEBUG_VENDOR_CMD_EN)
+#if MD_CLIENT_EN
 int cb_vd_key_report(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par)
 {
     //model_g_light_s_t *p_model = (model_g_light_s_t *)cb_par->model;
@@ -564,12 +624,12 @@ int cb_vd_key_report(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par)
     p_key = p_key;
 	LOG_MSG_INFO(TL_LOG_MESH,0,0,"vendor model key report: %d", p_key->code);
 	
-#if (! (__PROJECT_MESH_SWITCH__))
+#if 0 // (! (__PROJECT_MESH_SWITCH__)) // disable test code to save flash and RAM.
 	static u16 key_report_1_ON,  key_report_2_ON,  key_report_3_ON,  key_report_4_ON;
 	static u16 key_report_1_OFF, key_report_2_OFF, key_report_3_OFF, key_report_4_OFF;
 	static u16 key_report_UP,	 key_report_DN,    key_report_L,	 key_report_R;
 
-	u8 lum_level = light_lum_get(0, 0);
+	static u8 lum_level = 0; //light_lum_get(0, 0);
 
 	switch(p_key->code){
 		case RC_KEY_1_ON:
@@ -629,6 +689,9 @@ int cb_vd_key_report(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par)
 
     return 0;
 }
+#else
+#define cb_vd_key_report		NULL
+#endif
 #endif
 // ------ end --------
 
@@ -653,11 +716,11 @@ hx300t_sensor_t hx300t_sensor;
 #define HX300_INTER_TIME    (35*1000)
 
 #if ((MCU_CORE_TYPE == MCU_CORE_8258) || (MCU_CORE_TYPE == MCU_CORE_8278))
-#if(MCU_CORE_TYPE == MCU_CORE_8258)
+	#if(MCU_CORE_TYPE == MCU_CORE_8258)
 #include "drivers/8258/i2c.h"
-#elif(MCU_CORE_TYPE == MCU_CORE_8278)
+	#elif(MCU_CORE_TYPE == MCU_CORE_8278)
 #include "drivers/8278/i2c.h"
-#endif
+	#endif
 void i2c_io_init()
 {
     i2c_master_init(HX300_SENSOR_ID,8);//set clk to 500k
@@ -673,8 +736,6 @@ void i2c_io_init()
     gpio_setup_up_down_resistor(PIN_I2C_SDA, 2);//GPIO_PULL_UP_10K
     gpio_setup_up_down_resistor(PIN_I2C_SCL, 2);//GPIO_PULL_UP_10K    
 }
-
-#else
 #endif
 
 
@@ -846,14 +907,14 @@ int cb_vd_du_time_req_ack(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par)
 	vd_du_event_str  *p_event = (vd_du_event_str*)par;
 	if(p_event->op == VD_DU_TIME){
 		if(p_event->val[0] == 0x01){
-			LOG_MSG_INFO(TL_LOG_NODE_SDK,0,0,"du gatewaye support sync utc time",0);
+			LOG_MSG_INFO(TL_LOG_NODE_SDK,0,0,"du gatewaye support sync utc time");
 			#if DU_LPN_EN
 			// reserve 3s for the sending part 
 				update_du_busy_s(5);
 			#endif
 			
 		}else if(p_event->val[0] == 0x00){				
-			LOG_MSG_INFO(TL_LOG_NODE_SDK,0,0,"du gatewaye not support sync time",0);	
+			LOG_MSG_INFO(TL_LOG_NODE_SDK,0,0,"du gatewaye not support sync time");	
 			#if DU_LPN_EN
 			// reserve 3s for the sending part 
 				update_du_busy_s(0);
@@ -877,7 +938,7 @@ int cb_vd_du_time_cmd(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par)
 	time_rsp.op = VD_DU_TIME;
 	time_rsp.sts = 1;
 	u8 retry_times =0;
-	if(get_blt_state() == BLS_LINK_STATE_CONN){
+	if(blc_ll_getCurrentState() == BLS_LINK_STATE_CONN){
 		retry_times =1; // rsp 3 times will enough
 	}else{
 		retry_times =3; // rsp 3 times will enough
@@ -926,13 +987,19 @@ mesh_cmd_sig_func_t mesh_cmd_vd_func[] = {
     #endif
 
 	#if DU_ENABLE
-	CMD_NO_STR(VD_LPN_REPROT, 1, VENDOR_MD_LIGHT_S, VENDOR_MD_LIGHT_C, cb_vd_du_report, VD_LPN_REPROT),
+	CMD_NO_STR(VD_LPN_REPORT, 1, VENDOR_MD_LIGHT_S, VENDOR_MD_LIGHT_C, cb_vd_du_report, VD_LPN_REPORT),
 	CMD_NO_STR(VD_TIME_REQ, 1, VENDOR_MD_LIGHT_S, VENDOR_MD_LIGHT_C, cb_vd_du_time_req, STATUS_NONE),
 	CMD_NO_STR(VD_TIME_REQ_ACK, 0, VENDOR_MD_LIGHT_C, VENDOR_MD_LIGHT_S, cb_vd_du_time_req_ack, STATUS_NONE),
 	CMD_NO_STR(VD_TIME_CMD, 0, VENDOR_MD_LIGHT_C, VENDOR_MD_LIGHT_S, cb_vd_du_time_cmd, 0),
 	CMD_NO_STR(VD_TIME_RSP, 1, VENDOR_MD_LIGHT_S, VENDOR_MD_LIGHT_C, cb_vd_du_time_cmd_rsp, VD_TIME_RSP),
 	#endif
-    
+#elif LLSYNC_ENABLE
+    CMD_NO_STR(LLSYNC_VND_OP_SET, 0, VENDOR_MD_LIGHT_C, VENDOR_MD_LIGHT_S, llsync_tlk_mesh_recv_data_handle, LLSYNC_VND_OP_STATUS),
+	CMD_NO_STR(LLSYNC_VND_OP_GET, 0, VENDOR_MD_LIGHT_C, VENDOR_MD_LIGHT_S, llsync_tlk_mesh_recv_data_handle, LLSYNC_VND_OP_STATUS),
+	CMD_NO_STR(LLSYNC_VND_OP_SET_UNACK, 0, VENDOR_MD_LIGHT_C, VENDOR_MD_LIGHT_S, llsync_tlk_mesh_recv_data_handle, STATUS_NONE),
+    CMD_NO_STR(LLSYNC_VND_OP_STATUS, 1, VENDOR_MD_LIGHT_S, VENDOR_MD_LIGHT_C, llsync_tlk_mesh_recv_data_handle, STATUS_NONE),
+	CMD_NO_STR(LLSYNC_VND_OP_INDICATION, 0, VENDOR_MD_LIGHT_S, VENDOR_MD_LIGHT_C, llsync_tlk_mesh_recv_data_handle, STATUS_NONE),
+    CMD_NO_STR(LLSYNC_VND_OP_CONFIRM, 1, VENDOR_MD_LIGHT_C, VENDOR_MD_LIGHT_S, llsync_tlk_mesh_recv_data_handle, STATUS_NONE),
 #elif(VENDOR_OP_MODE_SEL == VENDOR_OP_MODE_DEFAULT)
     #if (DRAFT_FEATURE_VENDOR_TYPE_SEL == DRAFT_FEATURE_VENDOR_TYPE_ONE_OP)
 	CMD_NO_STR(VD_EXTEND_CMD0, 0, VENDOR_MD_LIGHT_C, VENDOR_MD_LIGHT_S, 0, STATUS_NONE),
@@ -957,12 +1024,14 @@ mesh_cmd_sig_func_t mesh_cmd_vd_func[] = {
     CMD_NO_STR(VD_MESH_PROV_CONFIRM, 0, VENDOR_MD_LIGHT_C, VENDOR_MD_LIGHT_S, cb_vd_mesh_provision_confirm, VD_MESH_PROV_CONFIRM_STS),
     CMD_NO_STR(VD_MESH_PROV_CONFIRM_STS, 1, VENDOR_MD_LIGHT_S, VENDOR_MD_LIGHT_C, cb_vd_mesh_provison_data_sts, STATUS_NONE),
     CMD_NO_STR(VD_MESH_PROV_COMPLETE, 0, VENDOR_MD_LIGHT_C, VENDOR_MD_LIGHT_S, cb_vd_mesh_provision_complete, STATUS_NONE),
-	#else
-		#if DEBUG_CFG_CMD_GROUP_AK_EN
+	#elif PAIR_PROVISION_ENABLE
+    CMD_NO_STR(VD_PAIR_PROV_RESET_ALL_NODES, 0, VENDOR_MD_LIGHT_C, VENDOR_MD_LIGHT_S, cb_vd_mesh_pair_prov_reset_all_nodes, STATUS_NONE),
+    CMD_NO_STR(VD_PAIR_PROV_DISTRIBUTE_DATA, 0, VENDOR_MD_LIGHT_C, VENDOR_MD_LIGHT_S, cb_vd_mesh_pair_prov_distribute, STATUS_NONE),
+    CMD_NO_STR(VD_PAIR_PROV_CONFIRM, 0, VENDOR_MD_LIGHT_C, VENDOR_MD_LIGHT_S, cb_vd_mesh_pair_prov_confirm, STATUS_NONE),
+	#elif DEBUG_CFG_CMD_GROUP_AK_EN
 	CMD_NO_STR(VD_MESH_TRANS_TIME_GET, 0, VENDOR_MD_LIGHT_C, VENDOR_MD_LIGHT_S, cb_vd_trans_time_get, VD_MESH_TRANS_TIME_STS),
 	CMD_NO_STR(VD_MESH_TRANS_TIME_SET, 0, VENDOR_MD_LIGHT_C, VENDOR_MD_LIGHT_S, cb_vd_trans_time_set, VD_MESH_TRANS_TIME_STS),
 	CMD_NO_STR(VD_MESH_TRANS_TIME_STS, 1, VENDOR_MD_LIGHT_S, VENDOR_MD_LIGHT_C, cb_vd_trans_time_sts, STATUS_NONE),
-		#endif
     #endif
 
 	#if AUDIO_MESH_EN
@@ -973,6 +1042,13 @@ mesh_cmd_sig_func_t mesh_cmd_vd_func[] = {
     CMD_NO_STR(VD_LPN_SENSOR_GET,0,VENDOR_MD_LIGHT_C,VENDOR_MD_LIGHT_S,cb_vd_lpn_sensor_get,VD_LPN_SENSOR_STATUS),
     CMD_NO_STR(VD_LPN_SENSOR_STATUS, 1, VENDOR_MD_LIGHT_S, VENDOR_MD_LIGHT_C, cb_vd_lpn_sensor_sts, STATUS_NONE),
     #endif
+	
+	#if (VENDOR_OP_USER_DEMO_EN)
+    CMD_NO_STR(VD_MESH_USER_DEMO_SET, 0, VENDOR_MD_LIGHT_C, VENDOR_MD_LIGHT_S, cb_vd_user_demo_set, VD_MESH_USER_DEMO_STATUS),
+	CMD_NO_STR(VD_MESH_USER_DEMO_GET, 0, VENDOR_MD_LIGHT_C, VENDOR_MD_LIGHT_S, cb_vd_user_demo_get, VD_MESH_USER_DEMO_STATUS),
+	CMD_NO_STR(VD_MESH_USER_DEMO_SET_NOACK, 0, VENDOR_MD_LIGHT_C, VENDOR_MD_LIGHT_S, cb_vd_user_demo_set, STATUS_NONE),
+    CMD_NO_STR(VD_MESH_USER_DEMO_STATUS, 1, VENDOR_MD_LIGHT_S, VENDOR_MD_LIGHT_C, cb_vd_user_demo_status, STATUS_NONE),
+	#endif
 #endif
 
     USER_MESH_CMD_VD_ARRAY
@@ -1067,7 +1143,7 @@ int vd_cmd_onoff(u16 adr_dst, u8 rsp_max, u8 onoff, int ack)
         return -1;
     }
 	
-#if 0 // GATEWAY_ENABLE // use the way of INI to send command for gatway
+#if 0 // GATEWAY_ENABLE // use the way of INI to send command for gateway
 	u8 par[32] = {0};
 	mesh_bulk_vd_cmd_par_t *p_bulk_vd_cmd = (mesh_bulk_vd_cmd_par_t *)par;
 	p_bulk_vd_cmd->nk_idx = 0;
@@ -1091,6 +1167,44 @@ int vd_cmd_onoff(u16 adr_dst, u8 rsp_max, u8 onoff, int ack)
 	return SendOpParaDebug(adr_dst, rsp_max, ack ? VD_GROUP_G_SET : VD_GROUP_G_SET_NOACK, 
 						   (u8 *)&par, sizeof(vd_light_onoff_set_t));
 #endif	
+}
+
+		#if VENDOR_SUB_OP_USER_DEMO_EN
+int vd_cmd_tx_sub_op_demo_user_set(u16 adr_dst, u8 rsp_max, u8 sub_op, u8 sno, int ack)
+{
+	vd_group_sub_op_demo_user_set_t par = {0};
+	par.sub_op = sub_op;
+	par.sno = sno;
+	//vendor opcode with g_vendor_id default, user can set g_msg_vd_id to specify vendor id
+	return SendOpParaDebug(adr_dst, rsp_max, ack ? VD_GROUP_G_SET : VD_GROUP_G_SET_NOACK, 
+						   (u8 *)&par, sizeof(vd_group_sub_op_demo_user_set_t));
+}
+
+int vd_cmd_tx_sub_op_demo_user_get(u16 adr_dst, u8 rsp_max, u8 sub_op)
+{
+	vd_group_sub_op_demo_user_set_t par = {0};
+	par.sub_op = sub_op;
+	//vendor opcode with g_vendor_id default, user can set g_msg_vd_id to specify vendor id
+	return SendOpParaDebug(adr_dst, rsp_max, VD_GROUP_G_GET, (u8 *)&par, sizeof(vd_group_sub_op_demo_user_set_t));
+}
+
+		#endif
+    #endif
+    
+	#if VENDOR_OP_USER_DEMO_EN
+int vd_cmd_tx_user_demo_set(u16 adr_dst, u8 rsp_max, u8 sno, int ack)
+{
+	vd_user_demo_set_t par = {0};
+	par.sno = sno;
+	//vendor opcode with g_vendor_id default, user can set g_msg_vd_id to specify vendor id
+	return SendOpParaDebug(adr_dst, rsp_max, ack ? VD_MESH_USER_DEMO_SET : VD_MESH_USER_DEMO_SET_NOACK, 
+						   (u8 *)&par, sizeof(vd_user_demo_set_t));
+}
+
+int vd_cmd_tx_user_demo_get(u16 adr_dst, u8 rsp_max)
+{
+	//vendor opcode with g_vendor_id default, user can set g_msg_vd_id to specify vendor id
+	return SendOpParaDebug(adr_dst, rsp_max, VD_MESH_USER_DEMO_GET, 0, 0);
 }
     #endif
 #endif

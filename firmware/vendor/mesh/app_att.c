@@ -101,7 +101,7 @@ static const u8 my_periConnParamChar[] = {
 	U16_LO(GATT_UUID_PERI_CONN_PARAM), U16_HI(GATT_UUID_PERI_CONN_PARAM)	
 };
 
-u16 my_appearance = GAP_APPEARE_UNKNOWN;
+u16 my_appearance = GAP_APPEARANCE_UNKNOWN;
 gap_periConnectParams_t my_periConnParameters = {20, 40, 0, 1000};
 
 
@@ -224,7 +224,7 @@ const u8 my_OtaServiceUUID[16]		= WRAPPING_BRACES(TELINK_OTA_UUID_SERVICE);
 const u8 my_OtaUUID[16]		= WRAPPING_BRACES(TELINK_SPP_DATA_OTA);
 
 static const u8 my_OtaProp[]		= {
-	CHAR_PROP_READ | CHAR_PROP_WRITE_WITHOUT_RSP,
+	CHAR_PROP_READ | CHAR_PROP_WRITE_WITHOUT_RSP | CHAR_PROP_NOTIFY,
 	U16_LO(OTA_CMD_OUT_DP_H), U16_HI(OTA_CMD_OUT_DP_H),
 	TELINK_SPP_DATA_OTA	
 };
@@ -346,9 +346,8 @@ const u8  du_ota_prop[] = {
 };
 	
 u8 du_ota_data[8];
-#endif
 
-#if(AIS_ENABLE)
+#elif(AIS_ENABLE)
 const u16 ais_pri_service_uuid = ALI_IOT_SERVICE_UUID;
 const u16 ais_read_uuid = ALI_IOT_READ_UUID;
 const u8 ais_read_prop[] = {
@@ -358,7 +357,7 @@ const u8 ais_read_prop[] = {
 };
 	
 const u16 ais_write_uuid = ALI_IOT_WRITE_UUID;
-const const u8 ais_write_prop[] = {
+const u8 ais_write_prop[] = {
 	CHAR_PROP_READ|CHAR_PROP_WRITE,
 	U16_LO(AIS_WRITE_DP_H), U16_HI(AIS_WRITE_DP_H),	
 	U16_LO(ALI_IOT_WRITE_UUID), U16_HI(ALI_IOT_WRITE_UUID)		
@@ -391,8 +390,8 @@ u8 ais_data_buf[2];
 #endif
 
 #if(ONLINE_STATUS_EN)
-const u8 online_st_service_uuid[16] = TELINK_ONLINE_ST_UUID_SERVICE;  // comfirm later
-const u8 online_st_data_uuid[16] = TELINK_ONLINE_ST_DATA_UUID;               // comfirm later
+const u8 online_st_service_uuid[16] = WRAPPING_BRACES(TELINK_ONLINE_ST_UUID_SERVICE);  // comfirm later
+const u8 online_st_data_uuid[16] = WRAPPING_BRACES(TELINK_ONLINE_ST_DATA_UUID);               // comfirm later
 const u8 online_st_prop[] = {
 	CHAR_PROP_READ | CHAR_PROP_WRITE | CHAR_PROP_WRITE_WITHOUT_RSP | CHAR_PROP_NOTIFY,
 	U16_LO(ONLINE_ST_DP_H), U16_HI(ONLINE_ST_DP_H),	
@@ -403,7 +402,7 @@ const u8 online_st_service_desc[]="Online Status";
 
 u8 online_st_att_data_buf[4];
 
-int online_st_att_write(u16 connHandle, ais_otaWritevoid *pw)
+int online_st_att_write(u16 connHandle, void *pw)
 {
     if(!pair_login_ok){
         return 1;
@@ -598,7 +597,7 @@ const u8 ONLINE_ST_ATT_HANDLE_SLAVE = (ATT_NUM_START_ONLINE_ST + 2);
 	{0,ATT_PERMISSIONS_RDWR, 16,sizeof(du_ota_data),(u8*)(du_ota_uuid),	(du_ota_data), &du_fw_proc, 0} /*value*/
 #endif
 
-attribute_t my_Attributes[] = {
+static const attribute_t my_Attributes[] = {
 	MY_ATTRIBUTE_BASE0
 #if ATT_SERVICE_AT_FIRST_EN
 	MY_ATTRIBUTE_SERVICE_CHANGE		// SERVICE_CHANGE should be after GAP, refer to base SDK.
@@ -697,54 +696,3 @@ void my_att_init(u8 mode)
 #endif
 #endif 
 }
-
-
-
-
-
-
-
-
-////////////////////////////////////////// central-role ATT concerned ///////////////////////////////////////////////
-
-
-
-
-
-
-
-/**
- * @brief       This function is used to send consumer HID report by USB.
- * @param[in]   conn     - connection handle
- * @param[in]   p        - Pointer point to data buffer.
- * @return
- */
-void	att_keyboard_media (u16 conn, u8 *p)
-{
-	u16 consumer_key = p[0] | p[1]<<8;
-
-
-#if (1 && UI_LED_ENABLE)	//Demo effect: when peripheral send Vol+/Vol- to central, LED GPIO toggle to show the result
-	if(consumer_key == MKEY_VOL_UP){
-		gpio_toggle(GPIO_LED_GREEN);
-	}
-	else if(consumer_key == MKEY_VOL_DN){
-		gpio_toggle(GPIO_LED_BLUE);
-	}
-#endif
-}
-
-
-//////////////// keyboard ///////////////////////////////////////////////////
-
-/**
- * @brief       This function is used to send HID report by USB.
- * @param[in]   conn     - connection handle
- * @param[in]   p        - Pointer point to data buffer.
- * @return
- */
-void	att_keyboard (u16 conn, u8 *p)
-{
-
-}
-

@@ -1,10 +1,10 @@
 /********************************************************************************************************
- * @file     keyboard.h
+ * @file    keyboard.h
  *
- * @brief    This is the header file for BLE SDK
+ * @brief   This is the header file for BLE SDK
  *
- * @author	 BLE GROUP
- * @date         2020.06
+ * @author  BLE GROUP
+ * @date    06,2022
  *
  * @par     Copyright (c) 2022, Telink Semiconductor (Shanghai) Co., Ltd. ("TELINK")
  *
@@ -19,8 +19,8 @@
  *          WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  *          See the License for the specific language governing permissions and
  *          limitations under the License.
+ *
  *******************************************************************************************************/
-
 #pragma once
 
 #include "drivers.h"
@@ -93,20 +93,5 @@ extern unsigned int kb_key_pressed(unsigned char * gpio);
 extern unsigned int kb_scan_key_value (int numlock_status, int read_key,unsigned char * gpio);
 
 extern unsigned int	scan_pin_need;
-
-
-static inline unsigned int kb_scan_key (int numlock_status, int read_key) {
-	unsigned char gpio[8];
-
-
-	scan_pin_need = kb_key_pressed (gpio);
-	if(scan_pin_need){
-		return  kb_scan_key_value(numlock_status,read_key,gpio);
-	}
-	else{
-#if (KB_REPEAT_KEY_ENABLE)
-		repeat_key.key_change_flg = KEY_NONE;
-#endif
-		return 0;
-	}
-}
+void global_var_no_ret_init_kb(); // BLE_SRC_TELINK_MESH_EN
+u32 kb_scan_key(int numlock_status, int read_key);

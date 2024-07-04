@@ -1,10 +1,10 @@
 /********************************************************************************************************
- * @file     hci_const.h
+ * @file    hci_const.h
  *
- * @brief    This is the header file for BLE SDK
+ * @brief   This is the header file for BLE SDK
  *
- * @author	 BLE GROUP
- * @date         2020.06
+ * @author  BLE GROUP
+ * @date    06,2022
  *
  * @par     Copyright (c) 2022, Telink Semiconductor (Shanghai) Co., Ltd. ("TELINK")
  *
@@ -19,8 +19,8 @@
  *          WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  *          See the License for the specific language governing permissions and
  *          limitations under the License.
+ *
  *******************************************************************************************************/
-
 #ifndef HCI_CONST_H_
 #define HCI_CONST_H_
 
@@ -87,7 +87,7 @@
 #define HCI_SUB_EVT_LE_CIS_REQUEST								 	 0x1A	//core_5.2	7.7.65.26 LE CIS Request event
 #define HCI_SUB_EVT_LE_CREATE_BIG_COMPLETE							 0x1B	//core_5.2	7.7.65.27 LE Create BIG Complete event
 #define HCI_SUB_EVT_LE_TERMINATE_BIG_COMPLETE						 0x1C	//core_5.2	7.7.65.28 LE Terminate BIG Complete event
-#define HCI_SUB_EVT_LE_BIG_SYNC_ESTABLISHED						 0x1D	//core_5.2	7.7.65.29 LE BIG Sync Established event
+#define HCI_SUB_EVT_LE_BIG_SYNC_ESTABLISHED						 	 0x1D	//core_5.2	7.7.65.29 LE BIG Sync Established event
 #define HCI_SUB_EVT_LE_BIG_SYNC_LOST								 0x1E	//core_5.2	7.7.65.30 LE BIG Sync Lost event
 #define HCI_SUB_EVT_LE_REQUEST_PEER_SCA_COMPLETE					 0x1F	//core_5.2	7.7.65.31 LE Request Peer SCA Complete event
 #define HCI_SUB_EVT_LE_PATH_LOSS_THRESHOLD							 0x20	//core_5.2	7.7.65.32 LE Path Loss Threshold event
@@ -96,12 +96,42 @@
 
 
 #define HCI_SUB_EVT_LE_SUBRATE_CHANGE								 0x23	//core_5.3	7.7.65.35 LE Subrate Change event
+#define HCI_SUB_EVT_LE_PERIODIC_ADVERTISING_SYNC_ESTABLISHED_V2	     0x24
+#define HCI_SUB_EVT_LE_PERIODIC_ADVERTISING_REPORT_V2				 0x25
+#define	HCI_SUB_EVT_LE_PERIODIC_ADVERTISING_SYNC_TRANSFER_RECEIVED_V2 0x26
+
+
+#define HCI_SUB_EVT_LE_PERIODIC_ADVERTISING_SUBEVENT_DATA_REQUEST	 0x27	//core_5.4	7.7.65.36 LE Periodic Advertising Subevent Data Request event
+#define HCI_SUB_EVT_LE_PERIODIC_ADVERTISING_RESPONSE_REPORT			 0x28	//core_5.4	7.7.65.37 LE Periodic Advertising Response Report event
+
+
+
+/*
+TBD	LE CS Read Remote Supported Capabilities Complete event
+TBD	LE CS Read Remote FAE Table Complete event
+TBD	LE CS Security Enable Complete event
+TBD	LE CS Config Complete event
+TBD	LE CS Procedure Enable Complete event
+TBD	LE CS Subevent Result event
+TBD	LE CS Subevent Result Continue event
+TBD	LE CS Test End Complete event
+ */
+#define HCI_SUB_EVT_LE_CS_READ_REMOTE_SUPPORTED_CAPABILITIES_COMPLETE	 0x2C	//channel sounding	7.7.Y+0 LE CS Read Remote Supported Capabilities Complete event
+#define HCI_SUB_EVT_LE_CS_READ_REMOTE_FAE_TABLE_COMPLETE				 0x2D	//channel sounding	7.7.Y+1 LE CS Read Remote FAE Table Complete event
+#define HCI_SUB_EVT_LE_CS_SECURITY_ENABLE_COMPLETE	 					 0x2E	//channel sounding	7.7.Y+2 LE CS Security Enable Complete event
+#define HCI_SUB_EVT_LE_CS_CONFIG_COMPLETE								 0x2F	//channel sounding	7.7.Y+3 LE CS Config Complete event
+#define HCI_SUB_EVT_LE_CS_PROCEDURE_ENABLE_COMPLETE						 0x30	//channel sounding	7.7.Y+4 LE CS Procedure Enable Complete event
+#define HCI_SUB_EVT_LE_CS_SUBEVENT_RESULT								 0x31	//channel sounding	7.7.Y+5 LE CS Subevent Result event
+#define HCI_SUB_EVT_LE_CS_SUBEVENT_RESULT_CONTINUE						 0x32	//channel sounding	7.7.Y+6 LE CS Subevent Result Continue event
+#define HCI_SUB_EVT_LE_CS_TEST_END_COMPLETE							 	 0x33	//channel sounding	7.7.Y+4 LE CS Test End Complete event
+
 
 #define HCI_SUB_EVT_MAX												 0x24
 
 
-#define HCI_SUB_EVT_LE_CONNECTION_ESTABLISH					         0xFF   //Telink private
 
+#define HCI_SUB_EVT_LE_CONNECTION_ESTABLISH					         0xF0   //Telink private
+#define HCI_SUB_EVT_LE_CONNECTION_FAIL						         0xF1	//Telink private
 
 
 
@@ -109,13 +139,13 @@
 #define HCI_EVT_MASK_NONE                                        	 0x00000000
 #define HCI_EVT_MASK_INQUIRY_COMPLETE                          	  	 0x00000001	// 0
 #define HCI_EVT_MASK_INQUIRY_RESULT                              	 0x00000002	// 1
-#define HCI_EVT_MASK_CONNECTION_COMPELETE                        	 0x00000004	// 2
+#define HCI_EVT_MASK_CONNECTION_COMPLETE                        	 0x00000004	// 2
 #define HCI_EVT_MASK_CONNECTION_REQUEST                          	 0x00000008	// 3
 #define HCI_EVT_MASK_DISCONNECTION_COMPLETE                      	 0x00000010	// 4
 #define HCI_EVT_MASK_AUTHENTICATION_COMPLETE                     	 0x00000020	// 5
 #define HCI_EVT_MASK_REMOTE_NAME_REQUEST_COMPLETE                	 0x00000040	// 6
 #define HCI_EVT_MASK_ENCRYPTION_CHANGE                           	 0x00000080	// 7
-#define HCI_EVT_MASK_CHANGE_CONECTION_LINK_KEY_COMPLETE              0x00000100	// 8
+#define HCI_EVT_MASK_CHANGE_CONNECTION_LINK_KEY_COMPLETE              0x00000100	// 8
 #define HCI_EVT_MASK_MASTER_LINK_KEY_COMPLETE                        0x00000200	// 9
 #define HCI_EVT_MASK_READ_REMOTE_SUPPORTED_FEATURES_COMPLETE     	 0x00000400	// 10
 #define HCI_EVT_MASK_READ_REMOTE_VERSION_INFORMATION_COMPLETE    	 0x00000800	// 11
@@ -154,26 +184,42 @@
 #define HCI_LE_EVT_MASK_CHANNEL_SELECTION_ALGORITHM                  0x00080000 // core5.0 - bit19
 
 #define HCI_LE_EVT_MASK_CONNECTIONLESS_IQ_REPORT                     0x00100000 // core5.1 - bit20
-#define HCI_LE_EVT_MASK_CONNECTION_IQ_REPORTD          				 0x00200000 // core5.1 - bit21
+#define HCI_LE_EVT_MASK_CONNECTION_IQ_REPORT          				 0x00200000 // core5.1 - bit21
 #define HCI_LE_EVT_MASK_CTE_REQUEST_FAILED                           0x00400000 // core5.1 - bit22
-#define HCI_LE_EVT_MASK_PERIODIC_ADVERTISING_SYNC_TRANSFOR_RECEIVED  0x00800000 // core5.1 - bit23
+#define HCI_LE_EVT_MASK_PERIODIC_ADVERTISING_SYNC_TRANSFER_RECEIVED  0x00800000 // core5.1 - bit23
 
 #define HCI_LE_EVT_MASK_CIS_ESTABLISHED								 0x01000000 // core5.2 - bit24
 #define HCI_LE_EVT_MASK_CIS_REQUESTED								 0x02000000 // core5.2 - bit25
 #define HCI_LE_EVT_MASK_CREATE_BIG_COMPLETE							 0x04000000 // core5.2 - bit26
 #define HCI_LE_EVT_MASK_TERMINATE_BIG_COMPLETE						 0x08000000 // core5.2 - bit27
-#define HCI_LE_EVT_MASK_BIG_SYNC_ESTABLILSHED						 0x10000000 // core5.2 - bit28
+#define HCI_LE_EVT_MASK_BIG_SYNC_ESTABLISHED						 0x10000000 // core5.2 - bit28
 #define HCI_LE_EVT_MASK_BIG_SYNC_LOST								 0x20000000 // core5.2 - bit29
 #define HCI_LE_EVT_MASK_REQUEST_PEER_SCA_COMPLETE					 0x40000000 // core5.2 - bit30
 #define HCI_LE_EVT_MASK_PATH_LOSS_THRESHOLD							 0x80000000 // core5.2 - bit31
 
 #define HCI_LE_EVT_MASK_2_TRANSMIT_POWER_REPORTING					 0x00000001 // core5.2 - bit32
 #define HCI_LE_EVT_MASK_2_BIGINFO_ADVERTISING_REPORT				 0x00000002 // core5.2 - bit33
+
 #define HCI_LE_EVT_MASK_2_SUBRATE_CHANGE							 0x00000004 // core5.3 - bit34
 
 
+#define HCI_LE_EVT_MASK_2_PERIODIC_ADVERTISING_SUBEVENT_DATA_REQUEST 		 0x00000040 // core5.4 - bit38
+#define HCI_LE_EVT_MASK_2_PERIODIC_ADVERTISING_RESPONSE_REPORT		 		 0x00000080 // core5.4 - bit39
 
-#define HCI_LE_EVT_MASK_CONNECTION_ESTABLISH                         0x80000000  //TODO
+
+#define HCI_LE_EVT_MASK_2_CS_READ_REMOTE_SUPPORTED_CAPABILITIES_COMPLETE	 0x00000800	//channel sounding bit43
+#define HCI_LE_EVT_MASK_2_CS_READ_REMOTE_FAE_TABLE_COMPLETE				 	 0x00001000	//channel sounding bit44
+#define HCI_LE_EVT_MASK_2_CS_SECURITY_ENABLE_COMPLETE	 					 0x00002000	//channel sounding bit45
+#define HCI_LE_EVT_MASK_2_CS_CONFIG_COMPLETE								 0x00004000	//channel sounding bit46
+#define HCI_LE_EVT_MASK_2_CS_PROCEDURE_ENABLE_COMPLETE						 0x00008000	//channel sounding bit47
+#define HCI_LE_EVT_MASK_2_CS_SUBEVENT_RESULT								 0x00010000	//channel sounding bit48
+#define HCI_LE_EVT_MASK_2_CS_SUBEVENT_RESULT_CONTINUE						 0x00020000	//channel sounding bit49
+#define HCI_LE_EVT_MASK_2_CS_TEST_END_COMPLETE							 	 0x00040000	//channel sounding bit50
+
+
+
+
+#define HCI_LE_EVT_MASK_CONNECTION_ESTABLISH                         0x80000000
 
 
 
@@ -362,10 +408,10 @@
 #define HCI_CMD_LE_CONNECTION_RESPONSE_ENABLE					 	 0x57 //7.8.86 LE Connection CTE Response Enable command
 #define HCI_CMD_LE_READ_ANTENNA_INFORMATION						 	 0x58 //7.8.87 LE Read Antenna Information command
 #define HCI_CMD_LE_SET_PERIODIC_ADVERTISING_RECEIVE_ENABLE		     0x59 //7.8.88 LE Set Periodic Advertising Receive Enable command
-#define HCI_CMD_LE_PERIODIC_ADVERTISING_SYNC_TRANSFOR				 0x5A //7.8.89 LE Periodic Advertising Sync Transfer command
-#define HCI_CMD_LE_PERIODIC_ADVERTISING_SET_INFO_TRANSFOR			 0x5B //7.8.90 LE Periodic Advertising Set Info Transfer command
-#define HCI_CMD_LE_SET_PERIODIC_ADV_SYNC_TRANSFOR_PARAMETERS 		 0x5C //7.8.91 LE Set Periodic Advertising Sync Transfer Parameters command
-#define HCI_CMD_LE_SET_DEFAULT_PERIODIC_ADV_SYNC_TRANSFOR_PARAMS 	 0x5D //7.8.92 LE Set Default Periodic Advertising Sync Transfer Parameters command
+#define HCI_CMD_LE_PERIODIC_ADVERTISING_SYNC_TRANSFER				 0x5A //7.8.89 LE Periodic Advertising Sync Transfer command
+#define HCI_CMD_LE_PERIODIC_ADVERTISING_SET_INFO_TRANSFER			 0x5B //7.8.90 LE Periodic Advertising Set Info Transfer command
+#define HCI_CMD_LE_SET_PERIODIC_ADV_SYNC_TRANSFER_PARAMETERS 		 0x5C //7.8.91 LE Set Periodic Advertising Sync Transfer Parameters command
+#define HCI_CMD_LE_SET_DEFAULT_PERIODIC_ADV_SYNC_TRANSFER_PARAMS 	 0x5D //7.8.92 LE Set Default Periodic Advertising Sync Transfer Parameters command
 #define HCI_CMD_LE_GENERATE_DHKEY_V2								 0x5E //7.8.93 LE Generate DHKey command [v2]
 #define HCI_CMD_LE_MODIFY_SLEEP_CLOCK_ACCURACY						 0x5F //7.8.94 LE Modify Sleep Clock Accuracy command
 //core_5.1 end
@@ -386,8 +432,8 @@
 #define HCI_CMD_LE_BIG_TERMINATE_SYNC								 0x6C //7.8.107 LE BIG Terminate Sync command
 #define HCI_CMD_LE_REQUEST_PEER_SCA									 0x6D //7.8.108 LE Request Peer SCA command
 #define HCI_CMD_LE_SETUP_ISO_DATA_PATH								 0x6E //7.8.109 LE Setup ISO Data Path command
-#define HCI_CMD_LE_REMOVE_ISO_DARA_PATH								 0x6F //7.8.110 LE Remove ISO Data Path command
-#define HCI_CMD_LE_ISO_TRTANSMIT_TEST								 0x70 //7.8.111 LE ISO Transmit Test command
+#define HCI_CMD_LE_REMOVE_ISO_DATA_PATH								 0x6F //7.8.110 LE Remove ISO Data Path command
+#define HCI_CMD_LE_ISO_TRANSMIT_TEST								 0x70 //7.8.111 LE ISO Transmit Test command
 #define HCI_CMD_LE_ISO_RECEIVE_TEST									 0x71 //7.8.112 LE ISO Receive Test command
 #define HCI_CMD_LE_ISO_READ_TEST_COUNTERS							 0x72 //7.8.113 LE ISO Read Test Counters command
 #define HCI_CMD_LE_ISO_TEST_END										 0x73 //7.8.114 LE ISO Test End command
@@ -406,6 +452,33 @@
 #define HCI_CMD_LE_SUBRATE_REQUEST									 0x7E //7.8.124 LE Subrate Request command
 //core_5.3 end
 
+//core_5.4 begin
+#define	HCI_CMD_LE_SET_PERIODIC_ADVERTISING_SUBEVENT_DATA			 0X82 //7.8.125 LE Set Periodic Advertising Subevent Data command
+#define	HCI_CMD_LE_SET_PERIODIC_ADVERTISING_RESPONSE_DATA			 0x83 //7.8.126 LE Set Periodic Advertising Response Data command
+#define HCI_CMD_LE_SET_PERIODIC_SYNC_SUBEVENT						 0x84 //7.8.127 LE Set Periodic Sync Subevent command
+#define HCI_CMD_LE_EXTENDED_CREATE_CONNECTION_V2              		 0x85 //7.8.66 LE Extended Create Connection Command [v2]
+#define HCI_CMD_LE_SET_PERIODIC_ADVERTISING_PARAMETERS_V2            0x86 //7.8.61 LE Set Periodic Advertising Parameters Command [v2]
+
+//core_5.4 end
+
+
+//channel sounding begin
+#define	HCI_CMD_LE_CS_READ_LOCAL_SUPPORTED_CAPABILITIES				 0x89 //7.8.X+0 LE CS Read Local Supported Capabilities command
+#define	HCI_CMD_LE_CS_READ_REMOTE_SUPPORTED_CAPABILITIES			 0x8A //7.8.X+1 LE CS Read Remote Supported Capabilities command
+#define	HCI_CMD_LE_CS_WRITE_REMOTE_SUPPORTED_CAPABILITIES			 0x8B //7.8.X+2 LE CS Write Remote Supported Capabilities command
+#define	HCI_CMD_LE_CS_SECURITY_ENABLE			 					 0x8C //7.8.X+3 LE CS Security Enable command
+#define	HCI_CMD_LE_CS_SET_DEFAULT_SETTINGS			 				 0x8D //7.8.X+4 LE CS Set Default Settings command
+#define	HCI_CMD_LE_CS_READ_REMOTE_FAE_TABLE			 				 0X8E //7.8.X+6 LE CS Read Remote FAE Table command
+#define	HCI_CMD_LE_CS_WRITE_CACHE_REMOTE_FAE_TABLE			 		 0X8F //7.8.X+7 LE CS Write Cache Remote FAE Table command
+#define	HCI_CMD_LE_CS_CREATE_CONFIG			 						 0X90 //7.8.X+8 LE CS Create Config command
+#define	HCI_CMD_LE_CS_REMOVE_CONFIG			 						 0X91 //7.8.X+9 LE CS Remove Config command
+#define	HCI_CMD_LE_CS_SET_Channel_CLASSIFICATION			 		 0X92 //7.8.X+10 LE CS Set Channel Classification command
+#define	HCI_CMD_LE_CS_SET_PROCEDURE_PARAMETERS			 			 0X93 //7.8.X+11 LE CS Set Procedure Parameters command
+#define	HCI_CMD_LE_CS_PROCEDURE_ENABLE			 					 0X94 //7.8.X+12 LE CS Procedure Enable command
+#define	HCI_CMD_LE_CS_TEST			 								 0X95 //7.8.X+13 LE CS Test command
+#define	HCI_CMD_LE_CS_TEST_END			 							 0X96 //7.8.X+14 LE CS Test End command
+//channel sounding end
+
 #define HCI_CMD_LINK_POLICY_OPCODE_OGF								 0x08 //0x02<<2 = 0x08
 #define HCI_CMD_TEST_OPCODE_OGF										 0x18 //0x06<<2 = 0x18
 
@@ -413,10 +486,5 @@
 //-- OGF --
 #define HCI_CMD_VENDOR_OPCODE_OGF									 0xFC  //0x3f <<2 = 0xFC
 //-- OCF --
-#define HCI_TELINK_READ_REG											 0x01
-#define HCI_TELINK_WRITE_REG										 0x02
-#define HCI_TELINK_SET_TX_PWR										 0x03
-#define HCI_TELINK_REBOOT_MCU										 0x04
-#define HCI_TELINK_SET_RXTX_DATA_LEN								 0x40
-#define HCI_EBQ_TEST_CASE_LOG										 0xE2 //EBQ log case name and timestamp
+
 #endif /* HCI_CONST_H_ */

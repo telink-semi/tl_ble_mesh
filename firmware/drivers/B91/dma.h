@@ -1,12 +1,12 @@
 /********************************************************************************************************
- * @file     dma.h
+ * @file    dma.h
  *
- * @brief    This is the header file for BLE SDK
+ * @brief   This is the header file for B91
  *
- * @author	 BLE GROUP
- * @date         11,2022
+ * @author  Driver Group
+ * @date    2019
  *
- * @par     Copyright (c) 2022, Telink Semiconductor (Shanghai) Co., Ltd. ("TELINK")
+ * @par     Copyright (c) 2019, Telink Semiconductor (Shanghai) Co., Ltd. ("TELINK")
  *
  *          Licensed under the Apache License, Version 2.0 (the "License");
  *          you may not use this file except in compliance with the License.
@@ -19,8 +19,8 @@
  *          WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  *          See the License for the specific language governing permissions and
  *          limitations under the License.
+ *
  *******************************************************************************************************/
-
 /**	@page DMA
  *
  *	Introduction
@@ -33,7 +33,7 @@
  */
 #ifndef DMA_H_
 #define DMA_H_
-#include "reg_include/register_b91.h"
+#include "reg_include/register.h"
  typedef enum{
 	DMA0=0,
 	DMA1,
@@ -101,9 +101,13 @@ typedef enum{
 }
 dma_ctr_width_e;
 
+/**
+ * DMA supports the following three types of transfer bytes, but all the related peripherals of this chip are designed according to DMA_WORD_WIDTH,
+ * so the modes that cannot be used are commented out.
+ */
 typedef enum{
-	DMA_BYTE_WIDTH=1,
-	DMA_HWORD_WIDTH=2,
+	//DMA_BYTE_WIDTH=1,
+	//DMA_HWORD_WIDTH=2,
 	DMA_WORD_WIDTH=4,
 }
 dma_transfer_width_e;
@@ -131,13 +135,15 @@ typedef struct {
 	unsigned int auto_en:1;/*/*auto_en : 31*/
 }dma_config_t;
 
-
+/*
+ * If volatile is not added, the compiler optimization will affect the configuration of the chain, which will lead to the abnormal work of pwm/audio(when using the chain function).
+ */
 typedef struct {
-	unsigned int dma_chain_ctl;
-	unsigned int dma_chain_src_addr;
-	unsigned int dma_chain_dst_addr;
-	unsigned int dma_chain_data_len;
-	unsigned int dma_chain_llp_ptr;
+	volatile unsigned int dma_chain_ctl;
+	volatile unsigned int dma_chain_src_addr;
+	volatile unsigned int dma_chain_dst_addr;
+	volatile unsigned int dma_chain_data_len;
+	volatile unsigned int dma_chain_llp_ptr;
 }dma_chain_config_t ;
 
 
@@ -146,11 +152,11 @@ typedef struct {
  * @param[in] chn    - dma channel
  * @param[in] config - the prt of dma_config that configured control register
  * @return    none
+ * @note      When a certain dma channel has not finished the transmission (bit 0 of reg_dma_ctr0(chn): 1-the transmission has not been completed,0-the transmission is completed),need to disable dma before writing to the dma register.
  */
 static inline void dma_config(dma_chn_e chn ,dma_config_t *config)
 {
-	BM_CLR(reg_dma_ctrl(chn),BIT_RNG(4,31));
-	reg_dma_ctrl(chn) |= (*(unsigned int*)config)<<4;
+	reg_dma_ctrl(chn) = (reg_dma_ctrl(chn)&(~BIT_RNG(4,31)))|((*(unsigned int*)config)<<4);
 }
 
 
@@ -265,6 +271,7 @@ static inline void dma_clr_abt_irq_status(dma_irq_chn_e abt_chn)
  * @param[in] size_byte  - the address of dma tx/rx size .The maximum transmission length of DMA is 0xFFFFFC bytes  and cannot exceed this length.
  * @param[in] byte_width -  dma   tx/rx  width
  * @return    none 
+ * @note      When a certain dma channel has not finished the transmission (bit 0 of reg_dma_ctr0(chn): 1-the transmission has not been completed,0-the transmission is completed),need to disable dma before writing to the dma register.
  */
 static inline void dma_set_size(dma_chn_e chn,unsigned int size_byte,dma_transfer_width_e byte_width)
 {
@@ -292,12 +299,14 @@ static inline unsigned int dma_cal_size(unsigned int size_byte,dma_transfer_widt
  * @param[in]  chn      - DMA channel
  * @param[in]  src_addr - the address of source.
  * @param[in]  dst_addr - the address of destination.
- * @return    none
+ * @return     none
+ * @note       1. src_addr and dst_addr must be aligned by word (4 bytes), otherwise the program will enter an exception
+ *             2. When a certain dma channel has not finished the transmission (bit 0 of reg_dma_ctr0(chn): 1-the transmission has not been completed,0-the transmission is completed),need to disable dma before writing to the dma register.
  */
 static inline void dma_set_address(dma_chn_e chn,unsigned int src_addr,unsigned int dst_addr)
 {
-	reg_dma_src_addr(chn)=src_addr;
-	reg_dma_dst_addr(chn)=dst_addr;
+	reg_dma_src_addr(chn)= (unsigned int)convert_ram_addr_cpu2bus(src_addr);
+	reg_dma_dst_addr(chn)= (unsigned int)convert_ram_addr_cpu2bus(dst_addr);
 }
 
 
@@ -305,25 +314,29 @@ static inline void dma_set_address(dma_chn_e chn,unsigned int src_addr,unsigned 
  * @brief   this function set source address for DMA,
  * @param[in]  chn - DMA channel
  * @param[in]  src_addr - the address of source.
- *  */
+ * @note       1. src_addr must be aligned by word (4 bytes), otherwise the program will enter an exception
+ *             2. When a certain dma channel has not finished the transmission (bit 0 of reg_dma_ctr0(chn) is 1),need to disable dma before writing to the dma register
+ */
 static inline void dma_set_src_address(dma_chn_e chn,unsigned int src_addr)
 {
-	reg_dma_src_addr(chn)=src_addr;
+	reg_dma_src_addr(chn)= (unsigned int)convert_ram_addr_cpu2bus(src_addr);
 }
 
 /**
  * @brief   this function set destination address for DMA,
  * @param[in]  chn - DMA channel
  * @param[in]  dst_addr - the address of destination.
- *  */
+ * @note       1.dst_addr must be aligned by word (4 bytes), otherwise the program will enter an exception
+ *             2.When a certain dma channel has not finished the transmission (bit 0 of reg_dma_ctr0(chn): 1-the transmission has not been completed,0-the transmission is completed),need to disable dma before writing to the dma register.
+ */
 static inline void dma_set_dst_address(dma_chn_e chn,unsigned int dst_addr)
 {
-	reg_dma_dst_addr(chn)=dst_addr;
+	reg_dma_dst_addr(chn)= (unsigned int)convert_ram_addr_cpu2bus(dst_addr);
 }
 
 
 /**
- * @brief   this function set reset  DMA,
+ * @brief   this function set reset DMA,DMA logic and registers will be reset.
  * @return    none
  */
 static inline void dma_reset(void)

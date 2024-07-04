@@ -1,10 +1,10 @@
 /********************************************************************************************************
- * @file     leg_adv.h
+ * @file    leg_adv.h
  *
- * @brief    This is the header file for BLE SDK
+ * @brief   This is the header file for BLE SDK
  *
- * @author	 BLE GROUP
- * @date         2020.06
+ * @author  BLE GROUP
+ * @date    06,2022
  *
  * @par     Copyright (c) 2022, Telink Semiconductor (Shanghai) Co., Ltd. ("TELINK")
  *
@@ -19,8 +19,8 @@
  *          WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  *          See the License for the specific language governing permissions and
  *          limitations under the License.
+ *
  *******************************************************************************************************/
-
 #ifndef LEG_ADV_H_
 #define LEG_ADV_H_
 
@@ -67,7 +67,7 @@ void 		blc_ll_initLegacyAdvertising_module(void);
  * @param[in]  len - The number of significant octets in the Advertising_Data.
  * @return     Status - 0x00: command succeeded; 0x01-0xFF: command failed
  */
-ble_sts_t  	blc_ll_setAdvData(u8 *data, u8 len);
+ble_sts_t  	blc_ll_setAdvData(const u8 *data, u8 len);
 
 
 /**
@@ -76,7 +76,7 @@ ble_sts_t  	blc_ll_setAdvData(u8 *data, u8 len);
  * @param[in]  len - The number of significant octets in the Scan_Response_Data.
  * @return     Status - 0x00: command succeeded; 0x01-0xFF: command failed
  */
-ble_sts_t 	blc_ll_setScanRspData(u8 *data, u8 len);
+ble_sts_t 	blc_ll_setScanRspData(const u8 *data, u8 len);
 
 
 
@@ -120,16 +120,6 @@ void 		blc_ll_continue_adv_after_scan_req(u8 enable);
  * @return     none.
  */
 void 		blc_ll_set_scan_rsp_en(u8 enable);
-
-
-/**
- * @brief      This function is used to set some other channel to replace advertising chn37/38/39.
- * @param[in]  chn0 - channel to replace channel 37
- * @param[in]  chn1 - channel to replace channel 38
- * @param[in]  chn2 - channel to replace channel 39
- * @return     none
- */
-void 		blc_ll_setAdvCustomedChannel (u8 chn0, u8 chn1, u8 chn2);
 
 
 

@@ -23,18 +23,8 @@
  *
  *******************************************************************************************************/
 #include "tl_common.h"
-#ifndef WIN32
-#if __TLSR_RISCV_EN__
-#include "watchdog.h"
-#else
-#include "proj/mcu/watchdog_i.h"
-#endif
-#endif
-#if !__TLSR_RISCV_EN__
-#include "proj_lib/ble/ll/ll.h"
 #include "proj_lib/ble/blt_config.h"
 #include "vendor/common/user_config.h"
-#endif
 #include "app_health.h"
 #include "proj_lib/sig_mesh/app_mesh.h"
 #include "lighting_model.h"
@@ -494,7 +484,7 @@ int ali_mesh_timing_set(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par)
 {
 	u8 err = 0;
 	u8 err_index = 0xFF;
-	u8 indexs[8];
+	u8 indexes[8];
 	int index_num = 0;
 	ali_msg_timing_set_t *set = (ali_msg_timing_set_t *) par;
 	int handled_len = sizeof(ali_msg_header_t);
@@ -544,7 +534,7 @@ int ali_mesh_timing_set(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par)
 			my_printf_uart("\r\n");
 #endif
 
-			indexs[index_num] = para->index;
+			indexes[index_num] = para->index;
 			index_num++;
 		}
 	}
@@ -559,7 +549,7 @@ EXIT:
 		model_common_t *p_model = (model_common_t *) cb_par->model;
 		timing_info_report_src_addr = p_model->ele_adr;
 		timing_info_report_des_addr = cb_par->adr_src;
-		return ali_mesh_timing_sts(indexs, index_num);
+		return ali_mesh_timing_sts(indexes, index_num);
 	}
 }
 
@@ -606,7 +596,7 @@ int ali_mesh_cycle_timing_set(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par)
 {
 	u8 err = 0;
 	u8 err_index = 0xFF;
-	u8 indexs[8];
+	u8 indexes[8];
 	int index_num = 0;
 	ali_msg_cycle_timing_set_t *set = (ali_msg_cycle_timing_set_t *) par;
 	int handled_len = sizeof(ali_msg_header_t);
@@ -637,7 +627,7 @@ int ali_mesh_cycle_timing_set(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par)
 
 #if ALI_MD_TIME_LOG_EN
 		my_printf_uart("Setup cycle timing: ");
-		my_printf_uart("%d WeekMask:", indexs[index_num]);
+		my_printf_uart("%d WeekMask:", indexes[index_num]);
 		for(int j=0;j<7;j++){
 			if (info->schedule & BIT(j)){
 				my_printf_uart("%d", j+1);
@@ -653,7 +643,7 @@ int ali_mesh_cycle_timing_set(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par)
 		my_printf_uart("\r\n");
 #endif
 
-		indexs[index_num] = para->index;
+		indexes[index_num] = para->index;
 		index_num++;
 	}
 EXIT:
@@ -667,7 +657,7 @@ EXIT:
 		model_common_t *p_model = (model_common_t *) cb_par->model;
 		timing_info_report_src_addr = p_model->ele_adr;
 		timing_info_report_des_addr = cb_par->adr_src;
-		return ali_mesh_cycle_timing_sts(indexs, index_num);
+		return ali_mesh_cycle_timing_sts(indexes, index_num);
 	}
 }
 
@@ -823,7 +813,7 @@ static void ali_mesh_timing_proc(u32 ali_unix_time)
 
 static u8 save_time_info_flag = 0;
 static u32 save_time_info_timing = 0;
-/* save sntp parameters and timing informations to flash */
+/* save sntp parameters and timing information to flash */
 static void ali_mesh_time_save()
 {
 	save_time_info_flag = 1;
@@ -851,7 +841,7 @@ void user_ali_time_proc()
 		return;
 	}
 	u32 clock_tmp = clock_time();
-	u32 t_delta = (u32) (clock_tmp - ali_mesh_time_tick); // should be differrent from system_time_tick_
+	u32 t_delta = (u32) (clock_tmp - ali_mesh_time_tick); // should be different from system_time_tick_
 
 	if (t_delta >= ALI_MESH_TIME_CHECK_INTERVAL) {
 		u32 interval_cnt = t_delta / ALI_MESH_TIME_CHECK_INTERVAL;
@@ -869,7 +859,7 @@ void user_ali_time_proc()
 	if (all_timing_info_report_flag && clock_time_exceed_ms(all_timing_info_report_timing, 300)) {
 		all_timing_info_report_timing = clock_time();
 
-		u8 indexs[5] = {0};
+		u8 indexes[5] = {0};
 		int count = 0;
 		for (int i=0; i<ALI_TIMING_INFO_NUM; i++) {
 			if (!(timing_info_report_mask[i/8] & BIT(i%8))) {
@@ -878,7 +868,7 @@ void user_ali_time_proc()
 			if (model_vd_ali_time.timing_infos[i].active_time != 0
 					&& model_vd_ali_time.timing_infos[i].active_time != U32_MAX &&
 					model_vd_ali_time.timing_infos[i].type == TIMING_TYPE_SINGLE) {
-				indexs[count++] = i;
+				indexes[count++] = i;
 				timing_info_report_mask[i/8] &= ~BIT(i%8);
 			}
 			if (count >= 5) {
@@ -886,7 +876,7 @@ void user_ali_time_proc()
 			}
 		}
 		if (count > 0) {
-			ali_mesh_timing_sts(indexs, count);
+			ali_mesh_timing_sts(indexes, count);
 			return;
 		}
 
@@ -897,7 +887,7 @@ void user_ali_time_proc()
 			if (model_vd_ali_time.timing_infos[i].active_time != 0
 					&& model_vd_ali_time.timing_infos[i].active_time != U32_MAX &&
 					model_vd_ali_time.timing_infos[i].type == TIMING_TYPE_CYCLE) {
-				indexs[count++] = i;
+				indexes[count++] = i;
 				timing_info_report_mask[i/8] &= ~BIT(i%8);
 			}
 			if (count >= 5) {
@@ -906,7 +896,7 @@ void user_ali_time_proc()
 		}
 
 		if (count > 0) {
-			ali_mesh_cycle_timing_sts(indexs, count);
+			ali_mesh_cycle_timing_sts(indexes, count);
 			return;
 		}
 		all_timing_info_report_flag = 0;

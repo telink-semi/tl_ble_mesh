@@ -23,16 +23,8 @@
  *
  *******************************************************************************************************/
 #pragma once
-#if !__TLSR_RISCV_EN__
-#include "proj_lib/ble/ll/ll.h"
 #include "proj_lib/ble/blt_config.h"
-#endif
 #include "proj_lib/sig_mesh/app_mesh.h"
-#if !__TLSR_RISCV_EN__
-#include "proj_lib/ble/service/ble_ll_ota.h"
-#include "proj/common/utlist.h"
-#endif
-
 #include "light.h"
 #if MI_API_ENABLE
 #include "./mi_api/telink_sdk_mible_api.h"
@@ -87,7 +79,7 @@ typedef struct ev_loop_ctrl_t{
 	int						fired_index;
 /*
 	Pool callbacks can be added and removed frequently. We could use double-linked list instead.
-	But it may be less than several vaiable poll events, use array is faster.
+	But it may be less than several variable poll events, use array is faster.
 */	
 	ev_poll_t				poll[EV_POLL_MAX];
 /*
@@ -108,7 +100,7 @@ typedef struct ev_loop_ctrl_t{
 	int						fired_index;
 /*
 	Pool callbacks can be added and removed frequently. We could use double-linked list instead.
-	But it may be less than several vaiable poll events, use array is faster.
+	But it may be less than several variable poll events, use array is faster.
 */	
 	ev_poll_t				poll[1];
 /*

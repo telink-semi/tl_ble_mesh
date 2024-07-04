@@ -1,10 +1,10 @@
 /********************************************************************************************************
- * @file     boot_general.link
+ * @file    boot_general.link
  *
- * @brief    This is the link file for BLE SDK
+ * @brief   This is the link file for BLE SDK
  *
- * @author	 BLE GROUP
- * @date         11,2022
+ * @author  BLE GROUP
+ * @date    06,2022
  *
  * @par     Copyright (c) 2022, Telink Semiconductor (Shanghai) Co., Ltd. ("TELINK")
  *
@@ -19,14 +19,14 @@
  *          WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  *          See the License for the specific language governing permissions and
  *          limitations under the License.
+ *
  *******************************************************************************************************/
-
  
 ENTRY(_RESET_ENTRY)
 SECTIONS
 {
-	NDS_SAG_LMA_FLASH = 0x20000000 ;
-	. = 0x20000000;	
+	NDS_SAG_LMA_FLASH = (__BOOT_SWITCH_FLASH_ADDR + __FW_OFFSET); /* support boot loader */	
+	. = (__BOOT_SWITCH_FLASH_ADDR + __FW_OFFSET);
 	PROVIDE (BIN_BEGIN = .);
 	.vectors 		: { KEEP(*(.vectors )) }
 	. = 0x00000000;
@@ -42,15 +42,30 @@ SECTIONS
 	.aes_data 	(NOLOAD)	: { KEEP(*(.aes_data )) }
 	PROVIDE (_AES_VMA_END = .);
 	. = ALIGN(8);
+	PROVIDE( __global_pointer$ = . + (4K / 2) );
 	.retention_data : AT( ALIGN(LOADADDR (.retention_reset) + SIZEOF (.retention_reset),8)) 
 		{ KEEP(*(.retention_data )) }
 	PROVIDE (_RETENTION_DATA_VMA_START = ADDR(.retention_data));
 	PROVIDE (_RETENTION_DATA_LMA_START = LOADADDR(.retention_data));
 	PROVIDE (_RETENTION_DATA_VMA_END = .); 
 	
+	. = ALIGN(8);
+	.data	: AT(ALIGN(LOADADDR (.retention_data) + SIZEOF (.retention_data),  ALIGNOF(.data)))
+		{ *(.data .data.* .gnu.linkonce.d.* ) KEEP(*(.gnu.linkonce.d.*personality* )) SORT(CONSTRUCTORS) 
+		  *(.sdata .sdata.* .gnu.linkonce.s.* ) 
+		}
+	PROVIDE (_DATA_VMA_END = .);	
+	PROVIDE (_DATA_VMA_START = ADDR(.data));
+	PROVIDE (_DATA_LMA_START = LOADADDR(.data));
 
 	. = ALIGN(8);
-	.ram_code	: AT( ALIGN(LOADADDR (.retention_data) + SIZEOF (.retention_data),8)) 
+	PROVIDE (_BSS_VMA_START = .);
+	.sbss 	(NOLOAD)	: { *(.dynsbss ) *(.sbss .sbss.* .gnu.linkonce.sb.* ) *(.scommon .scommon.* ) }
+	.bss 	(NOLOAD)	: { *(.dynbss ) *(.bss .bss.* .gnu.linkonce.b.* ) *(COMMON ) . = ALIGN(8); }
+	PROVIDE (_BSS_VMA_END = .);
+	
+	. = ALIGN(8);
+	.ram_code	: AT( ALIGN(LOADADDR (.data) + SIZEOF (.data),8)) 
 	  	{ KEEP(*(.ram_code )) }
 	PROVIDE (_RAMCODE_VMA_END = .);
 	PROVIDE (_RAMCODE_VMA_START = ADDR(.ram_code));
@@ -85,30 +100,46 @@ SECTIONS
 		
 	.exec.itable 	: AT(ALIGN(LOADADDR (.eh_frame) + SIZEOF (.eh_frame), ALIGNOF(.exec.itable)))
 		{ KEEP(*(.exec.itable)) }
+
+	. = ALIGN(ADDR (.iram_bss) + SIZEOF (.iram_bss), 8);
+	.no_ret_data : AT(ALIGN(LOADADDR (.exec.itable) + SIZEOF (.exec.itable),  ALIGNOF(.no_ret_data)))
+		{ KEEP(*(.no_ret_data )) }
+	PROVIDE (_NO_RETENTION_DATA_VMA_START = ADDR(.no_ret_data));
+	PROVIDE (_NO_RETENTION_DATA_LMA_START = LOADADDR(.no_ret_data));
+	PROVIDE (_NO_RETENTION_DATA_VMA_END = .); 
 				
+	. = ALIGN(8);
+	PROVIDE (_NO_RETENTION_BSS_VMA_START = .);
+	.no_ret_bss 	(NOLOAD)	: { KEEP(*(.no_ret_bss )) }
+	PROVIDE (_NO_RETENTION_BSS_VMA_END = .);
+	
 	. = 0x00080000;
-	PROVIDE( __global_pointer$ = . + (4K / 2) );
-	.data	: AT(ALIGN(LOADADDR (.exec.itable) + SIZEOF (.exec.itable),  ALIGNOF(.data)))
-		{ *(.data .data.* .gnu.linkonce.d.* ) KEEP(*(.gnu.linkonce.d.*personality* )) SORT(CONSTRUCTORS) 
-		  *(.sdata .sdata.* .gnu.linkonce.s.* ) 
-		}
-    PROVIDE (_DATA_VMA_END = .);	
-    PROVIDE (_DATA_VMA_START = ADDR(.data));
-	PROVIDE (_DATA_LMA_START = LOADADDR(.data));
-	PROVIDE (BIN_SIZE = LOADADDR(.data) + SIZEOF(.data) - BIN_BEGIN);
+	. = ALIGN(8);
+	.dlm_data	: AT(ALIGN(LOADADDR (.no_ret_data) + SIZEOF (.no_ret_data),  ALIGNOF(.dlm_data)))
+		{ KEEP(*(.dlm_data )) }
+	PROVIDE (_DLM_DATA_VMA_START = ADDR(.dlm_data));
+	PROVIDE (_DLM_DATA_LMA_START = LOADADDR(.dlm_data));
+	PROVIDE (_DLM_DATA_VMA_END = .); 
 	
 	. = ALIGN(8);
-	PROVIDE (_BSS_VMA_START = .);
-	.sbss 	(NOLOAD)	: { *(.dynsbss ) *(.sbss .sbss.* .gnu.linkonce.sb.* ) *(.scommon .scommon.* ) }
-	.bss 	(NOLOAD)	: { *(.dynbss ) *(.bss .bss.* .gnu.linkonce.b.* ) *(COMMON ) . = ALIGN(8); }
-	PROVIDE (_BSS_VMA_END = .);
+	PROVIDE (_DLM_BSS_VMA_START = .);
+	.dlm_bss	(NOLOAD)	: { KEEP(*(.dlm_bss )) }
+	. = ALIGN(4); /* must 4bytes aligned for stack init*/
+	PROVIDE (_DLM_BSS_VMA_END = .); 
+
+	.sdk_version	: AT(LOADADDR (.dlm_data) + SIZEOF (.dlm_data)) /* no need alignof, because no load */
+		{ KEEP(*(.sdk_version )) }
+		
+	PROVIDE (BIN_SIZE = LOADADDR(.sdk_version) + SIZEOF(.sdk_version) - BIN_BEGIN);
 	
 	. = ALIGN(8);
 	/* end is the starting address of the heap, the heap grows upward */
 	_end = .;
 	PROVIDE (end = .);		
-	PROVIDE (_STACK_TOP = 0x00a0000);/*Need to prevent stack overflow*/
+	PROVIDE (_STACK_TOP = 0x00a0000);/*Need to prevent stack overflow, or 0x0020000 + __SPEECH_ENABLE * 0x0080000*/
 	PROVIDE (FLASH_SIZE = 0x0100000);
 }
-
-ASSERT((BIN_SIZE)<= FLASH_SIZE, "BIN FILE OVERFLOW");
+ASSERT((_IRAM_BSS_VMA_END * __PM_DEEPSLEEP_RETENTION_ENABLE) <= (64*1024), "Error: RETENTION RAM OVERFLOW");
+ASSERT((_DLM_BSS_VMA_END) <= (_STACK_TOP - __STACK_INIT_SIZE__), "Error: IRAM OVERFLOW. Please move some _attribute_no_retention_bss_ to _attribute_bss_dlm_");
+ASSERT((_NO_RETENTION_BSS_VMA_END) <= (0x00020000), "Error: DRAM OVERFLOW");
+ASSERT((BIN_SIZE)<= FLASH_SIZE, "Error: BIN FILE OVERFLOW");

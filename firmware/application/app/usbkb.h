@@ -1,10 +1,10 @@
 /********************************************************************************************************
- * @file     usbkb.h
+ * @file    usbkb.h
  *
- * @brief    This is the header file for BLE SDK
+ * @brief   This is the header file for BLE SDK
  *
- * @author	 BLE GROUP
- * @date         2020.06
+ * @author  BLE GROUP
+ * @date    06,2022
  *
  * @par     Copyright (c) 2022, Telink Semiconductor (Shanghai) Co., Ltd. ("TELINK")
  *
@@ -19,8 +19,8 @@
  *          WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  *          See the License for the specific language governing permissions and
  *          limitations under the License.
+ *
  *******************************************************************************************************/
-
 #pragma once
 
 #include <application/usbstd/HIDClassCommon.h>
@@ -51,7 +51,7 @@ extern u8 usb_ff_wptr;
 #define KEYBOARD_REPORT_KEY_MAX     6
 typedef struct {
     u8 Modifier; /**< Keyboard modifier byte, indicating pressed modifier keys (a combination of
-                       *   \c HID_KEYBOARD_MODIFER_* masks).
+                       *   \c HID_KEYBOARD_MODIFIER_* masks).
                        */
     u8 Reserved; /**< Reserved for OEM use, always set to 0. */
     u8 KeyCode[KEYBOARD_REPORT_KEY_MAX]; /**< Key codes of the currently pressed keys. */

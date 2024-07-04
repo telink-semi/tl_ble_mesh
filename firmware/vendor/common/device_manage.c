@@ -1,10 +1,10 @@
 /********************************************************************************************************
- * @file     device_manage.c
+ * @file    device_manage.c
  *
- * @brief    This is the source file for BLE SDK
+ * @brief   This is the source file for BLE SDK
  *
- * @author	 BLE GROUP
- * @date         2020.06
+ * @author  BLE GROUP
+ * @date    06,2022
  *
  * @par     Copyright (c) 2022, Telink Semiconductor (Shanghai) Co., Ltd. ("TELINK")
  *
@@ -19,8 +19,8 @@
  *          WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  *          See the License for the specific language governing permissions and
  *          limitations under the License.
+ *
  *******************************************************************************************************/
-
 #include "tl_common.h"
 #include "drivers.h"
 #include "stack/ble/ble.h"
@@ -69,8 +69,8 @@ _attribute_ble_data_retention_	dev_char_info_t	conn_dev_list[DEVICE_CHAR_INFO_MA
 
 
 
-_attribute_ble_data_retention_	int acl_conn_central_num = 0;   //current ACL Central number in connection state
-_attribute_ble_data_retention_	int acl_conn_periphr_num = 0;   //current ACL Peripheral number in connection state
+_attribute_ble_data_retention_	u8 acl_conn_central_num = 0;   //current ACL Central number in connection state
+_attribute_ble_data_retention_	u8 acl_conn_periphr_num = 0;   //current ACL Peripheral number in connection state
 
 
 

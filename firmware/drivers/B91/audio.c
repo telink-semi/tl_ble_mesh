@@ -1,12 +1,12 @@
 /********************************************************************************************************
- * @file     audio.c
+ * @file    audio.c
  *
- * @brief    This is the source file for BLE SDK
+ * @brief   This is the source file for B91
  *
- * @author	 BLE GROUP
- * @date         11,2022
+ * @author  Driver Group
+ * @date    2019
  *
- * @par     Copyright (c) 2022, Telink Semiconductor (Shanghai) Co., Ltd. ("TELINK")
+ * @par     Copyright (c) 2019, Telink Semiconductor (Shanghai) Co., Ltd. ("TELINK")
  *
  *          Licensed under the Apache License, Version 2.0 (the "License");
  *          you may not use this file except in compliance with the License.
@@ -19,8 +19,8 @@
  *          WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  *          See the License for the specific language governing permissions and
  *          limitations under the License.
+ *
  *******************************************************************************************************/
-
 #include "audio.h"
 #include "clock.h"
 #include "pwm.h"
@@ -33,7 +33,7 @@ unsigned char audio_tx_dma_chn;
 dma_chain_config_t g_audio_tx_dma_list_cfg;
 dma_chain_config_t g_audio_rx_dma_list_cfg;
 
-aduio_i2s_codec_config_t audio_i2s_codec_config=
+audio_i2s_codec_config_t audio_i2s_codec_config=
 {
    .audio_in_mode 			=BIT_16_MONO,
    .audio_out_mode			=BIT_16_MONO_FIFO0,
@@ -41,7 +41,7 @@ aduio_i2s_codec_config_t audio_i2s_codec_config=
    .codec_data_select		=CODEC_BIT_16_DATA,
    .i2s_codec_m_s_mode		=I2S_M_CODEC_S,
    .in_digital_gain			=CODEC_IN_D_GAIN_0_DB,
-   .in_analog_gain     		=CODEC_IN_A_GAIN_0_DB,
+   .in_analog_gain     		=CODEC_IN_A_GAIN_16_DB,	//BLE SDK use: default 16dB
    .out_digital_gain   		=CODEC_OUT_D_GAIN_0_DB,
    .out_analog_gain    		=CODEC_OUT_A_GAIN_0_DB,
    .mic_input_mode_select   =DIFF_ENDED_INPUT,//0 single-ended input, 1 differential input
@@ -182,7 +182,7 @@ void audio_set_output_chn(audio_output_chn_e chn)
  * 	@param[in]  chn_wl: select word  length and audio channel number
  * 	@return     none
  */
-void aduio_set_chn_wl(audio_channel_wl_mode_e chn_wl)
+void audio_set_chn_wl(audio_channel_wl_mode_e chn_wl)
 {
 	switch (chn_wl)
 	{
@@ -268,6 +268,42 @@ void audio_i2s_set_pin(void)
 	audio_i2s_set_pin_mux(I2S_ADC_DAT_PC5);
 	audio_i2s_set_pin_mux(I2S_DAC_LR_PC6);
 	audio_i2s_set_pin_mux(I2S_DAC_DAT_PC7);
+}
+
+/**
+ * @brief      This function serves to set codec active, the bias voltage can only be set after setting the codec active.
+ * @return     none
+ */
+void audio_codec_active(void)
+{
+    audio_set_codec_clk(1, 16); /* from ppl 192/16=12M */
+    audio_clk_en(0, 1);
+    reg_audio_codec_vic_ctr = FLD_AUDIO_CODEC_SLEEP_ANALOG; /* active analog sleep mode */
+    while (!(reg_audio_codec_stat_ctr & FLD_AUDIO_CODEC_PON_ACK)); /* wait codec can be configured */
+    BM_CLR(reg_audio_codec_vic_ctr, FLD_AUDIO_CODEC_SLEEP_ANALOG); /* disable sleep mode */
+}
+
+/**
+ * @brief      This function serves to set amic micbias.
+ * @param[in]  en               - POWER_DOWN or POWER_ON.
+ * @param[in]  micbias_mode     - micbias output mode.
+ * @return     none
+ * @note       The interface audio_codec_active() must be called before the bias voltage can be set.
+ */
+void audio_codec_set_micbias(power_switch_e en, micbias_work_mode_e micbias_mode)
+{
+    if (en)
+    {
+        reg_audio_codec_mic1_ctr= (reg_audio_codec_mic1_ctr & (~(FLD_AUDIO_CODEC_MICBIAS1_SB | FLD_AUDIO_CODEC_MICBIAS1_V))) | MASK_VAL(FLD_AUDIO_CODEC_MICBIAS1_SB, 0,\
+                                    FLD_AUDIO_CODEC_MICBIAS1_V, micbias_mode);
+    }
+    else
+    {
+        reg_audio_codec_mic1_ctr |= FLD_AUDIO_CODEC_MICBIAS1_SB;
+    }
+        /* 0x17 <7>:mic bias voltage select(default 0)   0:micbias voltage = 2.08V, 1:micbias voltage = 1.66V
+                <5>:pd_micbias(default 1)                0:micbias active,          1:micbias power down
+        */
 }
 
 /**
@@ -395,8 +431,9 @@ void audio_set_dmic_pin(dmic_pin_group_e pin_gp)
  /**
   * @brief     This function serves to config  rx_dma channel.
   * @param[in] chn          - dma channel
-  * @param[in] dst_addr     - the dma address of destination
-  * @param[in] data_len     - the length of dma rx size by byte
+  * @param[in] dst_addr     - This parameter is the first address of the received data buffer, which must be 4 bytes aligned, otherwise the program will enter an exception.
+  *                           and the actual buffer size defined by the user needs to be not smaller than the data_len, otherwise there may be an out-of-bounds problem.
+  * @param[in] data_len     - This parameter is used to set the size of the received dma and must be set to a multiple of 4. The maximum value that can be set is 0xFFFFFC.
   * @param[in] head_of_list - the head address of dma llp.
   * @return    none
   */
@@ -416,11 +453,12 @@ void audio_rx_dma_config(dma_chn_e chn,unsigned short *dst_addr,unsigned int dat
 
 /**
  * @brief     This function serves to set rx dma chain transfer
- * @param[in] rx_config - the head of list of llp_pointer.
- * @param[in] llpointer - the next element of llp_pointer.
- * @param[in] dst_addr  -the dma address of destination.
- * @param[in] data_len  -the length of dma size by byte.
- * @return    none
+ * @param[in] config_addr - the head of list of llp_pointer.
+ * @param[in] llpointer   - the next element of llp_pointer.
+ * @param[in] dst_addr    - This parameter is the first address of the received data buffer, which must be 4 bytes aligned, otherwise the program will enter an exception.
+ *                          and the actual buffer size defined by the user needs to be not smaller than the data_len, otherwise there may be an out-of-bounds problem.
+ * @param[in] data_len    - This parameter is used to set the size of the received dma and must be set to a multiple of 4. The maximum value that can be set is 0xFFFFFC.
+ * @return 	  none
  */
 void audio_rx_dma_add_list_element(dma_chain_config_t *config_addr,dma_chain_config_t *llpointer ,unsigned short * dst_addr,unsigned int data_len)
 {
@@ -439,6 +477,7 @@ void audio_rx_dma_add_list_element(dma_chain_config_t *config_addr,dma_chain_con
  * @param[in] data_len     - the length of dma rx size by byte
  * @param[in] head_of_list - the head address of dma llp.
  * @return    none
+ * @note      src_addr : must be aligned by word (4 bytes), otherwise the program will enter an exception
  */
 void audio_tx_dma_config(dma_chn_e chn,unsigned short * src_addr, unsigned int data_len,dma_chain_config_t * head_of_list)
 {
@@ -460,6 +499,7 @@ void audio_tx_dma_config(dma_chn_e chn,unsigned short * src_addr, unsigned int d
  * @param[in] src_addr    - the address of source
  * @param[in] data_len    - the length of dma size by byte.
  * @return    none
+ * @note      src_addr : must be aligned by word (4 bytes), otherwise the program will enter an exception
  */
 void audio_tx_dma_add_list_element(dma_chain_config_t *config_addr,dma_chain_config_t *llpointer ,unsigned short * src_addr,unsigned int data_len)
 {
@@ -480,14 +520,14 @@ void audio_tx_dma_add_list_element(dma_chain_config_t *config_addr,dma_chain_con
  */
 void audio_init(audio_flow_mode_e flow_mode,audio_sample_rate_e rate,audio_channel_wl_mode_e channel_wl)
 {
-	aduio_set_chn_wl(channel_wl);
+	audio_set_chn_wl(channel_wl);
 	audio_set_codec_clk(1,16);//from ppl 192/16=12M
 	audio_mux_config(CODEC_I2S,audio_i2s_codec_config.audio_in_mode,audio_i2s_codec_config.audio_in_mode,audio_i2s_codec_config.audio_out_mode);
 	audio_i2s_config(I2S_I2S_MODE,audio_i2s_codec_config.i2s_data_select,audio_i2s_codec_config.i2s_codec_m_s_mode,&audio_i2s_invert_config);
 	audio_set_i2s_clock(rate,AUDIO_RATE_EQUAL,0);
 	audio_clk_en(1,1);
 	reg_audio_codec_vic_ctr=FLD_AUDIO_CODEC_SLEEP_ANALOG;//active analog sleep mode
-	while(!(reg_audio_codec_stat_ctr&FLD_AUDIO_CODEC_PON_ACK));//wait codec can be configed
+	while(!(reg_audio_codec_stat_ctr&FLD_AUDIO_CODEC_PON_ACK));//wait codec can be configured
 	if(flow_mode<BUF_TO_LINE_OUT)
 	{
 		audio_codec_adc_config(audio_i2s_codec_config.i2s_codec_m_s_mode,(flow_mode%3),rate,audio_i2s_codec_config.codec_data_select,MCU_WREG);
@@ -557,7 +597,7 @@ void audio_i2c_init(codec_type_e codec_type, i2c_sda_pin_e sda_pin,i2c_scl_pin_e
  */
 void audio_init_i2c(audio_flow_mode_e flow_mode,audio_sample_rate_e rate,audio_channel_wl_mode_e channel_wl)
 {
-	aduio_set_chn_wl(channel_wl);
+	audio_set_chn_wl(channel_wl);
 	audio_set_codec_clk(1,16);////from ppl 192/16=12M
 	audio_mux_config(CODEC_I2S,audio_i2s_codec_config.audio_in_mode,audio_i2s_codec_config.audio_in_mode,audio_i2s_codec_config.audio_out_mode);
 	audio_i2s_config(I2S_I2S_MODE,audio_i2s_codec_config.i2s_data_select,audio_i2s_codec_config.i2s_codec_m_s_mode,&audio_i2s_invert_config);
@@ -565,7 +605,7 @@ void audio_init_i2c(audio_flow_mode_e flow_mode,audio_sample_rate_e rate,audio_c
 	audio_clk_en(1,1);
 	audio_i2c_init(INNER_CODEC,0,0);
 	audio_i2c_codec_write(addr_audio_codec_vic_ctr,FLD_AUDIO_CODEC_SLEEP_ANALOG);//active analog sleep mode
-	while(!(audio_i2c_codec_read(addr_audio_codec_stat_ctr)&FLD_AUDIO_CODEC_PON_ACK));//wait codec can be configed
+	while(!(audio_i2c_codec_read(addr_audio_codec_stat_ctr)&FLD_AUDIO_CODEC_PON_ACK));//wait codec can be configured
 	if(flow_mode<BUF_TO_LINE_OUT)
 	{
 		audio_codec_adc_config(audio_i2s_codec_config.i2s_codec_m_s_mode,(flow_mode%3),rate,audio_i2s_codec_config.codec_data_select,I2C_WREG);
@@ -867,7 +907,7 @@ void audio_i2s_config(i2s_mode_select_e i2s_format,i2s_data_select_e wl,  i2s_co
 		   FLD_AUDIO_I2S_ADC_DCI_MS, m_s, \
 		   FLD_AUDIO_I2S_DAC_DCI_MS, m_s);
 }
-aduio_i2s_clk_config_t   aduio_i2s_8k_config=
+audio_i2s_clk_config_t   audio_i2s_8k_config=
 {
 	.i2s_clk_step=1,        //set i2s clk step
 	.i2s_clk_mode=8,		//set i2s clk mode,set i2s clk=192M*(1/8)= 24M
@@ -876,7 +916,7 @@ aduio_i2s_clk_config_t   aduio_i2s_8k_config=
 	.i2s_lrclk_dac_div=125, //dac sample rate =1M/125 = 8k
 };
 
-aduio_i2s_clk_config_t   aduio_i2s_16k_config=
+audio_i2s_clk_config_t   audio_i2s_16k_config=
 {
 	.i2s_clk_step=1,        //set i2s clk step
 	.i2s_clk_mode=8,        //set i2s clk mode,set i2s clk=192M*(1/8)= 24M
@@ -885,7 +925,18 @@ aduio_i2s_clk_config_t   aduio_i2s_16k_config=
 	.i2s_lrclk_dac_div=125, //dac sample rate =2M/125 = 16k
 };
 
-aduio_i2s_clk_config_t   aduio_i2s_32k_config=
+audio_i2s_clk_config_t   audio_i2s_24k_config=
+{
+	.i2s_clk_step=1,        //set i2s clk step
+	.i2s_clk_mode=125,      //set i2s clk mode,set i2s clk=192M*(1/125)= 1.536 M
+	.i2s_bclk_div=0,        //1.536 M/(1) = 1.536M bclk
+	.i2s_lrclk_adc_div=64,  //adc sample rate =1.536M/64 = 24k
+	.i2s_lrclk_dac_div=64,  //dac sample rate =1.536M/64 = 24k
+};
+
+
+
+audio_i2s_clk_config_t   audio_i2s_32k_config=
 {
 	.i2s_clk_step=1,        //set i2s clk step
 	.i2s_clk_mode=8,        //set i2s clk mode,set i2s clk=192M*(1/8)= 24M
@@ -894,7 +945,7 @@ aduio_i2s_clk_config_t   aduio_i2s_32k_config=
 	.i2s_lrclk_dac_div=125, //dac sample rate =4M/125 = 32k
 };
 
-aduio_i2s_clk_config_t   aduio_i2s_192k_config=
+audio_i2s_clk_config_t   audio_i2s_192k_config=
 {
 	.i2s_clk_step=8,        //set i2s clk step
 	.i2s_clk_mode=125,      //set i2s clk mode,i2s clk=192M*(8/125)= 12.288M
@@ -902,7 +953,7 @@ aduio_i2s_clk_config_t   aduio_i2s_192k_config=
 	.i2s_lrclk_adc_div=32, //adc sample rate =6.144M/32 =192k
 	.i2s_lrclk_dac_div=32, //dac sample rate =6.144M/32 =192k
 };
-aduio_i2s_clk_config_t   aduio_i2s_adc_16k_dac_48k_config=
+audio_i2s_clk_config_t   audio_i2s_adc_16k_dac_48k_config=
 {
 	.i2s_clk_step=2,        //set i2s clk step
 	.i2s_clk_mode=125,      //set i2s clk mode,i2s clk=192M*(2/125)= 3.072 M
@@ -911,7 +962,7 @@ aduio_i2s_clk_config_t   aduio_i2s_adc_16k_dac_48k_config=
 	.i2s_lrclk_dac_div=64,  //dac sample rate =3.072M/64  = 48k
 };
 
-aduio_i2s_clk_config_t   aduio_i2s_48k_config [AUDIO_MATCH_SIZE]=
+audio_i2s_clk_config_t   audio_i2s_48k_config [AUDIO_MATCH_SIZE]=
 {
 	{//48000
 		.i2s_clk_step=2,
@@ -954,7 +1005,7 @@ aduio_i2s_clk_config_t   aduio_i2s_48k_config [AUDIO_MATCH_SIZE]=
 	},
 };
 
-aduio_i2s_clk_config_t   aduio_i2s_44k1_config [AUDIO_MATCH_SIZE]=
+audio_i2s_clk_config_t   audio_i2s_44k1_config [AUDIO_MATCH_SIZE]=
 {
 	{//44099.9
 		.i2s_clk_step=8,
@@ -1008,27 +1059,31 @@ _attribute_ram_code_sec_noinline_ void  audio_set_i2s_clock (audio_sample_rate_e
 {
 	reg_tx_wptr=0xffff;//enable tx_rptr
 	unsigned short  tx_rptr_old;
-	aduio_i2s_clk_config_t * clk_config_ptr=0;
+	audio_i2s_clk_config_t * clk_config_ptr=0;
 	switch(audio_rate)
 	{
 		case AUDIO_8K :
-			clk_config_ptr=&aduio_i2s_8k_config;
+			clk_config_ptr=&audio_i2s_8k_config;
 		break;
 
 		case AUDIO_16K:
-			clk_config_ptr=&aduio_i2s_16k_config;
+			clk_config_ptr=&audio_i2s_16k_config;
+		break;
+
+		case AUDIO_24K:
+		    clk_config_ptr=&audio_i2s_24k_config;
 		break;
 
 		case AUDIO_32K:
-			clk_config_ptr=&aduio_i2s_32k_config;
+			clk_config_ptr=&audio_i2s_32k_config;
 		break;
 
 		case AUDIO_192K:
-			clk_config_ptr=&aduio_i2s_192k_config;
+			clk_config_ptr=&audio_i2s_192k_config;
 		break;
 
 		case AUDIO_ADC_16K_DAC_48K:
-			clk_config_ptr=&aduio_i2s_adc_16k_dac_48k_config;
+			clk_config_ptr=&audio_i2s_adc_16k_dac_48k_config;
 		break;
 
 		case AUDIO_48K:
@@ -1037,7 +1092,7 @@ _attribute_ram_code_sec_noinline_ void  audio_set_i2s_clock (audio_sample_rate_e
 				tx_rptr_old = reg_tx_rptr;
 				while(tx_rptr_old==reg_tx_rptr);
 			}
-			clk_config_ptr=&aduio_i2s_48k_config[match];
+			clk_config_ptr=&audio_i2s_48k_config[match];
 
 		break;
 
@@ -1047,7 +1102,7 @@ _attribute_ram_code_sec_noinline_ void  audio_set_i2s_clock (audio_sample_rate_e
 			tx_rptr_old = reg_tx_rptr;
 			while(tx_rptr_old==reg_tx_rptr);
 		}
-			clk_config_ptr=&aduio_i2s_44k1_config[match];
+			clk_config_ptr=&audio_i2s_44k1_config[match];
 		break;
 
 		default:
@@ -1061,11 +1116,12 @@ _attribute_ram_code_sec_noinline_ void  audio_set_i2s_clock (audio_sample_rate_e
 
 
 /**
- * @brief  This function serves to set audio rx dma chain transfer.
+ * @brief     This function serves to set audio rx dma chain transfer.
  * @param[in] chn       -  dma channel
- * @param[in] in_buff   - the pointer of rx_buff.
- * @param[in] buff_size - the size of rx_buff.
- * @return    none
+ * @param[in] in_buff     - This parameter is the first address of the received data buffer, which must be 4 bytes aligned, otherwise the program will enter an exception.
+ *                          and the actual buffer size defined by the user needs to be not smaller than the buff_size, otherwise there may be an out-of-bounds problem.
+ * @param[in] buff_size   - This parameter is used to set the size of the received dma and must be set to a multiple of 4. The maximum value that can be set is 0xFFFFFC.
+ * @return 	  none
  */
  void audio_rx_dma_chain_init (dma_chn_e chn,unsigned short * in_buff,unsigned int buff_size )
 {
@@ -1080,6 +1136,7 @@ _attribute_ram_code_sec_noinline_ void  audio_set_i2s_clock (audio_sample_rate_e
   * @param[in] out_buff  - the pointer of tx_buff.
   * @param[in] buff_size - the size of tx_buff.
   * @return    none
+  * @note      out_buff : must be aligned by word (4 bytes), otherwise the program will enter an exception
   */
 void audio_tx_dma_chain_init (dma_chn_e chn,unsigned short * out_buff,unsigned int buff_size)
 {
@@ -1156,7 +1213,7 @@ void audio_i2s_init(pwm_pin_e pwm0_pin, i2c_sda_pin_e sda_pin,i2c_scl_pin_e scl_
 	pwm_set(pwm0_pin);
 	audio_i2s_set_pin();
 	audio_i2c_init(EXT_CODEC,sda_pin,scl_pin);
-	aduio_set_chn_wl(MONO_BIT_16);
+	audio_set_chn_wl(MONO_BIT_16);
 	audio_mux_config(IO_I2S,BIT_16_MONO,BIT_16_MONO,BIT_16_MONO_FIFO0);
 	audio_i2s_config(I2S_I2S_MODE,I2S_BIT_16_DATA,I2S_M_CODEC_S,&audio_i2s_invert_config);
 	audio_set_i2s_clock(AUDIO_32K,AUDIO_RATE_EQUAL,0);

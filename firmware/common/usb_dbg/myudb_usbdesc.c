@@ -1,10 +1,10 @@
 /********************************************************************************************************
- * @file     myudb_usbdesc.c
+ * @file    myudb_usbdesc.c
  *
- * @brief    This is the source file for BLE SDK
+ * @brief   This is the source file for BLE SDK
  *
- * @author	 BLE GROUP
- * @date         11,2022
+ * @author  BLE GROUP
+ * @date    06,2022
  *
  * @par     Copyright (c) 2022, Telink Semiconductor (Shanghai) Co., Ltd. ("TELINK")
  *
@@ -19,8 +19,8 @@
  *          WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  *          See the License for the specific language governing permissions and
  *          limitations under the License.
+ *
  *******************************************************************************************************/
-
 #if(1)
 
 #include "drivers.h"
@@ -138,26 +138,26 @@ static const MYUDB_USB_Descriptor_Configuration_t
 		};
 
 u8* myudb_usbdesc_get_language(void) {
-	return (u8*) (&language_desc);
+	return (u8*)(size_t)(&language_desc);
 }
 
 u8* myudb_usbdesc_get_vendor(void) {
-	return (u8*) (&vendor_desc);
+	return (u8*)(size_t)(&vendor_desc);
 }
 
 u8* myudb_usbdesc_get_product(void) {
-	return (u8*) (&product_desc);
+	return (u8*)(size_t)(&product_desc);
 }
 u8* myudb_usbdesc_get_serial(void) {
-	return (u8*) (&serial_desc);
+	return (u8*)(size_t)(&serial_desc);
 }
 
 u8* myudb_usbdesc_get_device(void) {
-	return (u8*) (&device_desc);
+	return (u8*)(u32) (&device_desc);
 }
 
 u8* myudb_usbdesc_get_configuration(void) {
-	return (u8*) (&configuration_desc);
+	return (u8*)(u32) (&configuration_desc);
 }
 
 #endif

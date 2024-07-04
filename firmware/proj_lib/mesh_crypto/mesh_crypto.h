@@ -24,9 +24,7 @@
  *******************************************************************************************************/
 #ifndef BLE_MESH_CRYPTO_H
 #define BLE_MESH_CRYPTO_H
-#if !__TLSR_RISCV_EN__
-#include "proj_lib/ble/ll/ll.h"
-#endif
+
 //#include <memory.h>
 
 int test_mesh_sec_func ();
@@ -65,7 +63,7 @@ int	mesh_sec_msg_obfuscation (unsigned char key[16], unsigned char iv[4], unsign
 int  mesh_sec_msg_enc_nw(u8 *nw, u8 len_lt, u8 swap_type_lt, u8 sec_type, int fri_key_idx, u8 len_nw, u8 adv_type,int nonce_type, u8 nk_array_idx, bool4 retransmit_rx);
 int  mesh_sec_msg_enc_nw_rf_buf(u8 *nw, u8 len_lt, u8 sec_type, int fri_key_idx, int nonce_type, u8 nk_array_idx, bool4 retransmit_rx);
 int  mesh_sec_msg_enc_apl(u8 *mat, u8 *bear, int mic_length);
-int  mesh_sec_msg_dec_nw(u8 *nw, int len_dec_nw_int, u8 nid, u8 nonce_type, int src_type);
+int  mesh_sec_msg_dec_nw(u8 *nw, int len_dec_nw_int, u8 nid, u8 nonce_type, int src_type, int only_check_cache_flag);
 int  mesh_sec_msg_dec_apl(u8 *ac, u16 len_ut, const u8 *nw_little, const u8 *ac_backup);
 u8 mesh_sec_get_aid(u8 *key);
 int mesh_sec_dev_key (unsigned char dev_key[16], unsigned char *salt, unsigned char ecdh[32]);
@@ -91,7 +89,7 @@ void endianness_swap_u48(u8 *data);
 void endianness_swap_u64(u8 *data);
 void endianness_swap_u128(u8 *data);
 void endianness_swap(u8 *nw, u8 swap_type);
-void endianness_swap_ut(u8 *nw, u8 *par, u32 len);
+void endianness_swap_ut_ctl(u8 *nw, u8 *par, u32 len_ac/*len_ut*/, int filter_cfg); // len_ut = len_ac for control message.
 void endianness_swap_fri_sec_par(u8 *fri_sec_par);
 void mesh_swap_nw_lt(u8 *nw, u8 swap_type_lt);
 int test_proxy_adv_with_node_identity();
@@ -119,10 +117,11 @@ int mesh_sec_prov_session_key_hmac(unsigned char sk[16], unsigned char* sn, unsi
 #define NONCE_TYPE_PROXY        0x03
 #define NONCE_TYPE_SOLICITATION	0x04
 
-enum{
+enum rx_errno_e{
     ERR_NO_NW_DEC_ERR               = 1,    // must 1 for decryption error
     ERR_NO_NW_DEC_ADR_INVALID       = 2,
     ERR_NO_NW_DEC_CACHE_OLD         = 3,
+    // ERR_NO_NW_DEC_WRONG_KEY         = 4,
 };
 
 

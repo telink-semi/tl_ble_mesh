@@ -1,10 +1,10 @@
 /********************************************************************************************************
- * @file     hci_dfu.c
+ * @file    hci_dfu.c
  *
- * @brief    This is the source file for BLE SDK
+ * @brief   This is the source file for BLE SDK
  *
- * @author	 BLE GROUP
- * @date         11,2022
+ * @author  BLE GROUP
+ * @date    06,2022
  *
  * @par     Copyright (c) 2022, Telink Semiconductor (Shanghai) Co., Ltd. ("TELINK")
  *
@@ -19,8 +19,8 @@
  *          WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  *          See the License for the specific language governing permissions and
  *          limitations under the License.
+ *
  *******************************************************************************************************/
-
 #include "tl_common.h"
 #include "drivers.h"
 #include "stack/ble/ble.h"
@@ -60,7 +60,7 @@ void DFU_StartDfuCmdHandler(u8 *pParam, u32 len)
 	BSTREAM_TO_UINT32(fwSize, p);
 
 	if(dfuCb.status == DFU_STA_START){
-		Hci_SendCmdCmplStatusEvt(opcode, HCI_ERR_DFU_ENABLEED);
+		Hci_SendCmdCmplStatusEvt(opcode, HCI_ERR_DFU_ENABLED);
 		return;
 	}
 
@@ -148,12 +148,12 @@ void DFU_EndDfuCmdHandler(u8 *pParam, u32 len)
 		}
 		else{
 			u8 bootFlag = 0x4b;
-			u32 baswAddr = dfuCb.nextFwAddrStart;
+			u32 baseAddr = dfuCb.nextFwAddrStart;
 			FLASH_WritePage(dfuCb.nextFwAddrStart + DFU_FW_FLAG_OFFSET, &bootFlag, 1);
 
 			bootFlag = 0x00;
-			baswAddr = dfuCb.nextFwAddrStart==0 ? dfuCb.newFwAddrStart:0;
-			FLASH_WritePage(baswAddr + DFU_FW_FLAG_OFFSET, &bootFlag, 1);
+			baseAddr = dfuCb.nextFwAddrStart==0 ? dfuCb.newFwAddrStart:0;
+			FLASH_WritePage(baseAddr + DFU_FW_FLAG_OFFSET, &bootFlag, 1);
 
 			Hci_SendCmdCmplStatusEvt(opcode, HCI_SUCCESS);
 
@@ -264,7 +264,7 @@ void DFU_CmdHandler(u8 *pHciTrPkt, u32 len)
 		DFU_TRACK_INFO("Rx HCI_End_Dfu_Cmd...\n");
 		DFU_EndDfuCmdHandler(pPkt, paramLen);
 		break;
-#if MI_CONTROLER_EN
+#if MI_CONTROLLER_EN
 	case HCI_OPCODE_VS_SET_BD_ADDR:
 	{
 		if(paramLen != 6){
@@ -294,7 +294,7 @@ void DFU_CmdHandler(u8 *pHciTrPkt, u32 len)
 			return;
 		}
 
-		blc_ll_setDefaultTxPowerLevel(txPowerTbl[power]);
+		rf_set_power_level_index(txPowerTbl[power]);
 		Hci_SendCmdCmplStatusEvt(opcode, HCI_SUCCESS);
 		break;
 	}
@@ -347,7 +347,7 @@ int DFU_Handler(u8 *p, u32 len)
 
 	BSTREAM_TO_UINT16(opcode, pPkt);
 
-#if MI_CONTROLER_EN
+#if MI_CONTROLLER_EN
 	if(HCI_OGF_VS == HCI_OGF(opcode) || DFU_isEnable())
 	{
 		DFU_CmdHandler(p, len);
@@ -422,8 +422,7 @@ void DFU_Init(void)
 		dfuCb.nextFwAddrStart = 0;
 	}
 #else
-	extern unsigned int	ota_program_offset;//from ota_server.c
-	dfuCb.nextFwAddrStart = ota_program_offset;
+	dfuCb.nextFwAddrStart = blc_ota_getNextFirmwareStartAddress();
 #endif
 	//dfuCb.timer     = 0;
 	//dfuCb.status    = 0;

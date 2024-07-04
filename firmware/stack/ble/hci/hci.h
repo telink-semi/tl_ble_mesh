@@ -1,10 +1,10 @@
 /********************************************************************************************************
- * @file     hci.h
+ * @file    hci.h
  *
- * @brief    This is the header file for BLE SDK
+ * @brief   This is the header file for BLE SDK
  *
- * @author	 BLE GROUP
- * @date         2020.06
+ * @author  BLE GROUP
+ * @date    06,2022
  *
  * @par     Copyright (c) 2022, Telink Semiconductor (Shanghai) Co., Ltd. ("TELINK")
  *
@@ -19,8 +19,8 @@
  *          WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  *          See the License for the specific language governing permissions and
  *          limitations under the License.
+ *
  *******************************************************************************************************/
-
 #ifndef _HCI_H_
 #define _HCI_H_
 
@@ -83,40 +83,40 @@ typedef enum{
 	HCI_TYPE_EVENT  	= 0x04,
 	HCI_TYPE_ISO_DATA 	= 0x05,  //core_5.2
 	//-------- mesh // BLE_SRC_TELINK_MESH_EN
-	HCI_RSP_USER_START 			= 0x10,
-	HCI_RSP_USER 				= HCI_RSP_USER_START,	// line feeds
-	HCI_RSP_USER_END 			= 0x2F,
-	TSCRIPT_MESH_TX				= 0x30,
+	HCI_RSP_USER_START			= 0x10,
+	HCI_RSP_USER				= HCI_RSP_USER_START,	// line feeds
+	HCI_RSP_USER_END			= 0x2F,
+	TSCRIPT_MESH_TX 			= 0x30,
 	TSCRIPT_PROVISION_SERVICE	= 0x31,
 	TSCRIPT_PROXY_SERVICE		= 0x32,
 	TSCRIPT_END 				= 0x36,
-	HCI_LOG 					= 0x3A,	// ":"
-	DONGLE_REPORT_SPP_DATA 		= 0x55,
+	HCI_LOG 					= 0x3A, // ":"
+	DONGLE_REPORT_SPP_DATA		= 0x55,
 	DONGLE_REPORT_PROVISION_UUID= 0x56,
 	DONGLE_REPORT_PROXY_UUID	= 0x57,
 	DONGLE_REPORT_ATT_MTU		= 0x58,
-    DONGLE_REPORT_ONLINE_ST_UUID= 0x59,
-    DONGLE_REPORT_ONLINE_ST_DATA= 0x5a,
-    DONGLE_REPROT_READ_RSP		= 0x5b,
-    MESH_CMD_RSP 				= 0x70,
-    MESH_ADV_PAYLOAD 			= 0x71,
-    MESH_PROV 					= 0x72,	// provision parmeters
-	MESH_ADV_BEAR_GATT 			= 0x73,
+	DONGLE_REPORT_ONLINE_ST_UUID= 0x59,
+	DONGLE_REPORT_ONLINE_ST_DATA= 0x5a,
+	DONGLE_REPROT_READ_RSP		= 0x5b,
+	MESH_CMD_RSP				= 0x70,
+	MESH_ADV_PAYLOAD			= 0x71,
+	MESH_PROV					= 0x72, // provision parmeters
+	MESH_ADV_BEAR_GATT			= 0x73,
 	MESH_ADV_BLE_ST 			= 0x74,
-	MESH_MONITOR_DATA 			= 0x75,
-	MESH_ADV_ONE_PKT_COMPLETED 	= 0x76,
-	MESH_CONNECTION_STS_REPROT 	= 0x77,
+	MESH_MONITOR_DATA			= 0x75,
+	MESH_ADV_ONE_PKT_COMPLETED	= 0x76,
+	MESH_CONNECTION_STS_REPROT	= 0x77,
 	MESH_TX_CMD_RUN_STATUS		= 0x78,
-	MESH_GATT_OTA_STATUS 	    = 0x79,
-	// can't use 0x7f,  because of HCI_TYPE_TLK_MODULE
+	MESH_GATT_OTA_STATUS		= 0x79,
+	// can't use 0x7f,	because of HCI_TYPE_TLK_MODULE
 
 	//-------- mesh cmd receive
 	TSCRIPT_MESH_RX 			= 0x80,
-	TSCRIPT_MESH_RX_NW 			= 0x90,
+	TSCRIPT_MESH_RX_NW			= 0x90,
 	
 	TSCRIPT_GATEWAY_DIR_RSP 	= 0x91,
-	HCI_GATEWAY_CMD_SAR_MSG		= 0x92, 
-	TSCRIPT_CMD_VC_DEBUG 		= 0xfa,
+	HCI_GATEWAY_CMD_SAR_MSG 	= 0x92, 
+	TSCRIPT_CMD_VC_DEBUG		= 0xfa,
 	// can't use 0xff,	because of HCI_TYPE_TLK_MODULE
 } hci_type_t;
 
@@ -212,7 +212,7 @@ extern u32		hci_le_eventMask_2;
 extern hci_event_handler_t		blc_hci_event_handler;
 extern hci_data_handler_t		blc_hci_data_handler;
 extern hci_iso_data_handle_t	blt_hci_iso_data_handler;
-extern hci_event_handler_t		blc_audio_event_handler;
+
 extern hci_fifo_t				bltHci_rxfifo;
 extern hci_fifo_t			    bltHci_txfifo;
 
@@ -322,12 +322,7 @@ ble_sts_t 	blc_hci_le_setEventMask_2_cmd(u32 evtMask_2);   //eventMask: LE event
  */
 void 		blc_hci_registerControllerEventHandler (hci_event_handler_t  handler);
 
-/**
- * @brief      This function is used to register the controller and host event callback for audio.
- * @param[in]  handler - hci_event_handler_t
- * @return     none.
- */
-void        blc_audio_registerEventHandler (hci_event_handler_t handler);
+
 /**
  * @brief      This function is used to register ACL data transmission to Host for processing callback function.
  * @param[in]  handler - hci_data_handler_t

@@ -23,17 +23,7 @@
  *
  *******************************************************************************************************/
 #include "tl_common.h"
-#ifndef WIN32
-#if __TLSR_RISCV_EN__
-#include "watchdog.h"
-#else
-#include "proj/mcu/watchdog_i.h"
-#endif
-#endif 
-#if (!__TLSR_RISCV_EN__)
-#include "proj_lib/ble/ll/ll.h"
 #include "proj_lib/ble/blt_config.h"
-#endif
 #include "vendor/common/user_config.h"
 #include "app_health.h"
 #include "proj_lib/sig_mesh/app_mesh.h"

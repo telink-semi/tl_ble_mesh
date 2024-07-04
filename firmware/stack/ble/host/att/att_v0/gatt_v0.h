@@ -1,10 +1,10 @@
 /********************************************************************************************************
- * @file     gatt_v0.h
+ * @file    gatt_v0.h
  *
- * @brief    This is the header file for BLE SDK
+ * @brief   This is the header file for BLE SDK
  *
- * @author	 BLE GROUP
- * @date         11,2022
+ * @author  BLE GROUP
+ * @date    06,2022
  *
  * @par     Copyright (c) 2022, Telink Semiconductor (Shanghai) Co., Ltd. ("TELINK")
  *
@@ -19,8 +19,8 @@
  *          WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  *          See the License for the specific language governing permissions and
  *          limitations under the License.
+ *
  *******************************************************************************************************/
-
 #ifndef GATT_H_
 #define GATT_H_
 
@@ -172,7 +172,7 @@ ble_sts_t	blc_gatt_pushErrResponse(u16 connHandle, u8 reqOpcode, u16 attHdlInErr
  * @param[in]   connHandle         - connection handle.
  * @return      ble_sts_t.
  */
-ble_sts_t blc_gatt_pushAttHdlValueCfm(u16 connHandle);
+ble_sts_t blc_gatt_pushHandleValueConfirm(u16 connHandle);
 
 
 #endif /* GATT_H_ */

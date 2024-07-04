@@ -1,10 +1,10 @@
 /********************************************************************************************************
- * @file     app_ui.c
+ * @file    app_ui.c
  *
- * @brief    This is the source file for BLE SDK
+ * @brief   This is the source file for BLE SDK
  *
- * @author	 BLE GROUP
- * @date         11,2022
+ * @author  BLE GROUP
+ * @date    06,2022
  *
  * @par     Copyright (c) 2022, Telink Semiconductor (Shanghai) Co., Ltd. ("TELINK")
  *
@@ -19,260 +19,254 @@
  *          WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  *          See the License for the specific language governing permissions and
  *          limitations under the License.
+ *
  *******************************************************************************************************/
-
-#include <vendor/mesh/app.h>
-#include <vendor/mesh/app_att.h>
-#include <vendor/mesh/app_ui.h>
 #include "tl_common.h"
 #include "drivers.h"
+#if(MCU_CORE_TYPE == MCU_CORE_8278)
+#include "stack/ble_8278/ble.h"
+#else
 #include "stack/ble/ble.h"
-
-#include "application/keyboard/keyboard.h"
-#include "application/usbstd/usbkeycode.h"
-
-
-
-int	central_pairing_enable = 0;
-int central_unpair_enable = 0;
-
-int central_disconnect_connhandle;   //mark the central connection which is in un_pair disconnection flow
-
-
-
-
-
+#endif
+#include "app.h"
+#include "app_ui.h"
+#include "proj_lib/sig_mesh/app_mesh.h"
+#include "vendor/common/subnet_bridge.h"
+#include "vendor/common/blt_soft_timer.h"
 #if (UI_KEYBOARD_ENABLE)
+static int	long_pressed;
+u8   key_released =1;
 
-_attribute_ble_data_retention_	int 	key_not_released;
-
-
-#define CONSUMER_KEY   	   			1
-#define KEYBOARD_KEY   	   			2
-#define PAIR_UNPAIR_KEY   	   		3
-
-_attribute_ble_data_retention_	u8 		key_type;
+#define	KEY_SCAN_WAKEUP_INTERVAL		(40 * 1000)	// unit:us. wakeup interval to scan key.
+#define GPIO_WAKEUP_KEYPROC_CNT			3
 
 /**
- * @brief   Check changed key value.
- * @param   none.
- * @return  none.
+ * @brief       This function server to wakeup to scan key when key press.
+ * @return      0: keep same soft timer. -1: delete soft timer.
+ * @note        
  */
-void key_change_proc(void)
+int soft_timer_key_scan()
 {
-
-	u8 key0 = kb_event.keycode[0];
-//	u8 key_buf[8] = {0,0,0,0,0,0,0,0};
-
-	key_not_released = 1;
-	if (kb_event.cnt == 2)   //two key press
-	{
-
-	}
-	else if(kb_event.cnt == 1)
-	{
-		if(key0 >= CR_VOL_UP )  //volume up/down
-		{
-			key_type = CONSUMER_KEY;
-			__UNUSED u16 consumer_key;
-			if(key0 == CR_VOL_UP){  	//volume up
-				consumer_key = MKEY_VOL_UP;
-				tlkapi_send_string_data(APP_DUMP_EN, "UI send Vol+", 0, 0);
-			}
-			else if(key0 == CR_VOL_DN){ //volume down
-				consumer_key = MKEY_VOL_DN;
-				tlkapi_send_string_data(APP_DUMP_EN, "UI send Vol-", 0, 0);
-			}
-
-
-			/*Here is just Telink Demonstration effect. Cause the demo board has limited key to use, when Vol+/Vol- key pressed, we
-			send media key "Vol+" or "Vol-" to central for all peripheral role in connection.
-			For users, you should known that this is not a good method, you should manage your device and GATT data transfer
-			according to  conn_dev_list[]
-			 * */
-			for(int i=ACL_CENTRAL_MAX_NUM; i < (ACL_CENTRAL_MAX_NUM + ACL_PERIPHR_MAX_NUM); i++){ //peripheral index is from "ACL_CENTRAL_MAX_NUM" to "ACL_CENTRAL_MAX_NUM + ACL_PERIPHR_MAX_NUM - 1"
-				if(conn_dev_list[i].conn_state){
-//					blc_gatt_pushHandleValueNotify (conn_dev_list[i].conn_handle, HID_CONSUME_REPORT_INPUT_DP_H, (u8 *)&consumer_key, 2);
-				}
-			}
-		}
-		else{
-			key_type = PAIR_UNPAIR_KEY;
-
-			if(key0 == BTN_PAIR)   //Manual pair triggered by Key Press
-			{
-				central_pairing_enable = 1;
-				tlkapi_send_string_data(APP_DUMP_EN, "UI PAIR begin", 0, 0);
-			}
-			else if(key0 == BTN_UNPAIR) //Manual un_pair triggered by Key Press
-			{
-				/*Here is just Telink Demonstration effect. Cause the demo board has limited key to use, only one "un_pair" key is
-				 available. When "un_pair" key pressed, we will choose and un_pair one device in connection state */
-				if(acl_conn_central_num){ //at least 1 central connection exist
-
-					if(!central_disconnect_connhandle){  //if one central un_pair disconnection flow not finish, here new un_pair not accepted
-
-						/* choose one central connection to disconnect */
-						for(int i=0; i < ACL_CENTRAL_MAX_NUM; i++){ //peripheral index is from 0 to "ACL_CENTRAL_MAX_NUM - 1"
-							if(conn_dev_list[i].conn_state){
-								central_unpair_enable = conn_dev_list[i].conn_handle;  //mark connHandle on central_unpair_enable
-								tlkapi_send_string_data(APP_DUMP_EN, "UI UNPAIR", &central_unpair_enable, 2);
-								break;
-							}
-						}
-					}
-				}
-			}
-
-		}
-
-	}
-	else   //kb_event.cnt == 0,  key release
-	{
-		key_not_released = 0;
-		if(key_type == CONSUMER_KEY)
-		{
-			//u16 consumer_key = 0;
-			//Here is just Telink Demonstration effect. for all peripheral in connection, send release for previous "Vol+" or "Vol-" to central
-			for(int i=ACL_CENTRAL_MAX_NUM; i < (ACL_CENTRAL_MAX_NUM + ACL_PERIPHR_MAX_NUM); i++){ //peripheral index is from "ACL_CENTRAL_MAX_NUM" to "ACL_CENTRAL_MAX_NUM + ACL_PERIPHR_MAX_NUM - 1"
-				if(conn_dev_list[i].conn_state){
-//					blc_gatt_pushHandleValueNotify ( conn_dev_list[i].conn_handle, HID_CONSUME_REPORT_INPUT_DP_H, (u8 *)&consumer_key, 2);
-				}
-			}
-		}
-		else if(key_type == KEYBOARD_KEY)
-		{
-
-		}
-		else if(key_type == PAIR_UNPAIR_KEY){
-			if(central_pairing_enable){
-				central_pairing_enable = 0;
-				tlkapi_send_string_data(APP_DUMP_EN, "UI PAIR end", 0, 0);
-			}
-
-			if(central_unpair_enable){
-				central_unpair_enable = 0;
-			}
-		}
-	}
-
-
+	return key_released ? -1 : 0;
 }
 
+/**
+ * @brief       This function servers to quickly scan keyboard after wakeup and hold this data to the cache.
+ * @param[in]   none 
+ * @return      none
+ * @note        
+ */
+void deep_wakeup_proc(void)
+{
+#if(DEEPBACK_FAST_KEYSCAN_ENABLE)
+	if(kb_scan_key (KB_NUMLOCK_STATUS_POWERON, 1)){
+		deepback_key_state = DEEPBACK_KEY_CACHE;
+		memcpy(&kb_event_cache,&kb_event,sizeof(kb_event));
+	}
+#endif
 
-
-_attribute_ble_data_retention_		static u32 keyScanTick = 0;
+	return;
+}
 
 /**
- * @brief      keyboard task handler
- * @param[in]  e    - event type
- * @param[in]  p    - Pointer point to event parameter.
- * @param[in]  n    - the length of event parameter.
- * @return     none.
+ * @brief       This function servers to process keyboard event from deep_wakeup_proc().
+ * @param[io]   *det_key - detect key flag. 0: no key detect, use deepback cache if exist. other: key had been detected.
+ * @return      none
+ * @note        
  */
-void proc_keyboard (u8 e, u8 *p, int n)
+void deepback_pre_proc(int *det_key)
 {
-	if(clock_time_exceed(keyScanTick, 10 * 1000)){  //keyScan interval: 10mS
-		keyScanTick = clock_time();
+#if (DEEPBACK_FAST_KEYSCAN_ENABLE)
+	if(!(*det_key) && deepback_key_state == DEEPBACK_KEY_CACHE){
+		memcpy(&kb_event,&kb_event_cache,sizeof(kb_event));
+		*det_key = 1;
+		deepback_key_state = DEEPBACK_KEY_IDLE;
+	}
+#endif
+
+	return;
+}
+
+/**
+ * @brief       This function servers to process keyboard event.
+ * @param[in]   none
+ * @return      none
+ * @note        
+ */
+void mesh_proc_keyboard(u8 e, u8 *p, int n)
+{
+	static u32 tick_scan;
+	static int gpio_wakeup_proc_cnt;
+
+#if BLE_REMOTE_PM_ENABLE
+	if(e == BLT_EV_FLAG_GPIO_EARLY_WAKEUP){
+		#if BLT_SOFTWARE_TIMER_ENABLE
+		blt_soft_timer_add(&soft_timer_key_scan, KEY_SCAN_WAKEUP_INTERVAL);
+		#endif
+		
+		//when key press GPIO wake_up sleep, process key_scan at least GPIO_WAKEUP_KEYPROC_CNT times
+		gpio_wakeup_proc_cnt = GPIO_WAKEUP_KEYPROC_CNT;
+	}
+	else if(gpio_wakeup_proc_cnt){	
+		gpio_wakeup_proc_cnt--;
+	}
+#endif
+
+	if(gpio_wakeup_proc_cnt || clock_time_exceed(tick_scan, 10 * 1000)){ //key scan interval: 10ms
+		tick_scan = clock_time();
 	}
 	else{
 		return;
 	}
-
+	
+	static u32		tick_key_pressed;
+	static u8		kb_last[2];
+	extern kb_data_t	kb_event;
 	kb_event.keycode[0] = 0;
+	kb_event.keycode[1] = 0;
 	int det_key = kb_scan_key (0, 1);
-
-	if (det_key){
-		key_change_proc();
+#if(DEEPBACK_FAST_KEYSCAN_ENABLE)
+	if(deepback_key_state != DEEPBACK_KEY_IDLE){
+		deepback_pre_proc(&det_key);
 	}
-}
+#endif	
+	///////////////////////////////////////////////////////////////////////////////////////
+	//			key change:pressed or released
+	///////////////////////////////////////////////////////////////////////////////////////
+	if (det_key) 	{
+		/////////////////////////// key pressed  /////////////////////////////////////////
+		key_released = 0;
+		
+		if (kb_event.cnt == 2)   //two key press, do  not process
+		{
+		}
+		else if(kb_event.cnt == 1)
+		{			
+			#if 0
+			if(KEY_SW1 == kb_event.keycode[0]){
+				access_cmd_onoff(0xffff, 0, G_ON, CMD_NO_ACK, 0);
+				foreach(i,NET_KEY_MAX){
+							mesh_key.net_key[i][0].node_identity =1;
+				}
+			}
+			else if(KEY_SW2 == kb_event.keycode[0]){
+				static u8 onoff;
+				access_cmd_onoff(0xffff, 0, onoff, CMD_NO_ACK, 0);
+				onoff = !onoff;
+			}
+			#endif
+			
+			#if SMART_PROVISION_ENABLE
+			if(KEY_SW1 == kb_event.keycode[0]){
+				static u8 onoff=1;
+				onoff = !onoff;
+				access_cmd_onoff(0xffff, 0, onoff, CMD_NO_ACK, 0);
+			}
+			else if(KEY_SW2 == kb_event.keycode[0]){
+				mesh_smart_provision_start();
+			}	
+			#endif
 
-
-
-
-#endif   //end of UI_KEYBOARD_ENABLE
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-/**
- * @brief   BLE Unpair handle for central
- * @param   none.
- * @return  none.
- */
-void proc_central_role_unpair(void)
-{
-#if (!ACL_CENTRAL_SMP_ENABLE)
-    if(blm_manPair.manual_pair && clock_time_exceed(blm_manPair.pair_tick, 2000000)){  //@@
-    	blm_manPair.manual_pair = 0;
-    }
-#endif
-
-
-	//terminate and un_pair process, Telink demonstration effect: triggered by "un_pair" key press
-	if(central_unpair_enable){
-
-		dev_char_info_t* dev_char_info = dev_char_info_search_by_connhandle(central_unpair_enable); //connHandle has marked on on central_unpair_enable
-
-		if( dev_char_info ){ //un_pair device in still in connection state
-
-			if(blc_ll_disconnect(central_unpair_enable, HCI_ERR_REMOTE_USER_TERM_CONN) == BLE_SUCCESS){
-
-				central_disconnect_connhandle = central_unpair_enable; //mark conn_handle
-
-				central_unpair_enable = 0;  //every "un_pair" key can only triggers one connection disconnect
-
-
-				#if (ACL_CENTRAL_SIMPLE_SDP_ENABLE)
-					// delete ATT handle storage on flash
-					dev_char_info_delete_peer_att_handle_by_peer_mac(dev_char_info->peer_adrType, dev_char_info->peer_addr);
+			#if AUDIO_MESH_EN
+				#if RELAY_ROUTE_FILTE_TEST_EN
+			extern u32 mac_filter_by_button;
+			if(0 == mac_filter_by_button){
+				mac_filter_by_button = 0x2022070a; // test_mac
+			}else{
+				mac_filter_by_button = 0;
+			}
 				#endif
-
-
-				// delete this device information(mac_address and distributed keys...) on FLash
-				#if (ACL_CENTRAL_SMP_ENABLE)
-					blc_smp_deleteBondingSlaveInfo_by_PeerMacAddress(dev_char_info->peer_adrType, dev_char_info->peer_addr);
-				#else
-					user_tbl_peripheral_mac_delete_by_adr(dev_char_info->peer_adrType, dev_char_info->peer_addr);
+				
+			if(KEY_SW2 == kb_event.keycode[0]){	
+				#if AUDIO_MESH_MULTY_NODES_TX_EN
+				if(app_audio_is_valid_key_pressed() == 0){
+					return ;
+				}
+				#endif
+			
+				app_audio_mic_onoff(!audio_mesh_tx_tick);
+			}
+			#endif
+			
+			#if ((LIGHT_TYPE_SEL == LIGHT_TYPE_NLC_SENSOR) && (NLC_SENSOR_TYPE_SEL == NLCP_TYPE_OCS))
+				#if (NLC_SENSOR_SEL == SENSOR_NONE) // can not use key input to change sensor value when there is a sensor working.
+			if(KEY_SW2 == kb_event.keycode[0]){
+				sensor_measure_quantity = !sensor_measure_quantity;
+			}
+				#endif
+			#endif
+			
+			#if (DF_TEST_MODE_EN)
+			static u8 onoff;	
+			if(KEY_SW2 == kb_event.keycode[0]){ // dispatch just when you press the button 
+				foreach(i, MAX_FIXED_PATH){
+					path_entry_com_t *p_fwd_entry = &model_sig_g_df_sbr_cfg.df_cfg.fixed_fwd_tbl[0].path[i];
+					if(is_ele_in_node(ele_adr_primary, p_fwd_entry->path_origin, p_fwd_entry->path_origin_snd_ele_cnt+1)){
+						access_cmd_onoff(p_fwd_entry->destination, 0, onoff, CMD_NO_ACK, 0);
+						onoff = !onoff;
+						break;
+					}
+				}
+			}
+			#endif
+			
+			#if IV_UPDATE_TEST_EN
+			mesh_iv_update_test_initiate(kb_event.keycode[0]);
+			#endif
+		}
+		///////////////////////////   key released  ///////////////////////////////////////
+		else {
+			if(!long_pressed && (KEY_SW1 == kb_last[0])){
+				#if PAIR_PROVISION_ENABLE
+				pair_proc_start();
 				#endif
 			}
-
-		}
-		else{ //un_pair device can not find in device list, it's not connected now
-
-			central_unpair_enable = 0;  //every "un_pair" key can only triggers one connection disconnect
+			
+			key_released = 1;
+			long_pressed = 0;
 		}
 
+		tick_key_pressed = clock_time ();
+		kb_last[0] = kb_event.keycode[0];
+		kb_last[1] = kb_event.keycode[1];
 	}
+	//////////////////////////////////////////////////////////////////////////////////////////
+	//				no key change event
+	//////////////////////////////////////////////////////////////////////////////////////////
+	else if (kb_last[0])
+	{
+		//	long pressed
+		if (!long_pressed && clock_time_exceed(tick_key_pressed, PAIR_PROVISION_ENABLE ? 5*1000*1000 : 3*1000*1000))
+		{
+			long_pressed = 1;
+			#if PAIR_PROVISION_ENABLE
+			if(KEY_SW1 == kb_last[0]){
+				pair_prov_kick_out_all_nodes();
+			}
+			#endif
+			
+			#if GATT_LPN_EN
+			if(kb_last[0] == KEY_SW1){
+				cfg_cmd_reset_node(ele_adr_primary);
+			}
+			#endif
+		}
+
+	}else{
+		key_released = 1;
+		long_pressed = 0;
+	}
+
+	return;
 }
+#endif
 
+void proc_ui()
+{
+#if (UI_KEYBOARD_ENABLE)
+	mesh_proc_keyboard(0, 0, 0);
+#endif
 
-
-
-
-
-
-
-
-
-
-
+	return;
+}
 

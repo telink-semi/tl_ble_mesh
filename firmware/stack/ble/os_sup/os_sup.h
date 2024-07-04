@@ -1,44 +1,77 @@
 /********************************************************************************************************
- * @file     os_sup.h
+ * @file    os_sup.h
  *
- * @brief    This is the source file for BLE SDK
+ * @brief   This is the source file for BLE SDK
  *
- * @author       BLE GROUP
- * @date         2020.06
+ * @author  BLE GROUP
+ * @date    06,2022
  *
- * @par      Copyright (c) 2022, Telink Semiconductor (Shanghai) Co., Ltd.
- *           All rights reserved.
+ * @par     Copyright (c) 2022, Telink Semiconductor (Shanghai) Co., Ltd. ("TELINK")
  *
- *           The information contained herein is confidential property of Telink
- *           Semiconductor (Shanghai) Co., Ltd. and is available under the terms
- *           of Commercial License Agreement between Telink Semiconductor (Shanghai)
- *           Co., Ltd. and the licensee or the terms described here-in. This heading
- *           MUST NOT be removed from this file.
+ *          Licensed under the Apache License, Version 2.0 (the "License");
+ *          you may not use this file except in compliance with the License.
+ *          You may obtain a copy of the License at
  *
- *           Licensee shall not delete, modify or alter (or permit any third party to delete, modify, or
- *           alter) any information contained herein in whole or in part except as expressly authorized
- *           by Telink semiconductor (shanghai) Co., Ltd. Otherwise, licensee shall be solely responsible
- *           for any claim to the extent arising out of or relating to such deletion(s), modification(s)
- *           or alteration(s).
+ *              http://www.apache.org/licenses/LICENSE-2.0
  *
- *           Licensees are granted free, non-transferable use of the information in this
- *           file under Mutual Non-Disclosure Agreement. NO WARRENTY of ANY KIND is provided.
+ *          Unless required by applicable law or agreed to in writing, software
+ *          distributed under the License is distributed on an "AS IS" BASIS,
+ *          WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *          See the License for the specific language governing permissions and
+ *          limitations under the License.
  *
  *******************************************************************************************************/
-
 #ifndef OS_SUP_H_
 #define OS_SUP_H_
 
-#include "stack/ble/ble_config.h"
+#include "tl_common.h"
 
-
+/**
+ *  @brief  Define the prototypes that the os_give_sem_t must conform to.
+ */
 typedef void (*os_give_sem_t)(void);
 
-/* User API */
+/**
+ *  @brief  Define the prototypes that the take_mutex_sem&give_mutex_sem must conform to.
+ */
+typedef void (*os_mutex_sem_t)(void);
+
+/**
+ * @brief		This feature is used to enable support for OS mode
+ * @param[in]   true - Enable, false - disable
+ * @return      none
+ */
+void blc_setOsSupEnable(bool en);
+
+/**
+ * @brief		This function is to check if OS is supported
+ * @param[in]   none
+ * @return      true - Enable, false - disable
+ */
+bool blc_isOsSupEnable(void);
+
+/**
+ * @brief		This feature is used to check if the task schedule is busy
+ * @param[in]   none
+ * @return      true - busy,   false - no busy
+ */
+bool blc_isBleSchedulerBusy(void);
+
+/**
+ * @brief      Register an input for the Bluetooth OS semaphore
+ * @param[in]  give_sem_from_isr -Interrupt  use
+ * @param[in]  give_sem - Non-interruptible  use
+ * @return
+ */
 void blc_ll_registerGiveSemCb(os_give_sem_t give_sem_from_isr, os_give_sem_t give_sem);
 
-/* Stack API. !!! user can't use. */
-void blt_ll_sem_give(void);
-void blt_ll_sem_give_from_isr(void);
+/**
+ * @brief      Register a Bluetooth send data mutex.
+ * Handling multitasking while sending packets results in an exception.
+ * @param[in]  take_mutex_sem    -  lock
+ * @param[in]  give_mutex_sem    -  unlock
+ * @return
+ */
+void blc_ll_registerMutexSemCb(os_mutex_sem_t take_mutex_sem, os_mutex_sem_t give_mutex_sem);
 
 #endif /* OS_SUP_H_ */

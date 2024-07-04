@@ -1,10 +1,10 @@
 /********************************************************************************************************
- * @file     tl_queue.c
+ * @file    tl_queue.c
  *
- * @brief    This is the source file for BLE SDK
+ * @brief   This is the source file for BLE SDK
  *
- * @author	 BLE GROUP
- * @date         11,2022
+ * @author  BLE GROUP
+ * @date    06,2022
  *
  * @par     Copyright (c) 2022, Telink Semiconductor (Shanghai) Co., Ltd. ("TELINK")
  *
@@ -19,11 +19,11 @@
  *          WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  *          See the License for the specific language governing permissions and
  *          limitations under the License.
+ *
  *******************************************************************************************************/
-
 #include "tl_queue.h"
 #include "drivers.h"
-#include "common\compiler.h"
+#include "common/compiler.h"
 
 
 
@@ -161,9 +161,8 @@ queue_item_t *	queue_deq(queue_t *pQueue)
   *              used when iterating over elements in a Queue
   * @param[in]   pQueue - The queue that a new element need to push to
   * @param[in]   pItem  - The new element to be inserted
-  * @param[in]   pPrev  - The element in the queue before the new ele-
-  *                       ment to be inserted. Note: if the pPrev is NULL,
-  *                       which means the pItem is the 1st element in queue
+  * @param[in]   pPrev  - The element in the queue before the new element to be inserted.
+  * 					  Note: if the pPrev is NULL, the pItem is the 1st element in queue.
   * @return      Status
   */
 //_attribute_ram_code_

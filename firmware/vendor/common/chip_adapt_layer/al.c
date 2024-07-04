@@ -26,12 +26,11 @@
 #include "drivers.h"
 #include "stack/ble/ble.h"
 #include "proj_lib/mesh_crypto/aes_cbc.h"
-#include "../mesh_common.h"
-#include "stack/ble/controller/ble_controller.h"
+#include "vendor/common/mesh_common.h"
 
-_attribute_data_retention_	u8  ble_devName[MAX_DEV_NAME_LEN] = DEFAULT_DEV_NAME;  
-u8 g_max_slave_num = ACL_PERIPHR_MAX_NUM; 
+_attribute_data_retention_	u8  ble_devName[MAX_DEV_NAME_LEN] = DEFAULT_DEV_NAME;
 	
+STATIC_ASSERT(ACL_PERIPHR_MAX_NUM >= 2); // set ACL_PERIPHR_MAX_NUM range in [2, 4], 1 is reserved for mesh adv now
 STATIC_ASSERT(BIT_IS_POW2(ACL_RX_FIFO_NUM));
 STATIC_ASSERT(BIT_IS_POW2(ACL_PERIPHR_TX_FIFO_NUM - 1));
 #if (MCU_CORE_TYPE == MCU_CORE_B91)  //only Eagle have this limitation
@@ -39,10 +38,28 @@ STATIC_ASSERT(ACL_PERIPHR_TX_FIFO_SIZE * (ACL_PERIPHR_TX_FIFO_NUM - 1) <= 4096);
 STATIC_ASSERT(ACL_PERIPHR_TX_FIFO_NUM <= 33);	// for lib. // no number limitation for RX buffer which is manual mode.
 #endif
 
+#ifdef SCAN_PRICHN_RXFIFO_NUM
 STATIC_ASSERT(BIT_IS_POW2(SCAN_PRICHN_RXFIFO_NUM));
 STATIC_ASSERT(SCAN_PRICHN_RXFIFO_SIZE % 16 == 0);
+#endif
+
 STATIC_ASSERT(!(AUDIO_MESH_EN && SPEECH_ENABLE));	// can not enable at the same time now.
 
+int pkt_adv_pending = 0;
+_attribute_ram_code_ int blt_send_adv_cb()
+{
+	int adv_ready = pkt_adv_pending;
+	pkt_adv_pending = 0;
+	return adv_ready;
+}
+
+int mesh_adv_prepare_proc()
+{
+	if(!pkt_adv_pending){
+		pkt_adv_pending = app_advertise_prepare_handler(&pkt_Adv);
+	}
+	return pkt_adv_pending;
+}
 
 // just for the compile part 
 _attribute_ram_code_ void gpio_set_func(u32 pin, u32 func)
@@ -82,43 +99,12 @@ void flash_en_support_arch_flash(unsigned char en)
 void flash_en_support_arch_flash(unsigned char en){}
 #endif
 
-
-int otaRead(u16 connHandle, void * p)
-{
-	return 0;
-}
-
 ble_sts_t bls_att_setDeviceName(u8* pName,u8 len)
 {
 	memset(ble_devName, 0, MAX_DEV_NAME_LEN );
 	memcpy(ble_devName, pName, len < MAX_DEV_NAME_LEN ? len : MAX_DEV_NAME_LEN);
 
 	return BLE_SUCCESS;
-}
-
-int get_slave_idx_by_conn_handle(u16 connHandle)
-{
-	return ((connHandle & CONN_IDX_MASK)-ACL_CONN_IDX_PER0);
-}
-
-int get_slave_conn_handle_by_idx(int idx)
-{
-	return (BLS_CONN_HANDLE | (ACL_CONN_IDX_PER0 + idx));
-}
-
-u8		bls_ll_isConnectState (void)
-{
-	return	 blc_ll_isAclConnEstablished(BLS_HANDLE_MIN);
-}
-
-int blc_ll_isAllSlaveConnected()
-{
-	return (blmsParam.cur_slave_num >= blmsParam.max_slave_num);
-}
-
-int blc_ll_getCurSlaveNum()
-{
-	return blmsParam.cur_slave_num ;
 }
 
 ble_sts_t	bls_att_pushNotifyData (u16 attHandle, u8 *p, int len)
@@ -155,7 +141,12 @@ void	mz_mul2 (unsigned int * r, unsigned int * a, int na, unsigned int b)
 #endif
 }
 
-int blt_ota_writeBootMark(void);
+// ota
+int otaRead(u16 connHandle, void * p)
+{
+	return 0;
+}
+
 int ota_set_flag()
 {
 	return blt_ota_writeBootMark();
@@ -428,7 +419,7 @@ void set_scan_interval(u32 ms)
 #endif
 _attribute_ram_code_ int  blc_ll_procScanPkt_mesh(u8 *raw_pkt, u8 *new_pkt)
 {
-	return adv_filter_proc(raw_pkt);
+	return adv_filter_proc(raw_pkt, 0);
 }
 
 /**
@@ -557,8 +548,8 @@ int blc_hci_tx_to_usb ()
 }
 
 
-#if 1//(DEBUG_LOG_SETTING_DEVELOP_MODE_EN || HCI_LOG_FW_EN)
-volatile long trap0_cnt;
+#if (!FREERTOS_ENABLE)//(DEBUG_LOG_SETTING_DEVELOP_MODE_EN || HCI_LOG_FW_EN)
+volatile long AA_trap0_cnt;
 volatile long trap1_entry_ra;
 volatile long trap2_entry_sp;
 volatile long trap3_entry_gp;
@@ -571,11 +562,11 @@ volatile long trap8_mscratch;
 _attribute_ram_code_ void except_handler()
 {
 	register long ra asm("x1"), sp asm("x2"),gp asm("x3");
-	trap1_entry_ra = ra;
-	trap2_entry_sp = sp;
-	trap3_entry_gp = gp;
-	trap4_mcause = read_csr(NDS_MCAUSE);//4148
-	trap5_mepc = read_csr(NDS_MEPC);//4147
+	trap1_entry_ra = ra;	// return address
+	trap2_entry_sp = sp;	// stack pointer
+	trap3_entry_gp = gp;	// global pointer
+	trap4_mcause = read_csr(NDS_MCAUSE);//4148 	// 2 means invalid instruction, 7 means store access fault, such as write to RAM address 0x20004.
+	trap5_mepc = read_csr(NDS_MEPC);//4147		// PC
 	trap6_mtvl = read_csr(NDS_MTVAL);//4147
 	trap7_mdcause = read_csr(NDS_MDCAUSE);
 	trap8_mscratch = read_csr(NDS_MSCRATCH);
@@ -583,7 +574,7 @@ _attribute_ram_code_ void except_handler()
 	while(1){
 		/* Unhandled Trap */
 		wd_clear();
-		trap0_cnt++;
+		AA_trap0_cnt++;
 	}
 }
 #endif
@@ -602,7 +593,10 @@ void main_loop_risv_sdk()
 
 void user_init_risv_sdk()
 {
+#if !BLE_MULTIPLE_CONNECTION_ENABLE
 	blc_ll_continue_adv_after_scan_req(1);
+#endif
+
 #if AUDIO_MESH_EN
 	app_audio_init ();
 #endif
@@ -626,7 +620,7 @@ void adc_drv_init(){
 #if (HCI_ACCESS==HCI_USE_UART)
 const uart_num_e UART_RX_NUM = UART_NUM_GET(UART_RX_PIN);
 const uart_num_e UART_TX_NUM = UART_NUM_GET(UART_TX_PIN);
-const irq_source_e UART_IRQ_NUM = UART_IRQ_GET(UART_RX_PIN);
+const u32 UART_IRQ_NUM = UART_IRQ_GET(UART_RX_PIN);
 static volatile u32 uart_dma_sending_tick = 0;
 
 STATIC_ASSERT(UART_NUM_GET(UART_RX_PIN) == UART_NUM_GET(UART_TX_PIN)); // must to be same now.
@@ -699,7 +693,7 @@ void uart_drv_init_B91m()
 	uart_reset(UART_RX_NUM);
 	uart_set_pin(UART_TX_PIN ,UART_RX_PIN );// uart tx/rx pin set
 	uart_cal_div_and_bwpc(UART_DMA_BAUDRATE, sys_clk.pclk*1000*1000, &div, &bwpc);
-	uart_set_dma_rx_timeout(UART_RX_NUM, bwpc, 12, UART_BW_MUL1);
+	uart_set_rx_timeout(UART_RX_NUM, bwpc, 12, UART_BW_MUL1);
 	uart_init(UART_RX_NUM, div, bwpc, UART_PARITY_NONE, UART_STOP_BIT_ONE);
 
 	uart_clr_irq_mask(UART_RX_NUM, UART_RX_IRQ_MASK | UART_TX_IRQ_MASK | UART_TXDONE_MASK|UART_RXDONE_MASK);
@@ -719,10 +713,30 @@ void uart_drv_init_B91m()
 }
 #endif
 
-#if 1 // TBD
-ble_sts_t  bls_ll_terminateConnection (u8 reason)
+int bls_ll_terminateConnection (u8 reason)
 {
-	return blc_ll_disconnect (BLS_HANDLE_MIN, reason);
+	int st = BLE_SUCCESS;
+	foreach(idx, ACL_PERIPHR_MAX_NUM){
+		st = blc_ll_disconnect (get_slave_conn_handle_by_idx(idx), reason);
+	}
+
+	return st;
+}
+
+#ifdef I2C_IC_ID_SLAVE
+void i2c_write_series(unsigned int Addr, unsigned int AddrLen, unsigned char * dataBuf, int dataLen)
+{
+	u8 len = AddrLen + dataLen;
+	u8 data[len];
+	memcpy(data, &Addr, AddrLen);
+	memcpy(data + AddrLen, dataBuf, dataLen);
+	i2c_master_write(I2C_IC_ID_SLAVE, data, len);
+}
+
+void i2c_read_series(unsigned int Addr, unsigned int AddrLen, unsigned char * dataBuf, int dataLen)
+{
+	i2c_master_write(I2C_IC_ID_SLAVE, (u8 *)&Addr, AddrLen);
+	i2c_master_read(I2C_IC_ID_SLAVE, dataBuf, dataLen);
 }
 #endif
 

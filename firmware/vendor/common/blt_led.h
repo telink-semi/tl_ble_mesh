@@ -1,12 +1,13 @@
 /********************************************************************************************************
- * @file     blt_led.h
+ * @file	blt_led.h
  *
- * @brief    This is the header file for BLE SDK
+ * @brief	for TLSR chips
  *
- * @author	 BLE GROUP
- * @date         2020.06
+ * @author	telink
+ * @date	Sep. 30, 2010
  *
- * @par     Copyright (c) 2022, Telink Semiconductor (Shanghai) Co., Ltd. ("TELINK")
+ * @par     Copyright (c) 2017, Telink Semiconductor (Shanghai) Co., Ltd. ("TELINK")
+ *          All rights reserved.
  *
  *          Licensed under the Apache License, Version 2.0 (the "License");
  *          you may not use this file except in compliance with the License.
@@ -19,13 +20,12 @@
  *          WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  *          See the License for the specific language governing permissions and
  *          limitations under the License.
+ *
  *******************************************************************************************************/
-
 #ifndef BLT_LED_H_
 #define BLT_LED_H_
 
 #include "tl_common.h"
-
 
 
 #ifndef BLT_APP_LED_ENABLE
@@ -33,6 +33,7 @@
 #endif
 
 
+//led management
 /**
  * @brief	Configure the parameters for led event
  */

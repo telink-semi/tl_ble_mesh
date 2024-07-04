@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <projectDescription>
-	<name>B91_ble_multi_conn_src</name>
+	<name>tl_ble_mesh</name>
 	<comment></comment>
 	<projects>
 	</projects>
@@ -108,7 +108,7 @@
 		<link>
 			<name>config.h</name>
 			<type>1</type>
-			<locationURI>PARENT-2-PROJECT_LOC/config.h</locationURI>
+			<locationURI>PARENT-3-PROJECT_LOC/ble_lt_mesh/config.h</locationURI>
 		</link>
 		<link>
 			<name>drivers</name>

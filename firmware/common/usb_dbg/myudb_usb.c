@@ -1,10 +1,10 @@
 /********************************************************************************************************
- * @file     myudb_usb.c
+ * @file    myudb_usb.c
  *
- * @brief    This is the source file for BLE SDK
+ * @brief   This is the source file for BLE SDK
  *
- * @author	 BLE GROUP
- * @date         11,2022
+ * @author  BLE GROUP
+ * @date    06,2022
  *
  * @par     Copyright (c) 2022, Telink Semiconductor (Shanghai) Co., Ltd. ("TELINK")
  *
@@ -19,8 +19,8 @@
  *          WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  *          See the License for the specific language governing permissions and
  *          limitations under the License.
+ *
  *******************************************************************************************************/
-
 #include "drivers.h"
 #include "myudb.h"
 #include "myudb_usbdesc.h"
@@ -28,7 +28,7 @@
 #include <string.h>
 #include "vendor/common/tlkapi_debug.h"
 
-#if (VCD_EN || DUMP_STR_EN)
+#if (VCD_EN || DUMP_STR_EN || (TLKAPI_DEBUG_ENABLE && TLKAPI_DEBUG_CHANNEL == TLKAPI_DEBUG_CHANNEL_UDB))
 
 
 
@@ -46,7 +46,7 @@ typedef struct myudb_cfg
 
 } myudb_cfg_t;
 
-myudb_cfg_t myudb = {0x120};
+myudb_cfg_t myudb = {0x120,0,0,0,0,0,0};
 
 static USB_Request_Header_t control_request;
 
@@ -129,7 +129,7 @@ void myudb_usb_prepare_desc_data(void) {
 	return;
 }
 
-void myudb_usb_handle_in_class_intf_req() {
+void myudb_usb_handle_in_class_intf_req(void) {
 	u8 property = control_request.bRequest;
 	switch (property) {
 		case 0x00:
@@ -206,7 +206,7 @@ void myudb_usb_handle_request(u8 data_request) {
 	return;
 }
 
-void myudb_usb_handle_ctl_ep_setup() {
+void myudb_usb_handle_ctl_ep_setup(void) {
 	usbhw_reset_ctrl_ep_ptr();
 	control_request.bmRequestType = usbhw_read_ctrl_ep_data();
 	control_request.bRequest = usbhw_read_ctrl_ep_data();
@@ -231,7 +231,7 @@ void myudb_usb_handle_ctl_ep_data(void) {
 		usbhw_write_ctrl_ep_ctrl(FLD_EP_DAT_ACK);
 }
 
-void myudb_usb_handle_ctl_ep_status() {
+void myudb_usb_handle_ctl_ep_status(void) {
 	if (myudb.stall)
 		usbhw_write_ctrl_ep_ctrl(FLD_EP_STA_STALL);
 	else
@@ -276,8 +276,8 @@ _attribute_ram_code_ void usb_send_str_data (char *str, u8 *ph, int n)
 	u8 *ps =  myudb_print_fifo->p + (myudb_print_fifo->wptr & (myudb_print_fifo->num - 1)) * myudb_print_fifo->size;
 	u8 *pd = ps;
 
-	extern int tlk_strlen(char *str);
-	int ns = str ? tlk_strlen (str) : 0;
+	extern int tlk_strlen(const char *str);
+	unsigned int ns = str ? tlk_strlen (str) : 0;
 	if (ns > myudb_print_fifo->size - 12)
 	{
 		ns = myudb_print_fifo->size - 12;
@@ -289,7 +289,7 @@ _attribute_ram_code_ void usb_send_str_data (char *str, u8 *ph, int n)
 	}
 
 
-#if(TLKAPI_DEBUG_ENABLE && (TLKAPI_DEBUG_CHANNEL != TLKAPI_DEBUG_CHANNEL_UDB) && !STACK_USB_LOG_EN)
+#if(TLKAPI_DEBUG_ENABLE && (TLKAPI_DEBUG_CHANNEL != TLKAPI_DEBUG_CHANNEL_UDB))
 	#if 1 //QIU new tool
 		int len = ns + n + 5;
 		*pd++ = len;
@@ -297,7 +297,7 @@ _attribute_ram_code_ void usb_send_str_data (char *str, u8 *ph, int n)
 		*pd++ = 0;
 		*pd++ = 0;
 
-		*pd++ = 0x95;   //special mark£º 0xA695
+		*pd++ = 0x95;   //special markï¿½ï¿½ 0xA695
 		*pd++ = 0xA6;
 		*pd++ = ns;     // string length, 1byte
 		*pd++ = n;	    // data length, 2 byte
@@ -372,7 +372,7 @@ _attribute_ram_code_ void usb_send_str_u32s (char *str, u32 d0, u32 d1, u32 d2, 
 	usb_send_str_data (str, (u8*)d, 16);
 }
 
-_attribute_ram_code_ void myudb_to_usb()
+_attribute_ram_code_ void myudb_to_usb(void)
 {
 	static u16 len = 0;
 	static u8 *p = 0;
@@ -469,16 +469,10 @@ int	usb_send_str_int (char *str,int w)
 
 _attribute_ram_code_ int myudb_usb_get_packet (u8 *p)
 {
-#if(MCU_CORE_TYPE == MCU_CORE_B91)
-	if (reg_usb_irq & USB_ENDPOINT_BULK_OUT_FLAG)
+	if (reg_usb_ep_irq_status & USB_ENDPOINT_BULK_OUT_FLAG)
 	{
-		reg_usb_irq = USB_ENDPOINT_BULK_OUT_FLAG;
-#elif(MCU_CORE_TYPE == MCU_CORE_B92)
-		if (reg_usb_ep_irq_status & USB_ENDPOINT_BULK_OUT_FLAG)
-		{
-			//clear interrupt flag
-		    reg_usb_ep_irq_status = USB_ENDPOINT_BULK_OUT_FLAG;
-#endif
+		//clear interrupt flag
+		reg_usb_ep_irq_status = USB_ENDPOINT_BULK_OUT_FLAG;
 		// read data
 		int n = reg_usb_ep_ptr(MYUDB_EDP_OUT_HCI);
 		reg_usb_ep_ptr(MYUDB_EDP_OUT_HCI) = 0;
@@ -601,9 +595,15 @@ _attribute_ram_code_ int myudb_mem_cmd (u8 *p, int nbyte)
 			}
 			else
 			{
-				#if (MCU_CORE_TYPE != MCU_CORE_B92)
-				flash_erase_chip ();
-				#endif
+				//flash_erase_chip ();
+				unsigned int flash_mid = flash_read_mid();
+				flash_mid >>= 16;
+				flash_mid &= 0xff;
+				nb = (1 << (flash_mid+6));
+				for (int i=0; i<nb; i+=4096)
+				{
+					flash_erase_sector (adr + i);
+				}
 			}
 		}
 		else if (type == MYHCI_FW_DOWNLOAD)
@@ -660,9 +660,6 @@ _attribute_ram_code_ int myudb_hci_cmd_from_usb (void)
 }
 
 /////////////////////////////////////////////////////////////////////////
-#if (TIFS_VERIATION_WORKAROUND_MLP_CODE_IN_RAM)
-_attribute_ram_code_
-#endif
 void udb_usb_handle_irq(void) {
 	if(1){		//  do nothing when in suspend. Maybe not unnecessary
 		u32 irq = usbhw_get_ctrl_ep_irq();
@@ -682,10 +679,9 @@ void udb_usb_handle_irq(void) {
 			usbhw_clr_ctrl_ep_irq(FLD_CTRL_EP_IRQ_STA);
 			myudb_usb_handle_ctl_ep_status();
 		}
-
-		if (reg_usb_irq_mask & FLD_USB_IRQ_RESET_O)
+		if (usbhw_get_irq_status(USB_IRQ_RESET_STATUS))
 		{
-			reg_usb_irq_mask |= FLD_USB_IRQ_RESET_O; 		//Clear USB reset flag
+			usbhw_clr_irq_status(USB_IRQ_RESET_STATUS); 		//Clear USB reset flag
 			myudb_usb_bulkout_ready ();
 	    }
 		myudb.stall = 0;
@@ -701,15 +697,15 @@ void udb_usb_handle_irq(void) {
 	{
 		myudb.tick_sync = clock_time () | 1;
 		#if (VCD_EN)
-			log_sync (SL_STACK_EN);   //log_event(1, SLEV_timestamp)
-			log_tick(SL_STACK_EN, 0); //log_tick(1, SLET_timestamp)
+			log_sync (SL_STACK_VCD_EN);   //log_event(1, SLEV_timestamp)
+			log_tick(SL_STACK_VCD_EN, 0); //log_tick(1, SLET_timestamp)
 		#endif
 
 	}
 #endif
 }
 
-void myudb_usb_bulkout_ready ()
+void myudb_usb_bulkout_ready (void)
 {
 	reg_usb_ep_ctrl (MYUDB_EDP_OUT_HCI) = FLD_EP_DAT_ACK;
 }
@@ -724,10 +720,18 @@ void myudb_usb_init(u16 id, void * p_print)
 	memset (&myudb, 0, sizeof (myudb));
 
 	myudb.id = id;
+
+#if (MCU_CORE_TYPE == MCU_CORE_B930)
+    //enable USB manual interrupt(in auto interrupt mode,USB device would be USB printer device)
+	usbhw_init();
+    /* set control endpoint size */
+    usbhw_set_ctrl_ep_size(SIZE_64_BYTE);
+#endif
+
 	//reg_usb_mask = BIT(7);			//audio in interrupt enable
 	//reg_irq_mask |= FLD_IRQ_IRQ4_EN;
 	reg_usb_ep_max_size = (128 >> 2);
-	reg_usb_ep8_send_thre = 0x40;
+	reg_usb_ep8_send_thres = 0x40;
 	reg_usb_ep8_send_max = 128 >> 3;
 	reg_usb_ep_buf_addr (MYUDB_EDP_IN_HCI) = 128;
 	reg_usb_ep_buf_addr (MYUDB_EDP_OUT_HCI) = 192;
@@ -739,24 +743,6 @@ void myudb_usb_init(u16 id, void * p_print)
 
 	myudb_usb_bulkout_ready ();
 	usbhw_data_ep_ack(MYUDB_EDP_IN_HCI); //add log 1st log info
-}
-
-
-
-_attribute_ram_code_ void usb_send_upper_tester_result (u8 err)
-{
-	u32 rie = core_interrupt_disable ();
-	u8 *ps =  myudb_print_fifo->p + (myudb_print_fifo->wptr & (myudb_print_fifo->num - 1)) * myudb_print_fifo->size;;
-
-	*((u32 *)ps) = 3;
-	u8 *pd = (ps + 4);
-
-	*pd++ = 0x04; //HCI_TYPE_EVENT;
-	*pd++ = 0xF0; //HCI_EVT_HT_ERR_FLAG;
-	*pd++ = err;
-
-	myudb_print_fifo->wptr++;
-	core_restore_interrupt(rie);
 }
 
 

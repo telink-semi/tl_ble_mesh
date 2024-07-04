@@ -23,21 +23,12 @@
  *
  *******************************************************************************************************/
 #include "tl_common.h"
-#if !WIN32
-#if __TLSR_RISCV_EN__
-#else
-#include "proj/mcu/watchdog_i.h"
-#endif
-#include "watchdog.h"
-#endif 
-#if (!__TLSR_RISCV_EN__)
-#include "proj_lib/ble/ll/ll.h"
 #include "proj_lib/ble/blt_config.h"
 #include "vendor/common/user_config.h"
-#endif
 #include "app_health.h"
 #include "proj_lib/sig_mesh/app_mesh.h"
 #include "fast_provision_model.h"
+#include "smart_provision.h"
 #include "version.h"
 
 #define FAST_PROVISION_TIMEOUT 		60*1000*1000
@@ -58,19 +49,17 @@ int mesh_reset_network(u8 provision_enable)
 	if(!is_provision_success()){
 		return 1;
 	}
-	u32 r = irq_disable ();
+//	u32 r = irq_disable ();		// can't disable irq too much time in multiple connection sdk, less than 50us is better.
 	factory_test_mode_en = 1;
 	provision_mag.gatt_mode = GATT_PROVISION_MODE;
 	cache_init(ADR_ALL_NODES);
 	mesh_provision_para_reset();
 
 //init iv idx
-	u8 iv_idx_cur[4] = IV_IDX_CUR;
-	memcpy(iv_idx_st.cur, iv_idx_cur, 4);
-	mesh_iv_idx_init(iv_idx_st.cur, 0);
+	mesh_iv_idx_init(IV_IDX_CUR, 0, 0);
 //init model info
 	mesh_common_reset_all();
-	provision_mag.gatt_mode = GATT_PROVISION_MODE;// because retrive in mesh_common_reset_all	
+	provision_mag.gatt_mode = GATT_PROVISION_MODE;// because retrieve in mesh_common_reset_all	
 	if(!provision_enable){
 		mesh_gatt_adv_beacon_enable(0);
 	}else{
@@ -96,7 +85,7 @@ int mesh_reset_network(u8 provision_enable)
 	p_uuid->adv_flag = 0;
 	#endif	
 	
-	irq_restore(r);
+//	irq_restore(r);
 	return 0;
 }
 
@@ -106,7 +95,7 @@ void mesh_revert_network()
 	
 	#if FAST_PROVISION_ENABLE
 	if((!fast_prov.not_need_prov)&&(mesh_fast_prov_sts_get() == FAST_PROV_COMPLETE)){
-		mesh_provision_par_handle((u8 *)&fast_prov.net_info.pro_data);
+		mesh_provision_par_handle(&fast_prov.net_info.pro_data);
 		//set app_key
 		mesh_appkey_set_t *p_set = (mesh_appkey_set_t *)&fast_prov.net_info.appkey_set;
 		mesh_app_key_set(APPKEY_ADD, p_set->appkey, GET_APPKEY_INDEX(p_set->net_app_idx), GET_NETKEY_INDEX(p_set->net_app_idx), 1);
@@ -142,6 +131,10 @@ void mesh_revert_network()
 	mesh_node_init();
 	
 	#if FAST_PROVISION_ENABLE
+	#if GATEWAY_ENABLE		
+	provision_mag.unicast_adr_last = fast_prov.prov_addr; // save next address to be assigned.
+	provision_mag_cfg_s_store();
+	#endif
 	mesh_fast_prov_val_init();
 	#endif
 }
@@ -149,7 +142,7 @@ void mesh_revert_network()
 u8 mesh_fast_prov_get_ele_cnt_callback(u16 pid)
 {
 	u8 node_ele_cnt = 1;
-	pid &= 0x0fff;// should discard MCU chip type of MESH_PID_SEL
+	pid &= BIT_MASK_LEN(PID_DEV_TYPE_LEN);// should discard MCU chip type of MESH_PID_SEL
 	switch(pid){
 	case LIGHT_TYPE_CT:
 		node_ele_cnt = 2;
@@ -165,6 +158,8 @@ u8 mesh_fast_prov_get_ele_cnt_callback(u16 pid)
 		break;
 	case LIGHT_TYPE_PANEL:
 		break;
+	case (PID_LPN&BIT_MASK_LEN(PID_DEV_TYPE_LEN)):
+		break;
 	default:
 		break;
 	}
@@ -172,21 +167,28 @@ u8 mesh_fast_prov_get_ele_cnt_callback(u16 pid)
 }
 
 #if (__PROJECT_MESH_PRO__ || __PROJECT_MESH_GW_NODE__)
-void mesh_fast_prov_start(u16 pid, u16 start_addr)
+/**
+ * @brief      This function servers to start the fast provision state machine by self, confirm HCI_ACCESS set to HCI_USE_UART first before call this function.
+ * @param[in]  pid - the specified device type to be provision, 0xffff means all.
+ * @return     none.
+ */
+#if !WIN32
+void start_fast_provision_state_machine(u16 pid)
 {
-#if (FAST_PROVISION_ENABLE)
-	if(FAST_PROV_IDLE != fast_prov.cur_sts){
-		return;
+	if(FAST_PROV_IDLE == mesh_fast_prov_sts_get()){
+		if(!is_provision_success()){ // should set gateway's network info first
+			smart_gateway_provision_data_set();
+		};
+		mesh_fast_prov_start(pid, provision_mag.unicast_adr_last);
 	}
-	fast_prov.pid = pid;
-	fast_prov.prov_addr = start_addr;
-	fast_prov.cur_sts = fast_prov.last_sts = FAST_PROV_START;
-	fast_prov.start_tick = clock_time()|1;
-	fast_prov.pending = 0;
+}
+#endif
 
-// set network info
+void mesh_get_fast_prov_net_info()
+{
+	// set network info
 	fast_prov.net_info.pro_data.flags = 0;
-	memcpy(fast_prov.net_info.pro_data.iv_index, iv_idx_st.cur, 4);
+	get_iv_big_endian(fast_prov.net_info.pro_data.iv_index, (u8 *)&iv_idx_st.iv_cur);
 	u8 nk_array_idx = get_nk_arr_idx_first_valid();
     u8 ak_array_idx = get_ak_arr_idx_first_valid(nk_array_idx);
 	if((NET_KEY_MAX==nk_array_idx)|| (APP_KEY_MAX==ak_array_idx)){
@@ -195,6 +197,7 @@ void mesh_fast_prov_start(u16 pid, u16 start_addr)
 #if GATEWAY_ENABLE
 	appkey_bind_all(1, mesh_key.net_key[nk_array_idx][0].app_key[ak_array_idx].index, 0); // vc tool only send appkey_add in fast provision mode
 #endif
+	fast_prov.prov_addr = provision_mag.unicast_adr_last;
 	fast_prov.net_info.pro_data.key_index = mesh_key.net_key[nk_array_idx][0].index;
 	memcpy(fast_prov.net_info.pro_data.net_work_key, mesh_key.net_key[nk_array_idx][0].key, 16);
 	fast_prov.net_info.pro_data.unicast_address = ele_adr_primary;
@@ -204,7 +207,21 @@ void mesh_fast_prov_start(u16 pid, u16 start_addr)
 	memcpy(fast_prov.net_info.appkey_set.appkey, mesh_key.net_key[nk_array_idx][0].app_key[ak_array_idx].key, 16);
 
 	cache_init(ADR_ALL_NODES);
-#endif
+}
+
+void mesh_fast_prov_start(u16 pid, u16 start_addr)
+{
+#if (FAST_PROVISION_ENABLE)
+	if(FAST_PROV_IDLE != fast_prov.cur_sts){
+		return;
+	}
+	fast_prov.pid = pid;
+	fast_prov.cur_sts = fast_prov.last_sts = FAST_PROV_START;
+	fast_prov.start_tick = clock_time()|1;
+	fast_prov.pending = 0;
+	fast_prov.not_need_prov = 1;
+	provision_mag.unicast_adr_last = start_addr;
+#endif	
 }
 
 #define CACHE_MAC_MAX_NUM 	32
@@ -237,7 +254,7 @@ void mesh_fast_prov_reliable_finish_handle()
 			break;
 		case FAST_PROV_SET_ADDR:
 			if(mesh_tx_reliable.mat.op == VD_MESH_ADDR_SET){				
-				// for default address conflict, assume set addr must succcess
+				// for default address conflict, assume set addr must success
 				u8 device_key[16];
 				memset(device_key, 0x00, sizeof(device_key));
 				memcpy(device_key, fast_prov_mac_buf[fast_prov_r_idx-1].mac, OFFSETOF(fast_prov_mac_st,pid));
@@ -392,11 +409,15 @@ int mesh_fast_prov_rcv_op(u16 rcv_op)
 void mesh_fast_provision_timeout()
 {
 	if(fast_prov.start_tick && clock_time_exceed(fast_prov.start_tick,FAST_PROVISION_TIMEOUT)){
-		LOG_MSG_INFO(TL_LOG_NODE_BASIC, 0, 0,"FAST_PROV_TIME_OUT",0);
-		mesh_fast_prov_sts_set(FAST_PROV_TIME_OUT);
-		LOG_MSG_LIB(TL_LOG_NODE_SDK, 0, 0,"time out",0);
+		LOG_MSG_INFO(TL_LOG_NODE_BASIC, 0, 0,"FAST_PROV_TIME_OUT");
+		if(mesh_fast_prov_sts_get() == FAST_PROV_CONFIRM){
+			mesh_fast_prov_sts_set(FAST_PROV_COMPLETE);
+		}
+		else{
+			mesh_fast_prov_sts_set(FAST_PROV_TIME_OUT);
+		}
+		LOG_MSG_LIB(TL_LOG_NODE_SDK, 0, 0,"time out st:%d", mesh_fast_prov_sts_get());
 		fast_prov.start_tick = 0;
-		mesh_revert_network();
 	}
 }
 
@@ -410,7 +431,7 @@ void mesh_fast_prov_proc()
 	if((mesh_fast_prov_sts_get() == FAST_PROV_RESET_NETWORK) && clock_time_exceed(fast_prov.start_tick, fast_prov.delay*1000)){
 		fast_prov.delay = 0;
 		mesh_reset_network(0);
-		LOG_MSG_INFO(TL_LOG_COMMON, 0, 0,"FAST_PROV_RESET_NETWORK",0);
+		LOG_MSG_INFO(TL_LOG_NODE_BASIC, 0, 0,"FAST_PROV_RESET_NETWORK");
 		#if(__PROJECT_MESH_PRO__)
 		mesh_fast_prov_sts_set(FAST_PROV_GET_ADDR);
 		#else
@@ -424,7 +445,7 @@ void mesh_fast_prov_proc()
 		fast_prov.delay = 0;
 		mesh_adv_txrx_to_self_en(0);
 		mesh_revert_network();	
-		LOG_MSG_INFO(TL_LOG_COMMON, 0, 0,"FAST_PROV_REVERT_NETWORK",0);
+		LOG_MSG_INFO(TL_LOG_NODE_BASIC, 0, 0,"FAST_PROV_REVERT_NETWORK");
 		mesh_fast_prov_sts_set(FAST_PROV_IDLE);
 		fast_prov.pending = 0;
 	}
@@ -436,23 +457,25 @@ void mesh_fast_prov_proc()
 	switch(fast_prov.cur_sts){
 		case FAST_PROV_IDLE:
 			break;
-		case FAST_PROV_START:{
-			mesh_adv_txrx_to_self_en(1);
-			u16 delay_ms = 1000;
-			SendOpParaDebug_vendor(ADR_ALL_NODES, 0, VD_MESH_RESET_NETWORK, (u8 *)&delay_ms, 2, 0, 0);
-			fast_prov.delay = delay_ms+500;
-			mesh_fast_prov_sts_set(FAST_PROV_RESET_NETWORK);
-			fast_prov.pending = 1;
+		case FAST_PROV_START:
+			if(0 == my_fifo_data_cnt_get(&hci_rx_fifo)){ // makesure previous command had been executed, such as netkey add
+				mesh_get_fast_prov_net_info();
+				mesh_adv_txrx_to_self_en(1);
+				u16 delay_ms = 1000;
+				SendOpParaDebug_vendor(ADR_ALL_NODES, 0, VD_MESH_RESET_NETWORK, (u8 *)&delay_ms, 2, 0, 0);
+				fast_prov.delay = delay_ms+500;
+				mesh_fast_prov_sts_set(FAST_PROV_RESET_NETWORK);
+				fast_prov.pending = 1;
 			}
 			break;
 		case FAST_PROV_GET_ADDR:
-			LOG_MSG_INFO(TL_LOG_NODE_BASIC, 0, 0,"FAST_PROV_GET_ADDR",0);
+			LOG_MSG_INFO(TL_LOG_NODE_BASIC, 0, 0,"FAST_PROV_GET_ADDR");
 			g_reliable_retry_cnt_def = 0;
 			mesh_fast_prov_mac_buf_init();
 			SendOpParaDebug_vendor(ADR_ALL_NODES, CACHE_MAC_MAX_NUM, VD_MESH_ADDR_GET, (u8 *)&fast_prov.pid, sizeof(fast_prov.pid), VD_MESH_ADDR_GET_STS, 0);
 			break;
 		case FAST_PROV_GET_ADDR_RETRY:{
-			LOG_MSG_INFO(TL_LOG_NODE_BASIC, 0, 0,"FAST_PROV_GET_ADDR_RETRY",0);
+			LOG_MSG_INFO(TL_LOG_NODE_BASIC, 0, 0,"FAST_PROV_GET_ADDR_RETRY");
 			g_reliable_retry_cnt_def = 0;
 			mesh_fast_prov_mac_buf_init();
 			mac_addr_get_t mac_get;
@@ -462,7 +485,7 @@ void mesh_fast_prov_proc()
 			}
 			break;
 		case FAST_PROV_SET_ADDR:{
-			LOG_MSG_INFO(TL_LOG_NODE_BASIC,0,0,"FAST_PROV_SET_ADDR", 0);
+			LOG_MSG_INFO(TL_LOG_NODE_BASIC,0,0,"FAST_PROV_SET_ADDR");
 			g_reliable_retry_cnt_def = RELIABLE_RETRY_CNT_DEF;
 			mac_addr_set_t addr_set;
 			//memcpy(addr_set.mac, fast_prov.mac_ele_info.mac, sizeof(addr_set.mac));
@@ -470,25 +493,25 @@ void mesh_fast_prov_proc()
 			if(p_mac != 0){
 				memcpy(addr_set.mac, p_mac, sizeof(addr_set.mac));		
 				addr_set.ele_addr = fast_prov.prov_addr;
-				SendOpParaDebug_vendor(fast_prov_mac_buf[fast_prov_r_idx-1].default_addr, 1, VD_MESH_ADDR_SET,(u8 *)&addr_set, sizeof(mac_addr_set_t), VD_MESH_ADDR_SET_STS, 0);
+				SendOpParaDebug_vendor(ADR_ALL_NODES, 1, VD_MESH_ADDR_SET,(u8 *)&addr_set, sizeof(mac_addr_set_t), VD_MESH_ADDR_SET_STS, 0);
 			}
 			}
 			break;
 		case FAST_PROV_NET_INFO:
-			LOG_MSG_INFO(TL_LOG_COMMON,0,0,"FAST_PROV_NET_INFO", 0);
+			LOG_MSG_INFO(TL_LOG_NODE_BASIC,0,0,"FAST_PROV_NET_INFO");
 			g_reliable_retry_cnt_def = RELIABLE_RETRY_CNT_DEF;
 			SendOpParaDebug_vendor(ADR_ALL_NODES, 0, VD_MESH_PROV_DATA_SET,(u8 *)&fast_prov.net_info, sizeof(fast_prov.net_info), 0, 0);
 			mesh_fast_prov_sts_set(FAST_PROV_CONFIRM);
 			break;
 		case FAST_PROV_CONFIRM:
-			LOG_MSG_INFO(TL_LOG_COMMON,0,0,"FAST_PROV_CONFIRM", 0);
+			LOG_MSG_INFO(TL_LOG_NODE_BASIC,0,0,"FAST_PROV_CONFIRM");
 			SendOpParaDebug_vendor(ADR_ALL_NODES, 1, VD_MESH_PROV_CONFIRM, 0, 0, VD_MESH_PROV_CONFIRM_STS, 0);
 			break;
 		case FAST_PROV_CONFIRM_OK:{
 			u16 delay_ms = 1000;
 			SendOpParaDebug_vendor(ADR_ALL_NODES, 0, VD_MESH_PROV_COMPLETE, (u8 *)&delay_ms, 2, 0, 0);
 			mesh_fast_prov_sts_set(FAST_PROV_COMPLETE);
-			LOG_MSG_INFO(TL_LOG_COMMON,0,0,"FAST_PROV_COMPLETE", 0);
+			LOG_MSG_INFO(TL_LOG_NODE_BASIC,0,0,"FAST_PROV_COMPLETE");
 			fast_prov.delay = delay_ms;
 			fast_prov.pending = 1;
 			}
@@ -503,38 +526,36 @@ void mesh_fast_prov_proc()
 		case VD_MESH_RESET_NETWORK:
 			if(fast_prov.cur_sts == FAST_PROV_IDLE){
 				mesh_adv_txrx_to_self_en(1);
-				mesh_fast_prov_val_init(); // the proxy node maybe just provision by pb_gatt
 				if(is_provision_success()){
 					mesh_fast_prov_sts_set(FAST_PROV_RESET_NETWORK);
-					LOG_MSG_LIB(TL_LOG_NODE_SDK, 0, 0,"VD_MESH_RESET_NETWORK",0);
-				}				
+					LOG_MSG_LIB(TL_LOG_NODE_SDK, 0, 0,"VD_MESH_RESET_NETWORK");
+				}
 			}
 			break;
 		case VD_MESH_ADDR_GET:
 			if(fast_prov.cur_sts == FAST_PROV_IDLE){
 				mesh_adv_txrx_to_self_en(1);
 				mesh_fast_prov_sts_set(FAST_PROV_GET_ADDR);
-				mesh_gatt_adv_beacon_enable(0);
-				LOG_MSG_LIB(TL_LOG_NODE_SDK, 0, 0,"VD_MESH_ADDR_GET",0);
+				LOG_MSG_LIB(TL_LOG_NODE_SDK, 0, 0,"VD_MESH_ADDR_GET");
 			}
 			break;
 		case VD_MESH_ADDR_SET:
 			if(fast_prov.cur_sts == FAST_PROV_GET_ADDR){
-				cache_init(ADR_ALL_NODES);
+				mesh_gatt_adv_beacon_enable(0);
 				mesh_fast_prov_sts_set(FAST_PROV_SET_ADDR);
-				LOG_MSG_LIB(TL_LOG_NODE_SDK, 0, 0,"VD_MESH_ADDR_SET",0);
+				LOG_MSG_LIB(TL_LOG_NODE_SDK, 0, 0,"VD_MESH_ADDR_SET");
 			}
 			break;
 		case VD_MESH_PROV_DATA_SET:
 			if(fast_prov.cur_sts == FAST_PROV_SET_ADDR){				
 				mesh_fast_prov_sts_set(FAST_PROV_NET_INFO);
-				LOG_MSG_LIB(TL_LOG_NODE_SDK, 0, 0,"VD_MESH_PROV_DATA_SET",0);
+				LOG_MSG_LIB(TL_LOG_NODE_SDK, 0, 0,"VD_MESH_PROV_DATA_SET");
 			}
 			break;
 		case VD_MESH_PROV_CONFIRM:
 			if(fast_prov.cur_sts == FAST_PROV_NET_INFO){
 				mesh_fast_prov_sts_set(FAST_PROV_CONFIRM);
-				LOG_MSG_LIB(TL_LOG_NODE_SDK, 0, 0,"VD_MESH_PROV_CONFIRM",0);
+				LOG_MSG_LIB(TL_LOG_NODE_SDK, 0, 0,"VD_MESH_PROV_CONFIRM");
 			}
 			break;
 		case VD_MESH_PROV_COMPLETE:
@@ -551,6 +572,7 @@ void mesh_fast_prov_proc()
 
 int cb_vd_mesh_reset_network(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par)
 {
+	mesh_fast_prov_val_init(); // the proxy node maybe just provision by pb_gatt
 	mesh_fast_prov_rcv_op(cb_par->op);
 	fast_prov.delay = par[0] + (par[1]<<8);
 
@@ -586,7 +608,7 @@ int cb_vd_mesh_get_addr(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par)
 			default_addr_random = 1;
 			u16 tmp_ele_addr = mac_get.ele_addr+256+(u16)clock_time()%(0x8000-256-mac_get.ele_addr);
 			tmp_ele_addr &= 0x7fff;
-			mesh_set_ele_adr_ll(tmp_ele_addr, 0);
+			mesh_set_ele_adr_ll(tmp_ele_addr, 0, 0);
 		}
 		err = cb_vd_mesh_get_addr_st_rsp(cb_par);
 	}
@@ -608,7 +630,8 @@ int cb_vd_mesh_set_addr(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par)
 		u16 addr = par[6] +(par[7]<<8);
 		if(addr&&is_unicast_adr(addr)){
 			mesh_fast_prov_rcv_op(cb_par->op);
-			mesh_set_ele_adr_ll(addr, 0);
+			memset(&fast_prov.net_info.pro_data, 0x00, sizeof(provison_net_info_str));
+			fast_prov.net_info.pro_data.unicast_address = addr;
 		}
 		fast_prov.get_mac_en = 0;		
 	}
@@ -623,9 +646,7 @@ int cb_vd_mesh_set_provision_data(u8 *par, int par_len, mesh_cb_fun_par_t *cb_pa
 	}
 	mesh_fast_prov_rcv_op(cb_par->op);
 //par: provision data + app_key add
-	memset(&fast_prov.net_info.pro_data, 0x00, sizeof(provison_net_info_str));
-	memcpy(&fast_prov.net_info.pro_data, par, sizeof(provison_net_info_str));
-	fast_prov.net_info.pro_data.unicast_address = ele_adr_primary;//must, provision data's dst addrs is broadcast.
+	memcpy(&fast_prov.net_info.pro_data, par, OFFSETOF(provison_net_info_str, unicast_address));	// unicast address had been set in cb_vd_mesh_set_addr().
 	memcpy(&fast_prov.net_info.appkey_set,par+sizeof(provison_net_info_str),sizeof(mesh_appkey_set_t));
 
 	return 0;

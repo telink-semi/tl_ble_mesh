@@ -1,10 +1,10 @@
 /********************************************************************************************************
- * @file     mcu_boot.h
+ * @file    mcu_boot.h
  *
- * @brief    This is the header file for BLE SDK
+ * @brief   This is the header file for BLE SDK
  *
- * @author	 BLE GROUP
- * @date         11,2022
+ * @author  BLE GROUP
+ * @date    06,2022
  *
  * @par     Copyright (c) 2022, Telink Semiconductor (Shanghai) Co., Ltd. ("TELINK")
  *
@@ -19,8 +19,8 @@
  *          WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  *          See the License for the specific language governing permissions and
  *          limitations under the License.
+ *
  *******************************************************************************************************/
-
 #ifndef DRIVERS_B91_EXT_DRIVER_MCU_BOOT_H_
 #define DRIVERS_B91_EXT_DRIVER_MCU_BOOT_H_
 
@@ -36,9 +36,16 @@ typedef enum{
 
 
 
-#define 	BOOT_MARK_VALUE										0x4B
+
+/* MCU boot relative definition below are used by ota_server.c, sometimes customers may need obtained the source code through authorization
+ * so do not hidden these code */
+#define 	BOOT_MARK_VALUE_1_BYTE								0x4B
+#define 	BOOT_MARK_VALUE_4_BYTE								0x544C4E4B
 #define		BOOT_MARK_ADDR										0x00020
 
 #define		FW_SIZE_ADDR										0x00018
+
+/* used to check flash protection function consistency between the old and new  firmware when OTA upgrading */
+#define		FIRMWARE_FLASH_PROTECTION_FLAG_ADDR					0x00015
 
 #endif /* DRIVERS_B91_EXT_DRIVER_MCU_BOOT_H_ */

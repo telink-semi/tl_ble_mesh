@@ -1,10 +1,10 @@
 /********************************************************************************************************
- * @file     usbmouse.c
+ * @file    usbmouse.c
  *
- * @brief    This is the source file for BLE SDK
+ * @brief   This is the source file for BLE SDK
  *
- * @author	 BLE GROUP
- * @date         2020.06
+ * @author  BLE GROUP
+ * @date    06,2022
  *
  * @par     Copyright (c) 2022, Telink Semiconductor (Shanghai) Co., Ltd. ("TELINK")
  *
@@ -19,16 +19,13 @@
  *          WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  *          See the License for the specific language governing permissions and
  *          limitations under the License.
+ *
  *******************************************************************************************************/
-
 #include "tl_common.h"
-
-#if(USB_MOUSE_ENABLE)
 
 #include "usbmouse.h"
 #include "usbkb.h"
 #include "application/usbstd/usb.h"
-#include "application/rf_frame.h"
 
 
 #ifndef	USB_MOUSE_REPORT_SMOOTH
@@ -45,24 +42,22 @@ static u32 usbmouse_data_report_time;
 
 
 
-void usbmouse_add_frame (rf_packet_mouse_t *packet_mouse){
-
-	u8 new_data_num = packet_mouse->pno;
-	for(u8 i=0;i<new_data_num;i++)
+void usbmouse_add_frame (mouse_data_t *packet_mouse, int packet_num)
+{
+	for(u8 i=0;i<packet_num ;i++)
 	{
-//			tmemcpy4((int*)(&mouse_dat_buff[usbmouse_wptr]), (int*)(&packet_mouse->data[i*sizeof(mouse_data_t)]), sizeof(mouse_data_t));
-			memcpy((s8*)(&mouse_dat_buff[usbmouse_wptr]), (s8*)(&packet_mouse->data[i*sizeof(mouse_data_t)]), sizeof(mouse_data_t));
-			BOUND_INC_POW2(usbmouse_wptr,USBMOUSE_BUFF_DATA_NUM);
-			if(usbmouse_wptr == usbmouse_rptr)
-			{
-					//BOUND_INC_POW2(usbmouse_rptr,USBMOUSE_BUFF_DATA_NUM);
-					break;
-			}
+		memcpy((s8*)(&mouse_dat_buff[usbmouse_wptr]), (s8*)(packet_mouse + i), sizeof(mouse_data_t));
+		BOUND_INC_POW2(usbmouse_wptr,USBMOUSE_BUFF_DATA_NUM);
+		if(usbmouse_wptr == usbmouse_rptr)
+		{
+				//BOUND_INC_POW2(usbmouse_rptr,USBMOUSE_BUFF_DATA_NUM);
+				break;
+		}
 	}
 }
 
 
-void usbmouse_release_check(){
+void usbmouse_release_check(void){
 	if(usbmouse_not_released && clock_time_exceed(usbmouse_data_report_time, USB_MOUSE_RELEASE_TIMEOUT)){
 	    u32 release_data = 0;
 
@@ -73,7 +68,7 @@ void usbmouse_release_check(){
 }
 
 
-void usbmouse_report_frame(){
+void usbmouse_report_frame(void){
 
 #if 	USB_MOUSE_REPORT_SMOOTH
 	static u32 tick = 0;
@@ -111,7 +106,7 @@ int usbmouse_hid_report(u8 report_id, u8 *data, int cnt){
 
 
 	if(usbhw_is_ep_busy(USB_EDP_MOUSE)){
-
+#if 0 //mouse has its own buffer "mouse_dat_buff"
 		u8 *pData = (u8 *)&usb_fifo[usb_ff_wptr++ & (USB_FIFO_NUM - 1)];
 		pData[0] = DAT_TYPE_MOUSE;
 		pData[1] = report_id;
@@ -123,6 +118,7 @@ int usbmouse_hid_report(u8 report_id, u8 *data, int cnt){
 			usb_ff_rptr++;
 			//fifo overflow, overlap older data
 		}
+#endif
 
 		return 0;
 	}
@@ -150,4 +146,3 @@ int usbmouse_hid_report(u8 report_id, u8 *data, int cnt){
 }
 
 
-#endif

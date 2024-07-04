@@ -1,10 +1,10 @@
 /********************************************************************************************************
- * @file     driver_ext.h
+ * @file    driver_ext.h
  *
- * @brief    This is the header file for BLE SDK
+ * @brief   This is the header file for BLE SDK
  *
- * @author	 BLE GROUP
- * @date         11,2022
+ * @author  BLE GROUP
+ * @date    06,2022
  *
  * @par     Copyright (c) 2022, Telink Semiconductor (Shanghai) Co., Ltd. ("TELINK")
  *
@@ -19,22 +19,26 @@
  *          WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  *          See the License for the specific language governing permissions and
  *          limitations under the License.
+ *
  *******************************************************************************************************/
-
 #ifndef DRIVERS_B91_EXT_DRIVER_DRIVER_EXT_H_
 #define DRIVERS_B91_EXT_DRIVER_DRIVER_EXT_H_
 
-
-#include "ext_rf.h"
+#include "mcu_config.h"
 #include "ext_pm.h"
-#include "ext_aes.h"
-#include "ext_gpio.h"
 #include "ext_misc.h"
-#include "software_pa.h"
-#include "dbgport.h"
 #include "ext_uart.h"
-#include "ext_hci_uart.h"
+#include "software_pa.h"
 #include "mcu_boot.h"
-#include "ext_audio.h"
+#include "ext_hci_uart.h"
+#include "ext_misc.h"
+
+/*Remove start********************************************************/
+//Remove when file merge to SDK //
+#include "driver_lib/ext_lib.h"
+
+/*Remove end********************************************************/
+
+
 
 #endif /* DRIVERS_B91_EXT_DRIVER_DRIVER_EXT_H_ */

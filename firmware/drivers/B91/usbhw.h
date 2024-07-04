@@ -1,12 +1,12 @@
 /********************************************************************************************************
- * @file     usbhw.h
+ * @file    usbhw.h
  *
- * @brief    This is the header file for BLE SDK
+ * @brief   This is the header file for B91
  *
- * @author	 BLE GROUP
- * @date         11,2022
+ * @author  Driver Group
+ * @date    2019
  *
- * @par     Copyright (c) 2022, Telink Semiconductor (Shanghai) Co., Ltd. ("TELINK")
+ * @par     Copyright (c) 2019, Telink Semiconductor (Shanghai) Co., Ltd. ("TELINK")
  *
  *          Licensed under the Apache License, Version 2.0 (the "License");
  *          you may not use this file except in compliance with the License.
@@ -19,8 +19,8 @@
  *          WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  *          See the License for the specific language governing permissions and
  *          limitations under the License.
+ *
  *******************************************************************************************************/
-
 /**	@page USBHW
  *
  *	Introduction
@@ -34,7 +34,7 @@
 
 #pragma once
 
-#include "reg_include/register_b91.h"
+#include "reg_include/register.h"
 #include "analog.h"
 #include "gpio.h"
 
@@ -195,7 +195,8 @@ static inline void usbhw_clr_irq_mask( usb_irq_mask_e mask)
 /**
  * @brief     This function servers to get usb irq status.
  * @param[in]  status -the  irq status of usb.
- * @return    the status of irq.
+ * @retval	  non-zero   -  the interrupt occurred.
+ * @retval	  zero  -  the interrupt did not occur.
  */
 static inline unsigned char  usbhw_get_irq_status(usb_irq_status_e status)
 {
@@ -209,7 +210,20 @@ static inline unsigned char  usbhw_get_irq_status(usb_irq_status_e status)
  */
 static inline void usbhw_clr_irq_status(usb_irq_status_e status)
 {
-	reg_usb_irq_mask|=status;
+    /** the reg_usb_irq_mask register mask and status are in the same register
+     * enum
+     * {
+     *      FLD_USB_IRQ_RESET_MASK   = 	BIT(0),
+     *      FLD_USB_IRQ_250US_MASK 	 = 	BIT(1),
+     *      FLD_USB_IRQ_SUSPEND_MASK = 	BIT(2),
+     *      FLD_USB_IRQ_RESET_LVL	 = 	BIT(3),
+     *      FLD_USB_IRQ_250US_LVL	 = 	BIT(4),
+     *      FLD_USB_IRQ_RESET_O 	 = 	BIT(5),
+     *      FLD_USB_IRQ_250US_O		 = 	BIT(6),
+     *      FLD_USB_IRQ_SUSPEND_O	 = 	BIT(7),
+     * };
+     * Flags can only be cleared with |=, not by direct assignment. */
+	reg_usb_irq_mask|=status; 
 }
 
 
@@ -305,7 +319,7 @@ static inline void usbhw_data_ep_stall(unsigned int ep) {
  * @return    none.
  */
 static inline void usbhw_set_printer_threshold(unsigned char th) {
-	reg_usb_ep8_send_thre = th;
+	reg_usb_ep8_send_thres = th;
 }
 
 enum {
@@ -317,8 +331,8 @@ enum {
 	USB_EDP_PRINTER_OUT = 5,	// default hw buf len = 64
 	USB_EDP_SPEAKER = 6,		// default hw buf len = 16
 	USB_EDP_MIC = 7,			// default hw buf len = 16
-	USB_EDP_MS_IN = USB_EDP_PRINTER_IN,		// mass storage
-	USB_EDP_MS_OUT = USB_EDP_PRINTER_OUT,
+	USB_EDP_MS_IN = 4,		// mass storage
+	USB_EDP_MS_OUT = 5,
 	USB_EDP_SOMATIC_IN = USB_EDP_AUDIO_IN,		//  when USB_SOMATIC_ENABLE, USB_EDP_PRINTER_OUT disable
 	USB_EDP_SOMATIC_OUT = USB_EDP_PRINTER_OUT,
     USB_EDP_CDC_IN = 4,
@@ -337,7 +351,7 @@ enum {
 
 /**
  * @brief      This function disables the manual interrupt
- *             (Endpont8 is the alias of endpoint0)
+ *             (Endpoint8 is the alias of endpoint0)
  * @param[in]  m - the irq mode needs to set
  * @return     none
  */
@@ -421,4 +435,5 @@ static inline void usb_set_pin_en(void)
 	gpio_function_dis(GPIO_PA6);
 	gpio_input_en(GPIO_PA5|GPIO_PA6);//DP/DM must set input enable
 	usb_dp_pullup_en (1);
+	write_reg8(0x100c01, (read_reg8(0x100c01) | BIT(7)));   //swire_usb_en
 }

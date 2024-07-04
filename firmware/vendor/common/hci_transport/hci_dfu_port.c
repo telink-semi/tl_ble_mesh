@@ -1,10 +1,10 @@
 /********************************************************************************************************
- * @file     hci_dfu_port.c
+ * @file    hci_dfu_port.c
  *
- * @brief    This is the source file for BLE SDK
+ * @brief   This is the source file for BLE SDK
  *
- * @author	 BLE GROUP
- * @date         11,2022
+ * @author  BLE GROUP
+ * @date    06,2022
  *
  * @par     Copyright (c) 2022, Telink Semiconductor (Shanghai) Co., Ltd. ("TELINK")
  *
@@ -19,8 +19,8 @@
  *          WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  *          See the License for the specific language governing permissions and
  *          limitations under the License.
+ *
  *******************************************************************************************************/
-
 #include "hci_dfu_port.h"
 #include "hci_tr_def.h"
 #include "hci_tr.h"
@@ -29,6 +29,10 @@
 #include "string.h"
 #include "stack/ble/hci/hci.h"
 #include "stack/ble/ble_common.h"
+
+#ifndef HCI_DFU_EN
+#define HCI_DFU_EN  				0
+#endif
 
 #if HCI_DFU_EN
 
@@ -72,7 +76,7 @@ void MCU_Reset(void)
 
 bool UART_IsBusy(void)
 {
-	return isUartTxDone?false:true;
+	return ext_hci_getTxCompleteDone()?false:true;
 	//return uart_tx_is_busy();
 }
 
@@ -92,9 +96,9 @@ u16 Hci_Revision(void)
 	return hci_get_revision();
 }
 
-void Hci_SetRevision(u16 revison)
+void Hci_SetRevision(u16 revision)
 {
-	hci_set_revision(revison);
+	hci_set_revision(revision);
 }
 
 extern hci_fifo_t bltHci_txfifo;

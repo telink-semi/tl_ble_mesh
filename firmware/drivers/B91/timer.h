@@ -1,12 +1,12 @@
 /********************************************************************************************************
- * @file     timer.h
+ * @file    timer.h
  *
- * @brief    This is the header file for BLE SDK
+ * @brief   This is the header file for B91
  *
- * @author	 BLE GROUP
- * @date         11,2022
+ * @author  Driver Group
+ * @date    2019
  *
- * @par     Copyright (c) 2022, Telink Semiconductor (Shanghai) Co., Ltd. ("TELINK")
+ * @par     Copyright (c) 2019, Telink Semiconductor (Shanghai) Co., Ltd. ("TELINK")
  *
  *          Licensed under the Apache License, Version 2.0 (the "License");
  *          you may not use this file except in compliance with the License.
@@ -19,8 +19,8 @@
  *          WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  *          See the License for the specific language governing permissions and
  *          limitations under the License.
+ *
  *******************************************************************************************************/
-
 /**	@page TIMER
  *
  *	Introduction
@@ -40,9 +40,9 @@
 #ifndef TIMER_H_
 #define TIMER_H_
 
+#include "reg_include/register.h"
 #include "analog.h"
 #include "gpio.h"
-#include "reg_include/register_b91.h"
 
 
 /**********************************************************************************************************************
@@ -84,7 +84,8 @@ typedef enum{
 /*
  * @brief    This function refer to get timer irq status.
  * @param[in] status - variable of enum to select the timer interrupt source.
- * @return   the status of timer0/timer1.
+ * @retval	  non-zero   -  the interrupt occurred.
+ * @retval	  zero  -  the interrupt did not occur.
  */
 static inline unsigned char timer_get_irq_status(time_irq_e status)
 {
@@ -164,7 +165,7 @@ static inline unsigned int timer1_get_tick(void)
 }
 
 /*
- * @brief     This function set to initial tick for timr0/timer1.
+ * @brief     This function set to initial tick for timer0/timer1.
  * @param[in] type - timer0/timer1.
  * @param[in] init_tick - initial tick value.
  * @return    none
@@ -174,7 +175,7 @@ static inline void timer_set_init_tick(timer_type_e type, unsigned int init_tick
 	reg_tmr_tick(type) = init_tick;
 }
 /*
- * @brief     This function set to capture tick for timr0/timer1.
+ * @brief     This function set to capture tick for timer0/timer1.
  * @param[in] type - timer0/timer1.
  * @param[in] cap_tick - initial tick value.
  * @return    none
@@ -187,7 +188,7 @@ static inline void timer_set_cap_tick(timer_type_e type, unsigned int cap_tick)
 
 
 /**
- * @brief     the specifed timer start working.
+ * @brief     the specified timer start working.
  * @param[in] type - select the timer to start.
  * @return    none
  */
@@ -213,7 +214,7 @@ void timer_gpio_init(timer_type_e type, gpio_pin_e pin, gpio_pol_e pol );
 
 
 /**
- * @brief     the specifed timer stop working.
+ * @brief     the specified timer stop working.
  * @param[in] type - select the timer to stop.
  * @return    none
  */

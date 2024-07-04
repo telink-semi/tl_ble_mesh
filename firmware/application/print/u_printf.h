@@ -39,16 +39,16 @@ int printf_Bin2Text (char *lpD, int lpD_len_max, char *lpS, int n);
 u32 get_len_Bin2Text(u32 buf_len);
 void u_array_printf(unsigned char*data, unsigned int len);
 
-#define printf	 		my_printf
-#define sprintf	 		my_sprintf
-#define array_printf	u_array_printf
+//#define printf	 		my_printf
+//#define sprintf	 		my_sprintf
+//#define array_printf	u_array_printf
 
 //extern u8 get_print_buf_len_flag;
 #else
-	#define printf
-	#define sprintf
-	#define array_printf
+	#define printf(...)
+	#define sprintf(...)
+	#define array_printf(...)
 #endif
 
-#define PP_GET_PRINT_BUF_LEN_FALG		((char **)1)	// a valid pointer should never be 1. // length by getting is 1 more than actually print because the end of "\0".
+#define PP_GET_PRINT_BUF_LEN_FLAG		((char **)1)	// a valid pointer should never be 1. // length by getting is 1 more than actually print because the end of "\0".
 

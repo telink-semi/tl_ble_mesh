@@ -1,12 +1,12 @@
 /********************************************************************************************************
- * @file     gpio.h
+ * @file    gpio.h
  *
- * @brief    This is the header file for BLE SDK
+ * @brief   This is the header file for B91
  *
- * @author	 BLE GROUP
- * @date         11,2022
+ * @author  Driver Group
+ * @date    2019
  *
- * @par     Copyright (c) 2022, Telink Semiconductor (Shanghai) Co., Ltd. ("TELINK")
+ * @par     Copyright (c) 2019, Telink Semiconductor (Shanghai) Co., Ltd. ("TELINK")
  *
  *          Licensed under the Apache License, Version 2.0 (the "License");
  *          you may not use this file except in compliance with the License.
@@ -19,8 +19,8 @@
  *          WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  *          See the License for the specific language governing permissions and
  *          limitations under the License.
+ *
  *******************************************************************************************************/
-
 /**	@page GPIO
  *
  *	Introduction
@@ -34,9 +34,9 @@
 #ifndef DRIVERS_GPIO_H_
 #define DRIVERS_GPIO_H_
 
-
+#include <stdbool.h>
+#include "lib/include/plic.h"
 #include "analog.h"
-#include "plic.h"
 #include "reg_include/gpio_reg.h"
 /**********************************************************************************************************************
  *                                         global constants                                                           *
@@ -52,6 +52,12 @@
  *********************************************************************************************************************/
 /**
  *  @brief  Define GPIO types
+ *  @note	the following two points need to noticed when using PE5 port:
+ *  		1. This pin is not recommend to use as wake-up source;
+ *  		2. Since this pin is output function by default, even if it is configured with pull-up/pull-down retention,
+ *  		when deep/deep Retention is invoked, it can't maintain high/low level and an abnormal level will occur.
+ *  		Therefore, this pin can't be used in applications where a certain level state needs to be maintained all the time.
+ *  		The PF group can only be used as an mspi pin and cannot be used as a wake-up source.
  */
 typedef enum{
 		GPIO_GROUPA    = 0x000,
@@ -80,7 +86,7 @@ typedef enum{
 		GPIO_PB6 = GPIO_GROUPB | BIT(6),
 		GPIO_PB7 = GPIO_GROUPB | BIT(7),
 
-		GPIO_PC0 = GPIO_GROUPC | BIT(0),
+		GPIO_PC0 = GPIO_GROUPC | BIT(0),GPIO_SWM=GPIO_PC0,
 		GPIO_PC1 = GPIO_GROUPC | BIT(1),
 		GPIO_PC2 = GPIO_GROUPC | BIT(2),
 		GPIO_PC3 = GPIO_GROUPC | BIT(3),
@@ -113,7 +119,9 @@ typedef enum{
 		GPIO_PF1 = GPIO_GROUPF | BIT(1),
 		GPIO_PF2 = GPIO_GROUPF | BIT(2),
 		GPIO_PF3 = GPIO_GROUPF | BIT(3),
-
+		GPIO_PF4 = GPIO_GROUPF | BIT(4),
+		GPIO_PF5 = GPIO_GROUPF | BIT(5),
+		GPIO_NONE_PIN =0x00,
 }gpio_pin_e;
 
 /**
@@ -170,7 +178,11 @@ typedef enum {
 }gpio_pull_type_e;
 
 
-
+typedef enum{
+	GPIO_IRQ_MASK_GPIO       =          BIT(0),
+	GPIO_IRQ_MASK_GPIO2RISC0 = 			BIT(1),
+	GPIO_IRQ_MASK_GPIO2RISC1 = 			BIT(2),
+}gpio_irq_mask_e;
 
 /**
  * @brief      This function servers to enable gpio function.
@@ -410,6 +422,26 @@ static inline void gpio_clr_irq_status(gpio_irq_status_e status)
 }
 
 /**
+ * @brief      This function serves to enable gpio_irq/gpio_risc0_irq/gpio_risc1_irq mask function.
+ * @param[in]  mask  - to select interrupt type.
+ * @return     none.
+ */
+static inline void gpio_set_irq_mask(gpio_irq_mask_e mask)
+{
+	BM_SET(reg_gpio_irq_risc_mask, mask);
+}
+
+/**
+ * @brief      This function serves to disable gpio_irq/gpio_risc0_irq/gpio_risc1_irq mask function.
+ *             if disable gpio interrupt,choose disable gpio mask , use interface gpio_clr_irq_mask instead of gpio_irq_dis/gpio_gpio2risc0_irq_dis/gpio_gpio2risc1_irq_dis.
+ * @return     none.
+ */
+static inline void gpio_clr_irq_mask(gpio_irq_mask_e mask)
+{
+	BM_CLR(reg_gpio_irq_risc_mask, mask);
+}
+
+/**
  * @brief      This function set the pin's driving strength at strong.
  * @param[in]  pin - the pin needs to set the driving strength.
  * @return     none.
@@ -483,8 +515,8 @@ void gpio_shutdown(gpio_pin_e pin);
 void gpio_set_up_down_res(gpio_pin_e pin, gpio_pull_type_e up_down_res);
 
 /**
- * @brief     This function set pin's 30k pull-up registor.
- * @param[in] pin - the pin needs to set its pull-up registor.
+ * @brief     This function set pin's 30k pull-up register.
+ * @param[in] pin - the pin needs to set its pull-up register.
  * @return    none.
  */
 void gpio_set_pullup_res_30k(gpio_pin_e pin);

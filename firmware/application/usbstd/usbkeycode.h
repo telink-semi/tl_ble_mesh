@@ -1,10 +1,10 @@
 /********************************************************************************************************
- * @file     usbkeycode.h
+ * @file    usbkeycode.h
  *
- * @brief    This is the header file for BLE SDK
+ * @brief   This is the header file for BLE SDK
  *
- * @author	 BLE GROUP
- * @date         2020.06
+ * @author  BLE GROUP
+ * @date    06,2022
  *
  * @par     Copyright (c) 2022, Telink Semiconductor (Shanghai) Co., Ltd. ("TELINK")
  *
@@ -19,8 +19,8 @@
  *          WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  *          See the License for the specific language governing permissions and
  *          limitations under the License.
+ *
  *******************************************************************************************************/
-
 #pragma once
 
 #define VK_NONE        		0x00
@@ -156,7 +156,7 @@
 #define VK_KCR				0x90	//ok,K151
 #define VK_KCL				0x91	//ok,K150
 
-//  NOT standard,  use these reserved code to distinguish ctrol keys
+//  NOT standard,  use these reserved code to distinguish ctrl keys
 #ifndef CTRL_SHIFT_E0E7
 #define CTRL_SHIFT_E0E7		1
 #endif
@@ -251,7 +251,7 @@ typedef struct{
 	u8 val[VK_EXT_LEN];
 }vk_ext_t;
 
-// mulit-byte keycode for media keys, cannot used directly in c code..for reference
+// multi-byte keycode for media keys, cannot used directly in c code..for reference
 #define VK_POWER_V			0x01
 #define VK_SLEEP_V			0x02
 #define VK_WAKEUP_V			0x04
@@ -269,7 +269,7 @@ typedef struct{
 // calculator
 #define VK_CAL_V			{0x92,0x01}
 #define VK_MY_COMP_V		{0x94,0x01}
-// next track -- 01(mosue-ep/USB_EDP_MOUSE) 05(len) 03(kb-report-id/USB_HID_KB_MEDIA)
+// next track -- 01(mouse-ep/USB_EDP_MOUSE) 05(len) 03(kb-report-id/USB_HID_KB_MEDIA)
 // b5(val) 00 00 00
 #define VK_MENU_V			{0x40,0x00}
 #define VK_MENU_PICK_V		{0x41,0x00}

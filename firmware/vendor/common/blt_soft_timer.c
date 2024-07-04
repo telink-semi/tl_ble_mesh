@@ -1,12 +1,13 @@
 /********************************************************************************************************
- * @file     blt_soft_timer.c
+ * @file	blt_soft_timer.c
  *
- * @brief    This is the source file for BLE SDK
+ * @brief	for TLSR chips
  *
- * @author	 BLE GROUP
- * @date         2020.06
+ * @author	public@telink-semi.com;
+ * @date	Sep. 18, 2015
  *
- * @par     Copyright (c) 2022, Telink Semiconductor (Shanghai) Co., Ltd. ("TELINK")
+ * @par     Copyright (c) 2017, Telink Semiconductor (Shanghai) Co., Ltd. ("TELINK")
+ *          All rights reserved.
  *
  *          Licensed under the Apache License, Version 2.0 (the "License");
  *          you may not use this file except in compliance with the License.
@@ -19,21 +20,23 @@
  *          WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  *          See the License for the specific language governing permissions and
  *          limitations under the License.
+ *
  *******************************************************************************************************/
-
-#include "stack/ble/ble.h"
 #include "tl_common.h"
+#if (BLT_SOFTWARE_TIMER_ENABLE && (MCU_CORE_TYPE != MCU_CORE_8269))
+#if(MCU_CORE_TYPE == MCU_CORE_8258)
+#include "stack/ble/ble.h"
+#elif(MCU_CORE_TYPE == MCU_CORE_8278)
+#include "stack/ble_8278/ble.h"
+#elif(MCU_CORE_TYPE == MCU_CORE_9518)
+#include "stack/ble/ble.h"
+#endif
 #include "blt_soft_timer.h"
+#include "proj_lib/sig_mesh/app_mesh.h"
 
+STATIC_ASSERT(BLT_TIMER_SAFE_MARGIN_POST >= GET_ADV_INTERVAL_MS(ADV_INTERVAL_MAX)*1000*sys_tick_per_us); // BLT_TIMER_SAFE_MARGIN_POST should set to larger than ADV_INTERVAL_MAX
 
-
-
-#if (BLT_SOFTWARE_TIMER_ENABLE)
-
-
-
-
-_attribute_ble_data_retention_	blt_soft_timer_t	blt_timer;
+_attribute_data_retention_	blt_soft_timer_t	blt_timer;
 
 
 /**
@@ -82,22 +85,22 @@ int  blt_soft_timer_sort(void)
  */
 int blt_soft_timer_add(blt_timer_callback_t func, u32 interval_us)
 {
-	//int i;
+//	int i;
 	u32 now = clock_time();
+	blt_soft_timer_delete(func); // must delete the duplicate callback function, because can not use the same function to register two timer due to blt_soft_timer_delete().
 
 	if(blt_timer.currentNum >= MAX_TIMER_NUM){  //timer full
 		return 	0;
 	}
 	else{
 		blt_timer.timer[blt_timer.currentNum].cb = func;
-		blt_timer.timer[blt_timer.currentNum].interval = interval_us * SYSTEM_TIMER_TICK_1US;
+		blt_timer.timer[blt_timer.currentNum].interval = interval_us * CLOCK_16M_SYS_TIMER_CLK_1US;
 		blt_timer.timer[blt_timer.currentNum].t = now + blt_timer.timer[blt_timer.currentNum].interval;
 		blt_timer.currentNum ++;
 
 		blt_soft_timer_sort();
-
-		blc_pm_setAppWakeupLowPower(blt_timer.timer[0].t,  1);
-
+		bls_pm_setAppWakeupLowPower(blt_timer.timer[0].t,  1);
+		
 		return  1;
 	}
 }
@@ -125,7 +128,7 @@ int  blt_soft_timer_delete_by_index(u8 index)
 
 	blt_timer.currentNum --;
 
-	return 0;
+	return 1;
 }
 
 /**
@@ -144,11 +147,11 @@ int 	blt_soft_timer_delete(blt_timer_callback_t func)
 
 			if(i == 0){  //The most recent timer is deleted, and the time needs to be updated
 
-				if( (u32)(blt_timer.timer[0].t - clock_time()) < 3000 *  SYSTEM_TIMER_TICK_1MS){
-					blc_pm_setAppWakeupLowPower(blt_timer.timer[0].t,  1);
+				if(blt_timer.currentNum && ((u32)(blt_timer.timer[0].t - clock_time()) < BLT_TIMER_SAFE_MARGIN_POST)){
+					bls_pm_setAppWakeupLowPower(blt_timer.timer[0].t,  1);
 				}
 				else{
-					blc_pm_setAppWakeupLowPower(0, 0);  //disable
+					bls_pm_setAppWakeupLowPower(0, 0);  //disable
 				}
 
 			}
@@ -160,6 +163,20 @@ int 	blt_soft_timer_delete(blt_timer_callback_t func)
 	return 0;
 }
 
+int is_soft_timer_exist(blt_timer_callback_t func)
+{
+	for(int i=0; i<blt_timer.currentNum; i++){
+		if(func == blt_timer.timer[i].cb){
+			return 1;
+		}
+	}
+	return 0;
+}
+
+u8 blt_soft_timer_cur_num()
+{
+	return blt_timer.currentNum;
+}
 
 /**
  * @brief		This function is used to manage software timer tasks
@@ -169,12 +186,11 @@ int 	blt_soft_timer_delete(blt_timer_callback_t func)
 void  	blt_soft_timer_process(int type)
 {
 	if(type == CALLBACK_ENTRY){ //callback trigger
-
 	}
 
 	u32 now = clock_time();
 	if(!blt_timer.currentNum){
-		blc_pm_setAppWakeupLowPower(0, 0);  //disable
+		bls_pm_setAppWakeupLowPower(0, 0);  //disable
 		return;
 	}
 
@@ -191,7 +207,14 @@ void  	blt_soft_timer_process(int type)
 
 			}
 			else{
+				#if LLSYNC_ENABLE
+				if(blt_timer.timer[i].cb){
+					blt_timer.timer[i].cb(NULL);
+				}
+				result = 0;	// always continue.
+				#else
 				result = blt_timer.timer[i].cb();
+				#endif
 
 				if(result < 0){
 					blt_soft_timer_delete_by_index(i);
@@ -202,7 +225,7 @@ void  	blt_soft_timer_process(int type)
 				}
 				else{  //set new timer interval
 					change_flg = 1;
-					blt_timer.timer[i].interval = result * SYSTEM_TIMER_TICK_1US;
+					blt_timer.timer[i].interval = result * CLOCK_16M_SYS_TIMER_CLK_1US;
 					blt_timer.timer[i].t = now + blt_timer.timer[i].interval;
 				}
 			}
@@ -215,16 +238,16 @@ void  	blt_soft_timer_process(int type)
 			blt_soft_timer_sort();
 		}
 
-		if( (u32)(blt_timer.timer[0].t - now) < 3000 *  SYSTEM_TIMER_TICK_1MS){
-			blc_pm_setAppWakeupLowPower(blt_timer.timer[0].t,  1);
+		if( (u32)(blt_timer.timer[0].t - now) < BLT_TIMER_SAFE_MARGIN_POST){
+			bls_pm_setAppWakeupLowPower(blt_timer.timer[0].t,  1);
 		}
 		else{
-			blc_pm_setAppWakeupLowPower(0, 0);  //disable
+			bls_pm_setAppWakeupLowPower(0, 0);  //disable
 		}
 
 	}
 	else{
-		blc_pm_setAppWakeupLowPower(0, 0);  //disable
+		bls_pm_setAppWakeupLowPower(0, 0);  //disable
 	}
 
 }
@@ -236,7 +259,7 @@ void  	blt_soft_timer_process(int type)
  */
 void 	blt_soft_timer_init(void)
 {
-	blc_pm_registerAppWakeupLowPowerCb(blt_soft_timer_process);
+	bls_pm_registerAppWakeupLowPowerCb(blt_soft_timer_process);
 }
 
 

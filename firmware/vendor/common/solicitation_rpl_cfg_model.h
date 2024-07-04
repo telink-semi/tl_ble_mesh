@@ -27,17 +27,23 @@
 #include "tl_common.h"
 #include "proj_lib/sig_mesh/app_mesh.h"
 
-#define SOLI_WITH_RPL_TYPE		0
+#define SOLI_WITH_RPL_TYPE			0
 
 #define SOLI_RPL_MAX	8
 
 #define SOLICI_PDU_INTERVAL_MS 		50
 #define SOLICI_PDU_CNT				20
 
+#if MD_SOLI_PDU_RPL_EN
+#define VENDOR_IOS_SOLI_PDU_EN		1 // USE AD TYPE of Manufacturer Specific Data to send solicitation PDU for iOS, due to iPhone can not send solicitation PDU of mesh spec now.
+#else
+#define VENDOR_IOS_SOLI_PDU_EN		0  // must 0
+#endif
+
 typedef struct{
 	u8 id_type;
 	u8 id_para[17]; // OFFSETOF(mesh_cmd_nw_t, 8) +MIC(8)
-}soli_ser_dat_t;
+}soli_srv_dat_t;
 
 typedef struct {
 	u8 flag_len;
@@ -50,9 +56,45 @@ typedef struct {
 		u8 service_len;
 		u8 service_type;
 		u16 service_uuid;
-		soli_ser_dat_t service_data;
+		soli_srv_dat_t service_data;
 	};
-}soli_pdu_pkt_t;
+}soli_pdu_pkt_t; // solicitation PDU packet type
+
+#if VENDOR_IOS_SOLI_PDU_EN
+#define APPLE_CID		0x004C
+
+typedef struct {
+	u8 flag_len;
+	u8 flag_type;
+	u8 flag_content;
+	u8 len;
+	u8 type; // Manufacturer Specific Data
+	u16 cid;
+	u8 beacon_type_mfc; // BEACON_ADV_TYPE in Manufacturer Specific Data DPU.B91 compile enum 4 byte,b85 compile enum 1 byte.value is 0, 1, 2, 0x80, 0x81
+	struct{
+		u8 service_len;
+		u8 service_type;
+		u16 service_uuid;
+		soli_srv_dat_t service_data;
+	};	
+}ios_soli_pdu_pkt_t; // iOS solicitation PDU packet type
+
+static inline int is_ios_soli_pdu(u8 *payload)
+{
+	ios_soli_pdu_pkt_t *p_soli_pdu = (ios_soli_pdu_pkt_t *)payload;
+	return ((p_soli_pdu->type == GAP_ADTYPE_MANUFACTURER_SPECIFIC) && (p_soli_pdu->cid == APPLE_CID) &&
+			(p_soli_pdu->service_type == GAP_ADTYPE_SERVICE_DATA && p_soli_pdu->service_uuid == SIG_MESH_PROXY_SOLI_VAL));
+
+}
+#endif
+
+
+typedef struct{
+	u8 len;
+	u8 type;
+	u16 uuid;
+	u8 data[1];
+}service_uuid_t;
 
 typedef struct{
 	u16 ssrc;
@@ -61,22 +103,22 @@ typedef struct{
 
 typedef struct{
 	#if MD_SERVER_EN
-	model_g_light_s_t srv;			// server
+	model_g_light_s_t srv;			// server	// use app key, so need to be bind and subscription.
     #endif
 	#if MD_CLIENT_EN
 	model_client_common_t clnt;		        // client
 	#endif
 }model_sig_soli_pdu_rpl_t;
 
-extern model_sig_soli_pdu_rpl_t model_sig_soli_pdu_rpl;
-extern u32 mesh_md_soli_pdu_rpl_addr;
 extern u32 soli_sno_tx;
 
-extern soli_ser_dat_t soli_service_data;
+extern soli_srv_dat_t soli_service_data;
 extern int soli_pdu_adv_cnt;
 
 int is_exist_in_soli_rpl(u8 *p);
 int set_adv_solicitation(rf_packet_adv_t * p);
+service_uuid_t *get_service_uuid(u16 uuid, u8 *payload, u8 len);
+int mesh_soli_pdu_handle(u8 *payload, u8 len);
 
 #if (MD_SERVER_EN)
 int mesh_cmd_sig_cfg_soli_rpl_clear(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par);

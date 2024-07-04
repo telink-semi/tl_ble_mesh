@@ -1,12 +1,12 @@
 /********************************************************************************************************
- * @file     lpc.h
+ * @file    lpc.h
  *
- * @brief    This is the header file for BLE SDK
+ * @brief   This is the header file for B91
  *
- * @author	 BLE GROUP
- * @date         11,2022
+ * @author  Driver Group
+ * @date    2019
  *
- * @par     Copyright (c) 2022, Telink Semiconductor (Shanghai) Co., Ltd. ("TELINK")
+ * @par     Copyright (c) 2019, Telink Semiconductor (Shanghai) Co., Ltd. ("TELINK")
  *
  *          Licensed under the Apache License, Version 2.0 (the "License");
  *          you may not use this file except in compliance with the License.
@@ -19,8 +19,8 @@
  *          WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  *          See the License for the specific language governing permissions and
  *          limitations under the License.
+ *
  *******************************************************************************************************/
-
 #pragma once
 
 #include "analog.h"
@@ -74,7 +74,7 @@ typedef enum{
  */
 static inline void lpc_power_down(void)
 {
-	analog_write_reg8(0x07,(analog_read_reg8(0x07))|0x08);
+	analog_write_reg8(0x06,(analog_read_reg8(0x06))|0x02);
 }
 
 /**

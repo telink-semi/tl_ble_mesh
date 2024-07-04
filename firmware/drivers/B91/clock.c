@@ -1,12 +1,12 @@
 /********************************************************************************************************
- * @file     clock.c
+ * @file    clock.c
  *
- * @brief    This is the source file for BLE SDK
+ * @brief   This is the source file for B91
  *
- * @author	 BLE GROUP
- * @date         11,2022
+ * @author  Driver Group
+ * @date    2019
  *
- * @par     Copyright (c) 2022, Telink Semiconductor (Shanghai) Co., Ltd. ("TELINK")
+ * @par     Copyright (c) 2019, Telink Semiconductor (Shanghai) Co., Ltd. ("TELINK")
  *
  *          Licensed under the Apache License, Version 2.0 (the "License");
  *          you may not use this file except in compliance with the License.
@@ -19,11 +19,11 @@
  *          WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  *          See the License for the specific language governing permissions and
  *          limitations under the License.
+ *
  *******************************************************************************************************/
-
+#include "lib/include/sys.h"
 #include "clock.h"
 #include "mspi.h"
-#include "sys.h"
 #include "stimer.h"
 /**********************************************************************************************************************
  *                                			  local constants                                                       *
@@ -106,18 +106,25 @@ unsigned char clock_kick_32k_xtal(unsigned char xtal_times)
 			//2.set PD0 as pwm output
 			unsigned char pwm_clk = read_reg8(0x1401d8);//**condition: PCLK is 24MHZ,PCLK = HCLK
 			write_reg8(0x1401d8,((pwm_clk & 0xfc) | 0x01));//PCLK = 12M
-			unsigned char reg_31e = read_reg8(0x14031e);	//PD0
-			write_reg8(0x14031e,reg_31e & 0xfe);
-			unsigned short reg_418 = read_reg16(0x140418);	//pwm1 cmp
-			write_reg16(0x140418,0x01);
-			unsigned short reg_41a = read_reg16(0x14041a);  //pwm1 max
-			write_reg16(0x14041a,0x02);
-			unsigned char reg_400 = read_reg8(0x140400);	//pwm en
-			write_reg8(0x140400,0x02);
-			write_reg8(0x140402,0xb6);						//12M/(0xb6 + 1)/2 = 32k
+
+			unsigned char reg_31e = read_reg8(0x14031e);	//PD0 -> pwm0
+			write_reg8(0x14031e, reg_31e & 0xfe);
+			unsigned char reg_336 = read_reg8(0x140336);
+			write_reg8(0x140336, (reg_336 & 0xfc) | 0x02);
+			unsigned char reg_355 = read_reg8(0x140355);
+			write_reg8(0x140355, reg_355 | 0x01);
+
+			unsigned short reg_414 = read_reg16(0x140414);	//pwm0 cmp
+			write_reg16(0x140414, 0x01);
+			unsigned short reg_416 = read_reg16(0x140416);	//pwm0 max
+			write_reg16(0x140416, 0x02);
+
+			write_reg8(0x140402, 0xb6);						//12M/(0xb6 + 1)/2 = 32k
+			unsigned char reg_401 = read_reg8(0x140401);	//pwm_en  pwm0 enable
+			write_reg8(0x140401, 0x01);
 
 			//3.wait for PWM wake up Xtal
-			delay_ms(100);
+			delay_ms(10);
 
 			//4.Xtal 32k output
 			analog_write_reg8(0x03,0x4f); //<7:6>current select
@@ -125,15 +132,17 @@ unsigned char clock_kick_32k_xtal(unsigned char xtal_times)
 			//5.Recover PD0 as Xtal pin
 			write_reg8(0x1401d8,pwm_clk);
 			write_reg8(0x14031e,reg_31e);
-			write_reg16(0x140418,reg_418);
-			write_reg16(0x14041a,reg_41a);
-			write_reg8(0x140400,reg_400);
+			write_reg8(0x140336,reg_336);
+			write_reg8(0x140355,reg_355);
+			write_reg16(0x140414,reg_414);
+			write_reg16(0x140416,reg_416);
+			write_reg8(0x140401,reg_401);
 		}
 
-		last_32k_tick = clock_get_32k_tick();	//clock_get_32k_tick()
+		last_32k_tick = clock_get_32k_tick();
 		delay_us(305);		//for 32k tick accumulator, tick period: 30.5us, dly 10 ticks
 		curr_32k_tick = clock_get_32k_tick();
-		if(last_32k_tick != curr_32k_tick)		//clock_get_32k_tick()
+		if((curr_32k_tick - last_32k_tick) > 3)	
 		{
 			return 1;		//pwm kick 32k pad success
 		}
@@ -191,7 +200,7 @@ void clock_cal_32k_rc(void)
  * @param  tick - the value of to be set to 32k.
  * @return none.
  */
-void clock_set_32k_tick(unsigned int tick)
+_attribute_ram_code_sec_noinline_ void clock_set_32k_tick(unsigned int tick)
 {
 	reg_system_ctrl |= FLD_SYSTEM_32K_WR_EN;//r_32k_wr = 1;
 	while(reg_system_st & FLD_SYSTEM_RD_BUSY);
@@ -211,6 +220,7 @@ void clock_set_32k_tick(unsigned int tick)
  * @brief  This function serves to get the 32k tick.
  * @return none.
  */
+#if 0
 unsigned int clock_get_32k_tick(void)
 {
 	unsigned int timer_32k_tick;
@@ -222,6 +232,36 @@ unsigned int clock_get_32k_tick(void)
 	reg_system_ctrl |= FLD_SYSTEM_32K_WR_EN;	//1:32k write mode; 0:32k read mode
 	return timer_32k_tick;
 }
+#else
+/*
+ * modify by yi.bao,confirmed by guangjun at 20210105
+ * Use digital register way to get 32k tick may read error tick,cause the wakeup time is
+ * incorrect with the setting time,the sleep time will very little or very big,will not wakeup on time.
+ */
+_attribute_ram_code_sec_noinline_ unsigned int clock_get_32k_tick(void)
+{
+    unsigned int t0 = 0;
+    unsigned int t1 = 0;
+
+    //In the system timer auto mode, when writing a tick value to the system tick, if the writing operation overlaps
+    //with the 32k rising edge, the writing operation will be unsuccessful. When reading the 32k tick value,
+    //first wait for the rising edge to pass to avoid overlap with the subsequent write tick value operation.
+    //modify by weihua.zhang, confirmed by jianzhi at 20210126
+	t0 = analog_read_reg32(0x60);
+	while(1)
+	{
+		t1 = analog_read_reg32(0x60);
+		if((t1-t0) == 1)
+		{
+			return t1;
+		}
+		else if(t1-t0)
+		{
+			t0 = t1;
+		}
+	}
+}
+#endif
 
 /**
  * @brief       This function use to select the system clock source.
@@ -230,16 +270,31 @@ unsigned int clock_get_32k_tick(void)
  * @param[in]	cclk_div - the cclk divide from pll.it is useless if src is not PAD_PLL_DIV. cclk max is 96M
  * @param[in]	hclk_div - the hclk divide from cclk.hclk max is 48M.
  * @param[in]	pclk_div - the pclk divide from hclk.pclk max is 24M.if hclk = 1/2 * cclk, the pclk can not be 1/4 of hclk.
- * @param[in]	mspi_clk_div - mspi_clk has two source. pll div and hclk.mspi max is 64M.
+ * @param[in]	mspi_clk_div - mspi_clk has two source - pll div and cclk. If it is built-in flash, the maximum speed of mspi is 64M.
+							   If it is an external flash, the maximum speed of mspi needs to be based on the board test.
+							   Because the maximum speed is related to the wiring of the board, and is also affected by temperature and GPIO voltage,
+							   the maximum speed needs to be tested at the highest and lowest voltage of the board,
+							   and the high and low temperature long-term stability test speed is no problem.
  * @return      none
+ * @note		Do not switch the clock during the DMA sending and receiving process;
+ * 			    because during the clock switching process, the system clock will be
+ * 			    suspended for a period of time, which may cause data loss
+
  */
-void clock_init(sys_pll_clk_e pll,
+_attribute_ram_code_sec_noinline_
+void clock_init_ram(sys_pll_clk_e pll,
 		sys_clock_src_e src,
 		sys_pll_div_to_cclk_e cclk_div,
 		sys_cclk_div_to_hclk_e hclk_div,
 		sys_hclk_div_to_pclk_e pclk_div,
 		sys_pll_div_to_mspi_clk_e mspi_clk_div)
 {
+	//ensure mspi is not in busy status before change mspi clock
+	mspi_stop_xip();
+
+	//first cclk/mspi_clk switch to 24rc to avoid the risk of hclk/pclk/mspi_clk exceeding its maximum configurable frequency for a short period of time
+	//when switching different clock frequencies using this interface.
+	write_reg8(0x1401e8, read_reg8(0x1401e8) & 0x0f);				//cclk/mspi_clk to 24M rc clock
 
 	//pll clk
 	analog_write_reg8(0x80, (analog_read_reg8(0x80) & 0xe0) | ((pll >> 2) & 0x1f));
@@ -253,9 +308,6 @@ void clock_init(sys_pll_clk_e pll,
 	analog_write_reg8(0x81, (analog_read_reg8(0x81) | BIT(6)));
 	while(BIT(5) != (analog_read_reg8(0x88) & BIT(5)));
 	analog_write_reg8(0x81, (analog_read_reg8(0x81) & ~BIT(6)));
-
-	//ensure mspi is not in busy status before change mspi clock
-	mspi_stop_xip();
 
 	//change mspi clock should be ram code.
 	if(CCLK_TO_MSPI_CLK == mspi_clk_div)
@@ -312,6 +364,19 @@ void clock_init(sys_pll_clk_e pll,
 	if(CCLK_TO_MSPI_CLK == mspi_clk_div){
 		sys_clk.mspi_clk = sys_clk.cclk;
 	}
+}
+
+_attribute_text_sec_
+void clock_init(sys_pll_clk_e pll,
+				sys_clock_src_e src,
+				sys_pll_div_to_cclk_e cclk_div,
+				sys_cclk_div_to_hclk_e hclk_div,
+				sys_hclk_div_to_pclk_e pclk_div,
+				sys_pll_div_to_mspi_clk_e mspi_clk_div)
+{
+	__asm__("csrci 	mmisc_ctl,8");	//disable BTB
+	clock_init_ram(pll, src, cclk_div, hclk_div, pclk_div, mspi_clk_div);
+	__asm__("csrsi 	mmisc_ctl,8");	//enable BTB
 }
 
 

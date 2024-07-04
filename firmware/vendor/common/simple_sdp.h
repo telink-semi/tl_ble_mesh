@@ -1,10 +1,10 @@
 /********************************************************************************************************
- * @file     simple_sdp.h
+ * @file    simple_sdp.h
  *
- * @brief    This is the header file for BLE SDK
+ * @brief   This is the header file for BLE SDK
  *
- * @author	 BLE GROUP
- * @date         2020.06
+ * @author  BLE GROUP
+ * @date    06,2022
  *
  * @par     Copyright (c) 2022, Telink Semiconductor (Shanghai) Co., Ltd. ("TELINK")
  *
@@ -19,8 +19,8 @@
  *          WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  *          See the License for the specific language governing permissions and
  *          limitations under the License.
+ *
  *******************************************************************************************************/
-
 #ifndef SIMPLE_SDP_H_
 #define SIMPLE_SDP_H_
 
@@ -38,6 +38,14 @@
 #define ACL_CENTRAL_SIMPLE_SDP_ENABLE         		0
 #endif
 
+#ifndef APP_SIMPLE_SDP_LOG_EN
+#define APP_SIMPLE_SDP_LOG_EN         				0
+#endif
+
+#ifndef PEER_SLAVE_USE_RPA_EN
+#define PEER_SLAVE_USE_RPA_EN         				0
+#endif
+
 
 #if (ACL_CENTRAL_SIMPLE_SDP_ENABLE)
 
@@ -47,6 +55,9 @@ extern	main_service_t		main_service;
 
 extern	int	central_sdp_pending;
 extern	dev_char_info_t  cur_sdp_device;
+
+
+typedef int	(*sdp_info_store_cb_t)(u32, void*);
 
 
 #define		ATT_DB_UUID16_NUM		20
@@ -104,7 +115,7 @@ typedef struct{
 	u8	rsvd[8];  //very important: 16 byte aligned, to avoid different flash page write for a sequence data
 
 #if (PEER_SLAVE_USE_RPA_EN)
-	u8  irk[16];   //TODO: if peer device mac_adress is RPA(resolvable private address), IRK will be used
+	u8  irk[16];   //TODO: if peer device mac_address is RPA(resolvable private address), IRK will be used
 #endif
 
 	u16	char_handle[CHAR_HANDLE_MAX];
@@ -172,7 +183,7 @@ int 	dev_char_info_add_peer_att_handle (dev_char_info_t* dev_char_info);
  * @brief       Use for store peer device att handle to flash.
  * @param[in]   dev_char_info    Pointer point to peer device ATT handle info.
  * @return      0: failed
- *             !0: return falsh address
+ *             !0: return flash address
  */
 int		dev_char_info_store_peer_att_handle(dev_char_info_t* dev_char_info);
 
@@ -182,7 +193,7 @@ int		dev_char_info_store_peer_att_handle(dev_char_info_t* dev_char_info);
  * @param[in]   addr             Pointer point to peer address buffer
  * @param[out]  dev_att          Pointer point to dev_att_t
  * @return      0: failed
- *             !0: return falsh address
+ *             !0: return flash address
  */
 int		dev_char_info_search_peer_att_handle_by_peer_mac(u8 adr_type, u8* addr, dev_att_t * dev_att);
 
@@ -196,6 +207,11 @@ int		dev_char_info_search_peer_att_handle_by_peer_mac(u8 adr_type, u8* addr, dev
  */
 int		dev_char_info_delete_peer_att_handle_by_peer_mac(u8 addrType, u8 *addr);
 
+
+
+
+
+void 	simple_sdp_register_store_info_callback(sdp_info_store_cb_t cb);
 
 
 /* compatible with previous released SDK */

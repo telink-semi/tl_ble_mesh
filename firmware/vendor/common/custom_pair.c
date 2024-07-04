@@ -1,10 +1,10 @@
 /********************************************************************************************************
- * @file     custom_pair.c
+ * @file    custom_pair.c
  *
- * @brief    This is the source file for BLE SDK
+ * @brief   This is the source file for BLE SDK
  *
- * @author	 BLE GROUP
- * @date         2020.06
+ * @author  BLE GROUP
+ * @date    06,2022
  *
  * @par     Copyright (c) 2022, Telink Semiconductor (Shanghai) Co., Ltd. ("TELINK")
  *
@@ -19,11 +19,10 @@
  *          WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  *          See the License for the specific language governing permissions and
  *          limitations under the License.
+ *
  *******************************************************************************************************/
-
 #include "tl_common.h"
 #include "drivers.h"
-#include "blt_common.h"
 #include "custom_pair.h"
 
 
@@ -31,6 +30,10 @@
 /**********************************************************************************
 				// proc user  PAIR and UNPAIR
 **********************************************************************************/
+
+#if (ACL_CENTRAL_CUSTOM_PAIR_ENABLE)
+
+u32 flash_sector_custom_pairing = FLASH_ADR_SMP_PAIRING_2M_FLASH;
 
 man_pair_t blm_manPair;
 
@@ -88,7 +91,7 @@ void user_tbl_peripheral_mac_delete_by_index(int index)  //remove the oldest adr
 {
 	//erase the oldest with ERASE_MARK
 	u8 delete_mark = ADR_ERASE_MARK;
-	flash_write_page (FLASH_ADR_CUSTOM_PAIRING + user_tbl_periphrMac.bond_flash_idx[index], 1, &delete_mark);
+	flash_write_page (flash_sector_custom_pairing + user_tbl_periphrMac.bond_flash_idx[index], 1, &delete_mark);
 
 	for(int i=index; i<user_tbl_periphrMac.curNum - 1; i++){ 	//move data
 		user_tbl_periphrMac.bond_flash_idx[i] = user_tbl_periphrMac.bond_flash_idx[i+1];
@@ -128,7 +131,7 @@ int user_tbl_peripheral_mac_add(u8 adr_type, u8 *adr)  //add new mac address to 
 		user_tbl_periphrMac.bond_device[user_tbl_periphrMac.curNum].adr_type = adr_type;
 		memcpy(user_tbl_periphrMac.bond_device[user_tbl_periphrMac.curNum].address, adr, 6);
 
-		flash_write_page (FLASH_ADR_CUSTOM_PAIRING + user_bond_peripheral_flash_cfg_idx, 8, (u8 *)&user_tbl_periphrMac.bond_device[user_tbl_periphrMac.curNum] );
+		flash_write_page (flash_sector_custom_pairing + user_bond_peripheral_flash_cfg_idx, 8, (u8 *)&user_tbl_periphrMac.bond_device[user_tbl_periphrMac.curNum] );
 
 		user_tbl_periphrMac.bond_flash_idx[user_tbl_periphrMac.curNum] = user_bond_peripheral_flash_cfg_idx;  //mark flash idx
 		user_tbl_periphrMac.curNum++;
@@ -178,7 +181,7 @@ int user_tbl_peripheral_mac_delete_by_adr(u8 adr_type, u8 *adr)  //remove adr fr
 
 			//erase the match adr
 			u8 delete_mark = ADR_ERASE_MARK;
-			flash_write_page (FLASH_ADR_CUSTOM_PAIRING + user_tbl_periphrMac.bond_flash_idx[i], 1, &delete_mark);
+			flash_write_page (flash_sector_custom_pairing + user_tbl_periphrMac.bond_flash_idx[i], 1, &delete_mark);
 
 			for(int j=i; j< user_tbl_periphrMac.curNum - 1;j++){ //move data
 				user_tbl_periphrMac.bond_flash_idx[j] = user_tbl_periphrMac.bond_flash_idx[j+1];
@@ -200,11 +203,11 @@ int user_tbl_peripheral_mac_delete_by_adr(u8 adr_type, u8 *adr)  //remove adr fr
  * @param      none.
  * @return     none.
  */
-void user_tbl_periperal_mac_delete_all(void)  //delete all the  adr in peripheral mac table
+void user_tbl_peripheral_mac_delete_all(void)  //delete all the  adr in peripheral mac table
 {
 	u8 delete_mark = ADR_ERASE_MARK;
 	for(int i=0; i< user_tbl_periphrMac.curNum; i++){
-		flash_write_page (FLASH_ADR_CUSTOM_PAIRING + user_tbl_periphrMac.bond_flash_idx[i], 1, &delete_mark);
+		flash_write_page (flash_sector_custom_pairing + user_tbl_periphrMac.bond_flash_idx[i], 1, &delete_mark);
 		memset( (u8 *)&user_tbl_periphrMac.bond_device[i], 0, 8);
 		//user_tbl_periphrMac.bond_flash_idx[i] = 0;  //do not  concern
 	}
@@ -238,7 +241,7 @@ void	user_bond_peripheral_flash_clean (void)
 
 	adbg_flash_clean = 1;
 
-	flash_erase_sector (FLASH_ADR_CUSTOM_PAIRING);
+	flash_erase_sector (flash_sector_custom_pairing);
 
 	user_bond_peripheral_flash_cfg_idx = -8;  //init value for no bond ACL Peripheral MAC
 
@@ -247,7 +250,7 @@ void	user_bond_peripheral_flash_clean (void)
 		//u8 add_mark = ADR_BOND_MARK;
 
 		user_bond_peripheral_flash_cfg_idx += 8;  //inc flash idx to get the new 8 bytes area
-		flash_write_page (FLASH_ADR_CUSTOM_PAIRING + user_bond_peripheral_flash_cfg_idx, 8, (u8*)&user_tbl_periphrMac.bond_device[i] );
+		flash_write_page (flash_sector_custom_pairing + user_bond_peripheral_flash_cfg_idx, 8, (u8*)&user_tbl_periphrMac.bond_device[i] );
 
 		user_tbl_periphrMac.bond_flash_idx[i] = user_bond_peripheral_flash_cfg_idx;  //update flash idx
 	}
@@ -263,11 +266,11 @@ void	user_acl_central_host_pairing_flash_init(void)
 	u8 flag;
 	for (user_bond_peripheral_flash_cfg_idx=0; user_bond_peripheral_flash_cfg_idx<4096; user_bond_peripheral_flash_cfg_idx+=8)
 	{ //traversing 8 bytes area in sector 0x11000 to find all the valid ACL Peripheral MAC address
-		flash_read_page(FLASH_ADR_CUSTOM_PAIRING + user_bond_peripheral_flash_cfg_idx, 1, &flag);
+		flash_read_page(flash_sector_custom_pairing + user_bond_peripheral_flash_cfg_idx, 1, &flag);
 		if( flag == ADR_BOND_MARK ){  //valid adr
 			if(user_tbl_periphrMac.curNum < USER_PAIR_ACL_PERIPHR_MAX_NUM){
 				user_tbl_periphrMac.bond_flash_idx[user_tbl_periphrMac.curNum] = user_bond_peripheral_flash_cfg_idx;
-				flash_read_page (FLASH_ADR_CUSTOM_PAIRING + user_bond_peripheral_flash_cfg_idx, 8, (u8 *)&user_tbl_periphrMac.bond_device[user_tbl_periphrMac.curNum] );
+				flash_read_page (flash_sector_custom_pairing + user_bond_peripheral_flash_cfg_idx, 8, (u8 *)&user_tbl_periphrMac.bond_device[user_tbl_periphrMac.curNum] );
 				user_tbl_periphrMac.curNum ++;
 			}
 			else{ //ACL Peripheral mac in flash more than max, we think it's code bug
@@ -293,5 +296,37 @@ void	user_acl_central_host_pairing_flash_init(void)
  */
 void user_central_host_pairing_management_init(void)
 {
+
+	#if (ACL_CENTRAL_CUSTOM_PAIR_ENABLE && ACL_CENTRAL_SMP_ENABLE)
+		#error "can not use custom pair when ACL Central SMP enable !!!"
+	#endif
+
+	/* when custom pair enable, ACL Central SMP not disable, so using flash address for SMP storage is OK */
+		if(0){
+		}
+	#if (FLASH_P25Q80U_SUPPORT_EN) //1M
+		else if(blc_flash_capacity == FLASH_SIZE_1M){
+			flash_sector_custom_pairing = FLASH_ADR_SMP_PAIRING_1M_FLASH;
+		}
+	#endif
+	#if (FLASH_P25Q16SU_SUPPORT_EN || FLASH_GD25LQ16E_SUPPORT_EN) //2M
+		else if(blc_flash_capacity == FLASH_SIZE_2M){
+			flash_sector_custom_pairing = FLASH_ADR_SMP_PAIRING_2M_FLASH;
+		}
+	#endif
+	#if (FLASH_P25Q32SU_SUPPORT_EN) //4M
+		else if(blc_flash_capacity == FLASH_SIZE_4M){
+			flash_sector_custom_pairing = FLASH_ADR_SMP_PAIRING_4M_FLASH;
+		}
+	#endif
+	#if (FLASH_P25Q128L_SUPPORT_EN) //16M
+		else if(blc_flash_capacity == FLASH_SIZE_16M){
+			flash_sector_custom_pairing = FLASH_ADR_SMP_PAIRING_16M_FLASH;
+		}
+	#endif
+
 	user_acl_central_host_pairing_flash_init();
 }
+
+
+#endif

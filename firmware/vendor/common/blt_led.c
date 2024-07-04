@@ -1,12 +1,13 @@
 /********************************************************************************************************
- * @file     blt_led.c
+ * @file	blt_led.c
  *
- * @brief    This is the source file for BLE SDK
+ * @brief	for TLSR chips
  *
- * @author	 BLE GROUP
- * @date         2020.06
+ * @author	telink
+ * @date	Sep. 30, 2010
  *
- * @par     Copyright (c) 2022, Telink Semiconductor (Shanghai) Co., Ltd. ("TELINK")
+ * @par     Copyright (c) 2017, Telink Semiconductor (Shanghai) Co., Ltd. ("TELINK")
+ *          All rights reserved.
  *
  *          Licensed under the Apache License, Version 2.0 (the "License");
  *          you may not use this file except in compliance with the License.
@@ -19,15 +20,12 @@
  *          WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  *          See the License for the specific language governing permissions and
  *          limitations under the License.
+ *
  *******************************************************************************************************/
-
 #include "tl_common.h"
-#include "drivers.h"
 #include "blt_led.h"
 
-
-
-device_led_t device_led;
+_attribute_data_retention_ device_led_t device_led;
 
 /**
  * @brief		This function is used to control device led on or off
@@ -37,7 +35,7 @@ device_led_t device_led;
 void device_led_on_off(u8 on)
 {
 	gpio_write( device_led.gpio_led, on^device_led.polar );
-	gpio_set_output_en(device_led.gpio_led, on);
+	gpio_set_output_en(device_led.gpio_led,on);
 	device_led.isOn = on;
 }
 
@@ -49,11 +47,14 @@ void device_led_on_off(u8 on)
  * @return      none
  */
 void device_led_init(u32 gpio,u8 polarity){  //polarity: 1 for high led on, 0 for low led on
-
 #if (BLT_APP_LED_ENABLE)
 	device_led.gpio_led = gpio;
 	device_led.polar = !polarity;
-	gpio_write( gpio, !polarity );
+    gpio_set_func(device_led.gpio_led,AS_GPIO);
+    gpio_set_input_en(device_led.gpio_led,0);
+    gpio_set_output_en(device_led.gpio_led,0);
+
+    device_led_on_off(0);
 #endif
 }
 
@@ -108,10 +109,10 @@ void led_proc(void)
 {
 #if (BLT_APP_LED_ENABLE)
 	if(device_led.isOn){
-		if(clock_time_exceed(device_led.startTick,device_led.onTime_ms*1000)){
+		if(clock_time_exceed(device_led.startTick,(device_led.onTime_ms-5)*1000)){
 			device_led_on_off(0);
 			if(device_led.offTime_ms){ //offTime not zero
-				device_led.startTick += device_led.onTime_ms*SYSTEM_TIMER_TICK_1MS;
+				device_led.startTick += device_led.onTime_ms*CLOCK_SYS_CLOCK_1MS;
 			}
 			else{
 				device_led.repeatCount = 0;
@@ -119,10 +120,10 @@ void led_proc(void)
 		}
 	}
 	else{
-		if(clock_time_exceed(device_led.startTick,device_led.offTime_ms*1000)){
+		if(clock_time_exceed(device_led.startTick,(device_led.offTime_ms-5)*1000)){
 			if(--device_led.repeatCount){
 				device_led_on_off(1);
-				device_led.startTick += device_led.offTime_ms*SYSTEM_TIMER_TICK_1MS;
+				device_led.startTick += device_led.offTime_ms*CLOCK_SYS_CLOCK_1MS;
 			}
 		}
 	}

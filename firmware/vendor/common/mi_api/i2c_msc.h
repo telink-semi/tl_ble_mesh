@@ -26,11 +26,8 @@
 
 #ifndef I2C_MSC_H
 #define I2C_MSC_H
-#if (__TLSR_RISCV_EN__)
-#include "driver.h"
-#else
-#include "proj/mcu/gpio.h"
-#endif
+#include "drivers.h"
+
 
 /**
  *  @brief      This function serves to write a packet of data to the specified address of slave device

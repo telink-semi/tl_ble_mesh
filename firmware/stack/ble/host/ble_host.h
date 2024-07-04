@@ -1,10 +1,10 @@
 /********************************************************************************************************
- * @file     ble_host.h
+ * @file    ble_host.h
  *
- * @brief    This is the header file for BLE SDK
+ * @brief   This is the header file for BLE SDK
  *
- * @author	 BLE GROUP
- * @date         2020.06
+ * @author  BLE GROUP
+ * @date    06,2022
  *
  * @par     Copyright (c) 2022, Telink Semiconductor (Shanghai) Co., Ltd. ("TELINK")
  *
@@ -19,8 +19,8 @@
  *          WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  *          See the License for the specific language governing permissions and
  *          limitations under the License.
+ *
  *******************************************************************************************************/
-
 #ifndef STACK_BLE_HOST_BLE_HOST_H_
 #define STACK_BLE_HOST_BLE_HOST_H_
 
@@ -38,7 +38,6 @@
 #include "stack/ble/host/att/att.h"
 #include "stack/ble/host/att/atts.h"
 #include "stack/ble/host/att/attc.h"
-#include "stack/ble/host/att/eatt.h"
 #include "stack/ble/host/att/att_uuid.h"
 #include "stack/ble/host/att/att_cmd.h"
 #include "stack/ble/host/gatt/gatt.h"
@@ -56,26 +55,8 @@
 #include "stack/ble/host/host_comp.h"
 
 #include "stack/ble/host/l2cap/l2cap.h"
-#include "stack/ble/host/l2cap/l2cap_signal.h"
+#include "stack/ble/host/signaling/signaling.h"
 
-/*********************************************************/
-//Remove when file merge to SDK //
-#include "stack/ble/ble_stack.h"
-#include "stack/ble/ble_config.h"
-
-#include "stack/ble/host/host_stack.h"
-#include "stack/ble/host/l2cap/l2cap_stack.h"
-
-/* ATT/GATT old version */
-#include "stack/ble/host/att/att_v0/gatt_stack_v0.h"
-#include "stack/ble/host/att/att_v0/att_stack_v0.h"
-/* ATT/GATT new version */
-#include "stack/ble/host/att/att_stack.h"
-#include "stack/ble/host/gatt/gatt_stack.h"
-
-#include "stack/ble/host/smp/smp_stack.h"
-#include "stack/ble/host/gap/gap_stack.h"
-/*********************************************************/
 
 
 #endif /* STACK_BLE_HOST_BLE_HOST_H_ */

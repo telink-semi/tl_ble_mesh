@@ -1,10 +1,10 @@
 /********************************************************************************************************
- * @file     myudb.h
+ * @file    myudb.h
  *
- * @brief    This is the header file for BLE SDK
+ * @brief   This is the header file for BLE SDK
  *
- * @author	 BLE GROUP
- * @date         11,2022
+ * @author  BLE GROUP
+ * @date    06,2022
  *
  * @par     Copyright (c) 2022, Telink Semiconductor (Shanghai) Co., Ltd. ("TELINK")
  *
@@ -19,13 +19,14 @@
  *          WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  *          See the License for the specific language governing permissions and
  *          limitations under the License.
+ *
  *******************************************************************************************************/
-
 #ifndef		__MYUDB_H__
 #define		__MYUDB_H__
 #pragma once
 
 #include "common/config/user_config.h"
+#include "types.h"
 
 /* Trace global enable macro */
 #ifndef         VCD_EN
@@ -33,16 +34,16 @@
 #endif
 /* USB print log enable macro */
 #ifndef			DUMP_STR_EN
-#define 		DUMP_STR_EN                                   		1
+#define 		DUMP_STR_EN                                   		0
 #endif
 
 
-#define			SL_STACK_EN											1
+#define			SL_STACK_VCD_EN									    VCD_EN
 
 
 #if (DUMP_STR_EN)
 	#define my_usb_init(id, p_print)		myudb_usb_init(id, p_print)
-	#define my_dump_str_data(en,s,p,n)		if(en){usb_send_str_data(s,(u8*)(p),n);}
+	#define my_dump_str_data(en,s,p,n)		if(en){usb_send_str_data(s,(u8*)(u32)(p),n);}
 	#define my_dump_str_u32s(en,s,d0,d1,d2,d3)		if(en){usb_send_str_u32s(s,(u32)(d0),(u32)(d1),(u32)(d2),(u32)(d3));}
 	#define my_dump_str_u8s(en,s,d0,d1,d2,d3)		if(en){usb_send_str_u8s(s,(u8)(d0),(u8)(d1),(u8)(d2),(u8)(d3));}
 	#define	myudb_usb_handle_irq()			udb_usb_handle_irq()
@@ -63,7 +64,7 @@ void    myudb_register_hci_debug_cb (void *p);
 
 void    myudb_usb_init(u16 id, void * p_print);
 
-void 	myudb_usb_bulkout_ready ();
+void 	myudb_usb_bulkout_ready (void);
 
 void 	udb_usb_handle_irq(void);
 
@@ -74,8 +75,6 @@ void 	usb_send_str_data (char *str, u8 *ph, int n);
 void 	usb_send_str_u8s (char *str, u8 d0, u8 d1, u8 d2, u8 d3);
 
 void 	usb_send_str_u32s (char *str, u32 d0, u32 d1, u32 d2, u32 d3);
-
-void 	usb_send_upper_tester_result (u8 err);
 
 
 

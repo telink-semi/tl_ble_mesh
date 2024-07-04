@@ -1,10 +1,10 @@
 /********************************************************************************************************
- * @file     device_manage.h
+ * @file    device_manage.h
  *
- * @brief    This is the header file for BLE SDK
+ * @brief   This is the header file for BLE SDK
  *
- * @author	 BLE GROUP
- * @date         2020.06
+ * @author  BLE GROUP
+ * @date    06,2022
  *
  * @par     Copyright (c) 2022, Telink Semiconductor (Shanghai) Co., Ltd. ("TELINK")
  *
@@ -19,8 +19,8 @@
  *          WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  *          See the License for the specific language governing permissions and
  *          limitations under the License.
+ *
  *******************************************************************************************************/
-
 #ifndef APP_DEVICE_H_
 #define APP_DEVICE_H_
 
@@ -87,15 +87,14 @@ typedef struct
 	//rpa_addr_t *pPeer_RPA;    //only when peer  mac_address is RPA, this pointer is useful
 
 	u16		char_handle[CHAR_HANDLE_MAX];
-
 }dev_char_info_t;
 
 
 extern dev_char_info_t	conn_dev_list[];
 
 
-extern int	acl_conn_central_num;
-extern int	acl_conn_periphr_num;
+extern u8	acl_conn_central_num;
+extern u8	acl_conn_periphr_num;
 
 /**
  * @brief       Used for add device information to conn_dev_list.
@@ -196,7 +195,7 @@ int dev_char_get_conn_index_by_connhandle (u16 connhandle);
 
 /* compatible with previous released SDK */
 #define conn_master_num	acl_conn_central_num
-#define conn_salve_num	acl_conn_central_num
+#define conn_slave_num	acl_conn_central_num
 
 
 #endif /* APP_DEVICE_H_ */

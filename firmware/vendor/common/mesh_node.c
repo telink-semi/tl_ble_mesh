@@ -22,10 +22,8 @@
  *          limitations under the License.
  *
  *******************************************************************************************************/
-#if (!__TLSR_RISCV_EN__)
-#include "proj_lib/ble/ll/ll.h"
+#include "tl_common.h"
 #include "proj_lib/ble/blt_config.h"
-#endif
 #include "proj_lib/sig_mesh/app_mesh.h"
 #include "vendor/common/remote_prov.h"
 #include "vendor/common/fast_provision_model.h"
@@ -33,17 +31,22 @@
 #include "vendor/common/app_health.h"
 #include "vendor/common/directed_forwarding.h"
 #include "subnet_bridge.h"
+#include "sensors_model.h"
 #include "vendor/common/mesh_ota.h"
 #include "vendor/common/lighting_model_LC.h"
 #include "vendor/common/op_agg_model.h"
 #include "vendor/common/solicitation_rpl_cfg_model.h"
 #include "version.h"
 #include "app_privacy_beacon.h"
-#if __TLSR_RISCV_EN__
-#include "watchdog.h"
-#else
-#include "proj/mcu/watchdog_i.h"
-#include "proj_lib/ble/service/ble_ll_ota.h"
+#if PAIR_PROVISION_ENABLE
+#include "pair_provision.h"
+#endif
+
+#if MD_CMR_EN
+#include "controlled_mesh_relay.h"
+#endif
+#if SMART_PROVISION_ENABLE
+#include "vendor/common/smart_provision.h"
 #endif
 
 #ifdef WIN32
@@ -88,7 +91,6 @@ void check_prov_timeout();
 
 u16 ele_adr_primary = 0;    // save in configure server model.
 u8 g_ele_cnt = ELE_CNT;
-u8 g_bind_key_max = BIND_KEY_MAX;
 u8 key_bind_all_ele_en = 0;
 u8 node_need_store_misc=1; 
 u32 node_binding_tick = 0;  // key add command also refresh this tick
@@ -98,7 +100,7 @@ static u32 mesh_adv_tx_cmd_sno_last;
 
 
 mesh_iv_idx_st_t iv_idx_st = {
-    /*.cur = */IV_IDX_CUR,    // store in big endianness
+    /*.cur = */IV_IDX_CUR,    // little endianness in RAM. but big endianness when save to flash to keep compatibility.
 };
 
 mesh_key_t mesh_key = {{0}};  // not init here to decrease firmware size.
@@ -108,7 +110,7 @@ friend_key_t mesh_fri_key_lpn[NET_KEY_MAX][2];
 #else
 friend_key_t mesh_fri_key_fn[MAX_LPN_NUM][2];
 #endif
-#if MD_DF_EN
+#if (MD_DF_CFG_SERVER_EN || MD_DF_CFG_CLIENT_EN)
 directed_key_t directed_key[NET_KEY_MAX][2];
 #endif
 mesh_tid_t mesh_tid;
@@ -123,12 +125,20 @@ u8 tx_bear_extend_en = (MESH_DLE_MODE == MESH_DLE_MODE_EXTEND_BEAR);
 //#endif
 
 /*PTS test*/
-u8 pts_test_en = PTS_TEST_EN;
+// u8 pts_test_en = PTS_TEST_EN;
 
 #if (FEATURE_LOWPOWER_EN || GATT_LPN_EN)
 u8 proxy_message_between_gatt_and_adv_en = 0;
 #else
 u8 proxy_message_between_gatt_and_adv_en = FEATURE_PROXY_EN;
+#endif
+
+#if __TLSR_RISCV_EN__
+#if GATEWAY_ENABLE
+u8 gateway_enable_lib = 1; // use in library
+#else
+u8 gateway_enable_lib = 0;
+#endif
 #endif
 
 MYFIFO_INIT(mesh_adv_cmd_fifo, sizeof(mesh_cmd_bear_t)+DELTA_EXTEND_AND_NORMAL_ALIGN4_BUF, MESH_ADV_CMD_BUF_CNT);
@@ -141,7 +151,7 @@ MYFIFO_INIT_NO_RET(mesh_adv_fifo_relay, sizeof(mesh_relay_buf_t)+DELTA_EXTEND_AN
     
     #if __PROJECT_SPIRIT_LPN__
 MYFIFO_INIT_NO_RET(blt_notify_fifo, BLT_NOTIFY_FIFO_SIZE, 64);//save retention
-    #elif (FEATURE_LOWPOWER_EN || GATT_LPN_EN || __PROJECT_MESH_SWITCH__)
+    #elif (FEATURE_LOWPOWER_EN || GATT_LPN_EN || __PROJECT_MESH_SWITCH__||DU_LPN_EN)
 MYFIFO_INIT(blt_notify_fifo, BLT_NOTIFY_FIFO_SIZE, 8);
     #else
 MYFIFO_INIT(blt_notify_fifo, BLT_NOTIFY_FIFO_SIZE, 64);
@@ -155,7 +165,7 @@ STATIC_ASSERT(ARRAY_SIZE(mesh_key.net_key[0]) == ARRAY_SIZE(mesh_fri_key_lpn[0])
 STATIC_ASSERT(ARRAY_SIZE(mesh_key.net_key[0]) == ARRAY_SIZE(mesh_fri_key_fn[0]));
 STATIC_ASSERT(ARRAY_SIZE(mesh_key.net_key[0]) == ARRAY_SIZE(directed_key[0]));
 STATIC_ASSERT(NET0 == 0);
-STATIC_ASSERT(ELE_CNT <= ELE_CNT_MAX_LIB);  // don't cancle this assert
+STATIC_ASSERT(ELE_CNT <= ELE_CNT_MAX_LIB);  // don't cancel this assert
 STATIC_ASSERT((NET_KEY_MAX <= 255) && (APP_KEY_MAX <= 255));          // only one byte for array index
 STATIC_ASSERT(MD_SERVER_EN || MD_CLIENT_EN);
 STATIC_ASSERT((BUILD_VERSION & 0x00FF0000) != 0x00A50000);  // because ram[840004] is a special flag which is 0xA5, in cstartup_S.
@@ -169,6 +179,12 @@ STATIC_ASSERT(((DLE_LEN_MAX_TX >= MAX_OCTETS_DATA_LEN_EXTENSION)||(DLE_LEN_MAX_T
 
 #if EXTENDED_ADV_ENABLE
 STATIC_ASSERT((MESH_DLE_MODE == MESH_DLE_MODE_EXTEND_BEAR) && (DLE_LEN_MAX_RX == MAX_OCTETS_DATA_LEN_EXTENSION));
+#endif
+#if (LIGHT_TYPE_CT_EN || LIGHT_TYPE_HSL_EN || MD_LIGHT_CONTROL_EN)
+STATIC_ASSERT(MD_LIGHTNESS_EN == 1);
+#endif
+#if (MD_LIGHTNESS_EN)
+STATIC_ASSERT(MD_ONOFF_EN == 1);
 #endif
 #endif
 
@@ -212,13 +228,11 @@ STATIC_ASSERT((MESH_DLE_MODE == MESH_DLE_MODE_EXTEND_BEAR) && (DLE_LEN_MAX_RX ==
 #define MD_ID_PRIVACY_BEA_CLIENT    
 #endif
 
-#if MD_DF_EN
-	#if MD_CLIENT_EN
+#if MD_DF_CFG_CLIENT_EN
 #define MD_ID_DF_CFG_CLIENT    SIG_MD_DF_CFG_C,
-    #endif
-    #if MD_SERVER_EN
+#endif
+#if MD_DF_CFG_SERVER_EN
 #define MD_ID_DF_CFG_SERVER    SIG_MD_DF_CFG_S,
-    #endif
 #endif
 
 #ifndef MD_ID_DF_CFG_SERVER
@@ -228,13 +242,11 @@ STATIC_ASSERT((MESH_DLE_MODE == MESH_DLE_MODE_EXTEND_BEAR) && (DLE_LEN_MAX_RX ==
 #define MD_ID_DF_CFG_CLIENT
 #endif
 
-#if MD_SBR_EN
-	#if MD_CLIENT_EN
+#if MD_SBR_CFG_CLIENT_EN
 #define MD_ID_BRIDGE_CFG_CLIENT    SIG_MD_BRIDGE_CFG_CLIENT,
-    #endif
-    #if MD_SERVER_EN
+#endif
+#if MD_SBR_CFG_SERVER_EN
 #define MD_ID_BRIDGE_CFG_SERVER    SIG_MD_BRIDGE_CFG_SERVER,
-    #endif
 #endif
 
 #ifndef MD_ID_BRIDGE_CFG_SERVER
@@ -324,6 +336,22 @@ STATIC_ASSERT((MESH_DLE_MODE == MESH_DLE_MODE_EXTEND_BEAR) && (DLE_LEN_MAX_RX ==
 #define MD_ID_SOLI_PDU_RPL_CLIENT
 #endif
 
+#if MD_CMR_EN
+	#if MD_CLIENT_EN
+#define MD_ID_ARRAY_CMR_CLIENT			SIG_MD_CMR_C,
+	#endif
+	#if MD_SERVER_EN
+#define MD_ID_ARRAY_CMR_SERVER			SIG_MD_CMR_S,
+	#endif
+#endif
+								
+#ifndef MD_ID_ARRAY_CMR_SERVER
+#define MD_ID_ARRAY_CMR_SERVER
+#endif
+#ifndef MD_ID_ARRAY_CMR_CLIENT
+#define MD_ID_ARRAY_CMR_CLIENT
+#endif
+
 #define MD_ID_ARRAY_CFG         SIG_MD_CFG_SERVER, MD_ID_ARRAY_CFG_CLIENT       \
                                 SIG_MD_HEALTH_SERVER, SIG_MD_HEALTH_CLIENT,     \
                                 MD_ID_PRIVACY_BEA_SERVER MD_ID_PRIVACY_BEA_CLIENT\
@@ -333,12 +361,13 @@ STATIC_ASSERT((MESH_DLE_MODE == MESH_DLE_MODE_EXTEND_BEAR) && (DLE_LEN_MAX_RX ==
 								MD_ID_ON_DEMAND_PROXY_SERVER MD_ID_ON_DEMAND_PROXY_CLIENT\
 								MD_ID_OP_AGG_SERVER MD_ID_OP_AGG_CLIENT\
 								MD_ID_LARGE_CPS_SERVER MD_ID_LARGE_CPS_CLIENT\
-								MD_ID_SOLI_PDU_RPL_SERVER MD_ID_SOLI_PDU_RPL_CLIENT
+								MD_ID_SOLI_PDU_RPL_SERVER MD_ID_SOLI_PDU_RPL_CLIENT\
+								MD_ID_ARRAY_CMR_SERVER MD_ID_ARRAY_CMR_CLIENT
 
 
 #if MD_SERVER_EN
     #if (VENDOR_MD_MI_EN)	// default use vendor mi for dual vendor.
-#define MD_ID_ARRAY_VENDOR_SERVER1       MIOT_SEPC_VENDOR_MODEL_SER,
+#define MD_ID_ARRAY_VENDOR_SERVER1       MIOT_SEPC_VENDOR_MODEL_SRV,
     #elif (VENDOR_MD_NORMAL_EN)
 #define MD_ID_ARRAY_VENDOR_SERVER1       VENDOR_MD_LIGHT_S,
     #endif
@@ -358,7 +387,7 @@ STATIC_ASSERT((MESH_DLE_MODE == MESH_DLE_MODE_EXTEND_BEAR) && (DLE_LEN_MAX_RX ==
 
 #if MD_VENDOR_2ND_EN
     #if (VENDOR_MD_MI_EN)
-#define MD_ID_ARRAY_VENDOR2     MIOT_VENDOR_MD_SER,
+#define MD_ID_ARRAY_VENDOR2     MIOT_VENDOR_MD_SRV,
     #elif (VENDOR_MD_NORMAL_EN)
 #define MD_ID_ARRAY_VENDOR2     VENDOR_MD_LIGHT_S2,
     #endif
@@ -405,7 +434,11 @@ STATIC_ASSERT((MESH_DLE_MODE == MESH_DLE_MODE_EXTEND_BEAR) && (DLE_LEN_MAX_RX ==
 #define MD_ID_ARRAY_LIGHTNESS_SERVER    SIG_MD_LIGHTNESS_S, SIG_MD_LIGHTNESS_SETUP_S,
 //#define MD_ID_ARRAY_LIGHT_CTL_SERVER    SIG_MD_LIGHT_CTL_S, XXX,
 //#define MD_ID_ARRAY_LIGHT_HSL_SERVER    SIG_MD_LIGHT_HSL_S, XXX
+#if 0 // PTS_TEST_MMDL_SR_LXYL_BV_05
+#define MD_ID_ARRAY_LIGHT_XYL_SERVER    SIG_MD_LIGHT_XYL_S, SIG_MD_LIGHT_XYL_SETUP_S, SIG_MD_LIGHT_HSL_S, 
+#else
 #define MD_ID_ARRAY_LIGHT_XYL_SERVER    SIG_MD_LIGHT_XYL_S, SIG_MD_LIGHT_XYL_SETUP_S,
+#endif
 #define MD_ID_ARRAY_LIGHT_LC_SERVER     SIG_MD_LIGHT_LC_S, SIG_MD_LIGHT_LC_SETUP_S,
 #define MD_ID_ARRAY_PROP_SERVER		    SIG_MD_G_ADMIN_PROP_S, SIG_MD_G_MFG_PROP_S, SIG_MD_G_USER_PROP_S, SIG_MD_G_CLIENT_PROP_S,
 #define	MD_ID_ARRAY_BATTERY_SERVER		SIG_MD_G_BAT_S,
@@ -532,7 +565,7 @@ STATIC_ASSERT((MESH_DLE_MODE == MESH_DLE_MODE_EXTEND_BEAR) && (DLE_LEN_MAX_RX ==
 #endif
 
 #if (LIGHT_TYPE_CT_EN)
-    #if (ELE_CNT_EVERY_LIGHT >= 2)
+    #if (LEVEL_STATE_CNT_EVERY_LIGHT >= 2)
 #define MD_CTL_TEMP_S_PRIMARY   
     #else
 #define MD_CTL_TEMP_S_PRIMARY   SIG_MD_LIGHT_CTL_TEMP_S, 
@@ -546,7 +579,7 @@ STATIC_ASSERT((MESH_DLE_MODE == MESH_DLE_MODE_EXTEND_BEAR) && (DLE_LEN_MAX_RX ==
 #endif
 
 #if (LIGHT_TYPE_HSL_EN)
-    #if (ELE_CNT_EVERY_LIGHT >= 2)
+    #if (LEVEL_STATE_CNT_EVERY_LIGHT >= 2)
 #define MD_HSL_HUE_SAT_S_PRIMARY    
     #else
 #define MD_HSL_HUE_SAT_S_PRIMARY    SIG_MD_LIGHT_HSL_HUE_S,SIG_MD_LIGHT_HSL_SAT_S,
@@ -566,8 +599,12 @@ STATIC_ASSERT((MESH_DLE_MODE == MESH_DLE_MODE_EXTEND_BEAR) && (DLE_LEN_MAX_RX ==
 #if (LIGHT_TYPE_SEL == LIGHT_TYPE_POWER)
 #endif
 
-#if (MD_LIGHT_CONTROL_EN)
+#if (MD_LIGHT_CONTROL_EN || 0) // TEST_MMDL_SR_LLN_BV20
+	#if LIGHT_CONTROL_SERVER_LOCATE_EXCLUSIVE_ELEMENT_EN
+#define MD_ID_ARRAY_LIGHT_LC    MD_ID_ARRAY_LIGHT_LC_CLIENT
+	#else
 #define MD_ID_ARRAY_LIGHT_LC    MD_ID_ARRAY_LIGHT_LC_SERVER  MD_ID_ARRAY_LIGHT_LC_CLIENT
+	#endif
 #endif
 
 #ifndef MD_ID_ARRAY_VENDOR_SERVER
@@ -632,7 +669,7 @@ STATIC_ASSERT((MESH_DLE_MODE == MESH_DLE_MODE_EXTEND_BEAR) && (DLE_LEN_MAX_RX ==
 #define MD_ID_ARRAY_COMMON     \
     MD_ID_ARRAY_ONOFF               MD_ID_ARRAY_LEVEL \
     MD_ID_ARRAY_DEF_TRANSIT_TIME    MD_ID_ARRAY_POWER_ONOFF \
-    MD_ID_ARRAY_SCENE_SERVER \
+    MD_ID_ARRAY_SCENE_SERVER 		MD_ID_ARRAY_SCENE_CLIENT\
     MD_ID_ARRAY_SCHED_SERVER        MD_ID_ARRAY_POWER_LEVEL \
     MD_ID_ARRAY_LIGHTNESS           MD_ID_ARRAY_LIGHT_CTL \
     MD_ID_ARRAY_LIGHT_HSL           MD_ID_ARRAY_LIGHT_XYL \
@@ -650,7 +687,7 @@ STATIC_ASSERT((MESH_DLE_MODE == MESH_DLE_MODE_EXTEND_BEAR) && (DLE_LEN_MAX_RX ==
 #endif
 
 #if (0 == DEBUG_EVB_EN)
-#define MD_ID_ARRAY_PRIMARY     MD_ID_ARRAY_CFG   MD_ID_ARRAY_SIG2VD_SIG   MD_ID_ARRAY_TIME	 MD_ID_ARRAY_SCENE_CLIENT	MD_ID_ARRAY_SCHED_CLIENT	MD_ID_ARRAY_COMMON
+#define MD_ID_ARRAY_PRIMARY     MD_ID_ARRAY_CFG   MD_ID_ARRAY_SIG2VD_SIG   MD_ID_ARRAY_TIME	 MD_ID_ARRAY_SCHED_CLIENT	MD_ID_ARRAY_COMMON
 #else
 #define MD_ID_ARRAY_PRIMARY     MD_ID_ARRAY_CFG   MD_ID_ARRAY_MESH_OTA   MD_ID_ARRAY_ONOFF
 #endif
@@ -674,14 +711,21 @@ STATIC_ASSERT(MD_LEVEL_EN);
 #define MD_ID_ARRAY_FOURTH          SIG_MD_G_LEVEL_S,  SIG_MD_LIGHT_HSL_SAT_S   // only server model
     #endif
 
+	#if (LEVEL_STATE_CNT_EVERY_LIGHT >= 2)
 const u16 md_id_sig_second[] =      {MD_ID_ARRAY_SECOND};
-    #if (ELE_CNT_EVERY_LIGHT >= 3)
+	#endif
+    #if (LEVEL_STATE_CNT_EVERY_LIGHT >= 3)
 const u16 md_id_sig_third[] =       {MD_ID_ARRAY_THIRD};
 STATIC_ASSERT(ARRAY_SIZE(md_id_sig_third) == ARRAY_SIZE(md_id_sig_second)); // because of page0_local_t
     #endif
-    #if (ELE_CNT_EVERY_LIGHT >= 4)
+    #if (LEVEL_STATE_CNT_EVERY_LIGHT >= 4)
 const u16 md_id_sig_fourth[] =  {MD_ID_ARRAY_FOURTH};
 STATIC_ASSERT(ARRAY_SIZE(md_id_sig_fourth) == ARRAY_SIZE(md_id_sig_second));
+    #endif
+
+    #if LIGHT_CONTROL_SERVER_LOCATE_EXCLUSIVE_ELEMENT_EN
+#define MD_ID_ARRAY_LC_SRV_MODELS	SIG_MD_G_ONOFF_S, MD_ID_ARRAY_LIGHT_LC_SERVER   // only server model
+const u16 md_id_sig_lc_srv_models[] = {MD_ID_ARRAY_LC_SRV_MODELS};
     #endif
 #else
 const u16 md_id_sig_second[] =      {MD_ID_ARRAY_COMMON};
@@ -698,6 +742,7 @@ typedef struct{
 	u32 md_vendor[ARRAY_SIZE(md_id_vendor_primary)];
 }mesh_element_primary_t;
 
+#if ((LEVEL_STATE_CNT_EVERY_LIGHT >= 2) || (LIGHT_CNT > 1))
 typedef struct{
 	u16 loc;
 	u8 nums;
@@ -709,18 +754,52 @@ typedef struct{
 	#endif
 	#endif
 }mesh_element_second_t;
+#endif
 
+#if LIGHT_CONTROL_SERVER_LOCATE_EXCLUSIVE_ELEMENT_EN
+typedef struct{
+	u16 loc;
+	u8 nums;
+	u8 numv; // always 0
+	u16 md_sig[ARRAY_SIZE(md_id_sig_lc_srv_models)];
+}mesh_lc_srv_models_t;
+#endif
 
 typedef struct{
 	mesh_page0_head_t head;
 	mesh_element_primary_t ele_primary;
-	#if (ELE_CNT > 1)
+#if (ELE_CNT > 1)
+	#if LIGHT_CONTROL_SERVER_LOCATE_EXCLUSIVE_ELEMENT_EN
+		#if (LIGHT_CNT > 1)
+#error todo due to ele_second_
+		#else
+			#if (LEVEL_STATE_CNT_EVERY_LIGHT >= 2)
+	mesh_element_second_t ele_second[LEVEL_STATE_CNT_EVERY_LIGHT-1];
+			#endif
+	mesh_lc_srv_models_t  lc_srv_models;
+		#endif
+	#else
 	mesh_element_second_t ele_second[ELE_CNT-1];
 	#endif
+#endif
 }page0_local_t;
 
+#if NLC_PROFILE_EN
 typedef struct{
-	page0_local_t page0;     // differrent page with differrent struct, so can not use array.
+	u8 	page;
+	u16 profile_id;
+	u8  version_major;
+	u8  version_minor;
+	u8  version_z;
+	u8  num_element_offsets;
+	u8  element_offset_list[ELE_CNT];
+	u16	additional_data_len;
+	//u16 additional_data;
+}page2_local_t;
+#endif
+
+typedef struct{
+	page0_local_t page0;     // different page with different struct, so can not use array.
 }mesh_composition_data_local_t;
 
 #if (ELE_CNT_EVERY_LIGHT == 1)
@@ -735,7 +814,7 @@ typedef struct{
 #else
 #define CPS_DATA_ELE_SECOND  {\
     0, \
-    ARRAY_SIZE(md_id_sig_second),\
+    ARRAY_SIZE(md_id_sig_second), /* if want to add ARRAY_SIZE(md_id_vendor_second), need to change clnt[1] to clnt[LIGHT_CNT] for model_vd_light_t.*/ \
     0, \
     {MD_ID_ARRAY_COMMON},\
 }
@@ -743,6 +822,9 @@ typedef struct{
 #endif
 
 /*please refer to spec, such as "4.2.1 Composition Data" of V1.0.1*/
+#if PLATFORM_TELINK_EN
+__attribute__((section(".cps_data"))) 
+#endif
 mesh_composition_data_local_t model_sig_cfg_s_cps = {   // can't extern, must static
     {
         // head =
@@ -750,7 +832,11 @@ mesh_composition_data_local_t model_sig_cfg_s_cps = {   // can't extern, must st
             VENDOR_ID,      // u16 cid = ;
             MESH_PID_SEL,   // u16 pid = ;
             MESH_VID,       // u16 vid = ;
-            MESH_NODE_MAX_NUM, //CACHE_BUF_MAX,  // u16 crpl = ;
+            #if NLCP_BLC_EN
+			(max2(MESH_NODE_MAX_NUM, 255)), // Test BLCM/BLC/FEAT/BV-01,The CRPL field of the Composition Data Page 0 has a value greater than or equal to 255.
+			#else 
+			MESH_NODE_MAX_NUM, //CACHE_BUF_MAX,  // u16 crpl = ;
+			#endif
             //mesh_page_feature_t feature = 
             {
                 FEATURE_RELAY_EN,       // u16 relay       :1;
@@ -773,26 +859,38 @@ mesh_composition_data_local_t model_sig_cfg_s_cps = {   // can't extern, must st
             {MD_ID_ARRAY_PRIMARY_VD},           // u32 md_vendor[] = 
         },
 #if (ELE_CNT >= 2)
-    #if (ELE_CNT_EVERY_LIGHT >= 2)
+    #if (LEVEL_STATE_CNT_EVERY_LIGHT >= 2 || LIGHT_CONTROL_SERVER_LOCATE_EXCLUSIVE_ELEMENT_EN)
+    	#if (LEVEL_STATE_CNT_EVERY_LIGHT >= 2)
         {
             {0,                                 // u16 loc; 0x0000 means unknown
             ARRAY_SIZE(md_id_sig_second),       // u8 nums;
             0,
             {MD_ID_ARRAY_SECOND},},             // u16 md_sig[] = 
-        #if (ELE_CNT_EVERY_LIGHT >= 3)
+        	#if (LEVEL_STATE_CNT_EVERY_LIGHT >= 3)
             {0,                                 // u16 loc; 0x0000 means unknown
             ARRAY_SIZE(md_id_sig_third),        // u8 nums;
             0,
             {MD_ID_ARRAY_THIRD},},              // u16 md_sig[] = 
-        #endif
-    	#if (ELE_CNT_EVERY_LIGHT >= 4)
+        	#endif
+    		#if (LEVEL_STATE_CNT_EVERY_LIGHT >= 4)
             {0,                                 // u16 loc; 0x0000 means unknown
             ARRAY_SIZE(md_id_sig_fourth),       // u8 nums;
             0,
             {MD_ID_ARRAY_FOURTH},},             // u16 md_sig[] = 
-    	#endif
+    		#endif
         },
-    #elif (LIGHT_TYPE_SEL == LIGHT_TYPE_PANEL)
+        #endif
+        
+		#if LIGHT_CONTROL_SERVER_LOCATE_EXCLUSIVE_ELEMENT_EN
+		// mesh_lc_srv_models_t  lc_srv_models;
+        {
+            0,                                  // u16 loc; 0x0000 means unknown
+            ARRAY_SIZE(md_id_sig_lc_srv_models),      // u8 nums;
+            0,   // u8 numv;
+            {MD_ID_ARRAY_LC_SRV_MODELS},              // u16 md_sig[] = 
+        },
+		#endif
+    #else
         // mesh_element_second_t ele_second[] = 
         {
             CPS_DATA_ELE_SECOND,
@@ -846,21 +944,119 @@ mesh_composition_data_local_t model_sig_cfg_s_cps = {   // can't extern, must st
 #endif
     },
 };
+
+#if PLATFORM_TELINK_EN
+__attribute__((section(".cps_prefix"))) volatile unsigned char cps_prefix_value[] = {'#','#','#','C','P','S',sizeof(model_sig_cfg_s_cps) & 0xff,(sizeof(model_sig_cfg_s_cps) >> 8) & 0xff,};
+#endif
+
+#if COMPOSITION_DATA_PAGE1_PRESENT_EN
+const extend_model_map_t extend_model_map[] = {
+#if (MD_LIGHTNESS_EN)
+	{SIG_MD_LIGHTNESS_SETUP_S, EXTEND_MD_ID_ARRAY_LIGHTNESS_SETUP_S},
+	{SIG_MD_LIGHTNESS_S, EXTEND_MD_ID_ARRAY_LIGHTNESS_S},
+#endif
+#if (MD_POWER_ONOFF_EN)
+	{SIG_MD_G_POWER_ONOFF_SETUP_S, EXTEND_MD_ID_ARRAY_POWER_ONOFF_SETUP_S},
+	{SIG_MD_G_POWER_ONOFF_S, EXTEND_MD_ID_ARRAY_POWER_ONOFF_S},
+#endif
+#if (LIGHT_TYPE_SEL == LIGHT_TYPE_POWER)
+	{SIG_MD_G_POWER_LEVEL_S, EXTEND_MD_ID_ARRAY_POWER_LEVEL_S},
+	{SIG_MD_G_POWER_LEVEL_SETUP_S, EXTEND_MD_ID_ARRAY_POWER_LEVEL_SETUP_S},
+#endif
+#if (MD_LOCATION_EN)
+	{SIG_MD_G_LOCATION_SETUP_S, EXTEND_MD_ID_ARRAY_LOCATION_SETUP_S},
+#endif
+#if (MD_PROPERTY_EN)
+	{SIG_MD_G_ADMIN_PROP_S, EXTEND_MD_ID_ARRAY_ADMIN_PROP_S},
+	{SIG_MD_G_MFG_PROP_S, EXTEND_MD_ID_ARRAY_MANU_PROP_S},
+#endif
+#if (MD_SCENE_EN)
+	{SIG_MD_SCENE_SETUP_S, EXTEND_MD_ID_ARRAY_SCENE_SETUP_S},
+#endif
+#if (LIGHT_TYPE_CT_EN)
+	{SIG_MD_LIGHT_CTL_SETUP_S, EXTEND_MD_ID_ARRAY_LIGHT_CTL_SETUP_S},
+	{SIG_MD_LIGHT_CTL_S, EXTEND_MD_ID_ARRAY_LIGHT_CTL_S},
+	{SIG_MD_LIGHT_CTL_TEMP_S, EXTEND_MD_ID_ARRAY_LIGHT_CTL_TEMP_S},
+#endif
+#if (MD_LIGHT_CONTROL_EN)
+	{SIG_MD_LIGHT_LC_SETUP_S, EXTEND_MD_ID_ARRAY_LIGHT_LC_SETUP_S},
+	{SIG_MD_LIGHT_LC_S, EXTEND_MD_ID_ARRAY_LIGHT_LC_S},
+#endif
+#if (LIGHT_TYPE_HSL_EN)
+	{SIG_MD_LIGHT_HSL_S, EXTEND_MD_ID_ARRAY_LIGHT_HSL_S},
+	{SIG_MD_LIGHT_HSL_HUE_S, EXTEND_MD_ID_ARRAY_LIGHT_HSL_HUE_S},
+	{SIG_MD_LIGHT_HSL_SAT_S, EXTEND_MD_ID_ARRAY_LIGHT_HSL_SAT_S},
+	{SIG_MD_LIGHT_HSL_SETUP_S, EXTEND_MD_ID_ARRAY_LIGHT_HSL_SETUP_S},
+#endif
+#if (LIGHT_TYPE_SEL == LIGHT_TYPE_XYL)
+	{SIG_MD_LIGHT_XYL_S, EXTEND_MD_ID_ARRAY_LIGHT_XYL_S},
+	{SIG_MD_LIGHT_XYL_SETUP_S, EXTEND_MD_ID_ARRAY_LIGHT_XYL_SETUP_S},
+#endif
+};
+
+const corresponding_model_map_t corresponding_model_map[] = {
+#if MD_LIGHTNESS_EN
+	{SIG_MD_LIGHTNESS_SETUP_S, SIG_MD_LIGHTNESS_S},
+#endif
+#if MD_POWER_ONOFF_EN
+	{SIG_MD_G_POWER_ONOFF_SETUP_S, SIG_MD_G_POWER_ONOFF_S},
+#endif
+#if (LIGHT_TYPE_SEL == LIGHT_TYPE_POWER)
+	{SIG_MD_G_POWER_LEVEL_SETUP_S, SIG_MD_G_POWER_LEVEL_S},
+#endif
+#if (MD_LOCATION_EN)
+	{SIG_MD_G_LOCATION_SETUP_S, SIG_MD_G_LOCATION_S},
+#endif
+#if (MD_SCENE_EN)
+	{SIG_MD_SCENE_SETUP_S, SIG_MD_SCENE_S},
+#endif
+#if (LIGHT_TYPE_CT_EN)
+	{SIG_MD_LIGHT_CTL_TEMP_S, SIG_MD_LIGHT_CTL_S},
+	{SIG_MD_LIGHT_CTL_SETUP_S, SIG_MD_LIGHT_CTL_S},
+#endif
+#if (MD_SENSOR_EN)
+	{SIG_MD_SENSOR_SETUP_S, SIG_MD_SENSOR_S},
+#endif
+#if (MD_TIME_EN)
+	{SIG_MD_TIME_SETUP_S, SIG_MD_TIME_S},
+#endif
+#if (MD_SCENE_EN)
+	{SIG_MD_SCHED_SETUP_S, SIG_MD_SCHED_S},
+#endif
+#if (LIGHT_TYPE_HSL_EN)
+	{SIG_MD_LIGHT_HSL_SETUP_S, SIG_MD_LIGHT_HSL_S},
+	{SIG_MD_LIGHT_HSL_HUE_S, SIG_MD_LIGHT_HSL_S},
+	{SIG_MD_LIGHT_HSL_SAT_S, SIG_MD_LIGHT_HSL_S},
+#endif
+#if (LIGHT_TYPE_SEL == LIGHT_TYPE_XYL)
+	{SIG_MD_LIGHT_XYL_SETUP_S, SIG_MD_LIGHT_XYL_S},
+#endif
+};
+#endif
+
 #if MD_REMOTE_PROV
 // change the friend feature to make the 0 is different from 128
-mesh_composition_data_local_t model_sig_cfg_s_cps_page128 = {   // can't extern, must static
+const mesh_composition_data_local_t model_sig_cfg_s_cps_page128 = {   // can't extern, must static
     {
         // head =
         {
             VENDOR_ID,      // u16 cid = ;
             MESH_PID_SEL,   // u16 pid = ;
             MESH_VID,       // u16 vid = ;
-            MESH_NODE_MAX_NUM, //CACHE_BUF_MAX,  // u16 crpl = ;
+            #if NLCP_BLC_EN
+			(max2(MESH_NODE_MAX_NUM, 255)), // Test BLCM/BLC/FEAT/BV-01,The CRPL field of the Composition Data Page 0 has a value greater than or equal to 255.
+			#else 
+			MESH_NODE_MAX_NUM, //CACHE_BUF_MAX,  // u16 crpl = ;
+			#endif
             //mesh_page_feature_t feature = 
             {
                 FEATURE_RELAY_EN,       // u16 relay       :1;
                 FEATURE_PROXY_EN,        // u16 proxy       :1;
-                0,      // u16 frid        :1;
+                #if WIN32
+                0,
+                #else
+                FEATURE_FRIEND_EN,      // u16 frid        :1;
+                #endif
                 FEATURE_LOWPOWER_EN,    // u16 low_power   :1;
                 0,                      // u16 rfu         :12;
             },
@@ -874,26 +1070,36 @@ mesh_composition_data_local_t model_sig_cfg_s_cps_page128 = {   // can't extern,
             {MD_ID_ARRAY_PRIMARY_VD},           // u32 md_vendor[] = 
         },
 #if (ELE_CNT >= 2)
-    #if (ELE_CNT_EVERY_LIGHT >= 2)
+    #if (LEVEL_STATE_CNT_EVERY_LIGHT >= 2)
         {
             {0,                                 // u16 loc; 0x0000 means unknown
             ARRAY_SIZE(md_id_sig_second),       // u8 nums;
             0,
             {MD_ID_ARRAY_SECOND},},             // u16 md_sig[] = 
-        #if (ELE_CNT_EVERY_LIGHT >= 3)
+        #if (LEVEL_STATE_CNT_EVERY_LIGHT >= 3)
             {0,                                 // u16 loc; 0x0000 means unknown
             ARRAY_SIZE(md_id_sig_third),        // u8 nums;
             0,
             {MD_ID_ARRAY_THIRD},},              // u16 md_sig[] = 
         #endif
-    	#if (ELE_CNT_EVERY_LIGHT >= 4)
+    	#if (LEVEL_STATE_CNT_EVERY_LIGHT >= 4)
             {0,                                 // u16 loc; 0x0000 means unknown
             ARRAY_SIZE(md_id_sig_fourth),       // u8 nums;
             0,
             {MD_ID_ARRAY_FOURTH},},             // u16 md_sig[] = 
     	#endif
         },
-    #elif (LIGHT_TYPE_SEL == LIGHT_TYPE_PANEL)
+        
+		#if LIGHT_CONTROL_SERVER_LOCATE_EXCLUSIVE_ELEMENT_EN
+		// mesh_lc_srv_models_t  lc_srv_models;
+        {
+            0,                                  // u16 loc; 0x0000 means unknown
+            ARRAY_SIZE(md_id_sig_lc_srv_models),      // u8 nums;
+            0,   // u8 numv;
+            {MD_ID_ARRAY_LC_SRV_MODELS},              // u16 md_sig[] = 
+        },
+		#endif
+    #else
         // mesh_element_second_t ele_second[] = 
         {
             CPS_DATA_ELE_SECOND,
@@ -915,12 +1121,45 @@ mesh_composition_data_local_t model_sig_cfg_s_cps_page128 = {   // can't extern,
             #if ELE_CNT >= 8
             CPS_DATA_ELE_SECOND,
             #endif
+            #if ELE_CNT >= 9
+            CPS_DATA_ELE_SECOND,
+            #endif
+            #if ELE_CNT >= 10
+            CPS_DATA_ELE_SECOND,
+            #endif
+            #if ELE_CNT >= 11
+            CPS_DATA_ELE_SECOND,
+            #endif
+            #if ELE_CNT >= 12
+            CPS_DATA_ELE_SECOND,
+            #endif
+            #if ELE_CNT >= 13
+            CPS_DATA_ELE_SECOND,
+            #endif
+            #if ELE_CNT >= 14
+            CPS_DATA_ELE_SECOND,
+            #endif
+            #if ELE_CNT >= 15
+            CPS_DATA_ELE_SECOND,
+            #endif
+            #if ELE_CNT >= 16
+            CPS_DATA_ELE_SECOND,
+            #endif
+            #if ELE_CNT > ELE_CNT_MAX_LIB
+            #error xxxxxxx need to modify library
+            #endif
         },
     #endif
 #endif
     },
 };
 
+
+/**
+ * @brief       This function check model_sig_cfg_s_cps and model_sig_cfg_s_cps_page128 para same
+ * @return      0: no same; 1:same
+ * @note        
+ */
 u8 mesh_cps_data_page0_page128_is_same()
 {
 	if(!memcmp(&model_sig_cfg_s_cps,&model_sig_cfg_s_cps_page128,sizeof(model_sig_cfg_s_cps))){
@@ -966,7 +1205,7 @@ u32 get_cps_ele_len(const mesh_element_head_t *p_ele)
 	return (OFFSETOF(mesh_element_head_t, md_sig) + p_ele->nums * 2 + p_ele->numv * 4);
 }
 
-void mesh_set_model_ele_adr(u16 ele_adr, u32 model_id, bool4 sig_model)
+void mesh_set_model_ele_adr(u16 ele_adr, u32 model_id, bool4 sig_model, int reset_pub_flag)
 {
 	model_common_t *p_model;
 	u8 model_idx = 0;
@@ -976,6 +1215,9 @@ void mesh_set_model_ele_adr(u16 ele_adr, u32 model_id, bool4 sig_model)
 		#if VIRTUAL_ADDR_STAND_ALONE_SIZE_EN
 		p_model->sub_buf.mode = MODE_VIRTUAL_ADDR_STAND_ALONE_SIZE;
 		#endif
+		if(reset_pub_flag){
+			p_model->cb_pub_st = 0;
+		}
 	}
 }
 
@@ -983,7 +1225,8 @@ void ev_handle_traversal_cps_ll(u32 ev, u8 *par, u16 ele_adr, u32 model_id, bool
 {
 	switch(ev){
 		case EV_TRAVERSAL_SET_MD_ELE_ADR:
-			mesh_set_model_ele_adr(ele_adr, model_id, sig_model);
+		case EV_TRAVERSAL_SET_MD_ELE_ADR_AND_RESET_PUB_CB:
+			mesh_set_model_ele_adr(ele_adr, model_id, sig_model, (EV_TRAVERSAL_SET_MD_ELE_ADR_AND_RESET_PUB_CB == ev) ? 1:0);
 			break;
 		case EV_TRAVERSAL_BIND_APPKEY:
 			{u16 ak_idx = par[0] + (par[1] << 8);
@@ -1003,9 +1246,10 @@ void ev_handle_traversal_cps_ll(u32 ev, u8 *par, u16 ele_adr, u32 model_id, bool
 	}
 }
 
-void mesh_set_all_model_ele_adr()
+void mesh_set_all_model_ele_adr(int reset_pub_flag)
 {
-	ev_handle_traversal_cps(EV_TRAVERSAL_SET_MD_ELE_ADR, 0);
+	u32 ev = reset_pub_flag ? EV_TRAVERSAL_SET_MD_ELE_ADR_AND_RESET_PUB_CB : EV_TRAVERSAL_SET_MD_ELE_ADR;
+	ev_handle_traversal_cps(ev, 0);
 }
 
 void mesh_unbind_by_del_appkey(u16 appkey_index)
@@ -1013,10 +1257,23 @@ void mesh_unbind_by_del_appkey(u16 appkey_index)
 	ev_handle_traversal_cps(EV_TRAVERSAL_UNBIND_APPKEY, (u8 *)&appkey_index);
 }
 
+#if PUBLISH_REDUCE_COLLISION_EN
+u32 g_publish_check_us = PUBLISH_CHECK_INIT_DELAY;
+#else
+const u32 g_publish_check_us = PUBLISH_CHECK_INIT_DELAY;
+#endif
+
 void mesh_pub_period_proc()
 {
 	static u32 tick_pub_period_check;
-	if(clock_time_exceed(tick_pub_period_check, 40*1000)){
+
+#if PUBLISH_REDUCE_COLLISION_EN
+    if(!is_publish_allow()){
+		g_publish_check_us = PUBLISH_CHECK_INIT_DELAY;
+	}
+#endif
+
+	if(clock_time_exceed(tick_pub_period_check, g_publish_check_us)){
 		//if(buf_is_enough){
 			tick_pub_period_check = clock_time();
 			ev_handle_traversal_cps(EV_TRAVERSAL_PUB_PERIOD, 0);
@@ -1067,6 +1324,7 @@ u8 find_ele_support_model_and_match_dst(mesh_adr_list_t *adr_list, u16 adr_dst, 
                 foreach(i, p_ele->nums){
                     if(model_id == p_ele->md_sig[i]){
                         if(adr_list->adr_cnt < ELE_CNT_MAX_LIB){
+							adr_list->md_idx[adr_list->adr_cnt] = i;
                             adr_list->adr[adr_list->adr_cnt++] = ele_adr;
                         }
                         
@@ -1079,6 +1337,7 @@ u8 find_ele_support_model_and_match_dst(mesh_adr_list_t *adr_list, u16 adr_dst, 
                 foreach(i, p_ele->numv){
                     if(model_id == get_cps_vd_model_id(p_ele, i)){
                         if(adr_list->adr_cnt < ELE_CNT_MAX_LIB){
+							adr_list->md_idx[adr_list->adr_cnt] = p_ele->nums + i;
                             adr_list->adr[adr_list->adr_cnt++] = ele_adr;
                         }
                         
@@ -1230,14 +1489,14 @@ u8 get_ele_offset_by_model(mesh_page0_t * p_page0, u32 len_page0, u16 node_adr, 
 		pos += len_ele;
 		index++;
 	}
-    // LOG_MSG_ERR(TL_LOG_COMMON, 0, 0, "MODEL_NOT_FOUND!........................",0);
+    // LOG_MSG_ERR(TL_LOG_COMMON, 0, 0, "MODEL_NOT_FOUND!........................");
 	return MODEL_NOT_FOUND;
 }
 
 #if (IS_VC_PROJECT_MASTER)
 int is_support_model_dst(u16 adr_dst, u32 model_id, bool4 sig_model)
 {
-    // not use 'get_ele_offset_by_model_VC_node_info_()', because should not ouput ERR log.
+    // not use 'get_ele_offset_by_model_VC_node_info_()', because should not output ERR log.
     VC_node_info_t * p_info = get_VC_node_info(adr_dst, 0);
     if(p_info){
         u8 offset = get_ele_offset_by_model((mesh_page0_t *)(&p_info->cps.page0_head), p_info->cps.len_cps, p_info->node_adr, adr_dst, model_id, sig_model);
@@ -1285,7 +1544,11 @@ int is_support_op_dst_VC_APP(u16 op, u16 adr_dst)
 
 int is_mesh_adv_cmd_fifo_empty()
 {
+#if BLE_MULTIPLE_CONNECTION_ENABLE
+	return ((0 == my_fifo_data_cnt_get(&mesh_adv_cmd_fifo)) && !pkt_adv_pending);
+#else
     return (0 == my_fifo_data_cnt_get(&mesh_adv_cmd_fifo));
+#endif
 }
 
 u16 get_primary_adr(u16 ele_adr)
@@ -1295,7 +1558,7 @@ u16 get_primary_adr(u16 ele_adr)
         return p_info->node_adr;
     }
 
-    LOG_MSG_ERR(TL_LOG_COMMON,0, 0,"get primary address failed: VC node info not found",0);
+    LOG_MSG_ERR(TL_LOG_COMMON,0, 0,"get primary address failed: VC node info not found");
     return NODE_ADR_AUTO;
 }
 
@@ -1344,38 +1607,28 @@ void get_cps_from_keybind_list(mesh_page0_t *page0_out, mesh_page0_t *p_rsp_page
 #include <iostream>     // include rand_
 #endif
 
-// cache
-cache_buf_t cache_buf[CACHE_BUF_MAX];
-u16 g_cache_buf_max = CACHE_BUF_MAX;
-#ifndef WIN32
-//STATIC_ASSERT(sizeof(cache_buf_t) % 4 == 0);   // for compare sno quickly
-//STATIC_ASSERT(CACHE_BUF_MAX <= 110);
-#endif
-
-void mesh_network_cache_buf_init()
-{
-    memset(cache_buf, 0, sizeof(cache_buf));
-}
-
 #if DEBUG_CFG_CMD_GROUP_AK_EN
 nw_notify_record_t nw_notify_record;
 #endif
 // cache end
 
-#define PUB_RANDOM_DELAY_MAX_MS         (2000)
+#define PUB_RANDOM_DELAY_MAX_MS         (3000)
 #define PUB_RANDOM_RATE                 (10)        // (1/10)
 
 u16 publish_powerup_random_ms = 0;
 
-/*
-    return : interval_ms  * 10%
-*/
+/**
+ * @brief       This function get publish delay random
+ * @param[in]   interval_ms	- interval with unit ms.
+ * @return      (interval_ms  * 10%) * 2. and it means that publish period is with a minus or plus (0 ~ 10%) period.
+ * @note        
+ */
 u32 get_random_delay_pub_tick_ms(u32 interval_ms)
 {
-    #if 0   // if no need random
+    #if PTS_TEST_EN   // if no need random
     return 0;
     #else
-    u32 rand_max_ms = interval_ms / (PUB_RANDOM_RATE + 1) ;   // because interval is add 10% before.
+    u32 rand_max_ms = interval_ms / (PUB_RANDOM_RATE + 1) ;   // because interval is add 10% before, so need to add 1 to get 10%.
     if(rand_max_ms > PUB_RANDOM_DELAY_MAX_MS){
         rand_max_ms = PUB_RANDOM_DELAY_MAX_MS;
     }
@@ -1392,33 +1645,48 @@ u32 get_random_delay_pub_tick_ms(u32 interval_ms)
     #endif
 }
 
+/**
+ * @brief       This function get publish period(unit:ms)
+ * @param[in]   model_id	- model index
+ * @param[in]   sig_model	- model id is sig model(1) or vendor model(0).
+ * @param[in]   period		- publish period
+ * @return      publish period
+ * @note        
+ */
 u32 get_mesh_pub_interval_ms(u32 model_id, bool4 sig_model, mesh_pub_period_t *period)
 {
 	u32 step_res_ms = get_transition_100ms((trans_time_t *)period)*100;
-	step_res_ms = step_res_ms + (step_res_ms / PUB_RANDOM_RATE);
+#if !PTS_TEST_EN
+	step_res_ms = step_res_ms + min((step_res_ms / PUB_RANDOM_RATE), PUB_RANDOM_DELAY_MAX_MS);
+#endif
 	if((sig_model && (SIG_MD_HEALTH_SERVER == model_id)) && (model_sig_health.srv.health_mag.cur_sts.cur_fault_idx != 0)){
 		step_res_ms = step_res_ms>>model_sig_health.srv.health_mag.period_sts.fast_period_log;
 	}
 	#if(MD_SENSOR_SERVER_EN)
 	else if(sig_model && (SIG_MD_SENSOR_S == model_id)){
+		u32 sensor_val = 0;
 		u8 fast_candence = 0;
-		if((model_sig_sensor.sensor_states[0].cadence.cadence_unit.cadence_hight>=model_sig_sensor.sensor_states[0].cadence.cadence_unit.cadence_low)){
-			if((model_sig_sensor.sensor_states[0].sensor_data < model_sig_sensor.sensor_states[0].cadence.cadence_unit.cadence_hight) && 
-			(model_sig_sensor.sensor_states[0].sensor_data > model_sig_sensor.sensor_states[0].cadence.cadence_unit.cadence_low)){
+		sensor_cadence_t *p_cadence = &model_sig_sensor.sensor_states[0].cadence;
+		sensor_data_t *p_sensor_data = get_sensor_data(model_sig_sensor.sensor_states[0].prop_id);
+		memcpy(&sensor_val, p_sensor_data->p_raw, min2(sizeof(sensor_val), p_sensor_data->len_raw));
+		
+		if((p_cadence->cadence_unit.cadence_high >= p_cadence->cadence_unit.cadence_low)){
+			if((sensor_val < p_cadence->cadence_unit.cadence_high) && 
+			(sensor_val > p_cadence->cadence_unit.cadence_low)){
 				fast_candence = 1;
 			}
 		}
 		else{
-			if((model_sig_sensor.sensor_states[0].sensor_data < model_sig_sensor.sensor_states[0].cadence.cadence_unit.cadence_hight) || 
-			(model_sig_sensor.sensor_states[0].sensor_data > model_sig_sensor.sensor_states[0].cadence.cadence_unit.cadence_low)){
+			if((sensor_val < p_cadence->cadence_unit.cadence_high) || 
+			(sensor_val > p_cadence->cadence_unit.cadence_low)){
 				fast_candence = 1;
 			}
 		}
 		
 		if(fast_candence){
-			step_res_ms = step_res_ms>>model_sig_sensor.sensor_states[0].cadence.fast_period_div;
-			if(step_res_ms < (((u32)1<<model_sig_sensor.sensor_states[0].cadence.cadence_unit.min_interval))){
-				step_res_ms = ((u32)1<<model_sig_sensor.sensor_states[0].cadence.cadence_unit.min_interval);
+			step_res_ms = step_res_ms>>p_cadence->fast_period_div;
+			if(step_res_ms < (((u32)1<<p_cadence->cadence_unit.min_interval))){
+				step_res_ms = ((u32)1<<p_cadence->cadence_unit.min_interval);
 			}
 		}
 	}
@@ -1448,6 +1716,11 @@ void set_mesh_bear_tx_delay(u8 *p, int delay_ms)
  	p_delay->start_tick = clock_time()>>16;
 }
 
+/**
+ * @brief       This function server to get network transmit interval of the message in mesh_adv_cmd_fifo.
+ * @return      network transmit interval, the unit is us.
+ * @note        
+ */
 int get_mesh_adv_interval()
 {
 	int interval_step = 0;
@@ -1457,7 +1730,11 @@ int get_mesh_adv_interval()
 	    mesh_transmit_t *p_trans_par = (mesh_transmit_t *)&p_bear->trans_par_val;
 		if(BEAR_TX_PAR_TYPE_DELAY == p_bear->tx_head.par_type){
 			interval_step = get_mesh_tx_delay_ms((bear_delay_t *)&p_bear->tx_head)/10;
-		}else{
+		}
+		else if(BEAR_TX_PAR_TYPE_REMAINING_TIMES == p_bear->tx_head.par_type){
+			interval_step = 1;
+		}
+		else{
 			interval_step = p_trans_par->invl_steps+1;
 		}
 	}
@@ -1470,33 +1747,49 @@ int get_mesh_adv_interval()
 int mesh_cmd_sig_cfg_cps_get(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par)
 {
     if(1){//(0 == par[0]) || (0xff == par[0])){    // page0
-    u8 rsp[1 + sizeof(model_sig_cfg_s_cps.page0)];
-	u32 rsp_len = sizeof(rsp);
-	rsp[0] = 0;    
+	    u8 rsp[1 + sizeof(model_sig_cfg_s_cps.page0)];
+		u32 rsp_len = sizeof(rsp);
+		u8 page_get = par[0];
+		page_get = page_get;  // will be optimized, just for clean compile warning if it is not used.
+		
+		rsp[0] = 0;    
 
-	#if DU_ENABLE
-	du_set_gateway_adr(cb_par->adr_src);
-	du_enable_gateway_adr(0);// force not set the rollback flag .
-	#endif
+		#if DU_ENABLE
+		du_set_gateway_adr(cb_par->adr_src);
+		du_enable_gateway_adr(0);// force not set the rollback flag .
+		#endif
 	
-	#if MD_REMOTE_PROV
-		// when cpy and compare ,now we only suppose the page0 and page128 is the same .
-		if(par[0]== 0x80){
-			rsp_len = 1+sizeof(model_sig_cfg_s_cps_page128.page0);
-			memcpy(rsp+1, &model_sig_cfg_s_cps_page128.page0, sizeof(model_sig_cfg_s_cps_page128.page0));
-		}else{
-			rsp_len = 1+sizeof(model_sig_cfg_s_cps.page0);
-			memcpy(rsp+1, &model_sig_cfg_s_cps.page0, sizeof(model_sig_cfg_s_cps.page0));
-		}
-		return mesh_tx_cmd_rsp_cfg_model(COMPOSITION_DATA_STATUS, rsp, rsp_len, cb_par->adr_src);
-	#else		
 		#if (DRAFT_FEATURE_VENDOR_TYPE_SEL == DRAFT_FEATURE_VENDOR_TYPE_ONE_OP)
 		rsp_len = 1 + get_cps_vendor_op_extend(rsp+1);
 		#else
-		memcpy(rsp+1, &model_sig_cfg_s_cps.page0, sizeof(model_sig_cfg_s_cps.page0));
+			#if 0 // PTS_TEST_MMDL_SR_MLTEL_BV_01
+		rsp_len = get_cps_MMDL_SR_MLTEL_BV_01(rsp);
+   			#else
+   		if(0){
+   		}
+   				#if NLC_PROFILE_EN
+		else if(page_get == 0x02){
+			return  mesh_cmd_cps_page2_get(cb_par);
+		}
+				#endif
+				#if MD_REMOTE_PROV
+		else if(page_get == 0x80){
+			// when cpy and compare ,now we only suppose the page0 and page128 is the same .
+			memcpy(rsp+1, &model_sig_cfg_s_cps_page128.page0, sizeof(model_sig_cfg_s_cps_page128.page0));
+		}
+				#endif
+				#if COMPOSITION_DATA_PAGE1_PRESENT_EN
+		else if((page_get == 0x01) || (page_get == 0xff)){
+			mesh_cmd_cps_page1_get(cb_par);
+		}
+				#endif
+		else{
+			memcpy(rsp+1, &model_sig_cfg_s_cps.page0, sizeof(model_sig_cfg_s_cps.page0));
+		}
+			#endif
 		#endif
+		
         return mesh_tx_cmd_rsp_cfg_model(COMPOSITION_DATA_STATUS, rsp, rsp_len, cb_par->adr_src);
-	#endif
     }else{
         return 0;
     }
@@ -1510,6 +1803,159 @@ int mesh_cmd_sig_cfg_cps_status(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par)
     }
     return err;
 }
+
+#if COMPOSITION_DATA_PAGE1_PRESENT_EN
+/**
+ * @brief       This function server to get md_id's extended models. 
+ * @param[in]   md_id	- model id.
+ * @return      0:no extended model. other:extended model map of md_id.
+ * @note        
+ */
+extend_model_map_t* mesh_get_extend_model_map(u32 md_id)
+{
+	foreach(i, ARRAY_SIZE(extend_model_map)){
+		if(md_id == extend_model_map[i].main_md){
+			return (extend_model_map_t*)&extend_model_map[i];
+		}
+	}
+
+	return 0;
+}
+
+/**
+ * @brief       This function server to get md_id's corresponding model and group id.
+ * @param[in]   md_id	- model id.
+ * @return      struct of corresponding model id and group id.
+ * @note        md_id 0 in correspond_md means no corresponding model.
+ */
+corresponding_model_t mesh_get_corresponding_model(u32 md_id)
+{
+	corresponding_model_t correspond_md = {0};
+	
+	foreach(i, ARRAY_SIZE(corresponding_model_map)){
+		if(md_id == corresponding_model_map[i].md_id1){
+			correspond_md.group_id = i;
+			correspond_md.md_id = corresponding_model_map[i].md_id2;
+			break;
+		}
+		else if(md_id == corresponding_model_map[i].md_id2){
+			correspond_md.group_id = i;
+			correspond_md.md_id = corresponding_model_map[i].md_id1;
+			break;
+		}
+	}
+
+	return correspond_md;
+}
+
+/**
+ * @brief       This function server to reply composition data page 1 get message.
+ * @param[in]   cb_par	- mesh callback function parameter.
+ * @return      0:message process success. other:message process fail.
+ * @note        
+ */
+int mesh_cmd_cps_page1_get(mesh_cb_fun_par_t *cb_par)
+{
+	u16 page1_offset = 0;
+	u8 cps_page1[MESH_CMD_ACCESS_LEN_MAX];
+	memset(cps_page1, 0x00, sizeof(cps_page1));
+	cps_page1[0] = 0x01; // page 1
+	page1_offset += 1;
+	
+	mesh_adr_list_t adr_list;
+	int pos = 0;
+	int offset_ele = OFFSETOF(mesh_page0_t, ele);
+    const mesh_element_head_t *p_ele = &gp_page0->ele;
+    int total_len_ele = SIZE_OF_PAGE0_LOCAL - offset_ele;
+    u16 ele_adr = ele_adr_primary;
+
+	while (pos < total_len_ele)
+	{
+		cps_page1_ele_head_t *p_ele_head = (cps_page1_ele_head_t *)((u8 *)cps_page1+page1_offset);
+		u16 light_adr_primary = ele_adr - ((ele_adr - ele_adr_primary) % ELE_CNT_EVERY_LIGHT); // find extend and corresponding model id within every light.
+		p_ele_head->nums = p_ele->nums;
+		p_ele_head->numv = p_ele->numv;
+		page1_offset += sizeof(cps_page1_ele_head_t);
+		
+        foreach(i, p_ele->nums){
+			cps_page1_md_item_t *p_item = (cps_page1_md_item_t *)((u8 *)cps_page1+page1_offset);
+			
+			if(page1_offset > (sizeof(cps_page1) - (sizeof(cps_page1_ele_head_t) + sizeof(cps_page1_md_item_t) + MAX_EXTEND_MD_NUM * sizeof(cps_page1_extend_md_item_t)))){
+				return -1;
+			}
+			
+			// find corresponding model
+			corresponding_model_t correspond_md = mesh_get_corresponding_model(p_ele->md_sig[i]);
+			if(0 != correspond_md.md_id){
+				foreach(ele_idx, ELE_CNT_EVERY_LIGHT){
+					if(ST_SUCCESS == find_ele_support_model_and_match_dst(&adr_list, light_adr_primary + ele_idx, correspond_md.md_id, 1)){
+						p_item->group_id_present = 1;
+						p_item->group_id = correspond_md.group_id;
+					}
+				}
+			}			
+			page1_offset = page1_offset + (p_item->group_id_present ? sizeof(cps_page1_md_item_t) : OFFSETOF(cps_page1_md_item_t, group_id));
+
+			// find extended models
+			extend_model_map_t* p_extend = mesh_get_extend_model_map(p_ele->md_sig[i]); 
+			if(0 != p_extend){
+				foreach(md_idx, MAX_EXTEND_MD_NUM){				
+					if(0 != p_extend->extend_md[md_idx]){							
+						foreach(ele_idx, ELE_CNT_EVERY_LIGHT){
+							if(ST_SUCCESS == find_ele_support_model_and_match_dst(&adr_list, light_adr_primary + ele_idx, p_extend->extend_md[md_idx], 1)){
+								p_item->format = EXTEND_MD_LONG_FORMAT;
+								p_item->extend_cnt += adr_list.adr_cnt;							
+								foreach(adr_idx, adr_list.adr_cnt){
+									cps_page1_extend_md_item_t *p_extend_md = (cps_page1_extend_md_item_t *)((u8 *)cps_page1+page1_offset);
+									p_extend_md->ele_offset = adr_list.adr[adr_idx] - ele_adr;
+									p_extend_md->md_idx = adr_list.md_idx[adr_idx];
+									page1_offset += sizeof(cps_page1_extend_md_item_t);
+								}	
+							}
+						}
+					}
+				}
+			}
+       }
+
+        foreach(i, p_ele->numv){
+			if(page1_offset > (sizeof(cps_page1) - (sizeof(cps_page1_ele_head_t) + sizeof(cps_page1_md_item_t) + MAX_EXTEND_MD_NUM * sizeof(cps_page1_extend_md_item_t)))){
+				return -1;
+			}
+
+			// vendor model doesn't exist extended and corresponding model now.
+			page1_offset += OFFSETOF(cps_page1_md_item_t, group_id); 
+       }
+        
+        int len_ele = get_cps_ele_len(p_ele);
+		pos += len_ele;
+        p_ele = (mesh_element_head_t *)((u8 *)p_ele + len_ele);
+        ele_adr += 1;
+	}
+
+	return mesh_tx_cmd_rsp_cfg_model(COMPOSITION_DATA_STATUS, (u8 *)&cps_page1, page1_offset, cb_par->adr_src);;
+}
+#endif
+
+#if NLC_PROFILE_EN
+int  mesh_cmd_cps_page2_get(mesh_cb_fun_par_t *cb_par)
+{
+	page2_local_t page2;
+	
+	page2.page = 2;
+	page2.profile_id = NLC_PROFILE_ID;
+	page2.version_major = 1;
+	page2.version_minor = 0;
+	page2.version_z = 0;
+	page2.num_element_offsets = ELE_CNT;
+	foreach(i, ELE_CNT){
+		page2.element_offset_list[0] = i;
+	}
+	page2.additional_data_len = 0;
+
+	return mesh_tx_cmd_rsp_cfg_model(COMPOSITION_DATA_STATUS, (u8 *)&page2, sizeof(page2), cb_par->adr_src);
+}
+#endif
 
 #if MD_LARGE_CPS_EN
 #if (MD_SERVER_EN)
@@ -1526,6 +1972,19 @@ int mesh_cmd_sig_cfg_large_cps_get(u8 *par, int par_len, mesh_cb_fun_par_t *cb_p
 	return mesh_tx_cmd_rsp_cfg_model(cb_par->op_rsp, rsp, data_len+OFFSETOF(large_cps_st_head_t, data), cb_par->adr_src);
 }
 
+/**
+ * @brief       This function read a portion of a page of the Models Metadata state.
+ *              usually get models metadata after getting composition data when provision a node, 
+ *              to get most information of a node, such as Health Tests Information, Sensor Properties, Light Purpose(Night Light, Warming Light, etc),
+ *              Light Lightness Range, Light CTL Temperature Range, Light HSL Hue Range, Light HSL Saturation Range,
+ *              Clock Accuracy, Timekeeping Reserve, which are define in "Assigned_Numbers.pdf".
+ * @param[in]   par		- parameter
+ * @param[in]   par_len	- parameter length
+ * @param[in]   cb_par	- parameters output by callback function which handle the opcode received.
+ * @return      0: success, others failed
+ * @note        models metadata please refer to 1.1 spec "4.2.50.1 Models Metadata Page 0".
+ *              The Metadata_ID field indicates the Bluetooth assigned number for the Metadata Identifier.
+ */
 int mesh_cmd_sig_cfg_models_metadata_get(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par)
 {  
 	models_meta_get_t *p_meta_get = (models_meta_get_t *)par;
@@ -1536,73 +1995,24 @@ int mesh_cmd_sig_cfg_models_metadata_get(u8 *par, int par_len, mesh_cb_fun_par_t
 	p_cps_st->total_size = sizeof(model_sig_cfg_s_cps.page0) - OFFSETOF(page0_local_t, ele_primary) - ELE_CNT;
 	memcpy(p_cps_st->data, &model_sig_cfg_s_cps.page0.ele_primary.nums, sizeof(mesh_element_primary_t)-1); // ele_primary 
 	#if (ELE_CNT>1)
-	for(u8 i=0; i<ELE_CNT-1; i++){ // ele_second
+	for(u8 i=0; i< ARRAY_SIZE(model_sig_cfg_s_cps.page0.ele_second); i++){ // ele_second
 		memcpy(p_cps_st->data+sizeof(mesh_element_primary_t)-1 + (sizeof(mesh_element_second_t)-1)*i, &model_sig_cfg_s_cps.page0.ele_second[i].nums, sizeof(mesh_element_second_t)-1);
 	}
 	#endif
+	#if LIGHT_CONTROL_SERVER_LOCATE_EXCLUSIVE_ELEMENT_EN
+	// copy lc_srv_models
+	#endif
+	
 	u16 data_len = (p_meta_get->offset < p_cps_st->total_size) ? (p_cps_st->total_size-p_meta_get->offset):0;
 	return mesh_tx_cmd_rsp_cfg_model(cb_par->op_rsp, rsp, data_len+OFFSETOF(models_meta_status_head_t, data), cb_par->adr_src);
 }
 #endif
 #endif
 
-int  mesh_get_ivi_cur_val_little()
-{
-	int cur_val;
-	memcpy(&cur_val, iv_idx_st.cur, 4);
-	endianness_swap_u32((u8 *)&cur_val);  // swap to little endianness
-	return cur_val;
-}
-
-// iv index --------------
-void mesh_calculate_ivi(u8 *p_ivi, u8 add){
-    u32 ivi_t;
-    memcpy(&ivi_t, p_ivi, 4);
-    endianness_swap_u32((u8 *)&ivi_t);  // swap to little endianness
-    if(add){
-        ivi_t++;
-    }else{
-        ivi_t--;
-    }
-    endianness_swap_u32((u8 *)&ivi_t);  // restore to big endianness
-    memcpy(p_ivi, &ivi_t, 4);
-}
-
-void mesh_increase_ivi(u8 *p_ivi){
-    mesh_calculate_ivi(p_ivi, 1);
-}
-
-void mesh_decrease_ivi(u8 *p_ivi){
-    mesh_calculate_ivi(p_ivi, 0);
-}
-
-int mesh_ivi_greater_or_equal(const u8 *p_ivi1, const u8 *p_ivi2, u32 val){
-    u32 ivi1, ivi2;
-    memcpy(&ivi1, p_ivi1, 4);
-    endianness_swap_u32((u8 *)&ivi1);  // swap to little endianness
-    memcpy(&ivi2, p_ivi2, 4);
-    endianness_swap_u32((u8 *)&ivi2);  // swap to little endianness
-    if(ivi1 >= ivi2){
-    	if(ivi1 - ivi2 >= val){
-        	return 1;
-        }
-    }
-    return 0;
-}
-
-int mesh_ivi_equal(const u8 *p_ivi1, const u8 *p_ivi2, u32 delta){
-    u32 ivi1, ivi2;
-    memcpy(&ivi1, p_ivi1, 4);
-    endianness_swap_u32((u8 *)&ivi1);  // swap to little endianness
-    memcpy(&ivi2, p_ivi2, 4);
-    endianness_swap_u32((u8 *)&ivi2);  // swap to little endianness
-    return (ivi1 - ivi2 == delta);
-}
-
 void mesh_set_iv_idx_rx(u8 ivi){
-    memcpy(iv_idx_st.rx, iv_idx_st.cur, 4);
-    if((ivi & 1) != (iv_idx_st.cur[3] & 1)){
-        mesh_decrease_ivi(iv_idx_st.rx);
+	iv_idx_st.iv_rx = iv_idx_st.iv_cur;
+    if((ivi & 1) != (iv_idx_st.iv_cur & 1)){
+		iv_idx_st.iv_rx--;
     }else{
         // use current iv index
     }
@@ -1649,7 +2059,11 @@ u32 mesh_net_key_find(u16 key_index)
 
 u8 * mesh_cfg_cmd_dev_key_get(const u16 adr)
 {
-	#if DEBUG_CFG_CMD_GROUP_AK_EN
+	#if PRIVATE_SELF_PROVISION_EN
+	return mesh_key.dev_key;
+	#endif
+	
+	#if (DEBUG_CFG_CMD_GROUP_AK_EN || DEBUG_CFG_CMD_USE_AK_WHEN_GROUP_EN2)
     if(DEBUG_CFG_CMD_GROUP_USE_AK(adr)){
         return mesh_key.net_key[0][0].app_key[0].key;
     }
@@ -1664,7 +2078,7 @@ u8 * mesh_cfg_cmd_dev_key_get(const u16 adr)
 	return mesh_key.dev_key;
 }
 
-#if MD_REMOTE_PROV
+#if (MD_REMOTE_PROV && DEVICE_KEY_REFRESH_ENABLE)
 u8 * mesh_cfg_cmd_dev_key_candi_get(const u16 adr)
 {
 	#if (IS_VC_PROJECT_MASTER || DONGLE_PROVISION_EN)
@@ -1686,7 +2100,7 @@ void mesh_tx_en_devkey_candi(u8 en)
 
 u8 *mesh_cfg_devkey_candi_get(u16 adr)
 {
-	#if MD_REMOTE_PROV
+	#if (MD_REMOTE_PROV && DEVICE_KEY_REFRESH_ENABLE)
 	if(devkey_candi_en){
 		return mesh_cfg_cmd_dev_key_candi_get(adr);
 	}else
@@ -1710,7 +2124,7 @@ mesh_app_key_t *mesh_tx_access_key_get(u8 *mat, u8 akf)
 		p_key_str = &(mesh_key.net_key[p_mat->nk_array_idx][new_key_flag].app_key[p_mat->ak_array_idx]);
 		
 		if(!(mesh_key.net_key[p_mat->nk_array_idx][new_key_flag].valid) || (!p_key_str->valid)){
-			LOG_MSG_ERR(TL_LOG_COMMON,0, 0,"mesh_tx_access_key_get:key index invalid",0);
+			LOG_MSG_ERR(TL_LOG_COMMON,0, 0,"mesh_tx_access_key_get:key index invalid");
 			return 0;
 		}
 	}else{
@@ -1736,13 +2150,14 @@ static inline void APP_set_self_dev_key2node_info()
 
 const u32 MODEL_ID_DEV_KEY[] = {
     SIG_MD_CFG_SERVER,              SIG_MD_CFG_CLIENT,
-    SIG_MD_REMOTE_PROV_SERVER,      SIG_MD_REMOTE_PROV_CLIENT,
+    SIG_MD_REMOTE_PROV_SERVER,      SIG_MD_REMOTE_PROV_CLIENT, // no para
 	SIG_MD_DF_CFG_S,                SIG_MD_DF_CFG_C,
 	SIG_MD_BRIDGE_CFG_SERVER,       SIG_MD_BRIDGE_CFG_CLIENT,
 	SIG_MD_PRIVATE_BEACON_SERVER,   SIG_MD_PRIVATE_BEACON_CLIENT,
-	SIG_MD_SAR_CFG_S,   			SIG_MD_SAR_CFG_C,
-	SIG_MD_ON_DEMAND_PROXY_S,		SIG_MD_ON_DEMAND_PROXY_C,
-	SIG_MD_LARGE_CPS_S,				SIG_MD_LARGE_CPS_C
+	SIG_MD_SAR_CFG_S,   			SIG_MD_SAR_CFG_C, 	// save in model_sig_cfg_s_t now.
+	SIG_MD_ON_DEMAND_PROXY_S,		SIG_MD_ON_DEMAND_PROXY_C, // save in model_sig_cfg_s_t now.
+	SIG_MD_LARGE_CPS_S,				SIG_MD_LARGE_CPS_C,	// no para to save
+	//SIG_MD_OP_AGG_S,				SIG_MD_OP_AGG_C, 	// can not be bind, and can not set as using device key //op agg use devicekey/appkey depend on the payload
 };
 
 int is_use_device_key(u32 model_id, int sig_flag)
@@ -1801,18 +2216,27 @@ void net_key_del2(mesh_net_key_t *p_key)
 			app_key_del2(&p_key->app_key[i]);
 		}
 	}
-#if (MD_DF_EN&&!WIN32)
+#if (!FEATURE_LOWPOWER_EN && !WIN32)
+#if MD_DF_CFG_SERVER_EN
 	int key_offset = get_mesh_net_key_offset(p_key->index);
 	if(key_offset < NET_KEY_MAX){
-		memset(&proxy_mag.directed_server[key_offset], 0x00, sizeof(proxy_mag.directed_server[key_offset]));
-		mesh_directed_proxy_capa_report(key_offset);
+		foreach(idx, ACL_PERIPHR_MAX_NUM){
+			memset(&proxy_mag[idx].directed_server[key_offset], 0x00, sizeof(proxy_mag[idx].directed_server[key_offset]));
+			u16 conn_handle =  BLS_HANDLE_MIN;
+			#if BLE_MULTIPLE_CONNECTION_ENABLE
+			conn_handle = get_slave_conn_handle_by_idx(idx);
+			#endif
+			
+			mesh_directed_proxy_capa_report(conn_handle, key_offset);
+		}
 	}
 #endif	
 
-#if (MD_SBR_EN&&!WIN32)
+#if (MD_SBR_CFG_SERVER_EN)
 	mesh_remove_node_dependent_by_subnet_bridge();
 	mesh_subnet_bridge_bind_state_update();
 	mesh_model_store(1, SIG_MD_BRIDGE_CFG_SERVER);
+#endif
 #endif
 	memset(p_key, 0, sizeof(mesh_net_key_t));
 	mesh_key_save();
@@ -1823,7 +2247,7 @@ u32 get_all_appkey_cnt()
     u8 cnt =0;
 	foreach(i,NET_KEY_MAX){
 		foreach(j,APP_KEY_MAX){
-		    // just compare old key is enough, because appkey_idx of old key is alway valid and same with new, if existed.
+		    // just compare old key is enough, because appkey_idx of old key is always valid and same with new, if existed.
 			mesh_app_key_t *p = &(mesh_key.net_key[i][0].app_key[j]);
 			if(p->valid){
 				cnt++;
@@ -1892,6 +2316,7 @@ int is_net_key_save()
 	return (0xffffffff != val);
 }
 
+#if MD_PRIVACY_BEA
 void mesh_private_identity_change_by_proxy_service(mesh_net_key_t *p_netkey)
 {
 	#if FEATURE_PROXY_EN
@@ -1902,7 +2327,7 @@ void mesh_private_identity_change_by_proxy_service(mesh_net_key_t *p_netkey)
 	p_netkey->priv_identity = PRIVATE_NODE_IDENTITY_NOT_SUPPORT;
 	#endif
 }
-
+#endif
 
 void net_key_set2(mesh_net_key_t *key, const u8 *nk, u16 key_idx, int save)
 {
@@ -1913,19 +2338,26 @@ void net_key_set2(mesh_net_key_t *key, const u8 *nk, u16 key_idx, int save)
 	mesh_sec_get_identity_key (key->idk, key->key);
 	mesh_sec_get_beacon_key (key->bk, key->key);
 	mesh_sec_get_privacy_bacon_key(key->prik,key->key);
-	#if !WIN32
+#if (!WIN32 && MD_PRIVACY_BEA)
 	mesh_private_identity_change_by_proxy_service(key);
-	#endif
+#endif
 	// update friend key later
 	
 	key->index = key_idx;
 	key->valid = KEY_VALID;
-	caculate_proxy_adv_hash(key);
-#if (MD_DF_EN&&!WIN32)
+	calculate_proxy_adv_hash(key);
+#if (MD_DF_CFG_SERVER_EN && !WIN32)
 	if(get_net_key_cnt()>1){
 		int key_offset = get_mesh_net_key_offset(key_idx);
-		if((UNSET_CLIENT == proxy_mag.proxy_client_type) || (DIRECTED_PROXY_CLIENT == proxy_mag.proxy_client_type)){
-			mesh_directed_proxy_capa_report(key_offset);		
+		u16 conn_handle =  BLS_HANDLE_MIN;
+	
+		foreach(conn_idx, ACL_PERIPHR_MAX_NUM){
+			#if BLE_MULTIPLE_CONNECTION_ENABLE
+			conn_handle = get_slave_conn_handle_by_idx(conn_idx);
+			#endif
+			if((UNSET_CLIENT == proxy_mag[conn_idx].proxy_client_type) || (DIRECTED_PROXY_CLIENT == proxy_mag[conn_idx].proxy_client_type)){
+				mesh_directed_proxy_capa_report(conn_handle, key_offset);		
+			}
 		}
 	}
 #endif
@@ -1949,12 +2381,16 @@ u8 mesh_net_key_set(u16 op, const u8 *nk, u16 key_idx, int save)
 			if(idx < NET_KEY_MAX){
 				net_key_set2(&mesh_key.net_key[idx][0], nk, key_idx, save);
 				st = ST_SUCCESS;
-				if(is_need_send_sec_nw_beacon()){
-					mesh_tx_sec_nw_beacon(&mesh_key.net_key[idx][0], 1);
+
+				if(is_provision_success()){ // no report iv during provision should be better.
+					if(is_need_send_sec_nw_beacon()){
+						mesh_tx_sec_nw_beacon(&mesh_key.net_key[idx][0], 1);
+					}
+					
+					#if (MD_PRIVACY_BEA && MD_SERVER_EN)
+					mesh_key_add_trigger_beacon_send(idx);		
+					#endif
 				}
-				#if (MD_PRIVACY_BEA && MD_SERVER_EN)
-				mesh_key_add_trigger_beacon_send(idx);		
-				#endif
 			}else{
 				st = ST_INSUFFICIENT_RES;
 			}
@@ -2037,8 +2473,8 @@ void mesh_sec_get_nid_ek_pk_friend(u8 lpn_idx, u8 *nid, u8 *ek, u8 *pk, u8 *nk)
 
 u8 GetNKArrayIdxByPointer(mesh_net_key_t *key)
 {
-    u8 nk_arry_idx = (((((u32)key)-((u32)&mesh_key.net_key))/sizeof(mesh_net_key_t))/2)%NET_KEY_MAX;
-    return nk_arry_idx;
+    u8 nk_array_idx = (((((u32)key)-((u32)&mesh_key.net_key))/sizeof(mesh_net_key_t))/2)%NET_KEY_MAX;
+    return nk_array_idx;
 }
 
 void mesh_friend_key_refresh(mesh_net_key_t *new_key)
@@ -2175,9 +2611,6 @@ void mesh_seg_ack_poll_rx()
 #endif
 }
 
-#if (__TLSR_RISCV_EN__)
-_attribute_ram_code_
-#endif
 void mesh_seg_tx_set_one_pkt_completed(mesh_tx_seg_dst_type dst_type)
 {
 #if (!IS_VC_PROJECT)
@@ -2227,7 +2660,7 @@ void mesh_seg_ack_poll_tx()
 			mesh_seg_block_ack_cb(&bear_ack, ST_BLOCK_ACK_TIMEOUT);
 			
             mesh_tx_segment_finished();
-			LOG_MSG_INFO(TL_LOG_MESH,0,0,"mesh_seg_ack_poll_tx:segment tx timeout ",0);
+			LOG_MSG_INFO(TL_LOG_MESH,0,0,"mesh_seg_ack_poll_tx:segment tx timeout ");
 			#if RELIABLE_CMD_EN
             if(mesh_tx_reliable.busy && (!mesh_tx_seg_par.ack_received)){
             	mesh_tx_reliable_finish();
@@ -2239,7 +2672,7 @@ void mesh_seg_ack_poll_tx()
 			//if(!is_lpn_support_and_en){
             	mesh_rx_seg_ack_handle(1);
             //}
-			LOG_MSG_INFO(TL_LOG_MESH,0,0,"mesh_seg_ack_poll_tx:segment tx retry ",0);
+			LOG_MSG_INFO(TL_LOG_MESH,0,0,"mesh_seg_ack_poll_tx:segment tx retry ");
         }
     }
 
@@ -2252,6 +2685,7 @@ void mesh_seg_ack_poll_tx()
     #endif
 }
 
+// ----------------------------reliable flow
 #if RELIABLE_CMD_EN
     #if VC_APP_ENABLE
 typedef struct{
@@ -2282,6 +2716,71 @@ void reliable_rsp_check_app()
 }
     #endif
 
+mesh_tx_reliable_t mesh_tx_reliable;
+
+void mesh_tx_reliable_tick_refresh_proc(int rx_seg_flag, u16 adr_src)
+{
+	if(mesh_tx_reliable.busy){
+		if((!rx_seg_flag) || mesh_tx_reliable.mat.adr_dst == adr_src){
+			mesh_tx_reliable_tick_refresh();
+		}
+	}
+}
+
+int mesh_tx_cmd_reliable(material_tx_cmd_t *p)
+{
+	int err = -1;
+	
+	mesh_tx_reliable_check_and_init(p);
+	
+    if(is_busy_mesh_tx_cmd(p->adr_dst)){
+		mesh_tx_with_random_delay_ms = 0;//if tx failed, clear should be better.
+        LOG_MSG_ERR(TL_LOG_MESH,0, 0 ,"tx reliable: cmd is busy");
+        return TX_ERRNO_TX_BUSY;
+    }
+	LOG_MSG_LIB(TL_LOG_NODE_SDK,p->par, p->par_len,"tx cmd reliable,op:0x%02x(%s),dst:0x%x sno:0x%06x len:%d par:",p->op,get_op_string(p->op,0),p->adr_dst, mesh_adv_tx_cmd_sno, p->par_len);
+    mesh_match_type_t match_type;
+    mesh_match_group_mac(&match_type, p->adr_dst, p->op, 1, p->adr_src);
+
+    mesh_tx_reliable_finish();
+    is_cmd_with_tid_check_and_set(p->adr_src, p->op, p->par, p->par_len, p->tid_pos_vendor_app);
+    
+    if(1){ //(p->par_len <= sizeof(mesh_tx_reliable.ac_par)){ // not segment
+    	memcpy(&mesh_tx_reliable.mat, p, sizeof(material_tx_cmd_t));
+    	
+        memset(mesh_tx_reliable.ac_par, 0, sizeof(mesh_tx_reliable.ac_par));
+        memcpy(mesh_tx_reliable.ac_par, p->par, p->par_len);
+        mesh_tx_reliable.mat.par = mesh_tx_reliable.ac_par;
+        
+        memcpy(&mesh_tx_reliable.match_type, &match_type,sizeof(mesh_tx_reliable.match_type));
+        #if VC_SUPPORT_ANY_VENDOR_CMD_EN
+        if(IS_VENDOR_OP(mesh_tx_reliable.mat.op)){
+            //mesh_tx_reliable.mat.op_rsp = mesh_tx_reliable.mat.op_rsp; // have been set in mesh_bulk_cmd_() or set_material_tx_cmd_() before.
+        }else
+        #endif
+        {
+            mesh_tx_reliable.mat.op_rsp = get_op_rsp(p->op);
+        }
+        
+        u32 t_ms = get_reliable_interval_ms(p);
+        if(FW_UPDATE_CANCEL == p->op){
+			t_ms = get_reliable_interval_ms_min();
+        }
+        mesh_tx_reliable.invl_ms = t_ms;
+
+        err = mesh_tx_cmd2_access(p, 1, &match_type);
+        if(err){	// cancel reliable flow
+			memset(&mesh_tx_reliable, 0, sizeof(mesh_tx_reliable));
+        }
+    }else{
+    	err = mesh_tx_cmd2_access(p, 0, &match_type);
+    }
+	mesh_tx_with_random_delay_ms = 0;//if tx failed, clear should be better.
+    return err;
+}
+
+int is_busy_reliable_cmd(u16 adr_dst){return (mesh_tx_reliable.busy && !is_own_ele(adr_dst));}
+
 void mesh_tx_reliable_tick_refresh()
 {
 	mesh_tx_reliable.tick = clock_time();
@@ -2292,7 +2791,7 @@ void mesh_tx_reliable_start(u8 retry_cnt)
     mesh_tx_reliable.busy = 1;
     mesh_tx_reliable_tick_refresh();
     mesh_tx_reliable.retry_cnt = retry_cnt;
-	LOG_MSG_INFO(TL_LOG_MESH,0,0,"mesh_tx_reliable_start:start reliable cmd ",0);
+	LOG_MSG_INFO(TL_LOG_MESH,0,0,"mesh_tx_reliable_start:start reliable cmd ");
     rf_link_slave_read_status_start();
 }
 
@@ -2326,7 +2825,7 @@ void mesh_tx_reliable_finish()
 	}
 #endif
 	if(mesh_tx_reliable.busy){
-    	if((NODE_RESET == mesh_tx_reliable.mat.op) && is_actived_factory_test_mode()){
+    	if((NODE_RESET == mesh_tx_reliable.mat.op) && is_activated_factory_test_mode()){
     	    client_node_reset_cb(mesh_tx_reliable.mat.adr_dst);
     	}
     }
@@ -2391,7 +2890,55 @@ void mesh_tx_reliable_proc()
 		rf_link_slave_read_status_update ();
     }
 }
+#else
+int is_busy_reliable_cmd(u16 adr_dst){return 0;}
 #endif
+
+// ----------------------------unreliable
+int mesh_tx_cmd_unreliable(material_tx_cmd_t *p)
+{
+    int err = -1;
+
+    u8 repeat_cnt = REPEATE_CNT_UNRELIABLE;
+    mesh_match_type_t match_type;
+    mesh_match_group_mac(&match_type, p->adr_dst, p->op, 1, p->adr_src);
+    if((DST_MATCH_MAC == match_type.type)	// local or LPN
+    || (is_lpn_support_and_en)){
+    	repeat_cnt = 1;
+    }
+    is_cmd_with_tid_check_and_set(p->adr_src, p->op, p->par, p->par_len, p->tid_pos_vendor_app);
+
+    if(1){//(p->op & 0xff00){
+        LOG_MSG_LIB(TL_LOG_NODE_SDK,p->par, p->par_len>32?32:p->par_len,"mesh tx NoAck,op:0x%04x(%s),src:0x%04x,dst:0x%04x,sno:0x%06x par_len:%d par:",p->op,get_op_string(p->op,0),p->adr_src, p->adr_dst,mesh_adv_tx_cmd_sno,p->par_len);
+    }else{
+		// save code size
+        //LOG_MSG_LIB(TL_LOG_NODE_SDK,p->par, p->par_len>32?32:p->par_len,"mesh tx NoAck,op:0x%02x(%s),src:0x%04x,dst:0x%04x,par_len:%d par:",p->op,get_op_string(p->op,0),p->adr_src, p->adr_dst,p->par_len);
+    }
+
+    foreach(i,repeat_cnt){
+        int err_temp = mesh_tx_cmd2_access(p, 0, &match_type);
+        if(0 == i){
+            err = err_temp;     // return the first result.
+        }
+        
+        if(err_temp){
+            break;
+        }
+    }
+	mesh_tx_with_random_delay_ms = 0;//if tx failed, clear should be better.
+    return err;
+}
+
+int is_busy_tx_seg(u16 adr_dst)
+{
+    // mesh_cmd_ut_tx_seg is used for segment all the time when tx segment busy.  
+    return (mesh_tx_seg_par.busy && (BLOB_CHUNK_TRANSFER != mesh_tx_seg_par.match_type.mat.op) && !is_own_ele(adr_dst));
+}
+
+int is_busy_mesh_tx_cmd(u16 adr_dst)
+{
+	return (is_busy_reliable_cmd(adr_dst) || is_busy_tx_seg(adr_dst));
+}
 
 void mesh_friend_key_RevokingOld(mesh_net_key_t *new_key)
 {
@@ -2453,12 +3000,22 @@ u8 factory_test_cache_not_equal_mode_en = 0;    // must
 #endif
 u8 mesh_adv_txrx_self_en = 0; //must
 
+/**
+ * for op codes with app key, only op codes of these models will be handled in factory test mode.
+ */
 const u16 factory_test_model_array[] = {
     SIG_MD_G_ONOFF_S, SIG_MD_LIGHTNESS_S, SIG_MD_LIGHT_CTL_S, SIG_MD_LIGHT_CTL_TEMP_S, SIG_MD_LIGHT_HSL_S, SIG_MD_LIGHT_XYL_S,
+#if LIGHT_CONTROL_SERVER_LOCATE_EXCLUSIVE_ELEMENT_EN
+	SIG_MD_LIGHT_LC_S,
+#endif
 #if (!DRAFT_FEAT_VD_MD_EN)
     SIG_MD_FW_UPDATE_S,
 #endif
 };
+
+/**
+ * for op codes belong to SIG_MD_CFG_SERVER model, only op codes of these will be handled in factory test mode.
+ */
 const u16 factory_test_cfg_op_array[] = {COMPOSITION_DATA_GET, NODE_RESET};
 
 void mesh_adv_txrx_to_self_en(u8 en)
@@ -2466,7 +3023,7 @@ void mesh_adv_txrx_to_self_en(u8 en)
 	mesh_adv_txrx_self_en = en;
 }
 
-int is_actived_factory_test_mode()
+int is_activated_factory_test_mode()
 {
     return (factory_test_mode_en && (!is_provision_success()));
 }
@@ -2474,7 +3031,7 @@ int is_actived_factory_test_mode()
 int is_valid_cfg_op_when_factory_test(u16 op)
 {
 #if (!__PROJECT_MESH_PRO__)
-    if(is_actived_factory_test_mode()){
+    if(is_activated_factory_test_mode()){
         foreach_arr(i,factory_test_cfg_op_array){
             if(op == factory_test_cfg_op_array[i]){
                 return 1;
@@ -2554,7 +3111,7 @@ void appkey_bind_all(int bind_flag, u16 ak_idx, int fac_filter_en)
         appkey_bind_filter(bind_flag, ele_adr_primary, model_id, 0, ak_idx, fac_filter_en);
     }
     
-#if (ELE_CNT > 1)
+#if ((LEVEL_STATE_CNT_EVERY_LIGHT >= 2) || (LIGHT_CNT > 1))
     foreach_arr(i,model_sig_cfg_s_cps.page0.ele_second){
         mesh_element_second_t * p_ele = &model_sig_cfg_s_cps.page0.ele_second[i];
         u16 ele_adr = ele_adr_primary + 1 + i;
@@ -2569,6 +3126,13 @@ void appkey_bind_all(int bind_flag, u16 ak_idx, int fac_filter_en)
         }
 		#endif
         #endif
+    }
+#endif
+#if LIGHT_CONTROL_SERVER_LOCATE_EXCLUSIVE_ELEMENT_EN
+	mesh_lc_srv_models_t * p_lc = &model_sig_cfg_s_cps.page0.lc_srv_models;
+	u16 ele_adr = LC_get_lc_model_element_addr(0);
+	foreach_arr(k,p_lc->md_sig){
+		appkey_bind_filter(bind_flag, ele_adr, p_lc->md_sig[k], 1, ak_idx, fac_filter_en);
     }
 #endif
 }
@@ -2699,6 +3263,9 @@ u8 mesh_app_key_set(u16 op, const u8 *ak, u16 app_key_idx, u16 net_key_idx, int 
                                     #endif
 									#if DU_ENABLE									
 									cfg_cmd_heartbeat_pub_set(ele_adr_primary, VD_DU_GROUP_DST, 0xff, 0x07, 0x04, 0, 0);
+									#endif
+									#if MESH_OTA_DEFAULT_SUB_EN
+									cfg_cmd_sub_set(CFG_MODEL_SUB_ADD, ele_adr_primary, ele_adr_primary, MESH_OTA_DEFAULT_GROUP_ADDR, SIG_MD_BLOB_TRANSFER_S, !DRAFT_FEAT_VD_MD_EN);
 									#endif
     						    }                                         
     						}
@@ -2864,19 +3431,17 @@ void mesh_factory_test_mode_en(u8 en)
     factory_test_mode_en = en;
 }
 
-int mesh_provision_par_set(u8 *prov_pars)
+int mesh_provision_par_set(provison_net_info_str *p_prov_data)
 {
-	provison_net_info_str *prov_par;
-	prov_par = (provison_net_info_str *)prov_pars;
-	if(!is_unicast_adr(prov_par->unicast_address)){
+	if(!is_unicast_adr(p_prov_data->unicast_address)){
 		return -1;
 	}else{
 	}
 	
-    if(factory_test_mode_en && !is_provision_success()){ // is_actived_factory_test_mode 
+    if(factory_test_mode_en && !is_provision_success()){ // is_activated_factory_test_mode 
         factory_test_key_bind(0);
     }
-	provision_mag.gatt_mode = GATT_PROXY_MODE;
+    
 #if (DUAL_VENDOR_EN)
 	if(provision_mag.dual_vendor_st != DUAL_VENDOR_ST_MI){
     	provision_mag.dual_vendor_st = DUAL_VENDOR_ST_ALI;
@@ -2884,13 +3449,14 @@ int mesh_provision_par_set(u8 *prov_pars)
 	}
 #endif
     node_need_store_misc = 1;
-	memcpy(&provision_mag.pro_net_info,prov_par,sizeof(provison_net_info_str));
-	if(ADR_UNASSIGNED != prov_par->unicast_address){
-		mesh_set_ele_adr(prov_par->unicast_address);
+	memcpy(&provision_mag.pro_net_info,p_prov_data,sizeof(provison_net_info_str));
+	if(ADR_UNASSIGNED != p_prov_data->unicast_address){
+		mesh_set_ele_adr(p_prov_data->unicast_address);
 	}
 
-	mesh_net_key_add_by_provision(prov_par->net_work_key, prov_par->key_index, prov_par->prov_flags.KeyRefresh);
-	provision_set_ivi_para(prov_pars);	// must after net key add
+	mesh_net_key_add_by_provision(p_prov_data->net_work_key, p_prov_data->key_index, p_prov_data->prov_flags.KeyRefresh);
+	provision_set_ivi_para(p_prov_data);	// must after net key add
+	provision_mag.gatt_mode = GATT_PROXY_MODE; // after "mesh_net_key_add_by provision", because should not report iv to app when add key during provision.
 	#if MI_API_ENABLE
 	// after provision ,need to enter search mode first .
 	mesh_iv_update_enter_search_mode();
@@ -2901,18 +3467,17 @@ int mesh_provision_par_set(u8 *prov_pars)
 }
 
 // used by the app to set the internal provisioner's node info 
-int mesh_provision_par_set_dir(u8 *prov_par)
+int mesh_provision_par_set_dir(provison_net_info_str *p_prov_data)
 {
 	int err =-1;
 	memset(mesh_key.net_key, 0, sizeof(mesh_key_t)-OFFSETOF(mesh_key_t,net_key));
-	mesh_key_retrieve(); //provision.cfg may change after network retrive
-	provison_net_info_str *prov = (provison_net_info_str *)prov_par;
+	mesh_key_retrieve(); //provision.cfg may change after network retrieve
 	//restore provision para 
-	err = mesh_provision_par_set((u8 *)prov);
+	err = mesh_provision_par_set(p_prov_data);
 	APP_set_self_dev_key2node_info();
 	return err;
 }
-void mesh_provision_par_handle(u8 *net_info)
+void mesh_provision_par_handle(provison_net_info_str *p_prov_data)
 {
 // if open the switch att tab ,should switch the att part 
 #if MD_REMOTE_PROV
@@ -2920,9 +3485,9 @@ void mesh_provision_par_handle(u8 *net_info)
 	provision_random_data_init();// update the dev random part .
 #endif
 #if DEBUG_MESH_DONGLE_IN_VC_EN
-	debug_mesh_report_provision_par2usb(net_info);
+	debug_mesh_report_provision_par2usb(p_prov_data);
 #else
-	mesh_provision_par_set(net_info);  // must at first in this function, because provision_mag.gatt_mode is use later.
+	mesh_provision_par_set(p_prov_data);  // must at first in this function, because provision_mag.gatt_mode is use later.
 #endif
 
 #if ATT_TAB_SWITCH_ENABLE&&!WIN32
@@ -2931,24 +3496,28 @@ void mesh_provision_par_handle(u8 *net_info)
 #endif 
 }
 
-u8 mesh_provision_and_bind_self(u8 *p_prov_data, u8 *p_dev_key, u16 appkey_idx, u8 *p_app_key){
+u8 mesh_provision_and_bind_self(provison_net_info_str *p_prov_data, u8 *p_dev_key, u16 appkey_idx, u8 *p_app_key){
 	//save device key 
 	set_dev_key(p_dev_key);
 	
-	provison_net_info_str *p_net =(provison_net_info_str *)p_prov_data;
+	#if GATEWAY_ENABLE
+	// address for next node.
+	provision_mag.unicast_adr_last = p_prov_data->unicast_address + g_ele_cnt;
+	#endif
+	
+	//save prov data
+	mesh_provision_par_handle(p_prov_data);
 	//save provision flag
 	prov_para.provison_rcv_state = STATE_PRO_SUC;
-	//save prov data
-	mesh_provision_par_handle((u8 *)p_net);
 	mesh_node_prov_event_callback(EVENT_MESH_NODE_RC_LINK_SUC);
 	//cache init
 	cache_init(ADR_ALL_NODES);
 	
 	//add appkey and bind it to models
-	return mesh_app_key_set_and_bind(p_net->key_index, p_app_key, appkey_idx, 1);	
+	return mesh_app_key_set_and_bind(p_prov_data->key_index, p_app_key, appkey_idx, 1);	
 }
 
-void mesh_set_ele_adr_ll(u16 adr, int save)
+void mesh_set_ele_adr_ll(u16 adr, int save, int reset_pub_flag)
 {
 	if(/*(ADR_UNASSIGNED == adr) &&*/ (!is_unicast_adr(adr))){
 		return ;
@@ -2957,7 +3526,7 @@ void mesh_set_ele_adr_ll(u16 adr, int save)
 	mesh_model_ele_adr_init();
 	
     ele_adr_primary = adr;    // for test, should be provisioned later
-    mesh_set_all_model_ele_adr();
+    mesh_set_all_model_ele_adr(reset_pub_flag);
     #if (!(IS_VC_PROJECT || AIS_ENABLE))
 	mesh_scan_rsp_init();// update ele_adr_primary
 	#endif
@@ -2974,7 +3543,7 @@ void mesh_set_ele_adr_ll(u16 adr, int save)
 
 void mesh_set_ele_adr(u16 adr)
 {
-	mesh_set_ele_adr_ll(adr, 1);
+	mesh_set_ele_adr_ll(adr, 1, 0);
 }
 
 int is_ele_in_node(u16 ele_adr, u16 node_adr, u32 cnt)  // use for provisioner.
@@ -3060,7 +3629,7 @@ static inline u8 get_rsp_sec_type()
 }
 
 /**
- * @brief  Called after receiving the command, and when it is published
+ * @brief  Called after receiving the command, or when publish status.
  * @param  op: Opcode.
  * @param  par: Pointer to message data (excluding Opcode).
  * @param  par_len: The length of the message data.
@@ -3068,10 +3637,15 @@ static inline u8 get_rsp_sec_type()
  * @param  adr_dst: Destination address.
  * @param  uuid: When publishing, and the destination address is a virtual 
  *   address, uuid needs to be passed in, otherwise fill in 0.
- * @param  pub_md: When publishing, you need to pass in parameters.
+ * @param  pub_md: publish model. when publish, need to pass in a publish model. if not publish, set to NULL.
  *   For non-publish, pass in 0.
  * @retval Whether the function executed successfully
  *   (0: success; others: error)
+ * @note   this API will use mesh_key.netkey_sel_dec and 
+ *         mesh_key.appkey_sel_dec which are set by decryption. but the two keys index may be invalid when
+ *         send status message actively. so it is not recommended to send status message actively.
+ *         if you want to call this API to send status actively, please set mesh_key.netkey_sel_dec and 
+ *         mesh_key.appkey_sel_dec before or it will use the first key as default.
  */
 int mesh_tx_cmd_rsp(u16 op, u8 *par, u32 par_len, u16 adr_src, u16 adr_dst, u8 *uuid, model_common_t *pub_md)
 {
@@ -3082,7 +3656,7 @@ int mesh_tx_cmd_rsp(u16 op, u8 *par, u32 par_len, u16 adr_src, u16 adr_dst, u8 *
     
     #if 0 // (WIN32 && MD_SERVER_EN)
     #if VC_APP_ENABLE
-    if(ble_moudle_id_is_kmadongle()) // there is only client in gateway 
+    if(ble_module_id_is_kmadongle()) // there is only client in gateway 
     #endif
     {
         if(!is_own_ele(adr_dst)){
@@ -3103,10 +3677,14 @@ int mesh_tx_cmd_rsp(u16 op, u8 *par, u32 par_len, u16 adr_src, u16 adr_dst, u8 *
 		}
 	}else{
 		ak_array_idx = mesh_key.appkey_sel_dec; // use the same key with RX command. 
+		if((nk_array_idx >= NET_KEY_MAX) || (ak_array_idx >= APP_KEY_MAX)){
+			// key maybe invalid when call this API to send status actively, if so then use the first key.
+			nk_array_idx = ak_array_idx = 0;
+		}
 	}
 	
 //	LOG_MSG_LIB(TL_LOG_NODE_SDK,par,par_len,"cmd data rsp: adr_src0x%04x,dst adr 0x%04x ",adr_src,adr_dst);	
-	set_material_tx_cmd(&mat, op, par, par_len, adr_src, adr_dst, g_reliable_retry_cnt_def, 0, uuid, nk_array_idx, ak_array_idx, pub_md, immutable_flag, 0);
+	set_material_tx_cmd(&mat, op, par, par_len, adr_src, adr_dst, g_reliable_retry_cnt_def, 0, uuid, nk_array_idx, ak_array_idx, pub_md, BLS_HANDLE_MIN, immutable_flag, 0);
 	int ret = mesh_tx_cmd_unreliable(&mat);
 	return ret;
 }
@@ -3116,15 +3694,29 @@ int mesh_tx_cmd_rsp_cfg_model(u16 op, u8 *par, u32 par_len, u16 adr_dst)
     if(is_tx_status_cmd2self(op, adr_dst)){
         return 0;
     }
-	u8 immutable_flag = (MASTER==mesh_key.sec_type_sel)?1:0;
+	u8 immutable_flag = ((MASTER==mesh_key.sec_type_sel) || (FRIENDSHIP==mesh_key.sec_type_sel))?1:0;
 	material_tx_cmd_t mat;
-	set_material_tx_cmd(&mat, op, par, par_len, ele_adr_primary, adr_dst, g_reliable_retry_cnt_def, 0, 0, mesh_key.netkey_sel_dec, -1, 0, immutable_flag, 0);
+	set_material_tx_cmd(&mat, op, par, par_len, ele_adr_primary, adr_dst, g_reliable_retry_cnt_def, 0, 0, mesh_key.netkey_sel_dec, -1, 0, BLS_HANDLE_MIN, immutable_flag, 0);
 	int ret = mesh_tx_cmd_unreliable(&mat);
 	return ret;
 }
 
+#if (MESH_MODEL_MISC_SAVE_EN)
+mesh_model_misc_save_t g_mesh_model_misc_save;// = {0};
+static u32 mesh_model_misc_save_addr;
+
+STATIC_ASSERT((sizeof(mesh_model_misc_save_t) + 4) % 16 == 0); // 16 byte align in flash should be better. 4 is size of flag,
+
+void mesh_model_misc_save()
+{
+	mesh_common_store(FLASH_ADR_MD_MISC_PAR);
+}
+#endif
+
 #if 1   // save par
+	#if MD_SERVER_EN
 static u32 mesh_sw_level_addr = FLASH_ADR_SW_LEVEL;
+	#endif
 static u32 mesh_md_cfg_s_addr = FLASH_ADR_MD_CFG_S;
 static u32 mesh_md_health_addr = FLASH_ADR_MD_HEALTH;
 static u32 mesh_provision_mag_addr = FLASH_ADR_PROVISION_CFG_S;
@@ -3147,6 +3739,16 @@ static u32 mesh_md_vd_light_addr = FLASH_ADR_MD_VD_LIGHT;
 
 STATIC_ASSERT(sizeof(model_g_onoff_level_t) <= (4096 - 48));    // only one sector to save
 
+// -- compatibility check after OTA (refer to "mesh_save_map[]")---
+#if 1
+STATIC_ASSERT(sizeof(provision_mag) == 111); // org 111
+#if MESH_MODEL_MISC_SAVE_EN
+STATIC_ASSERT(sizeof(mesh_model_misc_save_t) == 44); // org 44
+#endif
+STATIC_ASSERT(sizeof(misc_save_t) == 28); // org 28
+#endif
+// -- compatibility check end ---
+
 #define MD_ID_NONE		0xFFFFFFFF
 
 #if !WIN32
@@ -3154,9 +3756,9 @@ const
 #endif
 mesh_md_adr_map_t mesh_md_adr_map[] = {
 #if (DUAL_VENDOR_EN)
-    {0, {MIOT_SEPC_VENDOR_MODEL_SER, MIOT_SEPC_VENDOR_MODEL_CLI, MIOT_VENDOR_MD_SER, VENDOR_MD_LIGHT_S, VENDOR_MD_LIGHT_C, VENDOR_MD_LIGHT_S2}, FLASH_ADR_MD_VD_LIGHT}, // must first
+    {0, {MIOT_SEPC_VENDOR_MODEL_SRV, MIOT_SEPC_VENDOR_MODEL_CLI, MIOT_VENDOR_MD_SRV, VENDOR_MD_LIGHT_S, VENDOR_MD_LIGHT_C, VENDOR_MD_LIGHT_S2}, FLASH_ADR_MD_VD_LIGHT}, // must first
 #elif (MI_API_ENABLE)
-    {0, {MIOT_SEPC_VENDOR_MODEL_SER, MIOT_SEPC_VENDOR_MODEL_CLI, MIOT_VENDOR_MD_SER, MD_ID_NONE, MD_ID_NONE, MD_ID_NONE}, FLASH_ADR_MD_VD_LIGHT}, // must first
+    {0, {MIOT_SEPC_VENDOR_MODEL_SRV, MIOT_SEPC_VENDOR_MODEL_CLI, MIOT_VENDOR_MD_SRV, MD_ID_NONE, MD_ID_NONE, MD_ID_NONE}, FLASH_ADR_MD_VD_LIGHT}, // must first
 #else// (VENDOR_MD_NORMAL_EN)
 	{0, {VENDOR_MD_LIGHT_S, VENDOR_MD_LIGHT_C, VENDOR_MD_LIGHT_S2, MD_ID_NONE, MD_ID_NONE, MD_ID_NONE}, FLASH_ADR_MD_VD_LIGHT}, // must first
 #endif
@@ -3176,10 +3778,7 @@ mesh_md_adr_map_t mesh_md_adr_map[] = {
 	{1, {SIG_MD_G_POWER_ONOFF_S, SIG_MD_G_POWER_ONOFF_C, SIG_MD_G_POWER_ONOFF_SETUP_S, SIG_MD_G_DEF_TRANSIT_TIME_S, SIG_MD_G_DEF_TRANSIT_TIME_C, MD_ID_NONE}, FLASH_ADR_MD_G_POWER_ONOFF},
 #endif
 #if MD_REMOTE_PROV
-    {!DRAFT_FEAT_VD_MD_EN, {SIG_MD_REMOTE_PROV_SERVER, SIG_MD_REMOTE_PROV_CLIENT, MD_ID_NONE, MD_ID_NONE, MD_ID_NONE, MD_ID_NONE}, FLASH_ADR_MD_REMOTE_PROV},
-#endif
-#if MD_PRIVACY_BEA
-	{1, {SIG_MD_PRIVATE_BEACON_SERVER, SIG_MD_PRIVATE_BEACON_CLIENT, MD_ID_NONE, MD_ID_NONE, MD_ID_NONE, MD_ID_NONE}, FLASH_ADR_MD_PRIVATE_BEACON},
+	// no para to save // {!DRAFT_FEAT_VD_MD_EN, {SIG_MD_REMOTE_PROV_SERVER, SIG_MD_REMOTE_PROV_CLIENT, MD_ID_NONE, MD_ID_NONE, MD_ID_NONE, MD_ID_NONE}, FLASH_ADR_MD_REMOTE_PROV},
 #endif
 #if (LIGHT_TYPE_SEL == LIGHT_TYPE_POWER)
 	{1, {SIG_MD_G_POWER_LEVEL_S, SIG_MD_G_POWER_LEVEL_C, SIG_MD_G_POWER_LEVEL_SETUP_S, MD_ID_NONE, MD_ID_NONE, MD_ID_NONE}, FLASH_ADR_MD_LIGHTNESS},
@@ -3205,15 +3804,17 @@ mesh_md_adr_map_t mesh_md_adr_map[] = {
 #endif
 #if(MD_PROPERTY_EN)
 	{1, {SIG_MD_G_ADMIN_PROP_S, SIG_MD_G_MFG_PROP_S, SIG_MD_G_USER_PROP_S, SIG_MD_G_CLIENT_PROP_S, SIG_MD_G_PROP_C, MD_ID_NONE}, FLASH_ADR_MD_PROPERTY},
-#elif((MD_DF_EN || MD_SBR_EN ))
-	{1, {SIG_MD_DF_CFG_S, SIG_MD_DF_CFG_C, SIG_MD_BRIDGE_CFG_SERVER, SIG_MD_BRIDGE_CFG_CLIENT, MD_ID_NONE, MD_ID_NONE}, FLASH_ADR_MD_DF_SBR},
-#elif(MD_SOLI_PDU_RPL_EN)	
-	{1, {SIG_MD_SOLI_PDU_RPL_CFG_S, SIG_MD_SOLI_PDU_RPL_CFG_C, MD_ID_NONE, MD_ID_NONE, MD_ID_NONE, MD_ID_NONE}, FLASH_ADR_MD_SOLI_PDU_RPL},
+#elif((MD_DF_CFG_SERVER_EN || MD_SBR_CFG_SERVER_EN || MD_SOLI_PDU_RPL_EN))
+	{1, {SIG_MD_DF_CFG_S, SIG_MD_DF_CFG_C, SIG_MD_BRIDGE_CFG_SERVER, SIG_MD_BRIDGE_CFG_CLIENT, SIG_MD_SOLI_PDU_RPL_CFG_S, SIG_MD_SOLI_PDU_RPL_CFG_C}, FLASH_ADR_MD_DF_SBR},
+#elif(MD_CMR_EN)
+	{1, {SIG_MD_CMR_S, MD_ID_NONE, MD_ID_NONE, MD_ID_NONE, MD_ID_NONE, MD_ID_NONE}, FLASH_ADR_MD_CMR}
 #endif
 };
 
 const mesh_save_map_t mesh_save_map[] = {
+#if MD_SERVER_EN
 	{FLASH_ADR_SW_LEVEL, (u8 *)&light_res_sw_save, &mesh_sw_level_addr, sizeof(light_res_sw_save)},
+#endif
 	{FLASH_ADR_MD_CFG_S, (u8 *)&model_sig_cfg_s, &mesh_md_cfg_s_addr, sizeof(model_sig_cfg_s)},
 	{FLASH_ADR_MD_HEALTH, (u8 *)&model_sig_health, &mesh_md_health_addr, sizeof(model_sig_health)},
 	{FLASH_ADR_MD_G_ONOFF_LEVEL, (u8 *)&model_sig_g_onoff_level, &mesh_md_g_onoff_level_addr, sizeof(model_sig_g_onoff_level)},
@@ -3224,8 +3825,8 @@ const mesh_save_map_t mesh_save_map[] = {
 #if MD_REMOTE_PROV
     //{FLASH_ADR_MD_REMOTE_PROV, (u8 *)&model_remote_prov, &mesh_md_rp_addr, sizeof(model_remote_prov)},
 #endif
-#if MD_PRIVACY_BEA
-	{FLASH_ADR_MD_PRIVATE_BEACON, (u8 *)&model_private_beacon, &mesh_md_pri_beacon_addr, sizeof(model_private_beacon)},
+#if (MESH_MODEL_MISC_SAVE_EN)
+	{FLASH_ADR_MD_MISC_PAR, (u8 *)&g_mesh_model_misc_save, &mesh_model_misc_save_addr, sizeof(g_mesh_model_misc_save)},
 #endif
 #if MD_SCENE_EN
 	{FLASH_ADR_MD_SCENE, (u8 *)&model_sig_scene, &mesh_md_scene_addr, sizeof(model_sig_scene)},
@@ -3260,10 +3861,10 @@ const mesh_save_map_t mesh_save_map[] = {
 #endif
 #if(MD_PROPERTY_EN)
 	{FLASH_ADR_MD_PROPERTY, (u8 *)&model_sig_property, &mesh_md_property_addr, sizeof(model_sig_property)},
-#elif((MD_DF_EN || MD_SBR_EN))
+#elif((MD_DF_CFG_SERVER_EN || MD_SBR_CFG_SERVER_EN))
 	{FLASH_ADR_MD_DF_SBR, (u8 *)&model_sig_g_df_sbr_cfg, &mesh_md_df_sbr_addr, sizeof(model_sig_g_df_sbr_cfg)},
-#elif(MD_SOLI_PDU_RPL_EN)
-	{FLASH_ADR_MD_SOLI_PDU_RPL, (u8 *)&model_sig_soli_pdu_rpl, &mesh_md_soli_pdu_rpl_addr, sizeof(model_sig_soli_pdu_rpl)},
+#elif(MD_CMR_EN)
+	{FLASH_ADR_MD_CMR, (u8 *)&model_sig_g_cmr, &mesh_md_cmr_addr, sizeof(model_sig_g_cmr)},
 #endif
 	{FLASH_ADR_MD_VD_LIGHT, (u8 *)&model_vd_light, &mesh_md_vd_light_addr, sizeof(model_vd_light)},
 #if (ALI_MD_TIME_EN)
@@ -3319,21 +3920,32 @@ int mesh_par_retrieve(u8 *out, u32 *p_adr, u32 adr_base, u32 size){
 		return -1;
 	}
 	#else
-    int err = -1;
-    for(int i = 0; i < (FLASH_SECTOR_SIZE); i += (size + SIZE_SAVE_FLAG)){
-		*p_adr = adr_base + i;
+	int err = -1;
+	*p_adr = adr_base + FLASH_SECTOR_SIZE-(FLASH_SECTOR_SIZE%(size+SIZE_SAVE_FLAG));
+	for(int adr_read = *p_adr - (size+SIZE_SAVE_FLAG); adr_read >= adr_base; adr_read -= (size + SIZE_SAVE_FLAG)){// from back to forward, crc16 of 4k byte cost 40ms in 16M clock
+		mesh_save_head_t head;
+    	flash_read_page(adr_read, SIZE_SAVE_FLAG, (u8 *)&head);
+		if(U32_MAX == *(u32 *)&head){ // checking 4 byte should be better
+			*p_adr = adr_read;
+		}else if(SAVE_FLAG == head.flag){
+			if(head.crc_en && (FLASH_ADR_MISC == adr_base)){ // only add crc for misc sector now.
+				u8 temp[min(size, FLASH_SECTOR_SIZE)];
+				flash_read_page(adr_read + SIZE_SAVE_FLAG, size, temp); 	
+				if(crc16(temp, size) == head.crc){
+					memcpy(out, temp, size); // copy to "out" only after checking OK in case no valid data, especially there is only one record.
+					err = 0;
+					//LOG_MSG_LIB(TL_LOG_NODE_BASIC, 0, 0, "crc ok address base:0x%x,address:0x%x,next pos:0x%x",adr_base,adr_read,*p_adr);
+				}
+			}else{
+				flash_read_page(adr_read + SIZE_SAVE_FLAG, size, out); 	
+				err = 0;
+			}
 
-        u8 save_flag;
-        flash_read_page(*p_adr, 1, &save_flag);
-		if(SAVE_FLAG == save_flag){
-            flash_read_page(*p_adr + SIZE_SAVE_FLAG, size, out);
-            err = 0;
-		}else if (SAVE_FLAG_PRE == save_flag){
+			if(0 == err){
+				break;
+			}
+		}else{ // include (SAVE_FLAG_PRE == head.flag)
 			continue;
-		}else if(save_flag != 0xFF){
-		    continue;   //invalid
-		}else{
-		    break;      // 0xFF: end
 		}
 	}
 	return err;
@@ -3355,6 +3967,9 @@ int mesh_flash_write_check(u32 adr, const u8 *in, u32 size)
 		flash_read_page(adr_read, len_read, data_read);
 		if(memcmp(data_read, p_in, len_read)){
 			flash_write_err_cnt++;
+			#if APP_FLASH_PROTECTION_ENABLE
+			LOG_MSG_ERR(TL_LOG_NODE_BASIC, 0, 0, "flash reacback error, adr: 0x%x\n", adr);
+			#endif
 			return -1;
 		}
 		
@@ -3439,11 +4054,14 @@ int mesh_flash_data_cmp(u32 adr, const u8 *in, u32 size)
 void mesh_par_write_with_check(u32 addr, u32 size, const u8 *in)
 {
 	// make sure when change to the save_flag ,the flash must be write already .
-	u32 save_flag = SAVE_FLAG_PRE;
-	flash_write_with_check(addr, SIZE_SAVE_FLAG, (u8 *)&save_flag);
+	mesh_save_head_t head={0};
+	head.flag = SAVE_FLAG_PRE;
+	head.crc_en = 1;
+	head.crc = crc16(in, size);
+	flash_write_with_check(addr, SIZE_SAVE_FLAG, (u8 *)&head);
 	flash_write_with_check(addr + SIZE_SAVE_FLAG, size, in);
-	save_flag = SAVE_FLAG;
-	flash_write_with_check(addr, SIZE_SAVE_FLAG, (u8 *)&save_flag);
+	head.flag = SAVE_FLAG;
+	flash_write_with_check(addr, sizeof(head.flag), &head.flag);
 }
 
 static int is_valid_mesh_par_addr(u32 addr)
@@ -3455,7 +4073,7 @@ static int is_valid_mesh_par_addr(u32 addr)
     );
 }
 
-void mesh_par_store(const u8 *in, u32 *p_adr, u32 adr_base, u32 size){
+void mesh_par_store_2(const u8 *in, u32 *p_adr, u32 adr_base, u32 size){
 #if WIN32 
     mesh_par_retrieve_store_win32((u8 *)in, p_adr, adr_base, size,MESH_PARA_STORE_VAL);
 #else
@@ -3473,6 +4091,7 @@ void mesh_par_store(const u8 *in, u32 *p_adr, u32 adr_base, u32 size){
     
 	u32 size_save = (size + SIZE_SAVE_FLAG);
 	if(*p_adr > (adr_base + FLASH_SECTOR_SIZE - size_save - SIZE_SAVE_FLAG)){	// make sure "0xffffffff" at the last for retrieve
+		//LOG_MSG_LIB(TL_LOG_NODE_BASIC, 0, 0, "trigger erase, address base:0x%x, write address:0x%x",adr_base,*p_adr);
         *p_adr = adr_base;
 		if(FLASH_ADR_MISC == adr_base){	//backup to prevent unexpected power down
 			mesh_par_write_with_check(FLASH_ADR_FRIEND_SHIP, size, in);
@@ -3495,10 +4114,12 @@ void mesh_par_store(const u8 *in, u32 *p_adr, u32 adr_base, u32 size){
     }
 	
 	mesh_par_write_with_check(*p_adr, size, in);
-	if(*p_adr >= adr_base + size_save){
+	#if 0 // no need to clear last save flag, because we need to find the previous valid data in mesh_par_retrieve_() when checking current data failed.
+	if(*p_adr >= adr_base + size_save){ // if current is the first flag, means no "last flag" need to be cleared.
 		u32 zero = 0;
     	flash_write_page(adr_last, SIZE_SAVE_FLAG, (u8 *)&zero);  // clear last flag
 	}
+	#endif
 
 	if(FLASH_ADR_MISC == adr_base){
 		u32 tmp = 0;
@@ -3509,6 +4130,17 @@ void mesh_par_store(const u8 *in, u32 *p_adr, u32 adr_base, u32 size){
 	}
 	*p_adr += size_save;
 	#endif
+#endif
+}
+
+void mesh_par_store(const u8 *in, u32 *p_adr, u32 adr_base, u32 size)
+{
+#if (APP_FLASH_PROTECTION_ENABLE)
+	u32 backup_addr = app_flash_protection_mesh_par_modify_much_sectors_begin(adr_base, *p_adr + size); // to avoid too many lock/unlock actions when store.
+#endif
+	mesh_par_store_2(in, p_adr, adr_base, size);
+#if (APP_FLASH_PROTECTION_ENABLE)
+	app_flash_protection_mesh_par_modify_much_sectors_end(backup_addr);
 #endif
 }
 
@@ -3562,7 +4194,12 @@ void mesh_common_retrieve_all()
     vendor_id_check_and_update();
 	#endif
 	// should be after retrieve all model to make sure cover the val read from flash. 
-	mesh_set_ele_adr_ll(ele_adr_primary, 0);  // for test, should be provisioned later
+	// reset_pub_flag set 1 to reset publish callback function, because it's wrong if model structure change after ota
+	mesh_set_ele_adr_ll(ele_adr_primary, 0, 1);  // for test, should be provisioned later
+
+	#if MD_SERVER_EN
+	mesh_model_cb_pub_st_register();	// must after mesh_set_ele_adr_ll
+	#endif
 }
 
 void mesh_common_save_all_md()
@@ -3612,15 +4249,19 @@ void mesh_common_reset_all()
 	}
 	
 	mesh_global_var_init();
-	mesh_set_ele_adr_ll(ele_adr_primary, 0);
-	mesh_par_retrieve((u8 *)&light_res_sw_save, &mesh_sw_level_addr, FLASH_ADR_SW_LEVEL, sizeof(light_res_sw_save));//retrive light_res_sw_save
-	mesh_par_retrieve((u8 *)&provision_mag, &mesh_provision_mag_addr, FLASH_ADR_PROVISION_CFG_S, sizeof(provision_mag));//retrive oob
+	mesh_set_ele_adr_ll(ele_adr_primary, 0, 0);
+	#if MD_SERVER_EN
+	mesh_par_retrieve((u8 *)&light_res_sw_save, &mesh_sw_level_addr, FLASH_ADR_SW_LEVEL, sizeof(light_res_sw_save));//retrieve light_res_sw_save
+	#endif
+	mesh_par_retrieve((u8 *)&provision_mag, &mesh_provision_mag_addr, FLASH_ADR_PROVISION_CFG_S, sizeof(provision_mag));//retrieve oob
 	#if MD_SERVER_EN
 	mesh_model_cb_pub_st_register();	
 	#endif
 }
 
 STATIC_ASSERT((sizeof(misc_save_t)+SIZE_SAVE_FLAG)% 16 == 0);
+STATIC_ASSERT(sizeof(mesh_save_head_t) == SIZE_SAVE_FLAG);
+
 void mesh_misc_store(){
 	if(!node_need_store_misc){
 		return;
@@ -3633,9 +4274,10 @@ void mesh_misc_store(){
         misc_save.sno = mesh_adv_tx_cmd_sno_last;   // not save sno when save other parameters should be better ?.
       }*/
     misc_save.ct_flag = ct_flag;
-	memcpy(misc_save.iv_index, iv_idx_st.cur, 4);
+	get_iv_big_endian(misc_save.iv_index, (u8 *)&iv_idx_st.iv_cur);
     if(IV_UPDATE_STEP1 == iv_idx_st.update_proc_flag){
-        mesh_decrease_ivi(misc_save.iv_index);// must decrease 1, if not, when power restart will make iv index error if sno is greater than 0xc00000.
+		u32 iv_idx = iv_idx_st.iv_cur - 1;
+		get_iv_big_endian(misc_save.iv_index, (u8 *)&iv_idx);// must decrease 1, if not, when power restart will make iv index error if sno is greater than 0xc00000.
         if(!is_sno_exhausted()){
             misc_save.iv_update_trigger_flag = 1;
         }
@@ -3653,9 +4295,19 @@ void mesh_misc_store(){
 	#endif
     // in the gateway mode 
 #if DONGLE_PROVISION_EN
-    gateway_upload_ividx(misc_save.iv_index); // save to json only when update completed.
+	misc_save_gw2vc_t misc2vc = {{0}};
+	memcpy(misc2vc.iv_index, misc_save.iv_index, sizeof(misc2vc.iv_index));
+	misc2vc.iv_update_trigger_flag = misc_save.iv_update_trigger_flag;
+	misc2vc.sno = misc_save.sno;
+    gateway_upload_ividx(&misc2vc); // save to json only when update completed.
 #endif
-    mesh_par_store((u8 *)&misc_save, &mesh_misc_addr, flash_adr_misc, sizeof(misc_save_t));
+#if DONGLE_PROVISION_EN
+	extern u8 is_only_report_iv;
+	if(!is_only_report_iv)
+#endif
+	{
+		mesh_par_store((u8 *)&misc_save, &mesh_misc_addr, flash_adr_misc, sizeof(misc_save_t));
+	}
 }
 
 
@@ -3670,13 +4322,12 @@ int mesh_misc_retrieve(){
 	
     if(!err){
         mesh_adv_tx_cmd_sno_last = mesh_adv_tx_cmd_sno = misc_save.sno + MESH_CMD_SNO_SAVE_DELTA;
-        if(!is_actived_factory_test_mode()){
+        if(!is_activated_factory_test_mode()){
             ct_flag = misc_save.ct_flag;
         }
-		u32 temp = -1;
-		if(memcmp(misc_save.iv_index, &temp, 4)){	// for compatibility
-			memcpy(iv_idx_st.cur, misc_save.iv_index, 4);
-		}
+
+		get_iv_little_endian((u8 *)&iv_idx_st.iv_cur, misc_save.iv_index);
+
 		iv_idx_st.update_trigger_by_save = misc_save.iv_update_trigger_flag;
 		
     }
@@ -3691,16 +4342,42 @@ void mesh_sno_save_check()
     }
 }
 
+#if WIN32
+u32 mesh_sno_get_save_delta()
+{
+	return MESH_CMD_SNO_SAVE_DELTA;
+}
+#endif
+
+/**
+ * @brief       This function is a debug function to trigger iv update entering to step 1.
+ * @return      none
+ * @note        
+ */
+void iv_index_set_sno_test()
+{
+    #if 0
+    mesh_tx_sec_private_beacon_proc(1);
+    #else
+    if(mesh_adv_tx_cmd_sno < IV_UPDATE_START_SNO){
+        mesh_adv_tx_cmd_sno = IV_UPDATE_START_SNO; // will enter step 1 with keeping discovery mode.
+	    LOG_MSG_INFO(TL_LOG_COMMON,0, 0,"mesh_adv_tx_cmd_sno set 0xc10000");
+	}else{
+	    LOG_MSG_INFO(TL_LOG_COMMON,0, 0,"already set sno ok before");
+    }
+    #endif
+}
+
 #if DEBUG_IV_UPDATE_TEST_EN
 void iv_index_read_print_test()
 {
     misc_save_t misc_save;
     int err = mesh_par_retrieve((u8 *)&misc_save, &mesh_misc_addr, flash_adr_misc, sizeof(misc_save_t));
     if(err){
-        LOG_MSG_INFO(TL_LOG_IV_UPDATE,0, 0,"IV index Read flash error:",0);
+        LOG_MSG_INFO(TL_LOG_IV_UPDATE,0, 0,"IV index Read flash error:");
     }else{
         LOG_MSG_INFO(TL_LOG_IV_UPDATE,misc_save.iv_index, 4,"sno:0x%06x, IV index in flash:",mesh_adv_tx_cmd_sno);
-        LOG_MSG_INFO(TL_LOG_IV_UPDATE,(u8 *)&iv_idx_st, sizeof(iv_idx_st),"IV index in RAM:",0);
+        LOG_MSG_INFO(TL_LOG_IV_UPDATE,(u8 *)&iv_idx_st, sizeof(iv_idx_st),"IV index in RAM:");
     }
 }
 
@@ -3708,24 +4385,10 @@ void iv_index_set_keep_time_test()
 {
     if(iv_idx_st.keep_time_s < 0x60000){
         iv_idx_st.keep_time_s = 0x60000;
-	    LOG_MSG_INFO(TL_LOG_IV_UPDATE,0, 0,"iv_index_set_keep_time set 0x60000",0);
+	    LOG_MSG_INFO(TL_LOG_IV_UPDATE,0, 0,"iv_index_set_keep_time set 0x60000");
     }else{
-	    LOG_MSG_INFO(TL_LOG_IV_UPDATE,0, 0,"already set keep time ok before",0);
+	    LOG_MSG_INFO(TL_LOG_IV_UPDATE,0, 0,"already set keep time ok before");
     }
-}
-
-void iv_index_set_sno_test()
-{
-    #if 0
-    mesh_tx_sec_private_beacon_proc(1);
-    #else
-    if(mesh_adv_tx_cmd_sno < IV_UPDATE_START_SNO){
-        mesh_adv_tx_cmd_sno = IV_UPDATE_START_SNO;
-	    LOG_MSG_INFO(TL_LOG_COMMON,0, 0,"mesh_adv_tx_cmd_sno set 0xc10000",0);
-	}else{
-	    LOG_MSG_INFO(TL_LOG_COMMON,0, 0,"already set sno ok before",0);
-    }
-    #endif
 }
 
 enum{
@@ -3756,6 +4419,7 @@ void iv_index_test_button_firmware()
 // mesh key save
 STATIC_ASSERT(APP_KEY_MAX < 16);
 STATIC_ASSERT(sizeof(mesh_key_save_t) % 16 == 0);
+STATIC_ASSERT(sizeof(mesh_key_save_t) < (FLASH_SECTOR_SIZE - SIZE_SAVE_FLAG));
 
 
 #if KEY_SAVE_ENCODE_ENABLE
@@ -3860,12 +4524,16 @@ void mesh_switch_identity_proc()// run in loop
 				p_in->node_identity =NODE_IDENTITY_SUB_NET_STOP;
 			}
 		}
+
+		#if MD_PRIVACY_BEA
 		if(p_in->valid && p_in->priv_identity == PRIVATE_NODE_IDENTITY_ENABLE){
 			if(clock_time_exceed_s(p_in->priv_identity_s,NODE_IDENTITY_TIMEOUT_S)){
 				identity_trigger++;
-				p_in->priv_identity_s =PRIVATE_NODE_IDENTITY_DISABLE;
+				p_in->priv_identity = PRIVATE_NODE_IDENTITY_DISABLE;
+			    p_in->priv_identity_s = clock_time_s();
 			}
 		}
+		#endif
 	}
 	if(identity_trigger){
 		mesh_key_save();
@@ -3886,7 +4554,9 @@ void mesh_key_save()
     		p_save->valid = p_in->valid;
     		p_save->index = p_in->index;
     		p_save->node_identity = p_in->node_identity;
+    		#if MD_PRIVACY_BEA
 			p_save->priv_identity = p_in->priv_identity;
+			#endif
 		    memcpy(p_save->key, p_in->key, 16);
 		    foreach(j,APP_KEY_MAX){
 				if(p_in->app_key[j].valid){
@@ -3938,11 +4608,15 @@ int mesh_key_retrieve(){
 				mesh_net_key_t *p_netkey_exist = is_mesh_net_key_exist(p_save->index);
 				if(p_netkey_exist){
 					p_netkey_exist->node_identity = p_save->node_identity;
+					#if MD_PRIVACY_BEA
 					p_netkey_exist->priv_identity = p_save->priv_identity;
+					#endif
 				}
 			}
 		}
 	}
+	
+	node_binding_tick = 0; // clear binding tick which refreshed in mesh_app_key_set().
 	
     return err;
 }
@@ -3951,7 +4625,7 @@ int mesh_key_retrieve(){
 int mesh_model_retrieve_and_store(bool4 sig_model, u32 md_id, int save)
 {    
 	int err = -1;
-    if(is_actived_factory_test_mode() && save){
+    if(is_activated_factory_test_mode() && save){
         return 0;
     }
     
@@ -3997,17 +4671,19 @@ void mesh_flash_retrieve()
         flash_write_page (CFG_ADR_MAC, 6, tbl_mac);
     }
 #endif
+
     ele_adr_primary = (tbl_mac[0] + (tbl_mac[1] << 8)) & (~(BIT(15)));    // init to mac
+#if PAIR_PROVISION_ENABLE
+	ele_adr_primary |= PAIR_PROV_UNPROV_ADDRESS_START;
+#else
     if(0 == ele_adr_primary){
         ele_adr_primary = 1;
     }
+#endif
+
     mesh_common_retrieve_all();		// should be first, because include model_sig_cfg_s
 	mesh_key_retrieve();            // should be after mesh common retrieve all() ,because of ele_adr_primary
 	mesh_misc_retrieve();           // should be after key mesh_common_retrieve_all(), because use is_provision_success() in it
-
-	#if MD_SERVER_EN
-	mesh_model_cb_pub_st_register();	// must after mesh_common_retrieve_all
-	#endif
 	
 #if (WIN32 && DEBUG_SHOW_VC_SELF_EN) // for test: because it have not save in VC.
     #if MD_LIGHT_CONTROL_EN
@@ -4059,9 +4735,9 @@ void mesh_node_init()
     #endif
 	register_nl_callback();
 
-	#if SPEECH_ENABLE
+#if (__TLSR_RISCV_EN__ && SPEECH_ENABLE)
 	aid_init();
-	#endif
+#endif
 
 #if 0 // PTS_TEST_OTA_EN
     model_sig_cfg_s.relay_retransmit.count = 2;
@@ -4084,7 +4760,7 @@ int is_mesh_latency_window()
 #if (__TL_LIB_8269__ || (MCU_CORE_TYPE == MCU_CORE_8269))
     #if (!FEATURE_LOWPOWER_EN)
     if(loop_interval_us){
-        static u32 tick_loop = BIT(31); // make sure actived when power on
+        static u32 tick_loop = BIT(31); // make sure activated when power on
         if(clock_time_exceed(tick_loop, loop_interval_us)){
             tick_loop = clock_time();
             return 0;
@@ -4100,8 +4776,9 @@ int is_mesh_latency_window()
 #endif
 
 #if (!IS_VC_PROJECT)
-int mesh_nw_pdu_report_to_gatt(u16 conn_handle, u8 *p, u8 len, u8 adv_type)	// from 8269 proxy node to adv from app or VC
+int mesh_nw_pdu_report_to_gatt(u16 conn_handle, u16 dst_addr, u8 *p, u8 len, u8 adv_type)	// from 8269 proxy node to adv from app or VC
 {
+	int ret = -1;
 	u8 proxy_type = MSG_NETWORK_PDU;
 	if(MESH_ADV_TYPE_MESSAGE == adv_type){
 		proxy_type = MSG_NETWORK_PDU;
@@ -4112,33 +4789,41 @@ int mesh_nw_pdu_report_to_gatt(u16 conn_handle, u8 *p, u8 len, u8 adv_type)	// f
 	}else if(MESH_ADV_TYPE_PROXY_CFG_FLAG == adv_type){
 		proxy_type = MSG_PROXY_CONFIG;
 	}
-	#if (!MESH_BLE_NOTIFY_FIFO_EN)
-	return notify_pkts(conn_handle, p, len, GATT_PROXY_HANDLE, proxy_type);
-	#else
-	mesh_notify_head_t notify_head;
-	notify_head.conn_handle = conn_handle;
-	notify_head.att_handle = GATT_PROXY_HANDLE;
-	notify_head.proxy_type = proxy_type;
 
-	return my_fifo_push(&blt_notify_fifo,p,len,(u8 *)&notify_head,sizeof(notify_head));;
-	#endif
+	__UNUSED mesh_notify_head_t notify_head;
+	notify_head.conn_handle = BLS_HANDLE_MIN;
+	notify_head.att_handle = GATT_PROXY_HANDLE;
+	notify_head.proxy_type = proxy_type; 
+	
+#if BLE_MULTIPLE_CONNECTION_ENABLE
+	foreach(idx, ACL_PERIPHR_MAX_NUM){
+		if(is_valid_addr_in_proxy_list(idx, dst_addr)){		
+			notify_head.conn_handle = (PROXY_CONFIG_FILTER_DST_ADR == dst_addr) ? conn_handle : get_slave_conn_handle_by_idx(idx);
+#endif		
+			#if (!MESH_BLE_NOTIFY_FIFO_EN)
+			ret = notify_pkts(notify_head.conn_handle, p, len, GATT_PROXY_HANDLE, proxy_type);
+			#else
+			ret = my_fifo_push(&blt_notify_fifo, p, len, (u8 *)&notify_head, OFFSETOF(mesh_notify_head_t, data));
+			#endif
+#if BLE_MULTIPLE_CONNECTION_ENABLE
+			if(PROXY_CONFIG_FILTER_DST_ADR == dst_addr){
+				break;
+			}
+		}
+	}	
+#endif
+
+	return ret;
 }
 #endif
 
 #if (!IS_VC_PROJECT)
-int mesh_proxy_adv2gatt(u16 conn_handle, u8 *bear, u8 adv_type)	// from 8269 proxy node to adv from app or VC
+int mesh_proxy_adv2gatt(u16 conn_handle, u16 dst_addr, u8 *bear, u8 adv_type)	// from 8269 proxy node to adv from app or VC
 {
 	int err=0;
 	mesh_cmd_bear_t *p_br = (mesh_cmd_bear_t *)bear;
 	if(PROXY_HCI_GATT == mesh_get_proxy_hci_type()){
-		if(MESH_ADV_TYPE_BEACON == adv_type){
-			if(	p_br->beacon.type != SECURE_BEACON &&
-				p_br->beacon.type != PRIVACY_BEACON){
-				err = mesh_nw_pdu_report_to_gatt(conn_handle, (u8 *)&p_br->beacon.type, p_br->len-1 , MESH_ADV_TYPE_BEACON);
-			}
-		}else{
-			err = mesh_nw_pdu_report_to_gatt(conn_handle, (u8 *)&p_br->nw, p_br->len - 1, adv_type);
-		}
+		err = mesh_nw_pdu_report_to_gatt(conn_handle, dst_addr, (u8 *)&p_br->nw, p_br->len - 1, adv_type);
 	}
 	#if (DEBUG_MESH_DONGLE_IN_VC_EN || MESH_MONITOR_EN)
 	else{
@@ -4161,16 +4846,19 @@ int mesh_notifyfifo_rxfifo()
 	my_fifo_buf_t *fifo = (my_fifo_buf_t *)my_fifo_get(&blt_notify_fifo);
 	mesh_notify_head_t *p_notify_head = (mesh_notify_head_t *)fifo->data;
 	if(fifo){
-		if(blc_ll_isAclConnEstablished(p_notify_head->conn_handle)){
-			u8 ret = 0;
+		#if BLE_MULTIPLE_CONNECTION_ENABLE
+		if(blc_ll_isAclConnEstablished(p_notify_head->conn_handle))
+		#else
+		if(blc_ll_getCurrentState() == BLS_LINK_STATE_CONN)
+		#endif
+		{
 			#if ONLINE_STATUS_EN
-			u8 att_handle = fifo->data[0];
-			if(ONLINE_ST_ATT_HANDLE_SLAVE == att_handle){
-	            ret = bls_att_pushNotifyData(att_handle,fifo->data+1,fifo->len-1);
+			if(MSG_ONLINE_ST_PDU == p_notify_head->proxy_type){
+                ret = blc_gatt_pushHandleValueNotify(p_notify_head->conn_handle, p_notify_head->att_handle, p_notify_head->data, fifo->len-OFFSETOF(mesh_notify_head_t, data));
 			}else
 			#endif
 			{
-			    ret = notify_pkts(p_notify_head->conn_handle, p_notify_head->data, fifo->len-sizeof(mesh_notify_head_t), p_notify_head->att_handle, p_notify_head->proxy_type);
+			    ret = notify_pkts(p_notify_head->conn_handle, p_notify_head->data, fifo->len-OFFSETOF(mesh_notify_head_t, data), p_notify_head->att_handle, p_notify_head->proxy_type);
 			}
 			
 			if(ret == BLE_SUCCESS){
@@ -4182,56 +4870,94 @@ int mesh_notifyfifo_rxfifo()
 		}
 	}
 #endif
+
 	return ret;
 }
 
 #if FEATURE_RELAY_EN
-#define FULL_REALY_PROC_ENABLE	1
-#if (__TLSR_RISCV_EN__)
-_attribute_ram_code_
-#endif
+#define FULL_RELAY_PROC_ENABLE	1
 int relay_adv_prepare_handler(rf_packet_adv_t * p, int rand_en)  // no random for relay transmit
 {
     my_fifo_t *p_fifo = &mesh_adv_fifo_relay;
-#if FULL_REALY_PROC_ENABLE
+#if FULL_RELAY_PROC_ENABLE
     my_fifo_poll_relay(p_fifo);   // must before get buffer.
     mesh_relay_buf_t *p_relay = my_fifo_get_relay(p_fifo);
     if(p_relay){ // means that need to send packet now.
+		#if 0 // (__PROJECT_MESH_SWITCH__ && SWITCH_ALWAYS_MODE_GATT_EN) // no need to count down, so use the same way to handle.
+		// BSSMP/BSS/FEAT/BV-01-I,need relay interval 80ms, but this function pool interval is 160ms, 
+		// so no need to tick count down. 
+		// if want to accurate interval, should use softtimer to send relay, such as soft_timer_mesh_adv_proc().
+    	p_relay->tick_relay = 0;
+		#else
+		p_relay->tick_relay = clock_time() | 1; // record tick for next transmit for both transmit count is not 0 and 0.
+    	#endif
+		
+		#if MESH_RX_TEST
+		mesh_cmd_bear_t *p_bear = (mesh_cmd_bear_t *)&p_relay->bear;
+		mesh_cmd_bear_t bear_backup;
+		if(BEAR_TX_PAR_TYPE_MESH_RX_TEST == p_bear->tx_head.par_type){
+			memcpy(&bear_backup, p_bear, sizeof(bear_backup));
+			
+			bear_ttc_head_t *p_ttc_bear = (bear_ttc_head_t *)&p_bear->tx_head;
+			cmd_ctl_ttc_t *p_ttc = (cmd_ctl_ttc_t *)p_bear->lt_ctl_unseg.data;
+			u16 delta_100us = ((clock_time() - (p_ttc_bear->tick_base << RX_TEST_BASE_TIME_SHIFT)) / sys_tick_per_us / 100) + 4; // // 4: mesh_sec_msg_enc_nw() cost 400us.
+			p_ttc->ttc_100us += delta_100us;
+			if(p_bear->lt_ctl_seg.seg){
+				;// TBD
+			}
+			else{
+				u8 index = model_sig_cfg_s.relay_retransmit.count - p_relay->cnt + 1;	// relay index start from 1.
+				SET_RELAY_TRANSMIT_INDEX(p_ttc->bit_field, p_bear->nw.ttl, index);
+				mesh_cmd_nw_t *p_nw = &p_bear->nw;
+				u8 len_nw = p_bear->len - 1; // 1:type
+				u8 len_lt = len_nw - OFFSETOF(mesh_cmd_nw_t, data) - (p_nw->ctl ? SZMIC_NW64 : SZMIC_NW32);
+				mesh_sec_msg_enc_nw((u8 *)p_nw, len_lt, SWAP_TYPE_NONE, MASTER, 0, len_nw, MESH_ADV_TYPE_MESSAGE, NONCE_TYPE_NETWORK, 0, 0);
+			}					
+		}
+		#endif
+		
         int ret = 0;
         #if WIN32
-        LOG_MSG_INFO(TL_LOG_NODE_BASIC,(u8 *)p_relay,p_relay->bear.len + 6,"Relay Buff:",0);
+        LOG_MSG_INFO(TL_LOG_NODE_BASIC,(u8 *)p_relay,p_relay->bear.len + 6,"Relay Buff:");
         #else
         ret = mesh_adv_cmd_set((u8 *)p, (u8 *)&p_relay->bear);
         #endif
 
-        if(0 == p_relay->cnt){
-            p_relay->valid = 0;
-            if((u8 *)p_relay == my_fifo_get(p_fifo)){
-                my_fifo_pop(p_fifo);
-				#if DF_TEST_MODE_EN
-				cfg_led_event(LED_EVENT_FLASH_2HZ_2S);
+		#if MESH_RX_TEST
+		if(BEAR_TX_PAR_TYPE_MESH_RX_TEST == p_bear->tx_head.par_type){
+			memcpy(p_bear, &bear_backup, sizeof(bear_backup));
+		}
+		#endif
+        
+		mesh_transmit_t *p_trans_par = (mesh_transmit_t *)&p_relay->bear.trans_par_val;
+		#if TELINK_RELAY_TEST_EN
+        if(ret){
+			LOG_MSG_LIB(TL_LOG_NODE_SDK, (u8 *)&p_relay->bear.nw, 10, "relay type: %0x, index: %d, data: ", p_relay->bear.type, p_trans_par->count);
+        }
+		#endif
+        
+       	if(0 == p_trans_par->count){
+       		// must keep tick_relay to be not 0, because my_fifo_get_relay_ can not check transmit count to get if need tx relay, but just can check tick is not 0.
+            if((u8 *)p_relay == my_fifo_get(p_fifo)){ // means head of fifo
+				// tick_relay can not set to 0 when pop buffer, because in my_fifo_poll_relay(): (transmit count == 0 && tick relay == 0) means one packet is ready to be sent, and (transmit count == 0 && tick relay != 0) means relay completed.
+				my_fifo_pop(p_fifo);
+				#if TELINK_RELAY_TEST_EN
+				LOG_MSG_LIB(TL_LOG_NODE_SDK, 0, 0, "relay pop 1");
 				#endif
-                #if WIN32
-                LOG_MSG_INFO(TL_LOG_NODE_BASIC, 0, 0, "Relay buffer pop", 0);
-                #endif
-            }else{
-                #if WIN32
-                LOG_MSG_INFO(TL_LOG_NODE_BASIC, 0, 0, "Relay buffer pop later in poll", 0);
-                #endif
-            }
+	            #if WIN32
+	            LOG_MSG_INFO(TL_LOG_NODE_BASIC, 0, 0, "Relay buffer pop");
+	            #endif
+			}else{
+				p_relay->pop_later_flag = 1; // can not pop here, and will pop in my_fifo_poll_relay_ later, because it is not head of fifo. usually for security beacon packet.
+			}
         }else{
-            if(p_relay->tick_10ms){ // not neccessary to check not zero, but should be better.
-                p_relay->tick_10ms--;   // start tick
-                if(rand_en){
-					#if (0 == __TLSR_RISCV_EN__)
-                    set_random_adv_delay(1);    // random 10~20ms
-                    #endif
-                }
-            }
+        	// tick_relay has been set to (clock time | 1) before.
+ 			p_trans_par->count--;
         }
         return ret;
     }
 #else
+#error not use this mode now.
 	mesh_relay_buf_t *p_relay = (mesh_relay_buf_t *)my_fifo_get(p_fifo);
 	if(p_relay){
 		mesh_transmit_t *p_trans_par = (mesh_transmit_t *)(&p_relay->bear.trans_par_val);
@@ -4354,11 +5080,11 @@ static u16 del_node_delay_ms = 0;
 
 /*********************************
 cb_node_reset() will be called by Node_RESET command
-return value: noly factory mode actived, return 0 means no response. return 1 with response.
+return value: noly factory mode activated, return 0 means no response. return 1 with response.
 */
 u32 node_reset_start(u16 adr_src)
 {
-	del_node_delay_ms = is_own_ele(adr_src) ? 0:1500;	// 	trriger at once if command if from self.
+	del_node_delay_ms = is_own_ele(adr_src) ? 0:1500;	// 	trigger at once if command if from self.
 	del_node_tick = clock_time()|1;
 	return 1;
 }
@@ -4395,20 +5121,24 @@ void send_and_wait_completed_reset_node_status()
 {
 #if (!WIN32)
 	my_fifo_reset(&mesh_adv_cmd_fifo);
-	cfg_cmd_reset_node(ele_adr_primary);// will only send reset status without flash erase.
+	cfg_cmd_reset_node(ele_adr_primary);// will send reset status	
 	del_node_tick = 0;
 	while(my_fifo_data_cnt_get(&mesh_adv_cmd_fifo)){
 		#if(MODULE_WATCHDOG_ENABLE)
 		wd_clear();
 		#endif
-		#if (0 == __TLSR_RISCV_EN__)		
-		blt_send_adv2scan_mode(1);
-		#endif
-		u32 ms = 10;
-		#if PM_DEEPSLEEP_RETENTION_ENABLE
-		cpu_sleep_wakeup(0, PM_WAKEUP_TIMER, clock_time() + ms*1000*sys_tick_per_us);
+		
+		#if BLE_MULTIPLE_CONNECTION_ENABLE
+		mesh_adv_prepare_proc();
 		#else
+		mesh_send_adv2scan_mode(1);
+
+		u32 ms = 10;
+			#if PM_DEEPSLEEP_RETENTION_ENABLE
+		cpu_sleep_wakeup(0, PM_WAKEUP_TIMER, clock_time() + ms*1000*sys_tick_per_us);
+			#else
 		sleep_ms(ms);
+			#endif
 		#endif
 	}
 #endif
@@ -4433,7 +5163,7 @@ const u8  my_fwRevision_value [FW_REVISION_VALUE_LEN] = {
 // --------end-------
 
 // service change request
-void mesh_service_change_report()
+void mesh_service_change_report(u16 conn_handle)
 {
 #if (!MI_API_ENABLE || DUAL_VENDOR_EN)
     #if DUAL_VENDOR_EN
@@ -4444,11 +5174,8 @@ void mesh_service_change_report()
         #if !WIN32
         u8 service_data[4]={0x01,0x00,0xff,0x00};
         // should keep the service change in the last 
-		#if (__TLSR_RISCV_EN__) 
-        blc_gatt_pushHandleValueIndicate(BLS_HANDLE_MIN, SERVICE_CHANGE_ATT_HANDLE_SLAVE,service_data,sizeof(service_data));
-		#else
-        bls_att_pushIndicateData(SERVICE_CHANGE_ATT_HANDLE_SLAVE,service_data,sizeof(service_data));
-		#endif
+		blc_gatt_pushHandleValueIndicate(conn_handle, SERVICE_CHANGE_ATT_HANDLE_SLAVE,service_data,sizeof(service_data));
+		
         #if (DUAL_MODE_WITH_TLK_MESH_EN || DUAL_MESH_SIG_PVT_EN)
         // dual_mode_TLK_service_change
         if(DUAL_MODE_SUPPORT_ENABLE == dual_mode_state){
@@ -4456,12 +5183,12 @@ void mesh_service_change_report()
 			#if (__TLSR_RISCV_EN__)
 			pkt_srv.handle = 0x28;
 			#else
-            pkt_srv.hl = 0x28; // hanle of service change in telink mesh SDK 
+            pkt_srv.hl = 0x28; // handle of service change in telink mesh SDK 
             #endif
             if(sizeof(pkt_srv.dat) >= sizeof(service_data)){
                 memcpy(pkt_srv.dat, service_data, sizeof(service_data));
             }
-            bls_ll_pushTxFifo(BLS_CONN_HANDLE, (u8 *)&pkt_srv.type);    // no need to check indication comfirm
+            bls_ll_pushTxFifo(conn_handle, (u8 *)&pkt_srv.type);    // no need to check indication confirm
         }
         #endif
         #endif
@@ -4553,21 +5280,34 @@ void online_st_proc()
     		if (my_fifo_free_cnt_get(&blt_txfifo) < 4)
     		#endif
     		{
-				if(get_blt_state() == BLS_LINK_STATE_CONN){
+				if(blc_ll_getCurrentState() == BLS_LINK_STATE_CONN){
 					return;
 				}
 			}
 
 			if (mesh_node_report_status ((u8 *)&report.node, ARRAY_SIZE(report.node)))
 			{
-				if((get_blt_state() == BLS_LINK_STATE_CONN)){
-					online_st_gatt_enc((u8 *)&report, sizeof(report));
-                    #if MESH_BLE_NOTIFY_FIFO_EN
-                    u8 header[1] = {ONLINE_ST_ATT_HANDLE_SLAVE};
-    				my_fifo_push(&blt_notify_fifo,(u8 *)&report,sizeof(report),header,sizeof(header));
-                    #else
-                    bls_att_pushNotifyData(ONLINE_ST_ATT_HANDLE_SLAVE,(u8 *)&report,sizeof(report));
-    				#endif
+				if((blc_ll_getCurrentState() == BLS_LINK_STATE_CONN)){
+					__UNUSED mesh_notify_head_t notify_head;
+					notify_head.conn_handle = BLS_HANDLE_MIN;
+					notify_head.att_handle = ONLINE_ST_ATT_HANDLE_SLAVE;
+					notify_head.proxy_type = MSG_ONLINE_ST_PDU; 
+
+					#if BLE_MULTIPLE_CONNECTION_ENABLE
+					for(notify_head.conn_handle = BLS_HANDLE_MIN; notify_head.conn_handle < BLS_HANDLE_MAX; notify_head.conn_handle++){
+						if(blc_ll_isAclConnEstablished(notify_head.conn_handle)){
+					#endif
+							online_st_gatt_enc((u8 *)&report, sizeof(report));
+					
+		                    #if MESH_BLE_NOTIFY_FIFO_EN	
+							my_fifo_push(&blt_notify_fifo, (u8 *)&report, sizeof(report), (u8 *)&notify_head, OFFSETOF(mesh_notify_head_t, data));
+		                    #else
+		                    blc_gatt_pushHandleValueNotify(notify_head.conn_handle, ONLINE_ST_ATT_HANDLE_SLAVE,(u8 *)&report,sizeof(report));
+		    				#endif
+					#if BLE_MULTIPLE_CONNECTION_ENABLE
+						}
+					}
+					#endif
 				}
 				#if GATEWAY_ENABLE
 				else{
@@ -4701,9 +5441,6 @@ void mesh_netkey_cb(u8 idx,u16 op)
 void mesh_loop_process()
 {
     CB_USER_MAIN_LOOP();
-	#if (__TLSR_RISCV_EN__)
-	mesh_adv_prepare_proc();
-	#endif
     #if SPEECH_ENABLE
     aid_loop();
     #endif
@@ -4720,7 +5457,8 @@ void mesh_loop_process()
 		#endif
 	#endif
 	// node identity proc 
-	#if !__PROJECT_MESH_SWITCH__ // switch adv with node identity
+	#if (!__PROJECT_MESH_SWITCH__ || SWITCH_ALWAYS_MODE_GATT_EN) // switch adv with node identity.
+	//BSSMP/BSS/FEAT/BV-01-I,IUT needs to send NODE_IDENTITY_TYPE broadcast packet for proxy connection
 	mesh_switch_identity_proc();
 	#endif
     // provision loop proc
@@ -4744,8 +5482,16 @@ void mesh_loop_process()
 	#if (MD_MESH_OTA_EN && (DISTRIBUTOR_UPDATE_SERVER_EN || DISTRIBUTOR_UPDATE_CLIENT_EN))
 	mesh_ota_master_proc();
 	#endif
-	#if ((WIN32) || GATEWAY_ENABLE)
-	mesh_kr_cfgcl_proc();
+	#if (WIN32 || GATEWAY_ENABLE)
+		#if(TESTCASE_FLAG_ENABLE)
+	extern u8 key_refresh_client_test_case_mode_en;
+	if(0 == key_refresh_client_test_case_mode_en)
+		#endif
+	{mesh_kr_cfgcl_proc();}
+		
+		#if SMART_PROVISION_ENABLE
+	mesh_smart_provision_proc();
+		#endif
 	#endif
 	#if MD_MESH_OTA_EN
 	mesh_ota_proc();
@@ -4776,9 +5522,9 @@ void mesh_loop_process()
 	system_time_run(); // must at last of main_loop(), before mesh_lpn_proc_suspend()
 	#endif
 	
-	
-	
-	
+	#if BLE_MULTIPLE_CONNECTION_ENABLE
+	mesh_adv_prepare_proc();
+	#endif	
 }
 
 // for the adv will not send adv at the same time to control 
@@ -4803,21 +5549,17 @@ FLASH_ADDRESS_DEFINE;
   */
 int is_pkt_notify_only(u16 dst_adr, int relay_flag)
 {
-    if(is_proxy_support_and_en && is_unicast_adr(dst_adr)){
-		#if 1
-		return is_valid_adv_with_proxy_filter(dst_adr);
-		#else
+    if(is_proxy_transfer_en && mesh_is_proxy_ready()){ // no need to check proxy enable, just support is enough.
         if(relay_flag){
             //reduce tx time of GATT connected node to receive more messages. especially when get all.
-            return (app_adr == dst_adr); // other nodes will relay this address.
+            return is_app_addr(dst_adr); // other nodes will relay this address.
         }else{ // tx command
             #if (MESH_USER_DEFINE_MODE == MESH_IRONMAN_MENLO_ENABLE)
             // other proxy client's filter address may subscribe this address. //return 0;
             #else
-            return (app_adr == dst_adr);
+            return is_app_addr(dst_adr);
             #endif
         }
-		#endif
     }
     return 0;
 }
@@ -4837,10 +5579,8 @@ void prov_random_proc(u8 *p_random)
 void mesh_init_all()
 {	
     mesh_init_flag = 1;
-	#if DU_ENABLE
-	blc_att_setRxMtuSize(247);
-	#endif
-    LOG_MSG_INFO(TL_LOG_COMMON,0, 0,"System start ............",0);
+
+    LOG_MSG_INFO(TL_LOG_COMMON,0, 0,"System start ............");
 #if WIN32
 	mesh_global_var_init();	// must call first in user init() for firmware SDK.
 #endif
@@ -4863,7 +5603,7 @@ void mesh_init_all()
     u8 node_ident_random[8];    // because it will be used in both mesh_flash_retrieve_()->mesh_net_key_set_() and mesh_provision_para_init_()
 	prov_random_proc(node_ident_random);
     // read parameters
-    mesh_flash_retrieve();	// should be first, get unicast addr from config modle.
+    mesh_flash_retrieve();	// should be first, get unicast addr from config model.
     mesh_key_node_identity_init();// should be after key retrieve .
     provision_random_data_init();
 	mesh_provision_para_init(node_ident_random);
@@ -4885,11 +5625,20 @@ void mesh_init_all()
 #if TEST_CASE_HBS_BV_05_EN
 	friend_add_special_grp_addr();
 #endif
-#if MD_PRIVACY_BEA
-	#if MD_SERVER_EN
-	mesh_private_para_init();
+#if (MD_PRIVACY_BEA && MD_SERVER_EN)
+	mesh_private_proxy_sts_init();
+	#if MD_ON_DEMAND_PROXY_EN
+	mesh_on_demand_private_gatt_proxy_start();
 	#endif
 #endif
+#if (MD_LIGHT_CONTROL_EN && MD_SERVER_EN && LOG_LIGHT_LC_EN)
+	light_lc_debug_print_all_par();
+#endif
+
+#if MESH_TX_RX_SELF_EN
+	mesh_adv_txrx_to_self_en(MESH_TX_RX_SELF_EN);
+#endif
+
     mesh_init_flag = 0;
 }
 
@@ -4927,25 +5676,12 @@ int decrypt_secure_beacon_by_beaconkey(u8 *p_payload ,u8 *p_beaconkey,u8 *p_ivi)
 	}
 	return err;
 }
+
 #endif
 
 int app_event_handler_adv(u8 *p_payload, int src_type, u8 need_proxy_and_trans_par_val)
 {
 	int err = 0;
-	#if (MD_SOLI_PDU_RPL_EN && MD_SERVER_EN)	
-	soli_pdu_pkt_t *p_soli_pkt = (soli_pdu_pkt_t *)p_payload;
-	if((GAP_ADTYPE_16BIT_COMPLETE == p_soli_pkt->type) && (SIG_MESH_PROXY_SOLI_VAL == p_soli_pkt->uuid) && (SOLI_WITH_RPL_TYPE==p_soli_pkt->service_data.id_type)){
-		mesh_cmd_nw_t *p_nw = (mesh_cmd_nw_t *)p_soli_pkt->service_data.id_para;
-		int len_dec_nw = p_soli_pkt->service_len - 4 - (OFFSETOF(mesh_cmd_nw_t, data) - 2);//2 is sizeof(dst addr)				
-		int err = mesh_sec_msg_dec_nw((u8 *)p_nw, len_dec_nw, p_nw->nid, NONCE_TYPE_SOLICITATION, MESH_BEAR_ADV);
-		if(!err && !is_exist_in_soli_rpl((u8 *)p_nw)){
-			if((GATT_PROXY_SUPPORT_DISABLE == model_sig_cfg_s.gatt_proxy) && (PRIVATE_PROXY_DISABLE == model_private_beacon.srv[0].proxy_sts) && model_sig_cfg_s.on_demand_proxy){
-				mesh_on_demand_proxy_time = clock_time()|1;
-			}
-		}
-		return 0;
-	}
-	#endif
 			
 	mesh_cmd_bear_t *p_br = GET_BEAR_FROM_ADV_PAYLOAD(p_payload);
 	#if (0 == PROXY_GATT_WITH_HEAD)
@@ -4956,31 +5692,17 @@ int app_event_handler_adv(u8 *p_payload, int src_type, u8 need_proxy_and_trans_p
 	}else
 	#endif
 	{
-	    // GATT may be a long packet, and the 'len' is caculated from payload length, so it's no need to check
+	    // GATT may be a long packet, and the 'len' is calculated from payload length, so it's no need to check
 	}
 	
 	u8 adv_type = p_br->type;
 	if(adv_type == MESH_ADV_TYPE_MESSAGE){
         lpn_debug_set_event_handle_pin(1);
-		err = mesh_rc_data_layer_network(BLS_HANDLE_MIN, p_payload, src_type, need_proxy_and_trans_par_val);
+		err = mesh_rc_data_layer_network(p_payload, src_type, need_proxy_and_trans_par_val);
         lpn_debug_set_event_handle_pin(0);
 	}
 	else if((adv_type == MESH_ADV_TYPE_BEACON)&&(p_br->beacon.type == SECURE_BEACON)){
 		mesh_rc_data_beacon_sec(p_payload, 0);
-		#if GATEWAY_ENABLE
-		extern u8 ivi_beacon_key[16];
-		u8 ivi_upload[4];
-		//only when the gateway is unprovisioned ,or it can decrypt the secure beacon,it will pass to vc 
-		if(!is_provision_success() && decrypt_secure_beacon_by_beaconkey(p_payload ,ivi_beacon_key,ivi_upload)==0){
-			gateway_upload_ivi(ivi_upload);
-		}
-		/*
-		else if ((is_provision_success() && decrypt_secure_beacon(p_payload,ivi_upload)== 0)){
-			// pass the ivi directly to gateway	
-			gateway_upload_ivi(ivi_upload);
-		}
-		*/
-		#endif
 	}
 	else if((adv_type == MESH_ADV_TYPE_BEACON)&&(p_br->beacon.type == PRIVACY_BEACON)){
 		#if MD_PRIVACY_BEA
@@ -4993,6 +5715,11 @@ int app_event_handler_adv(u8 *p_payload, int src_type, u8 need_proxy_and_trans_p
 		send_vc_fifo(TSCRIPT_CMD_VC_DEBUG,(u8 *)p_payload, mesh_adv_payload_len_get(p_br));
 	    #else
 		mesh_provision_rcv_process(p_payload,0);
+		#if MESH_MONITOR_EN
+		if(monitor_unprovision_en){
+			mesh_dongle_adv_report2vc(p_payload, MESH_MONITOR_DATA); // must at last, because data of p_payload may be changed.
+		}
+		#endif
 	    #endif
 	#if ONLINE_STATUS_EN
 	}else{
@@ -5015,11 +5742,7 @@ int mesh_is_proxy_ready()
 		#if (IS_VC_PROJECT && DEBUG_MESH_DONGLE_IN_VC_EN)
 		return 1;
 		#else
-		#if (__TLSR_RISCV_EN__)
-		return (bls_ll_isConnectState());
-		#else
-		return (BLS_LINK_STATE_CONN == get_blt_state());
-		#endif
+		return (BLS_LINK_STATE_CONN == blc_ll_getCurrentState());
 		#endif
 	}else{
 		return 1;
@@ -5027,22 +5750,26 @@ int mesh_is_proxy_ready()
 }
 
     #if (!IS_VC_PROJECT)
+/**
+ * @brief       This function server to process network PDU from proxy service.
+ * @param[in]   p_bear	- pointer of network PDU.
+ * @return      none
+ * @note        
+ */
 void mesh_nw_pdu_from_gatt_handle(u8 *p_bear)	// adv from app or VC to 8269 proxy node
 {
 	#if DEBUG_MESH_DONGLE_IN_VC_EN
-	if(FEATURE_PROXY_EN && (BLS_LINK_STATE_CONN == get_blt_state())){
+	if(FEATURE_PROXY_EN && (BLS_LINK_STATE_CONN == blc_ll_getCurrentState())){
 		debug_mesh_dongle_adv_bear2usb(p_bear);
 	}
 	#else
-	if(is_proxy_support_and_en){
+	if(is_proxy_transfer_en){
 		mesh_gatt_bear_handle(p_bear);
 	}
 	#endif
 }
 
-#if (__TLSR_RISCV_EN__)
-_attribute_ram_code_
-#endif
+#if MD_PRIVACY_BEA
 int is_private_beacon(u8 *p_data)
 {
 	if(p_data[1] == MESH_ADV_TYPE_BEACON &&p_data[2] == PRIVACY_BEACON){
@@ -5051,10 +5778,8 @@ int is_private_beacon(u8 *p_data)
 		return 0;
 	}
 }
-
-#if (__TLSR_RISCV_EN__)
-_attribute_ram_code_
 #endif
+
 int mesh_adv_cmd_set(u8 *p_adv, u8 *p_bear)
 {
     mesh_cmd_bear_t *p_br = (mesh_cmd_bear_t *)p_bear;
@@ -5065,14 +5790,17 @@ int mesh_adv_cmd_set(u8 *p_adv, u8 *p_bear)
     
     rf_packet_adv_t *p = (rf_packet_adv_t *)p_adv;
     p->header.type = LL_TYPE_ADV_NONCONN_IND;
+    #if MD_PRIVACY_BEA
 	if(is_private_beacon(&(p_br->len))){
-#if MD_PRIVACY_BEA
-		memcpy(p->advA,prov_para.priv_non_reslov,6);
-		p->header.txAddr =1;
-#endif
-	}else{
+		memcpy(p->advA,prov_para.priv_non_resolvable,6); // no need to set scan response, because "mesh_adv_cmd_set_()" is always for non-connected ADV.
+		p->header.txAddr = 1;
+	}else
+	#endif
+	{
 		memcpy(p->advA,tbl_mac,6);
+		#if MD_PRIVACY_BEA
 		p->header.txAddr = 0;
+		#endif
 	}
     memcpy(p->data, &p_br->len, len_payload);
     p->rf_len = 6 + len_payload;
@@ -5090,7 +5818,10 @@ int mesh_adv_cmd_set(u8 *p_adv, u8 *p_bear)
 		#endif
 	){
         if(len_payload > 31){
-            return PREPARE_HANDLE_ADV_EXTEND;	// EXTENDED_ADV_TX_TEST_EN
+        	#if AUDIO_MESH_EN
+        	app_audio_set_aux_payload((u8 *)p_br);
+        	#endif
+            return PREPARE_HANDLE_ADV_EXTEND;
         }
     }
 #endif
@@ -5098,19 +5829,22 @@ int mesh_adv_cmd_set(u8 *p_adv, u8 *p_bear)
     return 1;
 }
 
-ble_sts_t bls_ll_setAdvInterval(u16 intervalMin, u16 intervalMax);
-
 ble_sts_t  bls_ll_setAdvParam_interval(u16 min_ms, u16 rand_ms)
 {
     u16 min = GET_ADV_INTERVAL_LEVEL(min_ms);
     u16 max = GET_ADV_INTERVAL_LEVEL(min_ms + rand_ms);
-	#if (__TLSR_RISCV_EN__)
-	blc_ll_setAdvParam(min, max, ADV_TYPE_CONNECTABLE_UNDIRECTED, OWN_ADDRESS_PUBLIC, 0, NULL, BLT_ENABLE_ADV_ALL, ADV_FP_NONE);
+	#if (BLE_MULTIPLE_CONNECTION_ENABLE)
+	if(blc_ll_getAdvInterval() != min){
+		blc_ll_setAdvEnable(BLC_ADV_DISABLE);
+		blc_ll_setAdvParam(min, max, ADV_TYPE_CONNECTABLE_UNDIRECTED, OWN_ADDRESS_PUBLIC, 0, NULL, BLT_ENABLE_ADV_ALL, ADV_FP_NONE);
+		blc_ll_setAdvEnable(BLC_ADV_ENABLE);
+	}
 	#else
 	if(blta.advInt_min != min){
 	    bls_ll_setAdvInterval(min, max);
 	}
 	#endif
+	
 	return BLE_SUCCESS;
 }
 
@@ -5118,7 +5852,7 @@ ble_sts_t  bls_ll_setAdvParam_interval(u16 min_ms, u16 rand_ms)
 #endif
 
 //--------------------app key bind flow------------------------------//
-#if (__PROJECT_MESH_PRO__ || __PROJECT_MESH_GW_NODE__ || PTS_TEST_EN)
+#if (__PROJECT_MESH_PRO__ || __PROJECT_MESH_GW_NODE__ || PTS_TEST_EN || TESTCASE_FLAG_ENABLE)
 #define KR_CL_NK_INDEX			(0x000)
 #define KR_CL_AK_INDEX			(0x000)
 
@@ -5149,7 +5883,7 @@ void mesh_kr_cfgcl_retry_decrease()
 {
 	key_refresh_cfgcl_proc.retry_cnt--;
 	if(0 == key_refresh_cfgcl_proc.retry_cnt){
-		LOG_MSG_INFO(TL_LOG_MESH,0, 0,"mesh_kr_cfgcl_retry_decrease:app key decrease times overflow",0);
+		LOG_MSG_INFO(TL_LOG_MESH,0, 0,"mesh_kr_cfgcl_retry_decrease:app key decrease times overflow");
 		#if  ANDROID_APP_ENABLE || IOS_APP_ENABLE
 		App_key_bind_end_callback(MESH_KR_CFGCL_RETRY_TIMES_ERR);	
 		#endif 
@@ -5169,7 +5903,7 @@ void mesh_ker_cfgcl_proc_init()
 
 void mesh_kr_cfgcl_proc()
 {
-#if TESTCASE_FLAG_ENABLE
+#if PTS_TEST_KEY_REFRESH_EN
 	key_refresh_cfgcl_proc_t *p = &key_refresh_cfgcl_proc;
 	
 	if(is_busy_segment_or_reliable_flow() || (KR_CFGCL_NORMAL == p->st) || (!p->next_st_flag)){
@@ -5255,7 +5989,7 @@ void mesh_kr_cfgcl_proc()
 	mesh_kr_cfgcl_retry_decrease();
 	switch(p->st){		
 		case KR_CFGCL_GET_CPS:
-			LOG_MSG_INFO(TL_LOG_KEY_BIND,0,0,"SEND: get composition data",0);
+			LOG_MSG_INFO(TL_LOG_KEY_BIND,0,0,"SEND: get composition data");
 			cfg_cmd_cps_get(p->node_adr, 0xff);
 			break;
 		case KR_CFGCL_ADD_APPKEY:
@@ -5283,7 +6017,7 @@ void mesh_kr_cfgcl_mode_set(u16 addr, u8 mode,u16 nk_idx)
 {
 	key_refresh_cfgcl_proc_t * p = (key_refresh_cfgcl_proc_t *)&key_refresh_cfgcl_proc;
 	mesh_kr_cfgcl_retry_init();
-	LOG_MSG_INFO(TL_LOG_MESH,(u8 *)&mesh_key, (u8)sizeof(mesh_key),"mesh_kr_cfgcl_mode_set:mesh key printf\r\n",0);
+	LOG_MSG_INFO(TL_LOG_MESH,(u8 *)&mesh_key, (u8)sizeof(mesh_key),"mesh_kr_cfgcl_mode_set:mesh key printf\r\n");
 	p->node_adr = addr;
 	p->next_st_flag = KR_CFGCL_NORMAL;
 	if(KR_CFGCL_BIND_DEFAULT_APPKEY == mode){
@@ -5371,7 +6105,7 @@ void mesh_kr_cfgcl_status_update(mesh_rc_rsp_t *rsp)
 					memcpy(p_page0, p_page0_rsp, sizeof(mesh_page0_head_t)+2);  // +2: loc
 					get_cps_from_keybind_list(p_page0, p_page0_rsp);
 					LOG_MSG_INFO(TL_LOG_KEY_BIND,(u8 *)(p_page0->ele.md_sig),
-					(p_page0->ele.nums)*2+(p_page0->ele.numv)*4,"the model need to bind are:\r\n",0);
+					(p_page0->ele.nums)*2+(p_page0->ele.numv)*4,"the model need to bind are:\r\n");
 					VC_node_cps_save(p_page0,rsp->src,sizeof(mesh_page0_head_t)+get_cps_ele_len(&p_page0->ele));
 				}else
 				#endif
@@ -5475,6 +6209,7 @@ int is_valid_ota_check_type1()
 {	
 	u32 crc_org = 0;
 	u32 len = get_fw_len();
+	clock_switch_to_highest();
 	mesh_ota_read_data(len - 4, 4, (u8 *)&crc_org);
 
     u8 buf[2 + OTA_DATA_LEN_1];
@@ -5496,7 +6231,8 @@ int is_valid_ota_check_type1()
 			#endif
         }
     }
-    
+	
+    clock_switch_to_normal();
     return (crc_org == crc_new);
 }
 
@@ -5542,7 +6278,7 @@ unsigned long crc32_half_cal(unsigned long crc, unsigned char* input, unsigned l
 
 u32 get_crc32_16bytes(unsigned long crc_init, unsigned char* data)
 {
-    //split 16 bytes OTA data into 32 half bytes to caculate CRC.
+    //split 16 bytes OTA data into 32 half bytes to calculate CRC.
     u8 ota_dat[32];
     for(int i=0;i<16;i++){
         ota_dat[i*2] = data[i]&0x0f;
@@ -5561,28 +6297,10 @@ u32 get_blk_crc_tlk_type2(u32 crc_init, u8 *data, u32 len)
 }
 #endif
 
-#if (0 == MD_DF_EN)    // for compile
+#if (!MD_DF_CFG_SERVER_EN)
 int is_directed_forwarding_en(u16 netkey_offset){return 0;}
-int is_directed_relay_en(u16 netkey_offset){return 0;}
-int is_directed_proxy_en(u16 netkey_offset){return 0;}
-int is_directed_friend_en(u16 netkey_offset){return 0;}
 int is_directed_forwarding_op(u16 op){return 0;}
-void mesh_directed_forwarding_bind_state_update(){return;}
 void mesh_directed_forwarding_proc(u8 *bear, u8 *par, int par_len, int src_type){}
-path_entry_com_t *get_forwarding_entry(u16 netkey_offset, u16 src_address, u16 destination){return 0;}
-int mesh_df_path_monitoring(path_entry_com_t *p_entry){return 0;}
-int is_address_in_dependent_list(path_entry_com_t *p_fwd_entry, u16 addr){return 0;}
-int directed_forwarding_initial_start(u16 netkey_offset, u16 destination, u16 dependent_addr, u16 dependent_ele_cnt){return 0;}
-int is_proxy_use_directed(u16 netkey_offset){return 0;}
-u8 get_directed_proxy_dependent_ele_cnt(u16 netkey_offset, u16 addr){return 0;}
-u8 get_directed_friend_dependent_ele_cnt(u16 netkey_offset, u16 addr){return 0;}
-int directed_forwarding_dependents_update_start(u16 netkey_offset, u8 type, u16 path_enpoint, u16 dependent_addr, u8 dependent_ele_cnt){return 0;}
-#endif
-
-#if (0 == MD_SBR_EN)
-int is_subnet_bridge_en(){return 0;}
-int get_subnet_bridge_index(u16 netkey_index, u16 src, u16 dst){return -1;}
-int is_subnet_bridge_addr(u16 addr1, u16 addr2){return 0;};
 #endif
 #if (SLEEP_FUNCTION_DISABLE && ((MCU_CORE_TYPE == MCU_CORE_8258) || (MCU_CORE_TYPE == MCU_CORE_8278)))
 /*
@@ -5697,7 +6415,7 @@ u32 is_op_need_extend_and_fill_op_par(u16 op, u8 *ac_sig_out, u8 *par, u32 par_l
         memcpy(ac_vd->data, &op, op_size);
         memcpy(ac_vd->data + op_size, par, par_len);
         
-        LOG_MSG_LIB(TL_LOG_NODE_BASIC, ac_sig_out, OP_TYPE_VENDOR,"TX fill extend op",0);
+        LOG_MSG_LIB(TL_LOG_NODE_BASIC, ac_sig_out, OP_TYPE_VENDOR,"TX fill extend op");
         return OP_TYPE_VENDOR;
     }
 
@@ -5727,7 +6445,6 @@ bind_key_t * is_exist_bind_key_extend_op(u16 appkey_idx)
     return is_exist_bind_key(&model_vd_light.srv[0].com, appkey_idx);
 }
 #else
-int is_client_tx_extend_model(u16 model){return 0;}
 int rf_link_get_vendor_op_para_extend(u8 *ac,  int len_ac, u16 *op, u8 **params, int *par_len){return GET_OP_FAILED;}
 u32 is_op_need_extend_and_fill_op_par(u16 op, u8 *ac_sig_out, u8 *par, u32 par_len){return 0;}
 u32 is_op_need_extend_and_remove_op_par(u8 *rc_rsp_data, u8 *ac, int len_ac){return 0;}
@@ -5741,7 +6458,7 @@ void clock_switch_to_highest()
 #if (!WIN32 && !__TLSR_RISCV_EN__ && (MCU_CORE_TYPE >= MCU_CORE_8258))
 	#if (CLOCK_SYS_CLOCK_HZ < 48000000)
 	u32 r = irq_disable();
-	clock_init(SYS_CLK_48M_Crystal);
+	sys_clock_init(SYS_CLK_48M_Crystal);
 	irq_restore(r);
 	#endif
 #endif
@@ -5752,7 +6469,7 @@ void clock_switch_to_normal()
 #if (!WIN32 && !__TLSR_RISCV_EN__ && (MCU_CORE_TYPE >= MCU_CORE_8258))
 	#if (CLOCK_SYS_CLOCK_HZ < 48000000)
 	u32 r = irq_disable();
-	clock_init(SYS_CLK_CRYSTAL);
+	sys_clock_init(SYS_CLK_CRYSTAL);
 	    #if ((MCU_CORE_TYPE == MCU_CORE_8258) && (CLOCK_SYS_CLOCK_HZ < 48000000))
 	analog_write(0x0c, 0xc4);   // restore DCDC
 	    #endif
@@ -5760,6 +6477,38 @@ void clock_switch_to_normal()
 	#endif
 #endif
 }
+
+#if (!WIN32 && (0 == __TLSR_RISCV_EN__))
+u64 mul32x32_64(u32 a, u32 b)
+{
+	u32 r = irq_disable(); // must, because mul32x32_64_org can not be reentry due to reading high 32bit of result from a register.
+	u64 mul32x32_64_org(u32 a, u32 b);
+	u64 result = mul32x32_64_org(a, b);
+	irq_restore(r);
+
+	return result;
+}
+
+#if 0
+void mz_mul1()		// TODO: parameter and return value
+{
+	u32 r = irq_disable();
+	u64 result = mz_mul1_org();
+	irq_restore(r);
+
+	return result;
+}
+#endif
+
+void mz_mul2 (unsigned int * r, unsigned int * a, int na, unsigned int b)
+{
+	u32 v_irq = irq_disable();
+	void mz_mul2_org (unsigned int * r, unsigned int * a, int na, unsigned int b);
+	mz_mul2_org(r, a, na, b);
+	irq_restore(v_irq);
+}
+#endif
+
 
 #if (EXTENDED_ADV_ENABLE)
 	
@@ -5770,6 +6519,8 @@ void clock_switch_to_normal()
 #define APP_MAX_LENGTH_ADV_DATA					  320		// Maximum Advertising Data Length,   (if legacy ADV, max length 31 bytes is enough)
 #define APP_MAX_LENGTH_SCAN_RESPONSE_DATA		  31		// Maximum Scan Response Data Length, (if legacy ADV, max length 31 bytes is enough)
 
+#define	USER_EXT_ADV_FILTER_EN					  0         // Telink mesh message receive rf_pkt_aux_adv_ind_1 format only. User can set to 1 and add your filter rules in mesh_blc_aux_adv_filter(), then your ADV will be reported to app_event_handler().
+#define MAX_AUX_OFFSET_MS_DEF					  3			
 
 //_attribute_data_retention_
 u8	app_adv_set_param[ADV_SET_PARAM_LENGTH * APP_ADV_SETS_NUMBER];
@@ -5781,6 +6532,7 @@ u8	app_secondary_adv_pkt[MAX_LENGTH_SECOND_ADV_PKT * APP_ADV_SETS_NUMBER];
 u8	app_advData[APP_MAX_LENGTH_ADV_DATA * APP_ADV_SETS_NUMBER];
 //_attribute_data_retention_
 u8	app_scanRspData[APP_MAX_LENGTH_SCAN_RESPONSE_DATA * APP_ADV_SETS_NUMBER];
+extern u8 max_aux_offset_ms;
 
 
 void mesh_blc_ll_initExtendedAdv()
@@ -5790,6 +6542,12 @@ void mesh_blc_ll_initExtendedAdv()
     blc_ll_initExtAdvDataBuffer(app_advData, APP_MAX_LENGTH_ADV_DATA);
     //  blc_ll_initExtScanRspDataBuffer(app_scanRspData, APP_MAX_LENGTH_SCAN_RESPONSE_DATA);
     blc_ll_setAuxAdvChnIdxByCustomers(0);
+	
+#if USER_EXT_ADV_FILTER_EN 
+	max_aux_offset_ms = 30;	// make sure larger than MAX_AUX_OFFSET_MS_DEF. ADV_EXT_IND and AUX_ADV_IND are received in one rf irq. 3ms(MAX_AUX_OFFSET_MS_DEF) is not enough.
+#else
+	max_aux_offset_ms = MAX_AUX_OFFSET_MS_DEF; 	// auxiliary offset max is 3ms by default.
+#endif
 }
 
 void mesh_blc_ll_setExtAdvData(u8 adv_pdu_len, u8 *data)    // called in blt library
@@ -5835,6 +6593,104 @@ u8 mesh_blc_ll_setExtAdvParamAndEnable()
 
     return status;
 }
+
+typedef struct{	
+	u8 nid  :7;
+	u8 ivi  :1;
+	u8 ttl  :7;
+	u8 ctl  :1;
+    u8 sno[3];
+    u16 src;
+    u16 dst;
+    u8 obfuse_other_random[5];    // 5 = (6 + (7-1))-sizeof(sno,src,dst) // obfuscation will use data to "memcpy (random + 9, p_ctl + 6, 7);"
+}mesh_nw_obfuse_t;
+
+typedef struct{	
+    u8 len;
+    u8 type;    // adv type
+	mesh_nw_obfuse_t nw_obfuse;
+}mesh_cmd_bear_obfuse_t;
+
+/**
+ * @brief       This function will be called when sequence number is received. 
+ *              This function decrypt obfuse then check cache if sequence number of network layer is old. 
+ *              if yes, then current packet receiving will be abort to save time, then it can spend more time to scan other valid packets.
+ * @param[in]   p_adv_data	- pointer to adv data.
+ * @return      
+ * @note        
+ */
+_attribute_ram_code_ int irq_mesh_sec_msg_check_cache(u8 *p_adv_data)
+{
+
+	//u32 r = irq_disable(); // no need disable, because call in irq.
+	u32 iv_rx_backup = iv_idx_st.iv_rx;
+	mesh_cmd_bear_obfuse_t *p_bear_obfuse = (mesh_cmd_bear_obfuse_t *)p_adv_data;
+	int err = -1;
+	if((MESH_ADV_TYPE_MESSAGE == p_bear_obfuse->type) || (MESH_ADV_TYPE_PRO == p_bear_obfuse->type) || (MESH_ADV_TYPE_BEACON == p_bear_obfuse->type)){
+		err = 0;
+		if((MESH_ADV_TYPE_MESSAGE == p_bear_obfuse->type) && (p_bear_obfuse->len >= 40)){
+			#if (__TLSR_RISCV_EN__)
+			// irq state can not call function which is not all ramcode.
+			#else
+			err = mesh_sec_msg_dec_nw((u8 *)&p_bear_obfuse->nw_obfuse, sizeof(p_bear_obfuse->nw_obfuse), p_bear_obfuse->nw_obfuse.nid, NONCE_TYPE_NETWORK, MESH_BEAR_ADV, 1); // cost about 240us when 48MHz
+			#endif
+		}
+	}
+	
+	iv_idx_st.iv_rx = iv_rx_backup; // need to restore iv rx, because called in irq.
+	//irq_restore(r);
+
+	return err;
+}
+
+/**
+ * @brief       This function server to pre filter extended adv.
+ * @param[in]   raw_pkt	- raw_data packet.
+ * @return      0: drop aux_ext_adv;  1: accept aux_ext_adv.
+ * @note        sdk will wait rf packet receive complete if return 1. Otherwise will ignore directly to save time.
+ */
+_attribute_ram_code_ int mesh_blc_aux_adv_filter(u8 *raw_pkt)
+{
+	int accept_flag = 0;
+	u32 rx_begin_tick = clock_time ();
+	rf_pkt_ext_adv_t *pExtAdv = (rf_pkt_ext_adv_t *)raw_pkt;
+
+    while(!(reg_rf_irq_status & FLD_RF_IRQ_RX)){		
+		if (clock_time_exceed(rx_begin_tick, 8*(sizeof(rf_pkt_aux_adv_ind_1) + sizeof(mesh_cmd_bear_obfuse_t)))){ // margin = (50(wait ph before) + sizeof(dma_len)*8)us.
+    		// can not compare dma len which is valid only when rx completed. 	
+			
+			 if ((pExtAdv->type == LL_TYPE_ADV_EXT_IND)
+			 && (pExtAdv->ext_hdr_len == 9)
+			 && (pExtAdv->adv_mode == BLE_LL_EXT_ADV_MODE_NON_CONN_NON_SCAN)
+			 && (pExtAdv->ext_hdr_flg == (EXTHD_BIT_ADVA | EXTHD_BIT_ADI))){
+				// Telink mesh message use rf_pkt_aux_adv_ind_1 format. Discard in advance while receiving the unexpected message to save time.
+			 	rf_pkt_aux_adv_ind_1 *p_ind = (rf_pkt_aux_adv_ind_1 *)raw_pkt;
+			 	mesh_cmd_bear_obfuse_t *p_rx_obfuse = (mesh_cmd_bear_obfuse_t *)p_ind->dat;
+			 	mesh_cmd_bear_obfuse_t bear_obfuse;
+			 	
+			 	memcpy(&bear_obfuse, p_rx_obfuse, sizeof(bear_obfuse));
+			 	if(0 == irq_mesh_sec_msg_check_cache((u8 *)&bear_obfuse)){ // cost about 240us when 48MHz
+				 	accept_flag = 1;
+				}
+			}
+			 
+			break;
+    	}
+    }	
+
+#if USER_EXT_ADV_FILTER_EN  
+	// user can set rules to filter the extend adv.
+	if(is_provision_success()){
+		max_aux_offset_ms = MAX_AUX_OFFSET_MS_DEF;
+	}else if(0 == accept_flag){ 
+		if(BLE_LL_EXT_ADV_MODE_NON_CONN_NON_SCAN == pExtAdv->adv_mode){ 
+			accept_flag = 1; 
+		}
+	}
+#endif	
+
+	return accept_flag;
+}
 #endif
 
 u32 mesh_max_payload_get (u32 ctl, bool4 extend_adv_short_unseg)
@@ -5854,7 +6710,8 @@ u32 mesh_max_payload_get (u32 ctl, bool4 extend_adv_short_unseg)
 }
 
 #if (GATEWAY_ENABLE && EXTENDED_ADV_ENABLE)
-u8 g_gw_extend_adv_option = EXTEND_ADV_OPTION_OTA_ONLY;
+u8 g_gw_extend_adv_option = EXTEND_ADV_OPTION_OTA_ONLY; /* will be set to EXTEND_ADV_OPTION_NONE by "sig_mesh_tool.exe" as defeult.
+                                                           user can set this option by ListBox of "Extend Adv"*/
 #endif
 
 /*
@@ -5862,8 +6719,19 @@ u8 g_gw_extend_adv_option = EXTEND_ADV_OPTION_OTA_ONLY;
  * @retval: 1 means to not use extend adv to send message even if support.
  *          in some cases, only some OTA op codes use extend adv to get a faster OTA. others use no extend adv for compatibility.
 */
+
+/**
+ * @brief       This function check is not use extend adv
+ * @param[in]   op	- opcode
+ * @return      0:use extend; 1:not extend 
+ * @note        
+ */
 int is_not_use_extend_adv(u16 op)
 {
+#if DEBUG_PUBLISH_REDUCE_COLLISION_TEST_EN
+    return 0;
+#endif
+
 #if (WIN32 || (GATEWAY_ENABLE && EXTENDED_ADV_ENABLE))
     #if WIN32
     u8 option_val = isVC_DLEModeExtendBearer();
@@ -5880,23 +6748,39 @@ int is_not_use_extend_adv(u16 op)
 
     // -- EXTEND_ADV_OPTION_OTA_ONLY
 #if ((MESH_DLE_MODE == MESH_DLE_MODE_EXTEND_BEAR) || WIN32)
-    if((EXTEND_PROVISION_FLAG_OP == op)	// for provision
-    #if AUDIO_MESH_EN
+    if(0
+    // || (IS_VENDOR_OP(op))
+    #if EXTENDED_ADV_PROV_ENABLE
+    || (EXTEND_PROVISION_FLAG_OP == op)	// for provision, such as public key and provision data.
+		#if (MD_REMOTE_PROV)
+    || ((op >= REMOTE_PROV_SCAN_CAPA_GET) && (op <= REMOTE_PROV_PDU_REPORT)) // remote provision
+    	#endif
+	#endif
+	#if AUDIO_MESH_EN
     || (VD_ASYNC_AUDIO_DATA == op)
     #endif
-    || (FW_UPDATE_START == op)||(BLOB_CHUNK_TRANSFER == op)||(BLOB_BLOCK_STATUS == op)||(BLOB_PARTIAL_BLOCK_REPORT == op)){  // TODO : only Chunk data now.
+	#if PAIR_PROVISION_ENABLE
+    || (VD_PAIR_PROV_DISTRIBUTE_DATA == op) || (VD_PAIR_PROV_CONFIRM == op)
+	#endif
+    || ((FW_UPDATE_START == op)||(BLOB_CHUNK_TRANSFER == op)||(BLOB_BLOCK_STATUS == op)||(BLOB_PARTIAL_BLOCK_REPORT == op))  // TODO : only Chunk data now.
+    ){
         // use update start message to check whether node support extend adv
         return 0;
     }else{
-    	#if ((0 == EXTENDED_ADV_TX_TEST_EN) && (0 == MESH_RX_TEST))
         return 1;
-        #endif
     }
 #endif
 
     return 0;
 }
 
+
+/**
+ * @brief       This function check is not use extend adv for control message.
+ * @param[in]   ctl_op	- ctl opcode
+ * @return      0:use; 1:not use
+ * @note        
+ */
 int is_not_use_extend_adv_ctl(u16 ctl_op)
 {
 #if ((MESH_DLE_MODE == MESH_DLE_MODE_EXTEND_BEAR) || WIN32)
@@ -5905,6 +6789,133 @@ int is_not_use_extend_adv_ctl(u16 ctl_op)
 
     return 0;
 }
+
+#if BLE_REMOTE_SECURITY_ENABLE
+void blc_smp_module_disable() 
+{
+	// just disable weak function in lib to save code. 
+}
+#endif
+
+#if (((MCU_CORE_TYPE == MCU_CORE_8258) || (MCU_CORE_TYPE == MCU_CORE_8278)) && !WIN32)
+/**
+ * @brief       This function server to get cpu wakeup source
+ * @return      CPU_WATCHDOG_RESET: watchdog reset. 
+ *				CPU_PAD_WAKEUP: gpio wakeup. 
+ *				CPU_TIMER_WAKEUP: timer wakeup.
+ *				CPU_POWER_RESET: power reset.
+ * @note        calling this function must be after "cpu_wakeup init()" because can not read anlog,
+                and must before wakeup io setting(if exist).
+ */
+int get_cpu_wakeup_source()
+{
+	if(read_reg8(0x72) & BIT(0)){
+		write_reg8(0x72, BIT(0)); // manual clear watchdog reset flag after read.
+		return CPU_WATCHDOG_RESET;
+	}
+
+	u8 val = analog_read(0x44);
+	if((val & WAKEUP_STATUS_TIMER_PAD ) == WAKEUP_STATUS_PAD){
+		return CPU_PAD_WAKEUP;
+	}
+	else if((val & WAKEUP_STATUS_TIMER_CORE ) == WAKEUP_STATUS_TIMER_CORE){
+		return CPU_TIMER_WAKEUP;
+	}
+
+	return CPU_POWER_RESET;
+}
+#endif
+
+#if (/*MD_MESH_OTA_EN && */(DISTRIBUTOR_UPDATE_SERVER_EN || FEATURE_LOWPOWER_EN))
+#if !WIN32
+STATIC_ASSERT(!(DISTRIBUTOR_UPDATE_SERVER_EN && FEATURE_LOWPOWER_EN)); // FLD_MESH_OTA_100 FLAG is gatt connected flag before OTA reboot for LPN.
+
+/**
+ * @brief       This function set mesh ota distribute 100% flag for none LPN.
+ * @return      none
+ * @note        for LPN it is used for gatt connected flag before OTA reboot.
+ */
+void set_mesh_ota_distribute_100_flag()
+{
+	analog_write(DEEP_ANA_REG0, analog_read(DEEP_ANA_REG0) | FLD_MESH_OTA_100_FLAG);
+}
+
+/**
+ * @brief       This function clear mesh ota distribute 100% flag for none LPN.
+ * @return      none
+ * @note        for LPN it is used for gatt connected flag before OTA reboot.
+ */
+void clr_mesh_ota_distribute_100_flag()
+{
+	analog_write(DEEP_ANA_REG0, analog_read(DEEP_ANA_REG0) & (~ FLD_MESH_OTA_100_FLAG));
+}
+
+/**
+ * @brief       This function get mesh ota distribute 100% flag for none LPN.
+ * @return      1: yes, 0: no.
+ * @note        for LPN it is used for gatt connected flag before OTA reboot.
+ */
+int is_mesh_ota_distribute_100_flag()
+{
+	return (analog_read(DEEP_ANA_REG0) & FLD_MESH_OTA_100_FLAG);
+}
+#else
+void set_mesh_ota_distribute_100_flag()
+{
+	LOG_MSG_INFO (TL_LOG_CMD_NAME, 0, 0, "___________________ mesh ota update VC self success! in DISTRIBUTOR_NO_UPDATA_START_2_SELF mode!");
+}
+#endif
+#endif
+
+#if !WIN32
+/**
+ * @brief       This function check if the startup flag is valid
+ * @param[in]   flag_addr		- address of startup flag
+ * @param[in]   check_all_flag	- 1: check all 4 bytes of the flag. 0: check 3 bytes of the flag, and the first byte can be 0x4B or 0xFF. 
+ * @return      1: valid. 0: invalid.
+ * @note        
+ */
+int is_valid_startup_flag(u32 flag_addr, int check_all_flag)
+{
+    u32 fw_flag_telink = START_UP_FLAG;
+    u32 flag_new = 0;
+	flash_read_page(flag_addr, sizeof(flag_new), (u8 *)&flag_new);
+	if(0 == check_all_flag){
+		flag_new &= 0xffffff4b;
+	}
+	
+    if(flag_new != fw_flag_telink){
+        return 0; // invalid flag
+    }
+
+    return 1;
+}
+
+/**
+ * @brief       This function check startup flag of current firmware. will reboot if found error.
+ * @return      none
+ * @note        
+ */
+void check_self_startup_flag(void)
+{
+#if (__TLSR_RISCV_EN__)
+	u32 addr_current_fw = (ota_program_offset ? 0 : ota_program_bootAddr) + BOOT_MARK_ADDR;
+#elif(__TL_LIB_8267__ || (MCU_CORE_TYPE && MCU_CORE_TYPE == MCU_CORE_8267) || __TL_LIB_8269__ || (MCU_CORE_TYPE && MCU_CORE_TYPE == MCU_CORE_8269))
+	u32 addr_current_fw = (ota_program_offset ? 0 : 0x40000) + 8;
+#elif(__TL_LIB_8258__ || (MCU_CORE_TYPE && MCU_CORE_TYPE == MCU_CORE_8258) || (MCU_CORE_TYPE == MCU_CORE_8278)) //8258
+	u32 addr_current_fw = (ota_program_offset ? 0 : ota_program_bootAddr) + 8;
+#endif
+	if(0 == is_valid_startup_flag(addr_current_fw, 1)){
+		// should not happen here.
+		// this error may cause by flash read error due to low voltage of power. in this case, 63e is error, such as 0 was changed to 512k.
+		sleep_us(1000 * 1000);
+		
+		//LOG_MSG_ERR(TL_LOG_MESH, 0, 0, "startup flag error!");
+		start_reboot();
+		//while(1); // did while(1) inside start_reboot_.
+	}
+}
+#endif
 
 /**
   * @}

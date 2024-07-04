@@ -1,10 +1,10 @@
 /********************************************************************************************************
- * @file     smp_storage.h
+ * @file    smp_storage.h
  *
- * @brief    This is the header file for BLE SDK
+ * @brief   This is the header file for BLE SDK
  *
- * @author	 BLE GROUP
- * @date         2020.06
+ * @author  BLE GROUP
+ * @date    06,2022
  *
  * @par     Copyright (c) 2022, Telink Semiconductor (Shanghai) Co., Ltd. ("TELINK")
  *
@@ -19,27 +19,21 @@
  *          WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  *          See the License for the specific language governing permissions and
  *          limitations under the License.
+ *
  *******************************************************************************************************/
-
 #ifndef SMP_STORAGE_H_
 #define SMP_STORAGE_H_
 
 
-
-
-/*
- *  Address resolution is not supported by default. After pairing and binding, we need to obtain the central Address Resolution
- *  feature value of the opposite end to determine whether the opposite end supports the address resolution function, and write
- *  the result to smp_bonding_flg. Currently, we leave it to the user to obtain this feature.
+/**
+ * @brief   strategy for how to deal with new paring device when bonding device number reach maximum number(set by API "blc_smp_setBondingDeviceMaxNumber")
  */
-#define 	IS_PEER_ADDR_RES_SUPPORT(peerAddrResSuppFlg)	(!(peerAddrResSuppFlg & BIT(7)))
-
-
 typedef enum {
-	Index_Update_by_Pairing_Order = 0,     //default value
-	Index_Update_by_Connect_Order = 1,
-} index_updateMethod_t;
+	NEW_DEVICE_OVERWRITE_OLD_WITH_PAIRING_ORDER = 0,
 
+	NEW_DEVICE_REJECT_WHEN_PER_MAX_BONDING_NUM	= 4,		//When peripheral reach it's max bonding centrals, it reject new pair req.
+//	NEW_DEVICE_REJECT_WHEN_CEN_MAX_BONDING_NUM	= 5,		//Not supported now.
+}dev_exceed_max_strategy_t;
 
 /*
  * smp parameter need save to flash.
@@ -47,7 +41,7 @@ typedef enum {
 typedef struct {
 	//0x00
 	u8		flag;
-	u8		role_dev_idx;  //[7]:1 for master, 0 for slave;   [2:0] slave device index
+	u8		role_dev_idx;  //[7]:1 for ACL Central, 0 for ACL Peripheral;   [2:0] ACL Peripheral device index
 
 	// peer_addr_type & peer_addr must be together(SiHui 20200916), cause using flash read packed "type&address" in code
 	u8		peer_addr_type;  //address used in link layer connection
@@ -57,10 +51,10 @@ typedef struct {
 	u8		peer_id_addr[6];
 
 	//0x10
-	u8 		local_peer_ltk[16];   //slave: local_ltk; master: peer_ltk
+	u8 		local_peer_ltk[16];   //ACL Peripheral: local_ltk; ACL Central: peer_ltk
 
 	//0x20
-	u8 		encryt_key_size;
+	u8 		encrypt_key_size;
 	u8		local_id_adrType;
 	u8		local_id_addr[6];
 
@@ -91,12 +85,12 @@ void 			blc_smp_configPairingSecurityInfoStorageAddressAndSize (int address, int
 
 
 /**
- * @brief      This function is used to configure the number of master and slave devices that can be bound.
- * @param[in]  peer_slave_max - The number of slave devices that can be bound.
- * @param[in]  peer_master_max - The number of master devices that can be bound.
- * @return     none.
+ * @brief      This function is used to configure the number of ACL Central and ACL Peripheral devices that can be bound.
+ * @param[in]  cen_max_bonNum - The number of ACL Central devices that can be bound.
+ * @param[in]  per_max_bondNum - The number of ACL Peripheral devices that can be bound.
+ * @return     ble_sts_t.
  */
-void 			blc_smp_setBondingDeviceMaxNumber ( int peer_slave_max, int peer_master_max);
+ble_sts_t 		blc_smp_setBondingDeviceMaxNumber ( int cen_max_bonNum, int per_max_bondNum);
 
 
 /**
@@ -107,18 +101,17 @@ void 			blc_smp_setBondingDeviceMaxNumber ( int peer_slave_max, int peer_master_
 u32 			blc_smp_getBondingInfoCurStartAddr(void);
 
 
-//Search
-// This API is for master only, to search if current slave device is already paired with master
 /**
- * @brief      This function is used to obtain binding information according to the slave's address and address type.
+ * @brief      This function is used to obtain binding information according to the ACL Peripheral address and address type.
+ * 			   This API is for ACL Central only, to search if current ACL Peripheral device is already paired with ACL Central
  * @param[in]  peer_addr_type - Address type.
  * @param[in]  peer_addr - Address.
  * @return     0: Failed to get binding information;
  *             others: FLASH address of the information area.
  */
-u32 			blc_smp_searchBondingSlaveDevice_by_PeerMacAddress( u8 peer_addr_type, u8* peer_addr);
+u32 			blc_smp_searchBondingPeripheralDevice_by_PeerMacAddress( u8 peer_addr_type, u8* peer_addr);
 
-//Delete
+
 /**
  * @brief      This function is used to delete binding information according to the peer device address and device address type.
  * @param[in]  peer_addr_type - Address type.
@@ -126,17 +119,15 @@ u32 			blc_smp_searchBondingSlaveDevice_by_PeerMacAddress( u8 peer_addr_type, u8
  * @return     0: Failed to delete binding information;
  *             others: FLASH address of the deleted information area.
  */
-int				blc_smp_deleteBondingSlaveInfo_by_PeerMacAddress(u8 peer_addr_type, u8* peer_addr);
+int				blc_smp_deleteBondingPeripheralInfo_by_PeerMacAddress(u8 peer_addr_type, u8* peer_addr);
 
 
 /**
- * @brief      This function is used to configure the storage order of binding information.
- * @param[in]  method - The storage order of binding info method value can refer to the structure 'index_updateMethod_t'.
- *                      0: Index update by pairing order;
- *                      1: Index update by connect order.
+ * @brief      This function is used to configure the bonding strategy.
+ * @param[in]  strategy - The strategy. Refer to the structure 'dev_exceed_max_strategy_t'.
  * @return     none.
  */
-void			blc_smp_setBondingInfoIndexUpdateMethod(index_updateMethod_t method);
+void			blc_smp_setDevExceedMaxStrategy(dev_exceed_max_strategy_t strategy);
 
 
 /**
@@ -158,44 +149,64 @@ bool 			blc_smp_isBondingInfoStorageLowAlarmed(void);
 
 /**
  * @brief      This function is used to load bonding information according to the peer device address and device address type.
- * @param[in]  isMaster - Is it a Master role: 0: slave role, others: master role.
- * @param[in]  slaveDevIdx - Address.
+ * @param[in]  isCentral - ACL Connection role,  0: ACL Peripheral role, others: ACL Central role.
+ * @param[in]  perDevIdx - ACL Peripheral device index under multiple local device mode
+ * 				  1. if "isCentral" is none zero:  ACL Central device
+ * 					  so "perDevIdx" invalid, whatever value will be neglected
+ * 				  2. if "isCentral" is 0: ACL Peripheral device
+ * 				      this value is only valid when multiple local device function enabled by using API "blc_ll_setMultipleLocalDeviceEnable"
+ * 				      notice that multiple local device is a very special function, we believe that most users will not involve this function.
+ * 				      user can only use this function when they fully understand it.
+ * 				  	 (A). if user do use multiple local device function, "perDevIdx" is ACL Peripheral device index
+ * 				  	 (B). if user do not use multiple local device function
+ * 				  	 	  there is only one local device,"perDevIdx" must be 0.
+ * 				  	 	  if user set a value not equal to 0, SDK code will change it to 0 automatically to avoid error.
  * @param[in]  addr_type - Address type.
  * @param[in]  addr - Address.
  * @param[out] smp_param_load - bonding information.
  * @return     0: Failed to find the binding information; others: FLASH address of the bonding information area.
  */
-u32				blc_smp_loadBondingInfoByAddr(u8 isMaster, u8 slaveDevIdx, u8 addr_type, u8* addr, smp_param_save_t* smp_param_load);
+u32				blc_smp_loadBondingInfoByAddr(u8 isCentral, u8 perDevIdx, u8 addr_type, u8* addr, smp_param_save_t* smp_param_load);
 
 
 /**
  * @brief      This function is used to get the bonding information numbers.
- * @param[in]  isMaster - Is it a Master role: 0: slave role, others: master role.
- * @param[in]  slaveDevIdx - Address.
+ * @param[in]  isCentral - ACL Connection role, 0: ACL Peripheral role, others: ACL Central role.
+ * @param[in]  perDevIdx - ACL Peripheral device index under multiple local device mode
+ * 				  1. if "isCentral" is none zero:  ACL Central device
+ * 					  so "perDevIdx" invalid, whatever value will be neglected
+ * 				  2. if "isCentral" is 0: ACL Peripheral device
+ * 				      this value is only valid when multiple local device function enabled by using API "blc_ll_setMultipleLocalDeviceEnable"
+ * 				      notice that multiple local device is a very special function, we believe that most users will not involve this function.
+ * 				      user can only use this function when they fully understand it.
+ * 				  	 (A). if user do use multiple local device function, "perDevIdx" is ACL Peripheral device index
+ * 				  	 (B). if user do not use multiple local device function
+ * 				  	 	  there is only one local device,"perDevIdx" must be 0.
+ * 				  	 	  if user set a value not equal to 0, SDK code will change it to 0 automatically to avoid error.
  * @return     0: The number of bound devices is 0; others: Number of bound devices.
  */
-u8				blc_smp_param_getCurrentBondingDeviceNumber(u8 isMasterRole, u8 slaveDevIdx);
+u8				blc_smp_param_getCurrentBondingDeviceNumber(u8 isCentral, u8 perDevIdx);
 
 
 /**
  * @brief      This function is used to load bonding information according to the index.
- * @param[in]  isMaster - Is it a Master role: 0: slave role, others: master role.
- * @param[in]  slaveDevIdx - Address.
+ * @param[in]  isCentral - ACL Connection role, 0: ACL Peripheral role, others: ACL Central role.
+ * @param[in]  perDevIdx - ACL Peripheral device index under multiple local device mode
+ * 				  1. if "isCentral" is none zero:  ACL Central device
+ * 					  so "perDevIdx" invalid, whatever value will be neglected
+ * 				  2. if "isCentral" is 0: ACL Peripheral device
+ * 				      this value is only valid when multiple local device function enabled by using API "blc_ll_setMultipleLocalDeviceEnable"
+ * 				      notice that multiple local device is a very special function, we believe that most users will not involve this function.
+ * 				      user can only use this function when they fully understand it.
+ * 				  	 (A). if user do use multiple local device function, "perDevIdx" is ACL Peripheral device index
+ * 				  	 (B). if user do not use multiple local device function
+ * 				  	 	  there is only one local device,"perDevIdx" must be 0.
+ * 				  	 	  if user set a value not equal to 0, SDK code will change it to 0 automatically to avoid error.
  * @param[in]  index - bonding index.
  * @param[out] smp_param_load - bonding information.
  * @return     0: Failed to find the binding information; others: FLASH address of the bonding information area.
  */
-u32				blc_smp_loadBondingInfoFromFlashByIndex(u8 isMaster, u8 slaveDevIdx, u8 index, smp_param_save_t* smp_param_load);
-
-
-/**
- * @brief      This function is used to delete binding information according to the peer device address and device address type.
- * @param[in]  peer_addr_type - Address type.
- * @param[in]  peer_addr - Address.
- * @return     0: Failed to delete binding information;
- *             others: FLASH address of the deleted information area.
- */
-int				blc_smp_setPeerAddrResSupportFlg(u32 flash_addr, u8 support);
+u32				blc_smp_loadBondingInfoFromFlashByIndex(u8 isCentral, u8 perDevIdx, u8 index, smp_param_save_t* smp_param_load);
 
 
 #endif /* SMP_STORAGE_H_ */

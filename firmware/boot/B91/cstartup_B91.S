@@ -1,10 +1,10 @@
 /********************************************************************************************************
- * @file     cstartup_B91.S
+ * @file    cstartup_B91.S
  *
- * @brief    This is the boot file for BLE SDK
+ * @brief   This is the boot file for BLE SDK
  *
- * @author	 BLE GROUP
- * @date         11,2022
+ * @author  BLE GROUP
+ * @date    06,2022
  *
  * @par     Copyright (c) 2022, Telink Semiconductor (Shanghai) Co., Ltd. ("TELINK")
  *
@@ -19,12 +19,27 @@
  *          WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  *          See the License for the specific language governing permissions and
  *          limitations under the License.
+ *
  *******************************************************************************************************/
+#include "user_config.h"
+	
+#if (AUDIO_MESH_EN)
+	.equ __STACK_INIT_SIZE__,	(9*1024)
+#else
+	.equ __STACK_INIT_SIZE__,	(5*1024)
+#endif
+	.global  __STACK_INIT_SIZE__			// include normal stack and irq stack
+
+#ifdef __BOOT_SWITCH_APP1__
+	.equ __BOOT_SWITCH_FLASH_ADDR, 0x200EA000
+#else
+	.equ __BOOT_SWITCH_FLASH_ADDR, 0x20000000
+#endif
 
 #if	1	/*default is open*/
-	#include "../../../vendor/common/version.h"
     .section .vectors, "ax"
-
+    .global	__BOOT_SWITCH_FLASH_ADDR
+    
     //.org  and linker's relaxation (-flto) cannot be used at the same time
     //Pop corresponds to push. Before using .option norelax, use push to save the current .option configuration
     //and then modify .option. After using norelax, use pop to restore
@@ -39,8 +54,14 @@
     .align 2
 _RESET_ENTRY:
 	j 		 _START
-	.word	(BUILD_VERSION)
+	.word	(BUILD_VERSION)	
 	//free the 6th ~ 7th byte to store the crc type of the bin file
+
+/* used to check flash protection function consistency between the old and new  firmware when OTA upgrading */
+#if	APP_FLASH_PROTECTION_ENABLE
+	.org 0x15    //correspond to "FIRMWARE_FLASH_PROTECTION_FLAG_ADDR" in mcu_boot.h
+	.byte (0x5A)
+#endif
     .org 0x18
     .word (BIN_SIZE)
 
@@ -181,10 +202,58 @@ _ZERO_BSS:
     la     t2, _BSS_VMA_START
     la     t3, _BSS_VMA_END
 _ZERO_BSS_BEGIN:
+    bleu   t3, t2, _NO_RET_DATA_INIT
+    sw	   t0, 0(t2)
+    addi   t2, t2, 4
+    j	   _ZERO_BSS_BEGIN
+
+    /* Move No Retention Data from flash to sram */
+_NO_RET_DATA_INIT:
+    la	   t1, _NO_RETENTION_DATA_LMA_START
+    la	   t2, _NO_RETENTION_DATA_VMA_START
+    la	   t3, _NO_RETENTION_DATA_VMA_END
+_NO_RET_DATA_INIT_BEGIN:
+    bleu   t3, t2, _NO_RET_BSS_INIT
+    lw	   t0, 0(t1)
+    sw	   t0, 0(t2)
+    addi   t1, t1, 4
+    addi   t2, t2, 4
+    j	   _NO_RET_DATA_INIT_BEGIN
+
+    /* Zero .no ret bss section in sram */
+_NO_RET_BSS_INIT:
+    lui    t0, 0
+    la	   t2, _NO_RETENTION_BSS_VMA_START
+    la	   t3, _NO_RETENTION_BSS_VMA_END
+_NO_RET_BSS_BEGIN:
+    bleu   t3, t2, _DLM_DATA_INIT
+    sw	   t0, 0(t2)
+    addi   t2, t2, 4
+    j	   _NO_RET_BSS_BEGIN
+
+	/* Move DLM Data from flash to sram */
+_DLM_DATA_INIT:
+    la	   t1, _DLM_DATA_LMA_START
+    la	   t2, _DLM_DATA_VMA_START
+    la	   t3, _DLM_DATA_VMA_END
+_DLM_DATA_INIT_BEGIN:
+    bleu   t3, t2, _DLM_BSS_INIT
+    lw	   t0, 0(t1)
+    sw	   t0, 0(t2)
+    addi   t1, t1, 4
+    addi   t2, t2, 4
+    j	   _DLM_DATA_INIT_BEGIN
+
+    /* Zero .dlm bss section in sram */
+_DLM_BSS_INIT:
+    lui    t0, 0
+    la	   t2, _DLM_BSS_VMA_START
+    la	   t3, _DLM_BSS_VMA_END
+_DLM_BSS_BEGIN:
     bleu   t3, t2, _ZERO_AES
     sw     t0, 0(t2)
     addi   t2, t2, 4
-    j      _ZERO_BSS_BEGIN
+    j	   _DLM_BSS_BEGIN
 
 	/* Zero .aes section in sram */
 _ZERO_AES:
@@ -210,10 +279,10 @@ _ZERO_IRAM_BSS_BEGIN:
 
 	/* Fill the remaining section in sram */
 _FILL_STK:
-#if 0
+#if 1	// run only on powerup, so it is ok that enable as default.
     lui    t0, 0x55555
     addi   t0, t0, 0x555
-    la     t2, _BSS_VMA_END
+    la     t2, (_STACK_TOP - (__STACK_INIT_SIZE__)) // _BSS_VMA_END // include IRQ stack. must 4 bytes aligned, if not will cause trap entry.
     la     t3, _STACK_TOP
 _FILL_STK_BEGIN:
     bleu   t3, t2, _MAIN_FUNC
@@ -361,9 +430,9 @@ _WAIT_EFUSE_LOAD_FINISH:
 
 _MULTI_ADDRESS_BEGIN:
 	lui		t0 , 0x80140
-	la		t1 , g_pm_multi_addr
+	la		t1 , g_pm_mspi_cfg
 	lw		t2 , 0(t1)
-	sw		t2 , 0x104(t0)			 //g_pm_multi_addr->0x80140104
+	sw		t2 , 0x104(t0)			 //g_pm_mspi_cfg->0x80140104
 
 
 #if 0
@@ -382,6 +451,7 @@ _IRAMCODE_INIT_BEGIN:
     j      _IRAMCODE_INIT_BEGIN
 #endif
 
+#if 0 // IRAM data/bss is retention as default, so no need init.
 	/* Move Data from flash to sram */
 _IDATA_INIT:
     la     t1, _DATA_LMA_START
@@ -403,10 +473,59 @@ _IZERO_BSS:
     la     t2, _BSS_VMA_START
     la     t3, _BSS_VMA_END
 _IZERO_BSS_BEGIN:
-    bleu   t3, t2, _IZERO_AES
+    bleu   t3, t2, _INO_RET_DATA_INIT
     sw     t0, 0(t2)
     addi   t2, t2, 4
     j      _IZERO_BSS_BEGIN
+#endif
+
+	/* Move No Retention Data from flash to sram */
+_INO_RET_DATA_INIT:
+    la     t1, _NO_RETENTION_DATA_LMA_START
+    la     t2, _NO_RETENTION_DATA_VMA_START
+    la     t3, _NO_RETENTION_DATA_VMA_END
+_INO_RET_DATA_INIT_BEGIN:
+    bleu   t3, t2, _INO_RET_BSS_INIT
+    lw     t0, 0(t1)
+    sw     t0, 0(t2)
+    addi   t1, t1, 4
+    addi   t2, t2, 4
+    j      _INO_RET_DATA_INIT_BEGIN
+
+	/* Zero .no ret bss section in sram */
+_INO_RET_BSS_INIT:
+    lui    t0, 0
+    la     t2, _NO_RETENTION_BSS_VMA_START
+    la     t3, _NO_RETENTION_BSS_VMA_END
+_INO_RET_BSS_BEGIN:
+    bleu   t3, t2, _IDLM_DATA_INIT
+    sw     t0, 0(t2)
+    addi   t2, t2, 4
+    j      _INO_RET_BSS_BEGIN
+
+    /* Move DLM Data from flash to sram */
+_IDLM_DATA_INIT:
+    la	   t1, _DLM_DATA_LMA_START
+    la	   t2, _DLM_DATA_VMA_START
+    la	   t3, _DLM_DATA_VMA_END
+_IDLM_DATA_INIT_BEGIN:
+    bleu   t3, t2, _IDLM_BSS_INIT
+    lw	   t0, 0(t1)
+    sw	   t0, 0(t2)
+    addi   t1, t1, 4
+    addi   t2, t2, 4
+    j	   _IDLM_DATA_INIT_BEGIN
+
+    /* Zero .dlm bss section in sram */
+_IDLM_BSS_INIT:
+    lui    t0, 0
+    la	   t2, _DLM_BSS_VMA_START
+    la	   t3, _DLM_BSS_VMA_END
+_IDLM_BSS_BEGIN:
+    bleu   t3, t2, _IZERO_AES
+    sw     t0, 0(t2)
+    addi   t2, t2, 4
+    j	   _IDLM_BSS_BEGIN
 
 	/* Zero .aes section in sram */
 _IZERO_AES:
@@ -422,10 +541,10 @@ _IZERO_AES_BEGIN:
 
 	/* Fill the remaining section in sram */
 _IFILL_STK:
-#if 0
+#if 0	// no init to save time
     lui    t0, 0x55555
     addi   t0, t0, 0x555
-    la     t2, _BSS_VMA_END
+    la     t2, (_STACK_TOP - (__STACK_INIT_SIZE__)) // _BSS_VMA_END // include IRQ stack. must 4 bytes aligned, if not will cause trap entry.
     la     t3, _STACK_TOP
 _IFILL_STK_BEGIN:
     bleu   t3, t2, _IMAIN_FUNC
@@ -469,7 +588,7 @@ default_irq_entry:
 
 #define VECTOR_NUMINTRS         63
 
-   	.section .ram_code, "ax"
+   	.section .ram_code, "ax" // __vectors need to be 256bytes align. if we set in ramcode section, ramcode will need 256 align, and __vectors will also 256byte align again.
 
 	.global __vectors
 	.balign 256

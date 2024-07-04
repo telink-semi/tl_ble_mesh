@@ -1,10 +1,10 @@
 /********************************************************************************************************
- * @file     usbkb.c
+ * @file    usbkb.c
  *
- * @brief    This is the source file for BLE SDK
+ * @brief   This is the source file for BLE SDK
  *
- * @author	 BLE GROUP
- * @date         2020.06
+ * @author  BLE GROUP
+ * @date    06,2022
  *
  * @par     Copyright (c) 2022, Telink Semiconductor (Shanghai) Co., Ltd. ("TELINK")
  *
@@ -19,13 +19,12 @@
  *          WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  *          See the License for the specific language governing permissions and
  *          limitations under the License.
+ *
  *******************************************************************************************************/
-
 #include "usbkb.h"
 #include "usbmouse.h"
 #include "application/usbstd/usb.h"
 #include "application/usbstd/usbkeycode.h"
-#include "application/rf_frame.h"
 
 
 u8 usb_fifo[USB_FIFO_NUM][USB_FIFO_SIZE];
@@ -119,7 +118,7 @@ static void usbkb_release_keys(void){
 	usbkb_release_media_key();
 }
 
-void usbkb_release_check(){
+void usbkb_release_check(void){
 	if(usbkb_not_released && clock_time_exceed(usbkb_data_report_time, USB_KEYBOARD_RELEASE_TIMEOUT)){
 		usbkb_release_keys();	 //  release keys
 	}

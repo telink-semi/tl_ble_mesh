@@ -1,12 +1,13 @@
 /********************************************************************************************************
- * @file     flash_fw_check.c
+ * @file	flash_fw_check.c
  *
- * @brief    This is the source file for BLE SDK
+ * @brief	for TLSR chips
  *
- * @author	 BLE GROUP
- * @date         2020.06
+ * @author	BLE Group
+ * @date	May. 12, 2018
  *
- * @par     Copyright (c) 2022, Telink Semiconductor (Shanghai) Co., Ltd. ("TELINK")
+ * @par     Copyright (c) 2017, Telink Semiconductor (Shanghai) Co., Ltd. ("TELINK")
+ *          All rights reserved.
  *
  *          Licensed under the Apache License, Version 2.0 (the "License");
  *          you may not use this file except in compliance with the License.
@@ -19,16 +20,14 @@
  *          WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  *          See the License for the specific language governing permissions and
  *          limitations under the License.
+ *
  *******************************************************************************************************/
-
-#if 1
-#include "tl_common.h"
 #include "drivers.h"
-#include "stack/ble/ble.h"
 #include "flash_fw_check.h"
 
-
-
+extern _attribute_data_retention_   u32		ota_program_offset;
+extern _attribute_data_retention_	u32		ota_program_bootAddr;
+extern unsigned long crc32_half_cal(unsigned long crc, unsigned char* input, unsigned long* table, int len);
 
 static const unsigned long fw_crc32_half_tbl[16] = {
 	0x00000000, 0x1db71064, 0x3b6e20c8, 0x26d930ac,
@@ -41,15 +40,12 @@ static const unsigned long fw_crc32_half_tbl[16] = {
 
 u32 fw_crc_init = 0xFFFFFFFF;
 
-/***********************************
- * this function must be called after the function sys_init.
- * sys_init will set the ota_program_offset value.
- */
 /**
  * @brief		This function is used to check the firmware is ok or not
  * @param[in]	crc_init_value - the initial value of CRC
  * @return		0 - CRC is check success
  * 				1 - CRC is check fail
+ * @note 		this function must be called after the function sys_init. sys_init will set the ota_program_offset value.
  */
 bool flash_fw_check( u32 crc_init_value ){
 
@@ -112,10 +108,18 @@ bool flash_fw_check( u32 crc_init_value ){
 	return 0; ///CRC check ok
 }
 
-#endif
 
 
 
+
+void blt_firmware_completeness_check(void)
+{
+	//user can use flash_fw_check() to check whether firmware in flash is modified.
+	//Advice user to do it only when power on.
+	if(flash_fw_check(0xffffffff)){ //if retrun 0, flash fw crc check ok. if retrun 1, flash fw crc check fail
+		while(1);				    //Users can process according to the actual application.
+	}
+}
 
 
 

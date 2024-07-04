@@ -1,10 +1,10 @@
 /********************************************************************************************************
- * @file     usbcdc.h
+ * @file    usbcdc.h
  *
- * @brief    This is the header file for BLE SDK
+ * @brief   This is the header file for BLE SDK
  *
- * @author	 BLE GROUP
- * @date         2020.06
+ * @author  BLE GROUP
+ * @date    06,2022
  *
  * @par     Copyright (c) 2022, Telink Semiconductor (Shanghai) Co., Ltd. ("TELINK")
  *
@@ -19,53 +19,33 @@
  *          WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  *          See the License for the specific language governing permissions and
  *          limitations under the License.
+ *
  *******************************************************************************************************/
-
 #pragma once
 
-#include "application/usbstd/CDCClassCommon.h"
-#include "application/usbstd/CDCClassDevice.h"
-#include "common/types.h"
-#include "common/bit.h"
 #include "tl_common.h"
-#include "drivers.h"
+#if USB_CDC_ENABLE
+#include "driver.h"
+#include "../usbstd/HIDClassCommon.h"
+#include "../usbstd/HIDReportData.h"
+#include "../usbstd/CDCClassDevice.h"
+#include "../usbstd/usbdesc.h"
+
+
 
 /* Enable C linkage for C++ Compilers: */
 #if defined(__cplusplus)
     extern "C" {
 #endif
 
+typedef void (*usb_cdc_read_cb_t)(unsigned char * data, unsigned short length);
 
-typedef void ( *cdc_handlerFn_t)( u8* pData);
+void usb_cdc_read(usb_cdc_read_cb_t cb);
 
-typedef struct {
-    u8 len;
-    u8 data[1];
-} usbcdc_txBuf_t;
-
-
-typedef enum usbcdc_sts_e {
-    // success = 0
-    USB_BUSY = 1,
-    USB_MULTIBLOCK,
-} usbcdc_sts_t;
-
-
-void CDC_Device_ProcessControlRequest(u8 bRequest, u16 wValue, u16 wIndex, u16 wLength);
-
-usbcdc_sts_t usbcdc_sendData(u8* buf, u8 len);
-u8   usbcdc_sendBulkData(void);
-
-u8   usbcdc_isAvailable(void);
-u8*  usbcdc_getData(void);
-void usbcdc_init(void);
-void usbcdc_setCB(cdc_handlerFn_t rxFunc, cdc_handlerFn_t txCb);
-void usbcdc_setRxBuf(u8 *buf);
-
-
-
+unsigned short usb_cdc_write(unsigned char * data, unsigned short length);
 
 /* Disable C linkage for C++ Compilers: */
 #if defined(__cplusplus)
     }
+#endif
 #endif

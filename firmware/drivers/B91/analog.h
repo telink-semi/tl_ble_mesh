@@ -1,12 +1,12 @@
 /********************************************************************************************************
- * @file     analog.h
+ * @file    analog.h
  *
- * @brief    This is the header file for BLE SDK
+ * @brief   This is the header file for B91
  *
- * @author	 BLE GROUP
- * @date         11,2022
+ * @author  Driver Group
+ * @date    2019
  *
- * @par     Copyright (c) 2022, Telink Semiconductor (Shanghai) Co., Ltd. ("TELINK")
+ * @par     Copyright (c) 2019, Telink Semiconductor (Shanghai) Co., Ltd. ("TELINK")
  *
  *          Licensed under the Apache License, Version 2.0 (the "License");
  *          you may not use this file except in compliance with the License.
@@ -19,14 +19,14 @@
  *          WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  *          See the License for the specific language governing permissions and
  *          limitations under the License.
+ *
  *******************************************************************************************************/
-
 /*******************************      analog control registers: 0xb8      ******************************/
 /**	@page ANALOG
  *
  *	Introduction
  *	===============
- *	TLSRB91 analog support dma and normal mode, in each mode, support byte/halfword/word/buffer write and read.
+ *	B91 analog support dma and normal mode, in each mode, support byte/halfword/word/buffer write and read.
  *
  *	API Reference
  *	===============
@@ -35,9 +35,9 @@
 #pragma once
 
 
+#include "reg_include/register.h"
 #include "dma.h"
 #include "compiler.h"
-#include "reg_include/register_b91.h"
 
 /**********************************************************************************************************************
  *                                         global constants                                                           *
@@ -78,7 +78,7 @@ _attribute_ram_code_sec_noinline_ void analog_write_reg8(unsigned char addr, uns
  * @param[in]  addr - address need to be read.
  * @return     the result of read.
  */
-unsigned short analog_read_reg16(unsigned char addr);
+_attribute_ram_code_sec_noinline_ unsigned short analog_read_reg16(unsigned char addr);
 
 /**
  * @brief      This function serves to analog register write by halfword.
@@ -86,14 +86,14 @@ unsigned short analog_read_reg16(unsigned char addr);
  * @param[in]  data - the value need to be write.
  * @return     none.
  */
-void analog_write_reg16(unsigned char addr, unsigned short data);
+_attribute_ram_code_sec_noinline_ void analog_write_reg16(unsigned char addr, unsigned short data);
 
 /**
  * @brief      This function serves to analog register read by word.
  * @param[in]  addr - address need to be read.
  * @return     the result of read.
  */
- unsigned int analog_read_reg32(unsigned char addr);
+_attribute_ram_code_sec_noinline_ unsigned int analog_read_reg32(unsigned char addr);
 
  /**
   * @brief      This function serves to analog register write by word.
@@ -101,7 +101,7 @@ void analog_write_reg16(unsigned char addr, unsigned short data);
   * @param[in]  data - the value need to be write.
   * @return     none.
   */
-void analog_write_reg32(unsigned char addr, unsigned int data);
+_attribute_ram_code_sec_noinline_ void analog_write_reg32(unsigned char addr, unsigned int data);
 /**
  * @brief      This function serves to analog register read.
  * @param[in]  addr  - address need to be read.

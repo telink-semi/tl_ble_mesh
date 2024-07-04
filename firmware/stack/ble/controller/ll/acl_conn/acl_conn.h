@@ -1,10 +1,10 @@
 /********************************************************************************************************
- * @file     acl_conn.h
+ * @file    acl_conn.h
  *
- * @brief    This is the header file for BLE SDK
+ * @brief   This is the header file for BLE SDK
  *
- * @author	 BLE GROUP
- * @date         2020.06
+ * @author  BLE GROUP
+ * @date    06,2022
  *
  * @par     Copyright (c) 2022, Telink Semiconductor (Shanghai) Co., Ltd. ("TELINK")
  *
@@ -19,8 +19,8 @@
  *          WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  *          See the License for the specific language governing permissions and
  *          limitations under the License.
+ *
  *******************************************************************************************************/
-
 #ifndef ACL_CONN_H_
 #define ACL_CONN_H_
 
@@ -84,7 +84,6 @@ u8  		blc_ll_getTxFifoNumber (u16 connHandle);
  */
 ble_sts_t 	blc_ll_disconnect (u16 connHandle, u8 reason);
 
-ble_sts_t  	bls_ll_terminateConnection (u8 reason); // BLE_SRC_TELINK_MESH_EN
 
 /**
  * @brief      This function is used to obtain the connection establishment time point corresponding to the current ACL connection handle.
@@ -236,6 +235,41 @@ ble_sts_t	blc_ll_readPhy( u16 connHandle, hci_le_readPhyCmd_retParam_t *para);
  * @return     The value of latest average RSSI.
  */
 u8			blc_ll_getAclLatestAvgRSSI(u16 connHandle);
+
+/**
+ * @brief      This function is used to obtain the latest RSSI of ACL connections.
+ * @param[in]  connHandle - ACL connection handle.
+ * @return     The value of latest average RSSI.
+ */
+u8			blc_ll_getAclLatestRSSI(u16 connHandle);
+
+/**
+ * @brief      for user to read current ACL connection interval
+ * @param[in]  connHandle - ACL connection handle.
+ * @return     0    :  connHandle invalid, not match a connection
+ * 			   other:  connection interval, unit: 1.25mS
+ */
+u16 		blc_ll_getAclConnectionInterval(u16 connHandle);
+
+
+/**
+ * @brief      for user to read current ACL connection latency
+ * @param[in]  connHandle - ACL connection handle.
+ * @return     0    :  connHandle invalid, not match a connection
+ * 			   other:  connection latency
+ */
+u16	 		blc_ll_getAclConnectionLatency(u16 connHandle);
+
+
+/**
+ * @brief      for user to read current ACL connection supervision timeout
+ * @param[in]  connHandle - ACL connection handle.
+ * @return     0    :  connHandle invalid, not match a connection
+ * 			   other:  connection supervision timeout, unit: 10 mS
+ */
+u16	 		blc_ll_getAclConnectionTimeout(u16 connHandle);
+
+
 
 
 /**
