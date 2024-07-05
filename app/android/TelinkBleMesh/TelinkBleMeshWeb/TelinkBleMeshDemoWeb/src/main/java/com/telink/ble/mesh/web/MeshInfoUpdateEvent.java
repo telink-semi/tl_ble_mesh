@@ -1,5 +1,5 @@
 /********************************************************************************************************
- * @file AutoConnectEvent.java
+ * @file JoinedNetworkListFragment.java
  *
  * @brief for TLSR chips
  *
