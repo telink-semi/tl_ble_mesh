@@ -1,10 +1,10 @@
 /********************************************************************************************************
- * @file     types.h
+ * @file    types.h
  *
- * @brief    This is the header file for BLE SDK
+ * @brief   This is the header file for BLE SDK
  *
- * @author	 BLE GROUP
- * @date         2020.06
+ * @author  BLE GROUP
+ * @date    06,2022
  *
  * @par     Copyright (c) 2022, Telink Semiconductor (Shanghai) Co., Ltd. ("TELINK")
  *
@@ -19,10 +19,10 @@
  *          WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  *          See the License for the specific language governing permissions and
  *          limitations under the License.
+ *
  *******************************************************************************************************/
-
 #pragma once
-#if !WIN32		
+#if !WIN32	
 #include <stdbool.h>	// BLE_SRC_TELINK_MESH_EN
 #endif
 
@@ -41,7 +41,6 @@ typedef unsigned long long 	u64;
 typedef unsigned char 		uint8_t;
 typedef unsigned short 		uint16_t;
 
-
 typedef unsigned char		 uint08;
 typedef unsigned short		 uint16;
 typedef unsigned int		 uint32;
@@ -54,7 +53,7 @@ typedef unsigned long long	 uint64;
 
 #ifndef __cplusplus
 
-//typedef u8 bool;	
+//typedef u8 bool;
 
 #ifndef FALSE
 #define FALSE 	0
@@ -63,10 +62,8 @@ typedef unsigned long long	 uint64;
 #define TRUE 	(!FALSE)
 #endif
 
-#if (0 == __TLSR_RISCV_EN__)	// BLE_SRC_TELINK_MESH_EN
-#define false 	FALSE
-#define true 	TRUE
-#endif
+//#define false 	FALSE
+//#define true 	TRUE
 
 #endif
 

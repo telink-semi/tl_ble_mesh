@@ -25,13 +25,19 @@
 #ifndef MYPRINTF_H
 #define MYPRINTF_H
 
+#if __TLSR_RISCV_EN__
+#include "stack/ble/ble.h"
+#else
+#include "proj_lib/ble/service/ble_ll_ota.h"
+#endif
+
 #define SIMU_BAUD_115200    115200
 #define SIMU_BAUD_230400    230400
 #define SIMU_BAUD_1M        1000000
 
 #define BAUD_USE    SIMU_BAUD_1M
 #if __TLSR_RISCV_EN__
-#define SIMU_UART_IRQ_EN    1
+#define SIMU_UART_IRQ_EN    (1&&!blotaSvr.ota_start_tick)
 #else
 #define SIMU_UART_IRQ_EN    (1&&!blcOta.ota_start_flag)
 #endif

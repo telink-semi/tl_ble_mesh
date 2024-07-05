@@ -1,10 +1,10 @@
 /********************************************************************************************************
- * @file     tl_audio.h
+ * @file    tl_audio.h
  *
- * @brief    This is the header file for BLE SDK
+ * @brief   This is the header file for BLE SDK
  *
- * @author	 BLE GROUP
- * @date         11,2022
+ * @author  BLE GROUP
+ * @date    06,2022
  *
  * @par     Copyright (c) 2022, Telink Semiconductor (Shanghai) Co., Ltd. ("TELINK")
  *
@@ -19,8 +19,8 @@
  *          WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  *          See the License for the specific language governing permissions and
  *          limitations under the License.
+ *
  *******************************************************************************************************/
-
 #ifndef TL_AUDIO_H_
 #define TL_AUDIO_H_
 
@@ -30,8 +30,8 @@
 
 
 #if (TL_AUDIO_MODE & RCU_PROJECT)								//RCU
-#ifndef		TL_NOISE_SUPRESSION_ENABLE
-#define		TL_NOISE_SUPRESSION_ENABLE			0
+#ifndef		TL_NOISE_SUPPRESSION_ENABLE
+#define		TL_NOISE_SUPPRESSION_ENABLE			0
 #endif
 
 #ifndef		IIR_FILTER_ENABLE
@@ -62,14 +62,14 @@
 s16		buffer_mic[TL_MIC_BUFFER_SIZE>>1] __attribute__((aligned(4)));
 #endif
 
-#if TL_NOISE_SUPRESSION_ENABLE
+#if TL_NOISE_SUPPRESSION_ENABLE
 extern int md_long;
 extern int md_short;
 extern int md_im;
 extern int md_noise;
 extern int md_gain;
 
-static inline int noise_supression (s16 md) {
+static inline int noise_suppression (s16 md) {
 
 	static int md_th =384;
 	//static int md_long =0;

@@ -23,18 +23,8 @@
  *
  *******************************************************************************************************/
 #include "tl_common.h"
-#ifndef WIN32
-#if __TLSR_RISCV_EN__
-#include "watchdog.h"
-#else
-#include "proj/mcu/watchdog_i.h"
-#endif
-#endif 
-#if !__TLSR_RISCV_EN__
-#include "proj_lib/ble/ll/ll.h"
 #include "proj_lib/ble/blt_config.h"
 #include "vendor/common/user_config.h"
-#endif
 #include "app_health.h"
 #include "proj_lib/sig_mesh/app_mesh.h"
 #include "vendor/common/time_model.h"
@@ -45,6 +35,9 @@
 #include "fast_provision_model.h"
 #include "app_heartbeat.h"
 #include "directed_forwarding.h"
+#if PAIR_PROVISION_ENABLE
+#include "pair_provision.h"
+#endif
 
 #if ALI_MD_TIME_EN
 #include "user_ali_time.h"
@@ -52,6 +45,14 @@
 
 #ifndef __PROJECT_MESH_SWITCH__
 #define __PROJECT_MESH_SWITCH__     0
+#endif
+
+#if GW_SMART_PROVISION_REMOTE_CONTROL_PM_EN
+#define MESH_LONG_SLEEP_WAKEUP_EN	1
+#endif
+
+#ifndef MESH_LONG_SLEEP_WAKEUP_EN
+#define MESH_LONG_SLEEP_WAKEUP_EN	0
 #endif
 
 #if WIN32 // just for compile
@@ -65,19 +66,26 @@ u32 system_time_s = 0;
 u32 system_time_tick;
 
 #ifndef RTC_USE_32K_RC_ENABLE
-#define RTC_USE_32K_RC_ENABLE		0 // enable should be better when pm enable
+/* if PM enable, it is about 120ppm(10s/day) at 25 degrees Celsius after enable RTC_USE_32K_RC_ENABLE.*/
+#define RTC_USE_32K_RC_ENABLE	0		// 1.Don't enable if no sleep application. 2. when there is sleep application, RTC will be more accurate with being enable this function.
 #endif
 
 #if __PROJECT_MESH_SWITCH__
 #define CHECK_INTERVAL      (1*1000*32)  // 32k tick of 1s
+#elif MESH_LONG_SLEEP_WAKEUP_EN
+#define CHECK_INTERVAL      (32)  		 // 32k tick of 1ms
 #elif RTC_USE_32K_RC_ENABLE
 #define CHECK_INTERVAL      (500*CLOCK_16M_SYS_TIMER_CLK_1MS)
 #else
-#define CHECK_INTERVAL      (1 * CLOCK_SYS_CLOCK_1MS)
+#define CHECK_INTERVAL      (1 * CLOCK_SYS_CLOCK_1MS) // must 1ms, because light_transition_proc() need 1ms tick.
 #endif
 
 #define RTC_LEFT_MS 	(system_time_ms%1000+(tick_32k-tick_32k_begin)/32)
-#define LOG_RTC_DEBUG(pbuf,len,format,...)		//LOG_USER_MSG_INFO(pbuf,len,format,__VA_ARGS__)
+#define LOG_RTC_DEBUG(pbuf, len, format, ...)		//LOG_MSG_LIB(TL_LOG_NODE_BASIC, pbuf, len, format, ##__VA_ARGS__)
+
+#if (__PROJECT_MESH_SWITCH__ || RTC_USE_32K_RC_ENABLE)
+STATIC_ASSERT(MESH_LONG_SLEEP_WAKEUP_EN == 0); // because switch has enable long sleep mode
+#endif
 
 #if RTC_USE_32K_RC_ENABLE
 u32 cal_unit_32k;
@@ -115,40 +123,41 @@ void rtc_cal_init(u8 tick_start)
 		tick_32k_begin = tmp_32k_1;
 		tick_16m_begin = tick_32k_to_16m = tmp_16m_1;
 	}
-	LOG_RTC_DEBUG(0, 0, "rtc_cal_init", 0);
+	LOG_RTC_DEBUG(0, 0, "rtc_cal_init");
 }
 #endif
 
 void system_timer_handle_ms()
 {
-#if MD_SERVER_EN
-	light_transition_proc();
-#endif
 }
 
 void system_timer_handle_100ms()
 {
-    if(!is_lpn_support_and_en){
-        #if (!__PROJECT_MESH_SWITCH__)
-        mesh_beacon_poll_100ms();
-        #endif
-	}
 	mesh_heartbeat_poll_100ms();
 #if ALI_MD_TIME_EN
 	user_ali_time_proc();
 #endif
-#if !WIN32 && SENSOR_LIGHTING_CTRL_EN
+#if (!WIN32 && SENSOR_LIGHTING_CTRL_USER_MODE_EN && MD_SENSOR_CLIENT_EN)
     sensor_lighting_ctrl_proc();
 #endif
-#if (MD_DF_EN && MD_SERVER_EN && !WIN32 && !FEATURE_LOWPOWER_EN)
+#if (MD_DF_CFG_SERVER_EN && !WIN32 && !FEATURE_LOWPOWER_EN)
 	mesh_directed_forwarding_proc(0, 0, 0, MESH_BEAR_ADV);
 #endif
 }
 
+static inline u32 get_tick_for_system_time()
+{
+#if (__PROJECT_MESH_SWITCH__ || MESH_LONG_SLEEP_WAKEUP_EN)
+	return get_32k_tick();
+#else
+	return clock_time();
+#endif
+}
+
 void system_time_init(){
-	system_time_tick = clock_time();
+	system_time_tick = get_tick_for_system_time();
 #if RTC_USE_32K_RC_ENABLE
-	LOG_RTC_DEBUG(0, 0, "system_time_init", 0);
+	LOG_RTC_DEBUG(0, 0, "system_time_init");
 	rtc_cal_init(1);							
 #endif	
 }
@@ -159,11 +168,7 @@ _attribute_ram_code_
 void system_time_run(){
     mesh_iv_update_start_poll();
     
-	#if __PROJECT_MESH_SWITCH__
-	u32 clock_tmp = get_32k_tick();
-	#else
-    u32 clock_tmp = clock_time();
-	#endif
+    u32 clock_tmp = get_tick_for_system_time();
     u32 t_delta = clock_tmp - system_time_tick;	
 	#if RTC_USE_32K_RC_ENABLE
 	if(t_delta < BIT(31))
@@ -196,19 +201,29 @@ void system_time_run(){
         if(interval_cnt){
 			#if __PROJECT_MESH_SWITCH__
 			system_time_s += interval_cnt;
-			iv_idx_st.keep_time_s += (interval_cnt-1);
-			mesh_iv_update_st_poll_s();
-			switch_triger_iv_search_mode();
+			mesh_iv_update_st_poll_s(interval_cnt);
 			LOG_RTC_DEBUG(0, 0, "%02d:%02d:%02d", system_time_s/60/60, (system_time_s/60)%60, system_time_s%60);					
 			#else
             u32 inc_100ms = (system_time_ms % 100 + interval_cnt) / 100;
+
+            	#if LLSYNC_ENABLE
+			llsync_mesh_timer_period_proc(system_time_ms, interval_cnt); // must before "system_time_ms +="
+            	#endif
 			system_time_ms += interval_cnt;
 						
-			if(!(RTC_USE_32K_RC_ENABLE || FEATURE_LOWPOWER_EN || SPIRIT_PRIVATE_LPN_EN || GATT_LPN_EN ||DU_LPN_EN)){ // (!is_lpn_support_and_en){ // it will cost several tens ms from wake up
+			if(!(RTC_USE_32K_RC_ENABLE || FEATURE_LOWPOWER_EN || SPIRIT_PRIVATE_LPN_EN || GATT_LPN_EN ||DU_LPN_EN || MESH_LONG_SLEEP_WAKEUP_EN)){ // (!is_lpn_support_and_en){ // it will cost several tens ms from wake up
                 #if (PM_DEEPSLEEP_RETENTION_ENABLE)
                 // no need to run system_timer_handle_ms_,
                 // and it will take too much time to run system_timer_handle_ms_() for low power device which is wakeup after a long time sleep.
                 #else
+					#if MD_SERVER_EN
+			    foreach(i,interval_cnt){
+					if(0 == light_transition_proc()){
+						break; // quick break to save time.
+					}
+				}
+					#endif
+					
 			    foreach(i,interval_cnt){
 			        system_timer_handle_ms();
 			    }
@@ -219,7 +234,7 @@ void system_time_run(){
                 u32 inc_s = (system_time_100ms % 10 + inc_100ms) / 10;
     			system_time_100ms += inc_100ms;
 				
-                if(RTC_USE_32K_RC_ENABLE || is_lpn_support_and_en || SPIRIT_PRIVATE_LPN_EN ||DU_LPN_EN){ // it will cost several ms from wake up
+                if(RTC_USE_32K_RC_ENABLE || is_lpn_support_and_en || SPIRIT_PRIVATE_LPN_EN ||DU_LPN_EN || MESH_LONG_SLEEP_WAKEUP_EN){ // it will cost several ms from wake up
                     system_timer_handle_100ms();	// only run once to save time
 				}else{
 					foreach(i,inc_100ms){
@@ -235,8 +250,6 @@ void system_time_run(){
 					#endif
 					foreach(i,inc_s){
 						system_time_s++;
-                        mesh_iv_update_st_poll_s();
-						user_system_time_proc();
 						#if VC_APP_ENABLE
 						void sys_timer_refresh_time_ui();
 						sys_timer_refresh_time_ui();
@@ -249,7 +262,16 @@ void system_time_run(){
 							}
 						}
 						#endif
-				    }					
+				    }				
+
+					mesh_iv_update_st_poll_s(inc_s);
+					user_system_time_proc(); // no need inside foreach to save time.
+				    
+				    //if(!is_lpn_support_and_en){
+				        #if (!(__PROJECT_MESH_SWITCH__ || GW_SMART_PROVISION_REMOTE_CONTROL_PM_EN))
+				        mesh_beacon_poll_1s();
+				        #endif
+					//}
     			}
             }
 			#endif
@@ -259,16 +281,19 @@ void system_time_run(){
 		#else
         system_time_tick += interval_cnt * CHECK_INTERVAL;
 		#endif
+		
         // proc handle 1ms or greater
-        light_par_save_proc();
-	
 	#if FAST_PROVISION_ENABLE
 		mesh_fast_prov_proc();
+	#endif
+	#if PAIR_PROVISION_ENABLE
+		pair_provision_proc();
 	#endif
 	#if ONLINE_STATUS_EN
         online_st_proc();
     #endif
     #if MD_SERVER_EN
+        light_par_save_proc();
         #if MD_TIME_EN
         mesh_time_proc();
         #endif

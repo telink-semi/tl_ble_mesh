@@ -117,7 +117,7 @@ void process_mesh_node_init_event(void)
     node_info.lpn_node = 0;
 	if(node_info.provisioned){
 		node_info.address = ele_adr_primary;
-		node_info.ivi = mesh_get_ivi_cur_val_little();
+		node_info.ivi = iv_idx_st.iv_cur;
 	}else{
 		node_info.address = 0;
 		node_info.ivi = 0;	
@@ -130,7 +130,7 @@ void process_mesh_ivi_update()
 {
 	mible_mesh_iv_t mesh_iv;
 	mesh_ctl_fri_update_flag_t *p_flag =(mesh_ctl_fri_update_flag_t *)&(mesh_iv.flags);
-	mesh_iv.iv_index = mesh_get_ivi_cur_val_little();
+	mesh_iv.iv_index = iv_idx_st.iv_cur;
 	p_flag->IVUpdate = (IV_UPDATE_STEP1 == iv_idx_st.update_proc_flag);
 	MI_LOG_WARNING("[DEVICE_IVI_UPDATE]\n");
 	mible_mesh_event_callback(MIBLE_MESH_EVENT_IV_UPDATE, &mesh_iv);
@@ -456,7 +456,7 @@ int mible_mesh_device_get_relay(uint8_t *enabled, uint8_t *count, uint8_t *step)
 /**
  *@brief    get seq number.
  *@param    [in] element : model element
- *@param    [out] seq : current sequence numer
+ *@param    [out] seq : current sequence number
  *@param    [out] iv_index : current IV Index
  *@param    [out] flags : IV Update Flag
  *@return   0: success, negetive value: failure
@@ -469,7 +469,7 @@ int mible_mesh_device_get_seq(uint16_t element, uint32_t* seq, uint32_t* iv, uin
 		}
         if(NULL != iv){
 			
-            *iv = (uint32_t)mesh_get_ivi_cur_val_little();
+            *iv = iv_idx_st.iv_cur;
         }
         if(NULL != flags){
             *flags = iv_idx_st.rx_update;
@@ -597,7 +597,7 @@ int mible_mesh_device_set_sub_address(mible_mesh_op_t op, uint16_t element, uint
 		sig_model = 1;
 		model_id_res = model_id;
 	}
-	MI_LOG_INFO("modle is 0x%08x, sig model is %d,sub_adr is 0x%04x,ele is%04x", model_id_res,sig_model,sub_addr,element);
+	MI_LOG_INFO("model is 0x%08x, sig model is %d,sub_adr is 0x%04x,ele is%04x", model_id_res,sig_model,sub_addr,element);
 	if(op == MIBLE_MESH_OP_ADD){
         MI_LOG_DEBUG("mi_sub_address: sub model(0x%08x-%d) group address(%d)", model_id, element, sub_addr);
         err = mesh_sub_search_and_set(CFG_MODEL_SUB_ADD,adr,sub_addr,0,model_id_res,sig_model);
@@ -651,7 +651,7 @@ void mible_conn_timeout_cb(void *p_context)
         mible_gap_disconnect(mible_conn_handle);
     }
 }
-// need to trans little endiness to big endiness
+// need to trans little endianness to big endianness
 u16 mesh_mi_trans_op_little2big(u16 op)
 {
 	if(SIZE_OF_OP(op)== OP_TYPE_SIG2){
@@ -704,9 +704,9 @@ int mesh_mi_rx_cb(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par)
 		cfg_server_receive_peek(par,par_len,cb_par);
 	}
 	// vendor mode proc
-	if(p_res->id == MIOT_SEPC_VENDOR_MODEL_SER){
+	if(p_res->id == MIOT_SEPC_VENDOR_MODEL_SRV){
 		miot_server_data(par,par_len,cb_par);
-	}else if (p_res->id == MIOT_VENDOR_MD_SER){
+	}else if (p_res->id == MIOT_VENDOR_MD_SRV){
 		mijia_server_data(par,par_len,cb_par);
 	}
 	return 0;

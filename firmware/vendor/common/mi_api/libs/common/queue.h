@@ -3,6 +3,7 @@
 
 #include <stdint.h>
 #include "mible_type.h"
+
 #if MI_API_ENABLE
 typedef struct {
     void * buf;

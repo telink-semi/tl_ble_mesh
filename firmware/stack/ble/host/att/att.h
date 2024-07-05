@@ -1,10 +1,10 @@
 /********************************************************************************************************
- * @file     att.h
+ * @file    att.h
  *
- * @brief    This is the header file for BLE SDK
+ * @brief   This is the header file for BLE SDK
  *
- * @author	 BLE GROUP
- * @date         11,2022
+ * @author  BLE GROUP
+ * @date    06,2022
  *
  * @par     Copyright (c) 2022, Telink Semiconductor (Shanghai) Co., Ltd. ("TELINK")
  *
@@ -19,8 +19,8 @@
  *          WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  *          See the License for the specific language governing permissions and
  *          limitations under the License.
+ *
  *******************************************************************************************************/
-
 #pragma  once
 
 typedef struct {
@@ -29,7 +29,6 @@ typedef struct {
 } attr_pkt_t;
 
 #include "stack/ble/host/ble_host.h"
-#include "common/tl_queue.h"
 #include "att_cmd.h"
 #include "atts.h"
 #include "attc.h"

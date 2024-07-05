@@ -70,17 +70,25 @@ int is_buf_all_one(void *data, unsigned int len){
 	return 1;
 }
 
-int ismemzero4(void *data, unsigned int len){
-	int *p = (int*)data;
-	len = len >> 2;
-	for(unsigned int i = 0; i < len; ++i){
-		if(*p){
-			return 0;
-		}
-		++p;
+#if 0 // BLE_SRC_TELINK_MESH_EN
+int ismemzero4(unsigned int a[], unsigned int wordLen)
+{
+	unsigned int i;
+
+	if(!wordLen)
+	{
+		return 1;
 	}
+
+	for(i=0; i<wordLen; i++)
+	{
+		if(a[i])
+			return 0;
+	}
+
 	return 1;
 }
+#endif
 
 int ismemf4(void *data, unsigned int len){
 	int *p = (int*)data;

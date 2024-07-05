@@ -1,10 +1,10 @@
 /********************************************************************************************************
- * @file     usbdesc.h
+ * @file    usbdesc.h
  *
- * @brief    This is the header file for BLE SDK
+ * @brief   This is the header file for BLE SDK
  *
- * @author	 BLE GROUP
- * @date         2020.06
+ * @author  BLE GROUP
+ * @date    06,2022
  *
  * @par     Copyright (c) 2022, Telink Semiconductor (Shanghai) Co., Ltd. ("TELINK")
  *
@@ -19,8 +19,8 @@
  *          WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  *          See the License for the specific language governing permissions and
  *          limitations under the License.
+ *
  *******************************************************************************************************/
-
 #pragma once
 
 #include <application/usbstd/AudioClassCommon.h>
@@ -59,7 +59,7 @@ typedef enum {
 	USB_INTF_MIC,
 #endif
 #if(0)
-	USB_INTF_AUDIO_HID,		//  use for volumn control, mute, next, prev track,  move to mouse hid
+	USB_INTF_AUDIO_HID,		//  use for volume control, mute, next, prev track,  move to mouse hid
 #endif
 #if USB_KEYBOARD_ENABLE
 	USB_INTF_KEYBOARD,
@@ -73,10 +73,10 @@ typedef enum {
 	USB_INTF_MAX,
 } USB_INTF_ID_E;
 
-enum {
-	USB_SPEAKER_FEATURE_UNIT = USB_SPEAKER_ENABLE,
-	USB_MIC_FEATURE_UNIT = USB_MIC_ENABLE,
-};
+//enum {
+//	USB_SPEAKER_FEATURE_UNIT = USB_SPEAKER_ENABLE,
+//	USB_MIC_FEATURE_UNIT = USB_MIC_ENABLE,
+//};
 
 enum {
 	USB_SPEAKER_INPUT_TERMINAL_ID = 1,
@@ -96,6 +96,10 @@ enum {
 
 #if(USB_MIC_ENABLE)
 #define USB_MIC_CHANNELS_LEN   (MIC_CHANNEL_COUNT*(MIC_SAMPLE_RATE*MIC_RESOLUTION_BIT/1000/8))
+#endif
+
+#if(USB_SPEAKER_ENABLE)
+#define USB_SPK_CHANNELS_LEN   (SPK_CHANNEL_COUNT*(SPK_SAMPLE_RATE*SPK_RESOLUTION_BIT/1000/8))
 #endif
 
 enum {
@@ -221,10 +225,10 @@ enum {
 
 #if (USB_CDC_ENABLE)
 /** Endpoint number of the CDC device-to-host notification IN endpoint. */
-#define CDC_NOTIFICATION_EPNUM         2
+#define CDC_NOTIFICATION_EPNUM         3
 
 /** Endpoint number of the CDC device-to-host data IN endpoint. */
-#ifndef		CDC_TX_EPNUM
+#ifndef	CDC_TX_EPNUM
 #define CDC_TX_EPNUM                   4 ///3
 #endif
 
@@ -282,7 +286,7 @@ typedef struct {
 #endif
 
 #if (USB_CDC_ENABLE)
-#if 0
+#if DESC_IAD_ENABLE
     // IAD0
     USB_Descriptor_Interface_Association_t cdc_iad;
 #endif
@@ -300,6 +304,9 @@ typedef struct {
 #endif
 #endif
 #if (USB_MIC_ENABLE || USB_SPEAKER_ENABLE)
+#if DESC_IAD_ENABLE
+	USB_Descriptor_Interface_Association_t audio_iad;
+#endif
 	USB_Descriptor_Interface_t audio_control_interface;
 #if (USB_MIC_ENABLE && USB_SPEAKER_ENABLE)
 	USB_Audio_Descriptor_Interface_AC_TL_t audio_control_interface_ac;
@@ -344,11 +351,17 @@ typedef struct {
 	USB_HID_Descriptor_HID_Audio_t audio_descriptor;
 #endif	
 #if (USB_KEYBOARD_ENABLE)
+#if DESC_IAD_ENABLE
+	USB_Descriptor_Interface_Association_t keyboard_iad;
+#endif
 	// Keyboard HID Interface
 	USB_Descriptor_Interface_t keyboard_interface;
 	USB_HID_Descriptor_HID_Keyboard_t keyboard_descriptor;
 #endif
 #if (USB_MOUSE_ENABLE)
+#if DESC_IAD_ENABLE
+	USB_Descriptor_Interface_Association_t mouse_iad;
+#endif
 	// Mouse HID Interface
 	USB_Descriptor_Interface_t mouse_interface;
 	USB_HID_Descriptor_HID_Mouse_t mouse_descriptor;

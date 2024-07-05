@@ -1,10 +1,10 @@
 /********************************************************************************************************
- * @file     software_pa.c
+ * @file    software_pa.c
  *
- * @brief    This is the source file for BLE SDK
+ * @brief   This is the source file for BLE SDK
  *
- * @author	 BLE GROUP
- * @date         11,2022
+ * @author  BLE GROUP
+ * @date    06,2022
  *
  * @par     Copyright (c) 2022, Telink Semiconductor (Shanghai) Co., Ltd. ("TELINK")
  *
@@ -19,8 +19,8 @@
  *          WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  *          See the License for the specific language governing permissions and
  *          limitations under the License.
+ *
  *******************************************************************************************************/
-
 #include "compiler.h"
 #include "software_pa.h"
 #include "../gpio.h"
@@ -32,22 +32,31 @@ _attribute_ram_code_
 void app_rf_pa_handler(int type)
 {
 #if(PA_ENABLE)
+	u32 r = irq_disable();	// add irq disable should be better due to called in both main loop and irq.
+
 	if(type == PA_TYPE_TX_ON){
-		gpio_set_level(PA_RXEN_PIN, 0);
-		gpio_set_level(PA_TXEN_PIN, 1);
+		gpio_set_low_level(PA_RXEN_PIN);
+		gpio_set_high_level(PA_TXEN_PIN);
 	}
 	else if(type == PA_TYPE_RX_ON){
-		gpio_set_level(PA_TXEN_PIN, 0);
-		gpio_set_level(PA_RXEN_PIN, 1);
+		gpio_set_low_level(PA_TXEN_PIN);
+		gpio_set_high_level(PA_RXEN_PIN);
 	}
 	else{
-		gpio_set_level(PA_RXEN_PIN, 0);
-		gpio_set_level(PA_TXEN_PIN, 0);
+		gpio_set_low_level(PA_RXEN_PIN);
+		gpio_set_low_level(PA_TXEN_PIN);
 	}
+
+	irq_restore(r);
 #endif
 }
 
 
+/**
+ * @brief	RF software PA initialization
+ * @param	none
+ * @return	none
+ */
 void rf_pa_init(void)
 {
 #if(PA_ENABLE)

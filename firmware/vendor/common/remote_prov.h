@@ -32,6 +32,13 @@
 #include "scheduler.h"
 #include "mesh_property.h"
 
+#if MD_REMOTE_PROV
+#define MESH_SR_BV_10_C				0
+#define MESH_SR_BV_11_C				0
+#define MESH_SR_BV_RESEND_DISABLE	0
+#define MESH_SR_RPR_PDU_BV01_C		0
+#define MESH_GATT_TIMEOUT_EN		0
+
 #define REMOTE_PROV_SCAN_ITEM_CNT   4
 #define REMOTE_PROV_DKRI_EN_FLAG	0x80
 enum{
@@ -237,7 +244,6 @@ typedef struct{
     model_rp_client_common_t client[1];
     #endif
 }model_remote_prov_t;
-extern _align_4_ model_remote_prov_t model_remote_prov;
 extern u8 node_devkey_candi[16];
 
 #define MAX_SCAN_ITEMS_UUID_CNT 4
@@ -350,49 +356,44 @@ typedef struct{
 }rp_mag_str;
 // remote provision server sts 
 typedef enum{
-    RP_SER_IDLE =0,
-    RP_SER_LINK_OPEN_SEND,
-    RP_SER_LINK_OPEN_ACK,
-    RP_SER_INVITE_SEND,
-    RP_SER_INVITE_ACK,
-    PR_SER_CAPA_RCV,
-    RP_SER_START_SEND,
-    RP_SER_START_ACK,
-    RP_SER_PUBKEY_SEND,
-    PR_SER_PUBKEY_ACK,
-    PR_SER_PUBKEY_RSP,
-    PR_SER_COMFIRM_SEND,
-    PR_SER_COMFIRM_SEND_ACK,
-    PR_SER_COMFIRM_RSP,
-    PR_SER_RANDOM_SEND,
-    PR_SER_RANDOM_SEND_ACK,
-    PR_SER_RANDOM_RSP,
-    PR_SER_DATA_SEND,
-    PR_SER_DATA_SEND_ACK,
-    PR_SER_COMPLETE_RSP,
-    PR_SER_COMPLETE_SUC,
+    RP_SRV_IDLE =0,
+    RP_SRV_LINK_OPEN_SEND,
+    RP_SRV_LINK_OPEN_ACK,
+    RP_SRV_INVITE_SEND,
+    RP_SRV_INVITE_ACK,
+    PR_SRV_CAPA_RCV,
+    RP_SRV_START_SEND,
+    RP_SRV_START_ACK,
+    RP_SRV_PUBKEY_SEND,
+    PR_SRV_PUBKEY_ACK,
+    PR_SRV_PUBKEY_RSP,
+    PR_SRV_CONFIRM_SEND,
+    PR_SRV_CONFIRM_SEND_ACK,
+    PR_SRV_CONFIRM_RSP,
+    PR_SRV_RANDOM_SEND,
+    PR_SRV_RANDOM_SEND_ACK,
+    PR_SRV_RANDOM_RSP,
+    PR_SRV_DATA_SEND,
+    PR_SRV_DATA_SEND_ACK,
+    PR_SRV_COMPLETE_RSP,
+    PR_SRV_COMPLETE_SUC,
 }REMOTE_PROV_SERVER_ENUM;
 
 
 
 void mesh_rp_para_init();
 int mesh_cmd_sig_rp_scan_capa(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par);
-int mesh_cmd_sig_rp_scan_capa_sts(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par);
+int mesh_tx_cmd_rp_scan_sts(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par);
 int mesh_cmd_sig_rp_scan_get(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par);
 int mesh_cmd_sig_rp_scan_start(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par);
 int mesh_cmd_sig_rp_scan_stop(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par);
-int mesh_cmd_sig_rp_scan_sts(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par);
 int mesh_cmd_sig_rp_scan_report(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par);
 int mesh_cmd_sig_rp_extend_scan_start(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par);
-int mesh_cmd_sig_rp_extend_scan_report(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par);
 int mesh_cmd_sig_rp_link_get(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par);
 int mesh_cmd_sig_rp_link_open(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par);
 int mesh_cmd_sig_rp_link_close(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par);
-int mesh_cmd_sig_rp_link_sts(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par);
 int mesh_cmd_sig_rp_link_report(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par);
 int mesh_cmd_sig_rp_pdu_send(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par);
-int mesh_cmd_sig_rp_pdu_outbound_report(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par);
-int mesh_cmd_sig_rp_pdu_report(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par);
 int remote_prov_report_cb(u8 rssi,u8 *p_uuid,u8 * p_oob);
 int remote_prov_report_raw_pkt_cb(u8 *p_beacon);
 void mesh_cmd_sig_rp_loop_proc();
@@ -403,6 +404,22 @@ void mesh_rp_netkey_del_cb(u8 idx,u16 op);
 void mesh_prov_pdu_send_retry_set(pro_PB_ADV *p_adv,u8 flag);
 int mesh_prov_server_to_client_cmd(u8 *prov_dat,u8 len);
 void mesh_rp_server_set_link_rp_sts(u8 sts);
+
+#if MD_CLIENT_EN
+int mesh_cmd_sig_rp_scan_capa_sts(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par);
+int mesh_cmd_sig_rp_scan_sts(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par);
+int mesh_cmd_sig_rp_extend_scan_report(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par);
+int mesh_cmd_sig_rp_link_sts(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par);
+int mesh_cmd_sig_rp_pdu_outbound_report(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par);
+int mesh_cmd_sig_rp_pdu_report(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par);
+#else
+#define mesh_cmd_sig_rp_scan_capa_sts			(0)
+#define mesh_cmd_sig_rp_scan_sts				(0)
+#define mesh_cmd_sig_rp_extend_scan_report		(0)
+#define mesh_cmd_sig_rp_link_sts				(0)
+#define mesh_cmd_sig_rp_pdu_outbound_report		(0)
+#define mesh_cmd_sig_rp_pdu_report				(0)
+#endif
 
 // remote prov client part 
 typedef struct{
@@ -425,9 +442,9 @@ typedef enum{
     RP_PROV_PUBKEY_CMD,
     RP_PROV_PUBKEY_CMD_ACK,
     RP_PROV_PUBKEY_RSP,
-    RP_PROV_COMFIRM_CMD,
-    RP_PROV_COMFIRM_CMD_ACK,
-    RP_PROV_COMFIRM_RSP,
+    RP_PROV_CONFIRM_CMD,
+    RP_PROV_CONFIRM_CMD_ACK,
+    RP_PROV_CONFIRM_RSP,
     RP_PROV_RANDOM_CMD,
     RP_PROV_RANDOM_CMD_ACK,
     RP_PROV_RANDOM_RSP,
@@ -460,7 +477,6 @@ void mesh_prov_server_send_cmd(u8 *par,u8 len);
 void mesh_prov_server_rcv_cmd(pro_PB_ADV *p_adv);
 int mesh_cmd_sig_rp_pdu_outbound_send();
 void remote_prov_scan_report_cb(u8 *par,u8 len);
-extern _align_4_ model_remote_prov_t model_remote_prov;
 extern u32 mesh_md_rp_addr ;
 extern rp_mag_str rp_mag;
 void mesh_rp_start_settings(u16 adr,u8 *p_uuid,u8 dkri);
@@ -469,7 +485,7 @@ void remote_prov_capa_sts_cb(u8 max_item,u8 active_scan);
 void mesh_rp_pdu_retry_clear();
 void mesh_rp_server_pdu_reset();
 void mesh_rp_server_prov_end_cb();
-void mesh_rp_ser_tick_reset();
+void mesh_rp_srv_tick_reset();
 u8 get_remote_prov_scan_sts();
 void remote_prov_scan_en(u8 en);
 int mesh_cmd_send_link_report(u8 status,u8 RPState,u8 reason,u8 len);
@@ -491,8 +507,8 @@ void mesh_prov_set_cli_dkri(u8 dkri);
 void mesh_prov_set_adr_dev_candi(u16 adr,u8 *p_dev);
 u8 mesh_prov_dkri_is_valid();
 void mesh_prov_dev_candi_store_proc(u16 cmd_src);
-u8  is_rp_working();
 #endif
+u8  is_rp_working();
 
 void gw_get_rp_mode(u8 en);
 extern u16 seg_filter_adr;
@@ -500,6 +516,9 @@ void gw_rp_send_invite();
 extern u8 rp_dev_mac[6];
 extern u8 rp_dev_uuid[16];
 void gw_rp_timeout_proc();
+
+void gw_rp_scan_start();
+#endif
 
 #endif
 

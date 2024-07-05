@@ -31,15 +31,16 @@
 #include "scheduler.h"
 #include "mesh_property.h"
 
-#define PRIVATE_BEACON_GET			0x11B7
-#define PRIVATE_BEACON_SET			0x12B7
-#define PRIVATE_BEACON_STATUS		0x13B7
-#define PRIVATE_GATT_PROXY_GET		0x14B7
-#define PRIVATE_GATT_PROXY_SET		0x15B7
-#define PRIVATE_GATT_PROXY_STATUS	0x16B7
-#define PRIVATE_NODE_IDENTITY_GET	0x18B7
-#define PRIVATE_NODE_IDENTITY_SET		0x19B7
-#define PRIVATE_NODE_IDENTITY_STATUS	0x1AB7
+#if MD_PRIVACY_BEA
+#define PRIVATE_BEACON_GET			0x6080
+#define PRIVATE_BEACON_SET			0x6180
+#define PRIVATE_BEACON_STATUS		0x6280
+#define PRIVATE_GATT_PROXY_GET		0x6380
+#define PRIVATE_GATT_PROXY_SET		0x6480
+#define PRIVATE_GATT_PROXY_STATUS	0x6580
+#define PRIVATE_NODE_IDENTITY_GET	0x6680
+#define PRIVATE_NODE_IDENTITY_SET		0x6780
+#define PRIVATE_NODE_IDENTITY_STATUS	0x6880
 
 typedef struct{
 	u8 beacon_sts;
@@ -67,11 +68,7 @@ typedef struct{
 
 typedef struct{
 	model_common_t com;
-	u8 beacon_sts;
-	u8 random_inv_step;
-	u8 proxy_sts;
-	u8 identity_sts;
-}model_private_beacon_ser_t;
+}model_private_beacon_srv_t;
 
 typedef struct{
 	model_common_t com;
@@ -100,22 +97,20 @@ enum{
 
 typedef struct{
     #if MD_SERVER_EN
-    model_private_beacon_ser_t srv[1];
+    model_private_beacon_srv_t srv[1];
     #endif
     #if MD_CLIENT_EN
     model_private_beacon_cli_t client[1];
     #endif
 }model_private_beacon_t;
-extern _align_4_ model_private_beacon_t model_private_beacon;
-extern u32 mesh_md_pri_beacon_addr;
+
 void mesh_node_identity_refresh_private();
 void mesh_private_proxy_change_by_gatt_proxy(u8 private_sts,u8 *p_private_proxy);
 int mesh_rc_data_beacon_privacy(u8 *p_payload, u32 t);
 void mesh_key_add_trigger_beacon_send(u8 idx);
 
-
 #if MD_SERVER_EN
-void mesh_private_para_init();
+void mesh_private_proxy_sts_init();
 int mesh_cmd_sig_beacon_sts(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par);
 int mesh_cmd_sig_beacon_get(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par);
 int mesh_cmd_sig_beacon_set(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par);
@@ -127,7 +122,6 @@ int mesh_cmd_sig_private_node_identity_get(u8 *par, int par_len, mesh_cb_fun_par
 int mesh_cmd_sig_private_node_identity_set(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par);
 void mesh_prov_para_random_proc();
 int mesh_tx_privacy_nw_beacon_all_net(u8 blt_sts);
-void generate_non_reslov_mac(u8*p_mac);
 
 #else
 #define mesh_privacy_init            				(0)
@@ -152,7 +146,9 @@ typedef struct{
 	u32 idx;
 	u8  auth_tag[MAX_SUPPORT_AUTH_TAG_CNT][8];
 }auth_tag_cache_t;
+#endif
 
+void mesh_prov_para_random_generate();
 
 #if WIN32
 #pragma pack(1)

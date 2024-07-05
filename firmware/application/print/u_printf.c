@@ -62,7 +62,7 @@
 
 _PRINT_FUN_RAMCODE_ static void printchar(char **str, int c) {
 	if (str) {
-		if(PP_GET_PRINT_BUF_LEN_FALG != str){
+		if(PP_GET_PRINT_BUF_LEN_FLAG != str){
 			**str = c;
 			++(*str);
 		}
@@ -441,7 +441,7 @@ _PRINT_FUN_RAMCODE_ int print(char **out, const char *format, va_list args) {
 		}
 	}
 	if (out){
-		if((PP_GET_PRINT_BUF_LEN_FALG == out)){
+		if((PP_GET_PRINT_BUF_LEN_FLAG == out)){
 			++pc;
 		}else{
 			**out = '\0';

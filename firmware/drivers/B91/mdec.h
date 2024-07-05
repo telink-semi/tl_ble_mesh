@@ -1,12 +1,12 @@
 /********************************************************************************************************
- * @file     mdec.h
+ * @file    mdec.h
  *
- * @brief    This is the header file for BLE SDK
+ * @brief   This is the header file for B91
  *
- * @author	 BLE GROUP
- * @date         11,2022
+ * @author  Driver Group
+ * @date    2019
  *
- * @par     Copyright (c) 2022, Telink Semiconductor (Shanghai) Co., Ltd. ("TELINK")
+ * @par     Copyright (c) 2019, Telink Semiconductor (Shanghai) Co., Ltd. ("TELINK")
  *
  *          Licensed under the Apache License, Version 2.0 (the "License");
  *          you may not use this file except in compliance with the License.
@@ -19,8 +19,8 @@
  *          WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  *          See the License for the specific language governing permissions and
  *          limitations under the License.
+ *
  *******************************************************************************************************/
-
 #pragma once
 
 #include "analog.h"
@@ -40,7 +40,8 @@ static inline void mdec_reset(void)
 /**
  * @brief		After all packet data are received, it can check whether packet transmission is finished.
  * @param[in]	status	- the interrupt status to be obtained.
- * @return		irq status.
+ * @retval	  non-zero   -  the interrupt occurred.
+ * @retval	  zero  -  the interrupt did not occur.
  */
 static inline unsigned char mdec_get_irq_status(wakeup_status_e status)
 {
@@ -56,7 +57,7 @@ static inline unsigned char mdec_get_irq_status(wakeup_status_e status)
  */
 static inline void mdec_clr_irq_status(wakeup_status_e status)
 {
-	analog_write_reg8(reg_wakeup_status, (analog_read_reg8(reg_wakeup_status) | status));
+	analog_write_reg8(reg_wakeup_status,status);/*added by wei.wu, confirmed by jianzhi 20231016*/
 }
 
 /**

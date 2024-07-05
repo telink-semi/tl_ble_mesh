@@ -30,7 +30,7 @@
 #include "proj_lib/mesh_crypto/sha256_telink.h"
 #include "vendor_model.h"
 #include "fast_provision_model.h"
-#if !__TLSR_RISCV_EN__
+#if (!__TLSR_RISCV_EN__)
 #include "proj_lib/ble/service/ble_ll_ota.h"
 #endif
 #include "proj_lib/mesh_crypto/aes_cbc.h"
@@ -216,7 +216,7 @@ void cert_rand_rsp_auth(u8 *pbuf)
 }
 
 
-void read_dev_rsp_verison(u8 *pbuf)
+void read_dev_rsp_version(u8 *pbuf)
 {
 	du_dev_version_rsp_str rsp;
 	rsp.dev_type = 3;// mesh type
@@ -279,7 +279,7 @@ void du_ota_monitor_process(void)
 {
 	if(du_ota_flag&&clock_time_exceed(tick_du_ota_monitor,DU_OTA_TIMEOUT_S*1000*1000)){
 		du_ota_set_flag(0);
-		LOG_MSG_INFO(TL_LOG_NODE_SDK,0,0,"ota timeout, reboot!",0);
+		LOG_MSG_INFO(TL_LOG_NODE_SDK,0,0,"ota timeout, reboot!");
 		start_reboot();
 	}
 }
@@ -292,10 +292,8 @@ void start_ota_proc(u8*pbuf)
 	p_ota->image_size = p_start->image_size;
 	p_ota->image_offset = p_start->offset;
 	ota_sts.sts =1;
-	#if DU_ENABLE
-	clock_init(SYS_CLK_16M_Crystal);
-	//blc_ll_setScanEnable (0, 0);
-	LOG_MSG_INFO(TL_LOG_NODE_SDK,0,0,"connect suc",0);
+	#if (DU_ENABLE && !__TLSR_RISCV_EN__)
+	LOG_MSG_INFO(TL_LOG_NODE_SDK,0,0,"connect suc");
 	#endif
 	#if (ZBIT_FLASH_WRITE_TIME_LONG_WORKAROUND_EN)
 		check_and_set_1p95v_to_zbit_flash();
@@ -308,7 +306,7 @@ void start_ota_proc(u8*pbuf)
 			bls_l2cap_requestConnParamUpdate (48, 56, 0, 500);
 		#endif
 	#endif
-	LOG_MSG_INFO(TL_LOG_NODE_SDK,(u8*)&ota_sts,sizeof(ota_sts),"start_ota_proc",0);
+	LOG_MSG_INFO(TL_LOG_NODE_SDK,(u8*)&ota_sts,sizeof(ota_sts),"start_ota_proc");
 	bls_du_cmd_rsp(DU_START_OTA_RSP,(u8*)&ota_sts,sizeof(ota_sts));
 }
 
@@ -409,12 +407,12 @@ void buffer_chk_cmd_proc(u8*pbuf)
 			}
 		}
 		if((p_ota->image_offset + p_ota->buf_idx)> du_chk.fw_len){
-			LOG_MSG_INFO(TL_LOG_NODE_SDK,0,0,"ota fw overflow ",0);
+			LOG_MSG_INFO(TL_LOG_NODE_SDK,0,0,"ota fw overflow ");
 			start_reboot();
 		}
 		if(p_ota->image_offset + p_ota->buf_idx == du_chk.fw_len){
 			// the last packet 
-			LOG_MSG_INFO(TL_LOG_NODE_SDK,0,0,"buffer check last packet",0);
+			LOG_MSG_INFO(TL_LOG_NODE_SDK,0,0,"buffer check last packet");
 			soft_crc32_du_ota_flash(p_ota->image_offset,p_ota->buf_idx-4,0,&(du_chk.crc));
 		}else{
 			soft_crc32_du_ota_flash(p_ota->image_offset,p_ota->buf_idx,0,&(du_chk.crc));
@@ -485,7 +483,7 @@ void whole_img_chk_proc(u8*pbuf)
 	// check the information by telink .
 	u32 crc_telink = get_total_crc_type1_new_fw();
 	if(crc_telink != du_chk.crc_total){
-		LOG_MSG_INFO(TL_LOG_NODE_SDK,0,0,"telink fw check fail ",0);
+		LOG_MSG_INFO(TL_LOG_NODE_SDK,0,0,"telink fw check fail ");
 		start_reboot();
 	}
 	LOG_MSG_INFO(TL_LOG_NODE_SDK,0,0,"whole_img_chk_proc crc suc %x",p_ota->image_offset);
@@ -580,7 +578,7 @@ u8  du_get_bind_flag(void)
 }
 
 /*
-it is used to contrl the mcu to be low power mode when du provision have complete.
+it is used to control the mcu to be low power mode when du provision have complete.
 the last cmd is different by every pid ,it should be check by yourself.
 for example : the pid is 0x006b2d1d,the last cmd is HEARTBEAT_PUB_SET.
 */
@@ -589,7 +587,7 @@ void du_bind_end_proc(u16 gw_adr,u32 time_s)
 	update_du_busy_s(time_s);	
 	du_bind_success_flag = 1;
 	du_set_gateway_adr(gw_adr);
-	LOG_MSG_INFO(TL_LOG_NODE_SDK,0,0,"du bind end callback ",0);
+	LOG_MSG_INFO(TL_LOG_NODE_SDK,0,0,"du bind end callback ");
 }
 
 
@@ -606,7 +604,7 @@ void du_busy_proc()
 {
 	if(
 		#if DU_LPN_EN
-		(mi_mesh_get_state()||get_blt_state() == BLS_LINK_STATE_CONN)&&
+		(mi_mesh_get_state()||blc_ll_getCurrentState() == BLS_LINK_STATE_CONN)&&
 		#endif
 		du_busy_tick&& clock_time_exceed(du_busy_tick,du_busy_s*1000*1000)
 	){
@@ -633,7 +631,7 @@ void du_busy_proc()
 			du_bind_success_flag = 0;
 			if(is_unicast_adr(du_get_gateway_adr())){
 				du_enable_gateway_adr(DU_BIND_CHECK_EN);
-				LOG_MSG_INFO(TL_LOG_NODE_SDK,0,0,"store gateway adr",0);
+				LOG_MSG_INFO(TL_LOG_NODE_SDK,0,0,"store gateway adr");
 			}
 			du_loop_tick = clock_time()-60*CLOCK_SYS_CLOCK_1S;
 		}
@@ -643,7 +641,7 @@ void du_busy_proc()
 		#endif
 
 		
-		LOG_MSG_INFO(TL_LOG_NODE_SDK,0,0,"back to normal mode",0);
+		LOG_MSG_INFO(TL_LOG_NODE_SDK,0,0,"back to normal mode");
 	}
 }
 
@@ -656,7 +654,7 @@ void du_bls_ll_setAdvEnable(int adv_enable)
 	#if !LPN_CONTROL_EN
 	bls_ll_setAdvEnable(adv_enable); 
 
-	if(get_blt_state() == BLS_LINK_STATE_IDLE || get_blt_state() == BLS_LINK_STATE_ADV )
+	if(blc_ll_getCurrentState() == BLS_LINK_STATE_IDLE || blc_ll_getCurrentState() == BLS_LINK_STATE_ADV )
 	{
 
 		if(adv_enable)  //enable
@@ -664,7 +662,7 @@ void du_bls_ll_setAdvEnable(int adv_enable)
 		}
 		else  //disable
 		{
-			if(get_blt_state() == BLS_LINK_STATE_IDLE)  //adv/conn_slave -> idle
+			if(blc_ll_getCurrentState() == BLS_LINK_STATE_IDLE)  //adv/conn_slave -> idle
 			{
 				set_blt_state(BLS_LINK_STATE_ADV);
 				blta.adv_begin_tick = clock_time();  //update
@@ -692,19 +690,19 @@ void du_key_board_long_press_detect()
 	   	sw_but.press_on++;
 		sw_but.on_tick = clock_time();
 		sw_but.down_tick = clock_time();
-		LOG_MSG_INFO(TL_LOG_NODE_SDK,0,0,"press on ",0);
+		LOG_MSG_INFO(TL_LOG_NODE_SDK,0,0,"press on ");
 	}
 	if(sw_but.sw_last && !sw_but.sw){// press down
 		sw_but.press_down++;
 		sw_but.down_tick = clock_time();
-		LOG_MSG_INFO(TL_LOG_NODE_SDK,0,0,"press down ",0);
+		LOG_MSG_INFO(TL_LOG_NODE_SDK,0,0,"press down ");
 	}
 	sw_but.sw_last = sw_but.sw;
 	if(sw_but.press_on && clock_time_exceed(sw_but.on_tick,5*1000*1000)){
 		// long press trigger to enter provision mode 
 		sw_but.press_on = 0;
 		sw_but.on_tick = clock_time();
-		LOG_MSG_INFO(TL_LOG_NODE_SDK,0,0,"long_press",0);
+		LOG_MSG_INFO(TL_LOG_NODE_SDK,0,0,"long_press");
 		mi_mesh_state_set(1);
 		update_du_busy_s(60);
 		beacon_str_init();
@@ -721,10 +719,10 @@ void du_key_board_long_press_detect()
 		if(sw_but.press_on == 1){
 			//single press
 			du_time_req_start_proc();
-			LOG_MSG_INFO(TL_LOG_NODE_SDK,0,0,"single_press",0);
+			LOG_MSG_INFO(TL_LOG_NODE_SDK,0,0,"single_press");
 		}else if (sw_but.press_on == 2){
 			// twice press
-			LOG_MSG_INFO(TL_LOG_NODE_SDK,0,0,"twice_press",0);
+			LOG_MSG_INFO(TL_LOG_NODE_SDK,0,0,"twice_press");
 			kick_out(1);
 		}
 		// clear all the sts ,press end 
@@ -761,9 +759,9 @@ void du_normal_send_demo_event()
 	p_htp->power= 100;
 	
 	while(retry_times--){
-		mesh_tx_cmd2normal(VD_LPN_REPROT,(u8*)&htp_str,sizeof(vd_du_event_str),ele_adr_primary,du_get_gateway_adr(),0);
+		mesh_tx_cmd2normal(VD_LPN_REPORT,(u8*)&htp_str,sizeof(vd_du_event_str),ele_adr_primary,du_get_gateway_adr(),0);
 	}
-	LOG_MSG_INFO(TL_LOG_NODE_SDK,0,0,"du_vd_htp_event_proc",0);
+	LOG_MSG_INFO(TL_LOG_NODE_SDK,0,0,"du_vd_htp_event_proc");
 
 }
 
@@ -823,7 +821,7 @@ void du_ui_proc_init()
 		
 		du_ota_reboot_flag = 1;
 
-		//LOG_MSG_INFO(TL_LOG_NODE_SDK,0,0,"ota reboot ,send version adv!",0);
+		//LOG_MSG_INFO(TL_LOG_NODE_SDK,0,0,"ota reboot ,send version adv!");
 		
 	}else{
 		#if DU_LPN_EN
@@ -862,7 +860,11 @@ void magic_code_chk_proc(u8* pbuf)
 	}
 }
 
-int	du_ctl_Write (u16 connHandle, void *p)
+#if BLE_MULTIPLE_CONNECTION_ENABLE
+int	du_ctl_Write (u16 conn_handle, void *p)
+#else
+int	du_ctl_Write (void *p)
+#endif
 {
 	rf_packet_att_write_t *pw = (rf_packet_att_write_t *)(p);
 	du_cmd_str *p_cmd = (du_cmd_str *)(&pw->value);
@@ -872,7 +874,7 @@ int	du_ctl_Write (u16 connHandle, void *p)
 			cert_rand_rsp_auth(p_cmd->buf);
 			break;
 		case DU_READ_DEV_VERSION_CMD:
-   			read_dev_rsp_verison(p_cmd->buf);
+   			read_dev_rsp_version(p_cmd->buf);
    			break;
 		case DU_TRANS_RESUME_BREAK_CMD:
 			resume_break_proc(p_cmd->buf);
@@ -898,13 +900,17 @@ int	du_ctl_Write (u16 connHandle, void *p)
 	return 1;
 }
 
-_attribute_ram_code_ int du_fw_proc(u16 connHandle, void *p)
+#if BLE_MULTIPLE_CONNECTION_ENABLE
+_attribute_ram_code_ int du_fw_proc(u16 conn_handle, void *p)
+#else
+_attribute_ram_code_ int du_fw_proc(void *p)
+#endif
 {
 	rf_packet_att_data_t *p_w = (rf_packet_att_data_t*)p;
 	
 	u32 len = p_w->l2cap-3;
 	du_ota_update_monitor_tick();
-	//LOG_MSG_INFO(TL_LOG_NODE_SDK,p_w->dat,16,"rcv fw proc ",0);
+	//LOG_MSG_INFO(TL_LOG_NODE_SDK,p_w->dat,16,"rcv fw proc ");
 	if(p_ota->buf_idx+len >MAX_DU_OTA_BUF) {
 		return 0;
 	}
@@ -927,7 +933,7 @@ void du_prov_bind_check()
 	//provision suc ,but provision fail.
 	if(is_provision_success() && (!du_get_bind_flag())){
 		
-		LOG_MSG_INFO(TL_LOG_NODE_SDK,0,0,"provision is not complete , bind failed!",0);
+		LOG_MSG_INFO(TL_LOG_NODE_SDK,0,0,"provision is not complete , bind failed!");
 		
 		// need to rool back .
 		kick_out(0);
@@ -937,7 +943,7 @@ void du_prov_bind_check()
 
 int du_vd_event_send(u8*p_buf,u8 len,u16 dst)
 {
-	return mesh_tx_cmd2normal(VD_LPN_REPROT, (u8 *)p_buf, len,ele_adr_primary,dst,0);
+	return mesh_tx_cmd2normal(VD_LPN_REPORT, (u8 *)p_buf, len,ele_adr_primary,dst,0);
 }
 
 u8 du_time_tid =0;
@@ -1007,7 +1013,7 @@ int du_vd_temp_event_send(vd_du_event_t* event)
 
 void du_vd_send_loop_proc()
 {
-	if(get_blt_state() != BLS_LINK_STATE_CONN && (!mi_mesh_get_state())&&is_unicast_adr(du_get_gateway_adr())){
+	if(blc_ll_getCurrentState() != BLS_LINK_STATE_CONN && (!mi_mesh_get_state())&&is_unicast_adr(du_get_gateway_adr())){
 
 		vd_du_event_t du_event;
 
@@ -1034,7 +1040,7 @@ void du_vd_send_loop_proc()
 
 #if DU_ULTRA_PROV_EN
 #define dev_key_pad		pro_random
-#define randomc_pad		pro_comfirm
+#define randomc_pad		pro_confirm
 void mesh_du_ultra_prov_loop()
 {
 	if(genie_nw_cache.tick && clock_time_exceed(genie_nw_cache.tick, 2*1000*1000)){//genie APP rx timeout 
@@ -1047,7 +1053,7 @@ void mesh_du_ultra_prov_loop()
 	}
 }
 
-void create_sha256_input_string_wihout_comma(char *p_input,u8 *pid,u8 *p_mac,u8 *p_secret)
+void create_sha256_input_string_without_comma(char *p_input,u8 *pid,u8 *p_mac,u8 *p_secret)
 {
 	u8 idx =0;
 	u8 con_product_id_rev[4];
@@ -1120,54 +1126,54 @@ int mesh_du_rcv_random(u8 *p_payload)
 	RandomC = myrand();
 	#endif
 // RandomC	
-	LOG_MSG_LIB(TL_LOG_NODE_SDK, randomc_pad, 23, "randomc_pad pre:", 0);
+	LOG_MSG_LIB(TL_LOG_NODE_SDK, randomc_pad, 23, "randomc_pad pre:");
 	memcpy(randomc_pad+19, &RandomC, sizeof(RandomC));
 	endianness_swap_u32(randomc_pad+19);
 
 	#if 1//DU_SAMPLE_DATA_TEST_EN
-	LOG_MSG_LIB(TL_LOG_NODE_SDK, p_du_random->random_a, 8, "RandomA:", 0);
-	LOG_MSG_LIB(TL_LOG_NODE_SDK, p_du_random->random_b, 8, "RandomB:", 0);
+	LOG_MSG_LIB(TL_LOG_NODE_SDK, p_du_random->random_a, 8, "RandomA:");
+	LOG_MSG_LIB(TL_LOG_NODE_SDK, p_du_random->random_b, 8, "RandomB:");
 	#endif
 // S1	
 	convert_num2_char(p_du_random->random_a, 0, 8, shar256_in);
 	convert_num2_char(p_du_random->random_b, 0, 8, shar256_in+16);
 	u8 mac[6];
 	swap48(mac, tbl_mac);
-	create_sha256_input_string_wihout_comma(shar256_in+32, (u8 *)&con_product_id, mac, con_sec_data);
+	create_sha256_input_string_without_comma(shar256_in+32, (u8 *)&con_product_id, mac, con_sec_data);
 	mbedtls_sha256((u8 *)shar256_in, 84, shar256_out, 0);
 	memcpy(S1, shar256_out, 16);
 	#if DU_SAMPLE_DATA_TEST_EN
-	LOG_USER_MSG_INFO( S1, 16, "S1:", 0);
+	LOG_USER_MSG_INFO( S1, 16, "S1:");
 	#endif
 // K1	
 	convert_num2_char(p_du_random->random_b, 0, 8, shar256_in);
-	create_sha256_input_string_wihout_comma(shar256_in+16, (u8 *)&con_product_id, mac, con_sec_data);
+	create_sha256_input_string_without_comma(shar256_in+16, (u8 *)&con_product_id, mac, con_sec_data);
 	mbedtls_sha256((u8 *)shar256_in, 68, shar256_out, 0);
 	#if DU_SAMPLE_DATA_TEST_EN
-	LOG_USER_MSG_INFO( shar256_out, 16, "K1:", 0);
+	LOG_USER_MSG_INFO( shar256_out, 16, "K1:");
 	#endif
 // D1
-	tn_aes_cmac(shar256_out, S1, 16, dev_comfirm);
+	tn_aes_cmac(shar256_out, S1, 16, dev_confirm);
 	#if DU_SAMPLE_DATA_TEST_EN
-	LOG_USER_MSG_INFO( dev_comfirm, 16, "D1:", 0);
+	LOG_USER_MSG_INFO( dev_confirm, 16, "D1:");
 	#endif
 // device key
 	convert_num2_char(p_du_random->random_a, 0, 8, shar256_in);
 	#if 1
-	// have copyed in K1, no need to copy again to save code size.
+	// have copied in K1, no need to copy again to save code size.
 	#else
 	create_sha256_input_string(shar256_in+16, (u8 *)&p_three_par->pid, p_three_par->mac, p_three_par->sec_data);
 	#endif
 	mbedtls_sha256((u8 *)shar256_in, 68, shar256_out, 0);
 	memcpy(mesh_key.dev_key, shar256_out, 16);
 	memcpy(dev_key_pad+7, shar256_out, 16);
-	LOG_MSG_LIB(TL_LOG_NODE_SDK, mesh_key.dev_key, 16, "rcv_random,device key:", 0);
+	LOG_MSG_LIB(TL_LOG_NODE_SDK, mesh_key.dev_key, 16, "rcv_random,device key:");
 	du_rancomc_t *p_rancomc = (du_rancomc_t *) p_manu_data;
 	p_rancomc->mac[0] = tbl_mac[0];
 	p_rancomc->mac[1] = tbl_mac[1];
-	memcpy(p_rancomc->device_confirm, dev_comfirm, 16);
+	memcpy(p_rancomc->device_confirm, dev_confirm, 16);
 	p_rancomc->randomC = RandomC;
-	LOG_MSG_LIB(TL_LOG_NODE_SDK, randomc_pad, 23, "randomc_pad:", 0);
+	LOG_MSG_LIB(TL_LOG_NODE_SDK, randomc_pad, 23, "randomc_pad:");
 	mesh_du_ble_adv(p_manu_data->data_type+1, p_rancomc->mac, sizeof(du_rancomc_t)-OFFSETOF(du_rancomc_t, mac));
 	return 0;
 }
@@ -1179,8 +1185,8 @@ int mesh_du_rcv_prov_data(u8 *p_payload)
 	du_manu_data_t *p_manu_data = (du_manu_data_t *)p_payload;
 	du_prov_data_t *p_prov_data = (du_prov_data_t *)(p_manu_data->data);
 	#if DU_SAMPLE_DATA_TEST_EN
-	LOG_USER_MSG_INFO(randomc_pad, 23, "RandomC':", 0);
-	LOG_USER_MSG_INFO(dev_key_pad, 23, "DeviceKey':", 0);
+	LOG_USER_MSG_INFO(randomc_pad, 23, "RandomC':");
+	LOG_USER_MSG_INFO(dev_key_pad, 23, "DeviceKey':");
 	LOG_USER_MSG_INFO(p_manu_data->data, 23, "%s raw_data:", __func__);
 	#endif
 // d3
@@ -1189,17 +1195,17 @@ int mesh_du_rcv_prov_data(u8 *p_payload)
 		p_manu_data->data[i] = randomc_pad[i]^dev_key_pad[i] ^ p_manu_data->data[i];
 	}
 	#if DU_SAMPLE_DATA_TEST_EN
-	LOG_USER_MSG_INFO(randomc_pad, 23, "RandomC':", 0);
-	LOG_USER_MSG_INFO(dev_key_pad, 23, "DeviceKey':", 0);
-	LOG_USER_MSG_INFO(p_manu_data->data, 23, "D3:", 0);
+	LOG_USER_MSG_INFO(randomc_pad, 23, "RandomC':");
+	LOG_USER_MSG_INFO(dev_key_pad, 23, "DeviceKey':");
+	LOG_USER_MSG_INFO(p_manu_data->data, 23, "D3:");
 	#endif
 // s4 
 	u8 salt[] = "XiaoduIoTTinyMesh";
 	memcpy(shar256_in, salt, sizeof(salt)-1);
-	convert_num2_char(dev_comfirm, 0, 16, shar256_in+sizeof(salt)-1);
+	convert_num2_char(dev_confirm, 0, 16, shar256_in+sizeof(salt)-1);
 	mbedtls_sha256((u8 *)shar256_in, sizeof(salt)-1+32, shar256_out, 0);
 	#if DU_SAMPLE_DATA_TEST_EN
-	LOG_USER_MSG_INFO(shar256_out, 23, "S4:", 0);
+	LOG_USER_MSG_INFO(shar256_out, 23, "S4:");
 	#endif
 // s2, prov data
 	foreach(i, 23){
@@ -1209,7 +1215,7 @@ int mesh_du_rcv_prov_data(u8 *p_payload)
 	if((p_prov_data->mac[0] != tbl_mac[1]) || (p_prov_data->mac[1] != tbl_mac[0])){
 		return -1;
 	}
-	LOG_MSG_LIB(TL_LOG_NODE_SDK, (u8 *)p_prov_data, 23, "S2:", 0);	
+	LOG_MSG_LIB(TL_LOG_NODE_SDK, (u8 *)p_prov_data, 23, "S2:");	
 
 	endianness_swap_u16((u8 *)&p_prov_data->unicast_addr);	
 	#if !DU_SAMPLE_DATA_TEST_EN
@@ -1219,7 +1225,7 @@ int mesh_du_rcv_prov_data(u8 *p_payload)
 	net_info.flags = p_prov_data->flag;
 	memcpy(net_info.iv_index+2, p_prov_data->iv_index, 2);
 	net_info.unicast_address = p_prov_data->unicast_addr;
-	mesh_provision_par_set((u8 *)&net_info);
+	mesh_provision_par_handle((u8 *)&net_info);
 	#endif
 
 	mesh_du_ble_adv(p_manu_data->data_type+1, prov_para.device_uuid, 16);
@@ -1247,7 +1253,7 @@ void mesh_du_rcv_appkey(u8 *p_payload)
 		p_manu_data->data[i] = dev_key_tmp[i] ^ p_manu_data->data[i];
 	}
 	
-	LOG_MSG_LIB(TL_LOG_NODE_SDK, p_appkey->net_app_idx, 19, "Add AppKey:", 0);
+	LOG_MSG_LIB(TL_LOG_NODE_SDK, p_appkey->net_app_idx, 19, "Add AppKey:");
 	#if !DU_SAMPLE_DATA_TEST_EN
 	mesh_app_key_set(APPKEY_ADD, p_appkey->appkey, GET_APPKEY_INDEX(p_appkey->net_app_idx),
 								GET_NETKEY_INDEX(p_appkey->net_app_idx), 1);
@@ -1309,7 +1315,7 @@ int genie_manu_nw_package(genie_nw_cache_t *p)
 				genie_nw_cache.tick = clock_time()|1;
 				memcpy(&genie_nw_cache, p, p->len_payload+OFFSETOF(genie_nw_cache_t, payload));
 				genie_nw_cache.seg_o = 2; // first packet is 1, next should be 2
-				LOG_USER_MSG_INFO((u8 *)p, p->len_payload+OFFSETOF(genie_nw_cache_t, payload),"rcv seg1:",0);
+				LOG_USER_MSG_INFO((u8 *)p, p->len_payload+OFFSETOF(genie_nw_cache_t, payload),"rcv seg1:");
 				if(1 == p->seg_N){
 					genie_nw_cache.tick = 0;
 					return 1;
@@ -1363,7 +1369,7 @@ int app_event_handler_ultra_prov(u8 *p_payload)
 	if(is_control){
 		genie_nw_cache.pkt_num = genie_nw_cache.len_payload+1;
 		genie_nw_cache.len_payload = MESH_ADV_TYPE_MESSAGE;						
-		mesh_rc_data_layer_network(BLS_HANDLE_MIN, &genie_nw_cache.pkt_num, MESH_BEAR_GATT, TRANSMIT_DEF_PAR);
+		mesh_rc_data_layer_network(&genie_nw_cache.pkt_num, MESH_BEAR_GATT, TRANSMIT_DEF_PAR);
 	}
 	#endif
 
@@ -1375,7 +1381,7 @@ void du_sample_data_run()
 	u8 RandomA[8] = {0x79,0x48,0x10,0xe7,0x72,0x8a,0x08,0x39};
 	u8 RandomB[8] = {0xa1,0x45,0x0b,0xc1,0xbc,0xda,0xf1,0xf3};
 #if 1 // dec
-	LOG_USER_MSG_INFO(randomc_pad, sizeof(randomc_pad), "mesh_cmd_ut_rx_seg_union:", 0) ;
+	LOG_USER_MSG_INFO(randomc_pad, sizeof(randomc_pad), "mesh_cmd_ut_rx_seg_union:") ;
 	du_manu_data_t manu_random = {
 		.len = 20,
 		.ad_type = GAP_ADTYPE_MANUFACTURER_SPECIFIC,

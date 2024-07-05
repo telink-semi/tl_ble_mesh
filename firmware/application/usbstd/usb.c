@@ -1,10 +1,10 @@
 /********************************************************************************************************
- * @file     usb.c
+ * @file    usb.c
  *
- * @brief    This is the source file for BLE SDK
+ * @brief   This is the source file for BLE SDK
  *
- * @author	 BLE GROUP
- * @date         2020.06
+ * @author  BLE GROUP
+ * @date    06,2022
  *
  * @par     Copyright (c) 2022, Telink Semiconductor (Shanghai) Co., Ltd. ("TELINK")
  *
@@ -19,8 +19,8 @@
  *          WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  *          See the License for the specific language governing permissions and
  *          limitations under the License.
+ *
  *******************************************************************************************************/
-
 #include "tl_common.h"
 #include "drivers.h"
 
@@ -28,7 +28,7 @@
 //#define FLOW_NO_OS         0
 //#define USB_MOUSE_ENABLE   1
 
-#if(USB_DESCRIPTER_CONFIGURATION_FOR_KM_DONGLE || USB_ID_AND_STRING_CUSTOM)
+#if(USB_DESCRIPTOR_CONFIGURATION_FOR_KM_DONGLE || USB_ID_AND_STRING_CUSTOM)
 	#include "../../vendor/8267_multi_mode/dongle_usb.h"
 #endif
 
@@ -41,6 +41,10 @@
 #include "usb.h"
 #include "usbdesc.h"
 #include "application/usbstd/StdRequestType.h"
+
+#if(USB_CDC_ENABLE)
+#include "application/app/usbcdc_i.h"
+#endif
 
 
 #if (USB_MOUSE_ENABLE)
@@ -121,7 +125,7 @@ void usb_prepare_desc_data(void) {
 		break;
 
 	case DTYPE_Configuration:
-#if(USB_DESCRIPTER_CONFIGURATION_FOR_KM_DONGLE)
+#if(USB_DESCRIPTOR_CONFIGURATION_FOR_KM_DONGLE)
 		g_response = (u8*) (&configuration_km_desc);
 		g_response_len = configuration_km_desc[2];  //the third element is the len
 #else
@@ -191,6 +195,7 @@ void usb_handle_std_intf_req() {
 	u8 value_h = (control_request.Value >> 8) & 0xff;
 #if(USB_MIC_ENABLE || USB_SPEAKER_ENABLE || USB_MOUSE_ENABLE || USB_KEYBOARD_ENABLE || USB_SOMATIC_ENABLE)
 	u8 index_l = (control_request.Index) & 0xff;
+	(void)index_l;
 #endif
 	switch (value_h) {
 	case HID_DTYPE_HID:// HID Descriptor
@@ -202,7 +207,7 @@ void usb_handle_std_intf_req() {
 		}
 #endif
 #if(USB_MOUSE_ENABLE)
-#if(USB_DESCRIPTER_CONFIGURATION_FOR_KM_DONGLE)
+#if(USB_DESCRIPTOR_CONFIGURATION_FOR_KM_DONGLE)
 		if (index_l == mouse_interface_number)
 		{
 			g_response = (u8*) (&configuration_desc_mouse[9]);
@@ -218,7 +223,7 @@ void usb_handle_std_intf_req() {
 #endif
 #endif
 #if(USB_KEYBOARD_ENABLE)
-#if(USB_DESCRIPTER_CONFIGURATION_FOR_KM_DONGLE)
+#if(USB_DESCRIPTOR_CONFIGURATION_FOR_KM_DONGLE)
 		if (index_l == keyboard_interface_number)
 		{
 			g_response = (u8*) (&configuration_desc_keyboard[9]);
@@ -262,14 +267,14 @@ void usb_handle_std_intf_req() {
 		}
 #endif
 #if(USB_KEYBOARD_ENABLE)
-		 if (index_l == (USB_DESCRIPTER_CONFIGURATION_FOR_KM_DONGLE ? keyboard_interface_number : USB_INTF_KEYBOARD)) {
+		 if (index_l == (USB_DESCRIPTOR_CONFIGURATION_FOR_KM_DONGLE ? keyboard_interface_number : USB_INTF_KEYBOARD)) {
 			//keyboard
 			g_response = (u8*) usbkb_get_report_desc();
 			g_response_len = usbkb_get_report_desc_size();
 		}
 #endif
 #if(USB_MOUSE_ENABLE)
-		else if (index_l == (USB_DESCRIPTER_CONFIGURATION_FOR_KM_DONGLE ? mouse_interface_number : USB_INTF_MOUSE)) {
+		else if (index_l == (USB_DESCRIPTOR_CONFIGURATION_FOR_KM_DONGLE ? mouse_interface_number : USB_INTF_MOUSE)) {
 			//mouse
 			g_response = (u8*) usbmouse_get_report_desc();
 			g_response_len = usbmouse_get_report_desc_size();
@@ -304,7 +309,7 @@ void usb_handle_std_intf_req() {
 			g_stall = 1;
 		}
 		break;
-	case 0x23:// Phisical Descriptor
+	case 0x23:// Physical Descriptor
 		// TODO
 		break;
 
@@ -332,7 +337,15 @@ void usb_handle_out_class_intf_req(int data_request) {
 #endif
 
 	switch (property) {
+#if(USB_CDC_ENABLE)//for cdc
+	case CDC_REQ_SetControlLine_State:
 
+		break;
+	case CDC_REQ_SetLine_Encoding:					//--2-2. set serial parameter:baudrate,check,stop and data
+		usb_cdc_set_line_encoding(data_request);
+		//-todo- according to LineCoding from USB HOST, user can set baud rate, stop bits, parity, data bit, etc.
+		break;
+#endif
 	case HID_REQ_SetReport:
 		switch (value_h) {
 		case HID_REPORT_ITEM_In:
@@ -465,6 +478,14 @@ void usb_handle_in_class_intf_req() {
 		case 0x00:
 			usbhw_write_ctrl_ep_data(0x00);
 			break;
+#if(USB_CDC_ENABLE)
+		case CDC_REQ_GetLine_Encoding:
+			usb_cdc_get_line_encoding();
+			break;
+
+		case CDC_NOTIF_Serial_State:
+			break;
+#endif
 		case HID_REQ_GetReport:
 #if(USB_SOMATIC_ENABLE)
 			if(usbsomatic_hid_report_type((control_request.Value & 0xff))){
@@ -738,17 +759,67 @@ int usb_suspend_check(void){
 	return 0;
 }
 
-#if(0)
+#if(USB_RESUME_HOST)
+
 void usb_resume_host(void)
 {
-#if (MCU_CORE_TYPE == MCU_CORE_3520)
-#else
-	reg_wakeup_en = FLD_WAKEUP_SRC_USB_RESM;
-	reg_wakeup_en = 0;
-#endif
-	sleep_us(6000);
+    reg_wakeup_en = FLD_USB_RESUME;
+    reg_wakeup_en = FLD_USB_PWDN_I;
+}
+
+u8 g_usb_device_status;
+typedef enum
+{
+    IDLE,
+    USB_DEVICE_CONNECT_PC,
+    USB_DEVICE_CHECK_PC_SLEEP,
+    USB_DEVICE_DISCONECT_PC, //may be pc power off
+}USB_DEVICE_STATUS;
+
+void usb_host_status_check(void)
+{
+	//u8 now_status = 0; // 1: pc connected, 2 :PC sleep , 3: pc off
+	static u8 last_status = 0xff;
+	if (reg_usb_host_conn & BIT(7))
+	{
+	    if ((reg_usb_mdev & FLD_USB_MDEV_WAKE_FEA) &&(usbhw_get_irq_status(USB_IRQ_SUSPEND_STATUS)))
+	    {
+	        g_usb_device_status = USB_DEVICE_CHECK_PC_SLEEP;
+	    }
+	    else
+	    {
+	        g_usb_device_status = USB_DEVICE_CONNECT_PC;
+	    }
+	}
+	else
+	{
+	    g_usb_device_status = USB_DEVICE_DISCONECT_PC;
+	}
+
+	if (last_status != g_usb_device_status)
+	{
+		if((g_usb_device_status == USB_DEVICE_CONNECT_PC))
+		{
+		    if(last_status == USB_DEVICE_DISCONECT_PC)
+		    {
+//		    	tlkapi_printf (1, "PC POWER ON\n", &last_status, 1);
+		    }
+		}
+		else if (g_usb_device_status == USB_DEVICE_CHECK_PC_SLEEP)
+		{
+//			tlkapi_printf (1, "PC Sleep\n", &last_status, 1);
+			usb_resume_host();
+		}
+		else if (g_usb_device_status == USB_DEVICE_DISCONECT_PC)
+		{
+//			tlkapi_printf (1, "PC DISCONNECT\n", &last_status, 1);
+		}
+	    last_status = g_usb_device_status;
+	}
 }
 #endif
+
+
 u8 edp_toggle[8];
 
 
@@ -767,13 +838,21 @@ void usb_handle_irq(void)
 		usbhw_clr_ctrl_ep_irq(FLD_CTRL_EP_IRQ_STA);
 		usb_handle_ctl_ep_status();
 	}
-	if (reg_usb_irq_mask & FLD_USB_IRQ_RESET_O){		//USB reset
+#if(USB_CDC_ENABLE)
+	usb_cdc_irq_data_process();
+#endif
+	if (usbhw_get_irq_status(USB_IRQ_RESET_STATUS)){		//USB reset
 		usb_mouse_report_proto = 1;
-		reg_usb_irq_mask |= FLD_USB_IRQ_RESET_O; 		//Clear USB reset flag
+		usbhw_clr_irq_status(USB_IRQ_RESET_STATUS) ; 		//Clear USB reset flag
 		for (int i=0; i<8; i++) {
 			reg_usb_ep_ctrl(i) = 0;
 			edp_toggle[i]=0;
 		}
+#if (USB_CDC_ENABLE)
+	//must add ,if endpoint is reset and ack is not set,CDC out_irq will not be generated.
+	//The packet capture phenomenon of the USB analyzer is: device does not return ack.(kaixin modify,2020-01-15)
+	usbhw_data_ep_ack(USB_EDP_CDC_OUT);
+#endif
 	}
 	irq = reg_usb_irq;							// data irq
 #if(USB_SOMATIC_ENABLE)
@@ -786,7 +865,8 @@ void usb_handle_irq(void)
 		usbhw_data_ep_ack(USB_EDP_SOMATIC_OUT);
 	}
 #endif
-	if(IRQ_USB_PWDN_ENABLE && (reg_irq_src(FLD_IRQ_USB_PWDN_EN) & FLD_IRQ_USB_PWDN_EN)){
+
+	if(IRQ_USB_PWDN_ENABLE && (reg_irq_src(IRQ_USB_PWDN) & IRQ_USB_PWDN)){
 		usb_has_suspend_irq = 1;
 	}else{
 		usb_has_suspend_irq = 0;
@@ -820,15 +900,15 @@ void usb_handle_irq(void)
 //		usbhw_reset_ep_ptr(USB_EDP_PRINTER_OUT);
 //	}
 
-	if(IRQ_USB_PWDN_ENABLE && (reg_irq_src & FLD_IRQ_USB_PWDN_EN)){
+	if(IRQ_USB_PWDN_ENABLE && (reg_irq_src & IRQ_USB_PWDN)){
 		usb_has_suspend_irq = 1;
 	}else{
 		usb_has_suspend_irq = 0;
 	}
 #endif
 
-#if (!USB_DESCRIPTER_CONFIGURATION_FOR_KM_DONGLE)
-	if ((reg_irq_src(FLD_IRQ_USB_PWDN_EN) & FLD_IRQ_USB_PWDN_EN))
+#if (!USB_DESCRIPTOR_CONFIGURATION_FOR_KM_DONGLE)
+	if (0 && reg_irq_src(IRQ_USB_PWDN))
 	{
 		return;
 	}
@@ -837,17 +917,19 @@ void usb_handle_irq(void)
 		extern void usbmouse_report_frame(void);
 		extern void usbmouse_release_check(void);
 		usbmouse_report_frame();
-		//usbmouse_release_check();
+		usbmouse_release_check();
 	#endif
 
 	#if(USB_KEYBOARD_ENABLE)
 		extern void usbkb_report_frame(void);
 		extern void usbkb_release_check(void);
-		//usbkb_report_frame();
-		//usbkb_release_check();
+		usbkb_report_frame();
+		usbkb_release_check();
 	#endif
 #endif
-
+#if(USB_RESUME_HOST)
+	usb_host_status_check();
+#endif
 	usb_hid_report_fifo_proc();
 }
 

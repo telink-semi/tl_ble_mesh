@@ -1,10 +1,10 @@
 /********************************************************************************************************
- * @file     gatt.h
+ * @file    gatt.h
  *
- * @brief    This is the header file for BLE SDK
+ * @brief   This is the header file for BLE SDK
  *
- * @author	 BLE GROUP
- * @date         11,2022
+ * @author  BLE GROUP
+ * @date    06,2022
  *
  * @par     Copyright (c) 2022, Telink Semiconductor (Shanghai) Co., Ltd. ("TELINK")
  *
@@ -19,14 +19,26 @@
  *          WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  *          See the License for the specific language governing permissions and
  *          limitations under the License.
+ *
  *******************************************************************************************************/
-
 #pragma  once
 
 
+/* Client Supported Features bit assignments */
+#define CLIENT_SUPP_FEAT_ROBUST_CACHING			BIT(0) //The client supports robust caching
+#define CLIENT_NOT_SUPP_FEAT_ROBUST_CACHING		0
+#define CLIENT_SUPP_FEAT_EATT_BEARER			BIT(1) //The client supports Enhanced ATT bearer
+#define CLIENT_NOT_SUPP_FEAT_EATT_BEARER		0
+#define CLIENT_SUPP_FEAT_MULTI_HDL_VAL_NTF		BIT(2) //The client supports Enhanced ATT bearer
+#define CLIENT_NOT_SUPP_FEAT_MULTI_HDL_VAL_NTF	0
+
+/* Server Supported Features bit assignments */
+#define SERVER_SUPP_FEAT_EATT_BEARER			BIT(0) //The server supports Enhanced ATT bearer
+#define SERVER_NOT_SUPP_FEAT_EATT_BEARER		0
+
 
 /** @brief Service Attribute Value. */
-typedef struct {
+typedef struct __attribute__((packed)) {
     /** Service UUID. */
     const uuid_t *uuid;
     /** Service end handle. */
@@ -34,7 +46,7 @@ typedef struct {
 } gatt_service_val_t;
 
 /** @brief Include Attribute Value. */
-typedef struct {
+typedef struct __attribute__((packed)) {
 	/* Service start handle. */
     u16 startHdl;
     /* Service end handle. */
@@ -43,27 +55,15 @@ typedef struct {
     uuid_t uuid;
 } gatt_include_t;
 
-/* Declare the structure first */
-struct gatt_attr_t;
-typedef u32 (*gatt_attr_read_func_t)(u16 connHdl, struct gatt_attr_t *attr, void *buf, u16 len, u16 offset);
-typedef u32 (*gatt_attr_write_func_t)(u16 connHdl, struct gatt_attr_t *attr, void *buf, u16 len, u16 offset, u8 flags);
 
 /** @brief GATT Attribute structure. */
-typedef struct {
-    /* Attribute_permissions:  */
-    u16 perm;
-
+typedef struct __attribute__((packed)) {
     /* Attribute_handle: handle */
     u16 handle;
     /* Attribute_types: UUID */
     const uuid_t *uuid;
     /* Attribute_value: User data */
     void *user_data;
-
-    /* Read callback */
-    gatt_attr_read_func_t rd_cb;
-    /* Write callback */
-    gatt_attr_write_func_t wr_cb;
 
 }gatt_attr_t;
 
@@ -89,7 +89,7 @@ typedef struct {
 #define CHAR_PROP_EXTENDED               BIT(7)
 
 /** @brief Characteristic Attribute Value. */
-typedef struct {
+typedef struct __attribute__((packed)) {
 	/** GATT Characteristic attribute Handle. */
 	u16 attrHdl;
 	/** GATT Characteristic Properties. */
@@ -132,7 +132,7 @@ typedef struct {
 
 
 /** @brief Characteristic Presentation Format declaration. */
-typedef struct {
+typedef struct __attribute__((packed)) {
 	/* Format of the value of the characteristic */
 	u8 format;
 	/* Exponent field to determine how the value of this characteristic is further formatted */
@@ -144,7 +144,3 @@ typedef struct {
 	/* Description of the characteristic as defined in a higher layer profile */
 	u16 description;
 } gatt_cpf_t;
-
-
-
-void blt_gatt_procSvrDisc(u16 connHandle);

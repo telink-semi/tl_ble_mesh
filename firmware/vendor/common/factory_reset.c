@@ -23,11 +23,7 @@
  *
  *******************************************************************************************************/
 #include "tl_common.h"
-#if (!__TLSR_RISCV_EN__)
 #include "proj_lib/ble/blt_config.h"
-#include "proj_lib/ble/service/ble_ll_ota.h"
-#endif
-#include "stack/ble/ble.h"
 #include "app_beacon.h"
 
 //FLASH_ADDRESS_EXTERN;
@@ -48,6 +44,11 @@ static int adr_reset_cnt_idx = 0;
 
 typedef void (*mesh_start_reboot_t) (void);
 
+/**
+ * @brief       This function will trigger MCU reboot.
+ * @return      none
+ * @note        
+ */
 /*_attribute_no_inline_ */void mesh_start_reboot()
 {
 #if 1
@@ -175,6 +176,9 @@ int factory_reset_handle ()
 
 int factory_reset_cnt_check ()
 {
+#if PM_DEEPSLEEP_RETENTION_ENABLE
+	return 0; // not support recording factory reset count
+#else
     static u8 clear_st = 3;
     static u32 reset_check_time;
 
@@ -199,6 +203,7 @@ int factory_reset_cnt_check ()
 	}
 	
 	return 0;
+#endif
 }
 
 #if __TLSR_RISCV_EN__
@@ -228,6 +233,11 @@ const u8 factory_reset_serials[] = FACTORY_RESET_SERIALS;
 STATIC_ASSERT(sizeof(factory_reset_serials) % 2 == 0);
 STATIC_ASSERT(sizeof(factory_reset_serials) < 100);
 
+/**
+ * @brief       This function check if there is spare flash area to write a new "reset count", if not it will run erase.
+ * @return      none
+ * @note        
+ */
 void	reset_cnt_clean ()
 {
 	if (adr_reset_cnt_idx < 3840)
@@ -235,21 +245,32 @@ void	reset_cnt_clean ()
 		return;
 	}
 #if FACTORY_RESET_LOG_EN
-	LOG_USER_MSG_INFO(0,0,"flash erase\r\n",0);
+	LOG_USER_MSG_INFO(0,0,"flash erase\r\n");
 #endif
 	flash_erase_sector (FLASH_ADR_RESET_CNT);
 	adr_reset_cnt_idx = 0;
 }
 
+/**
+ * @brief       This function write "reset count"
+ * @param[in]   cnt	- count
+ * @return      none
+ * @note        
+ */
 void write_reset_cnt (u8 cnt) // reset cnt value from 1 to 254, 0 is invalid cnt
 {
     reset_cnt_clean ();
 	flash_write_page (FLASH_ADR_RESET_CNT + adr_reset_cnt_idx, 1, (u8 *)(&cnt));
 #if FACTORY_RESET_LOG_EN
-	LOG_USER_MSG_INFO(0,0,"flash write page action\r\n",0);
+	LOG_USER_MSG_INFO(0,0,"flash write page action\r\n");
 #endif
 }
 
+/**
+ * @brief       This function clear "reset count"
+ * @return      none
+ * @note        
+ */
 void clear_reset_cnt ()
 {
     write_reset_cnt(RESET_CNT_INVALID);
@@ -264,6 +285,11 @@ STATIC_ASSERT(BIT_IS_POW2(RESET_CNT_SIZE));
 #define RESET_CNT_SIZE			(1)
 #endif
 
+/**
+ * @brief       This function get address index of the last valid record of "Reset count".
+ * @return      none
+ * @note        
+ */
 void reset_cnt_get_idx ()		//return 0 if unconfigured
 {
 	for (adr_reset_cnt_idx=0; adr_reset_cnt_idx<4096; adr_reset_cnt_idx+=RESET_CNT_SIZE)
@@ -294,6 +320,11 @@ void reset_cnt_get_idx ()		//return 0 if unconfigured
 #endif
 }
 
+/**
+ * @brief       This function get "reset count" value.
+ * @return      reset_cnt.
+ * @note        
+ */
 u8 get_reset_cnt () // reset cnt value from 1 to 254, 0 is invalid cnt
 {
 	u8 reset_cnt;
@@ -301,6 +332,11 @@ u8 get_reset_cnt () // reset cnt value from 1 to 254, 0 is invalid cnt
 	return reset_cnt;
 }
 
+/**
+ * @brief       This function increase "reset count".
+ * @return      none
+ * @note        
+ */
 void increase_reset_cnt ()
 {
 	u8 reset_cnt = get_reset_cnt();
@@ -318,6 +354,11 @@ void increase_reset_cnt ()
     #endif
 }
 
+/**
+ * @brief       This function check if "reset count" is valid to trigger factory reset. if not will increase reset count.
+ * @return      0
+ * @note        
+ */
 int factory_reset_handle ()
 {
     reset_cnt_get_idx();   
@@ -328,12 +369,12 @@ int factory_reset_handle ()
         irq_disable();
         factory_reset();
             #if DUAL_MODE_WITH_TLK_MESH_EN
-        UI_resotre_TLK_4K_with_check();
+        UI_restore_TLK_4K_with_check();
             #endif
             #if FACTORY_RESET_LOG_EN
-        LOG_USER_MSG_INFO(0,0,"factory reset success\r\n",0);
+        LOG_MSG_LIB(TL_LOG_NODE_BASIC, 0,0,"factory reset success\r\n");
             #endif
-        show_ota_result(OTA_SUCCESS);
+        show_factory_reset();
 	    mesh_start_reboot();
 	}else{
         increase_reset_cnt();
@@ -341,9 +382,18 @@ int factory_reset_handle ()
 	return 0;
 }
 
-#define VALID_POWER_ON_TIME_US 	(50*1000)
+#define VALID_POWER_ON_TIME_US 	(50*1000)	// will not start checking flow of factory reset count until after this time to avoid unstable power supply.
+
+/**
+ * @brief       This function is a poll flow to check power on serials.
+ * @return      0
+ * @note        
+ */
 int factory_reset_cnt_check ()
 {
+#if PM_DEEPSLEEP_RETENTION_ENABLE
+	return 0; // not support recording factory reset count
+#else
     static u8 clear_st = 4;
     static u32 reset_check_time;
 
@@ -367,20 +417,31 @@ int factory_reset_cnt_check ()
 	    clear_st = 0;
         clear_reset_cnt();
         #if FACTORY_RESET_LOG_EN
-        LOG_USER_MSG_INFO(0,0,"cnt clear\r\n",0);
+        LOG_USER_MSG_INFO(0,0,"cnt clear\r\n");
         #endif
 	}
 	
 	return 0;
+#endif
 }
 
 #endif
 #endif
 
 #if FLASH_PLUS_ENABLE
-int factory_reset() // flash plus
+
+/**
+ * @brief       This function is factory reset API to clear all settings for 1M bytes flash map.
+ * @return      0
+ * @note        
+ */
+int factory_reset() // 1M flash
 {
 	u32 r = irq_disable ();
+#if (APP_FLASH_PROTECTION_ENABLE)
+	u32 backup_addr = app_flash_protection_mesh_par_modify_much_sectors_begin(FLASH_ADR_AREA_1_START, FLASH_SIZE_MAX_SW);
+#endif
+
 	for(int i = 0; i < (FLASH_ADR_AREA_1_END - FLASH_ADR_AREA_1_START) / 4096; ++i){
 	    u32 adr = FLASH_ADR_AREA_1_START + i*0x1000;
 	    if(adr != FLASH_ADR_RESET_CNT){
@@ -391,6 +452,20 @@ int factory_reset() // flash plus
 	if((FLASH_ADR_MESH_TYPE_FLAG < FLASH_ADR_AREA_1_START) || (FLASH_ADR_MESH_TYPE_FLAG >= FLASH_ADR_AREA_1_END)){
         flash_erase_sector(FLASH_ADR_MESH_TYPE_FLAG);
     }
+
+#if GATEWAY_ENABLE
+	#if (FLASH_ADR_VC_NODE_INFO_END > FLASH_ADR_AREA_1_END) // user may move FLASH_ADR_VC_NODE_INFO to custom flash area.
+	for (int i = 0; i < (FLASH_ADR_VC_NODE_INFO_END - FLASH_ADR_VC_NODE_INFO) / 4096; ++i){
+		flash_erase_sector(FLASH_ADR_VC_NODE_INFO + i*0x1000); // user may change FLASH_ADR_VC_NODE_INFO, erase should be better
+	}
+	#endif
+#endif
+
+#if (BLE_REMOTE_SECURITY_ENABLE)
+	for(int i = 0; i < 2; ++i){
+		// flash_erase_sector(FLASH_ADR_SMP_PARA_START + i*0x1000); // no need erase. if needed, it should not be erased still when gateway import/export JSON. 
+    }
+#endif
 	// no area2
 
 	#if HOMEKIT_EN
@@ -423,12 +498,26 @@ int factory_reset() // flash plus
 	#endif
 	CB_USER_FACTORY_RESET_ADDITIONAL();
     flash_erase_sector(FLASH_ADR_RESET_CNT);    // at last should be better, when power off during factory reset erase.
+
+#if (APP_FLASH_PROTECTION_ENABLE)
+	app_flash_protection_mesh_par_modify_much_sectors_end(backup_addr);
+#endif
+
     irq_restore(r);
 	return 0;
 }
 #else
+
+/**
+ * @brief       This function is factory reset API to clear all settings for 512k bytes flash map.
+ * @return      0
+ * @note        
+ */
 int factory_reset(){
 	u32 r = irq_disable ();
+#if (APP_FLASH_PROTECTION_ENABLE)
+	u32 backup_addr = app_flash_protection_mesh_par_modify_much_sectors_begin(FLASH_ADR_AREA_1_START, FLASH_SIZE_MAX_SW);
+#endif
 	for(int i = 0; i < (FLASH_ADR_AREA_1_END - FLASH_ADR_AREA_1_START) / 4096; ++i){
 	    u32 adr = FLASH_ADR_AREA_1_START + i*0x1000;
 	    if(adr != FLASH_ADR_RESET_CNT){
@@ -443,6 +532,20 @@ int factory_reset(){
 		}
 	}
 	
+#if GATEWAY_ENABLE
+	#if (FLASH_ADR_VC_NODE_INFO_END > FLASH_ADR_AREA_2_END) // user may move FLASH_ADR_VC_NODE_INFO to custom flash area.
+	for (int i = 0; i < (FLASH_ADR_VC_NODE_INFO_END - FLASH_ADR_VC_NODE_INFO) / 4096; ++i){
+		flash_erase_sector(FLASH_ADR_VC_NODE_INFO + i*0x1000); // user may change FLASH_ADR_VC_NODE_INFO, erase should be better
+	}
+	#endif
+#endif
+
+#if (BLE_REMOTE_SECURITY_ENABLE)
+	for(int i = 0; i < 2; ++i){
+		// flash_erase_sector(FLASH_ADR_SMP_PARA_START + i*0x1000); // no need erase. if needed, it should not be erased still when gateway import/export JSON. 
+	}
+#endif
+
 	for(int i = 1; i < (FLASH_ADR_PAR_USER_MAX - (CFG_SECTOR_ADR_CALIBRATION_CODE)) / 4096; ++i){
 		#if XIAOMI_MODULE_ENABLE
 		if(i < (((FLASH_ADR_PAR_USER_MAX - (CFG_SECTOR_ADR_CALIBRATION_CODE)) / 4096) - 1)){ // the last sector is FLASH_ADR_MI_AUTH
@@ -473,14 +576,24 @@ int factory_reset(){
 	CB_USER_FACTORY_RESET_ADDITIONAL();
     flash_erase_sector(FLASH_ADR_RESET_CNT);    // at last should be better, when power off during factory reset erase.
 
+#if (APP_FLASH_PROTECTION_ENABLE)
+	app_flash_protection_mesh_par_modify_much_sectors_end(backup_addr);
+#endif
+
     irq_restore(r);
 	return 0;
 }
 #endif
 
+/**
+ * @brief       This function to kick out current node to unprovision state(factory reset state).
+ * @param[in]   led_en	- 1: with led indication; 0: no led inditation
+ * @return      none
+ * @note        
+ */
 void kick_out(int led_en){
 #if AUDIO_MESH_EN
-	vd_cmd_mic_tx_req(ele_adr_primary);
+	vd_cmd_mic_tx_req(ele_adr_primary); // just to clear play buffer of itself(no sending RF packet), so that no noise during 6 seconds of led flash.
 #endif
 	#if !WIN32
 	// add terminate cmd 
@@ -491,7 +604,7 @@ void kick_out(int led_en){
 	#endif
 	
     #if DUAL_MODE_WITH_TLK_MESH_EN
-    UI_resotre_TLK_4K_with_check();
+    UI_restore_TLK_4K_with_check();
     #endif
 #if 0 // not erase network info, user can revert network info by reboot or call mesh_revert_network()
 	mesh_reset_network(1);

@@ -1,10 +1,10 @@
 /********************************************************************************************************
- * @file     static_assert.h
+ * @file    static_assert.h
  *
- * @brief    This is the header file for BLE SDK
+ * @brief   This is the header file for BLE SDK
  *
- * @author	 BLE GROUP
- * @date         11,2022
+ * @author  BLE GROUP
+ * @date    06,2022
  *
  * @par     Copyright (c) 2022, Telink Semiconductor (Shanghai) Co., Ltd. ("TELINK")
  *
@@ -19,8 +19,8 @@
  *          WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  *          See the License for the specific language governing permissions and
  *          limitations under the License.
+ *
  *******************************************************************************************************/
-
 #pragma once
 
 
@@ -28,7 +28,7 @@
 
 // #define STATIC_ASSERT(expr)   			{ char static_assertion[(expr) ? 1 : -1]; ((void) static_assertion); }	// (void) array;  to remove compiler unused variable warning
 
-// more complicated version canbe used anywhere in the source
+// more complicated version can be used anywhere in the source
 #define STATIC_ASSERT_M(COND,MSG)  __attribute__((unused)) typedef char static_assertion_##MSG[(!!(COND))*2-1]
 // token pasting madness: 
 #define STATIC_ASSERT3(X,L) 	STATIC_ASSERT_M(X,static_assertion_at_line_##L) 

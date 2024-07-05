@@ -1,10 +1,10 @@
 /********************************************************************************************************
- * @file     app_common.h
+ * @file    app_common.h
  *
- * @brief    This is the header file for BLE SDK
+ * @brief   This is the header file for BLE SDK
  *
- * @author	 BLE GROUP
- * @date         11,2022
+ * @author  BLE GROUP
+ * @date    06,2022
  *
  * @par     Copyright (c) 2022, Telink Semiconductor (Shanghai) Co., Ltd. ("TELINK")
  *
@@ -19,26 +19,19 @@
  *          WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  *          See the License for the specific language governing permissions and
  *          limitations under the License.
+ *
  *******************************************************************************************************/
-
 #ifndef VENDOR_COMMON_APP_COMMON_H_
 #define VENDOR_COMMON_APP_COMMON_H_
 
 
-#include "blt_common.h"
+/**
+ * @brief      This function is check If IRK(local IRK or peer IRK) valid
+ * @param[in]  pIrk - pointer to IRK(local IRK or peer IRK)
+ * @return     1: IRK valid
+ * 			   0: IRK invalid
+ */
+int blc_app_isIrkValid(u8* pIrk);
 
-#include "device_manage.h"
-
-#include "simple_sdp.h"
-
-#include "custom_pair.h"
-
-#include "blt_fw_sign.h"
-
-#include "flash_fw_check.h"
-
-#include "blt_soft_timer.h"
-
-#include "common_dbg.h"
 
 #endif /* VENDOR_COMMON_APP_COMMON_H_ */

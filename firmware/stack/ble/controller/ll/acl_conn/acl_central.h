@@ -1,10 +1,10 @@
 /********************************************************************************************************
- * @file     acl_central.h
+ * @file    acl_central.h
  *
- * @brief    This is the header file for BLE SDK
+ * @brief   This is the header file for BLE SDK
  *
- * @author	 BLE GROUP
- * @date         11,2022
+ * @author  BLE GROUP
+ * @date    06,2022
  *
  * @par     Copyright (c) 2022, Telink Semiconductor (Shanghai) Co., Ltd. ("TELINK")
  *
@@ -19,8 +19,8 @@
  *          WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  *          See the License for the specific language governing permissions and
  *          limitations under the License.
+ *
  *******************************************************************************************************/
-
 #ifndef ACL_CENTRAL_H_
 #define ACL_CENTRAL_H_
 
@@ -69,6 +69,16 @@ ble_sts_t	blc_ll_setAclCentralBaseConnectionInterval(conn_inter_t conn_interval)
  * 			           other: failed
  */
 ble_sts_t 	blc_ll_updateConnection(u16 connHandle, conn_inter_t conn_min, conn_inter_t conn_max, u16 conn_latency, conn_tm_t timeout, u16 ce_min, u16 ce_max);
+
+
+
+/**
+ * @brief      This function is used to customize Connection Establish Event
+ * @param[in]  enable - 1: enable;  0: disable
+ * @return     none
+ */
+void	 	blc_ll_customizeConnectionEstablishEvent(int enable);
+
 
 
 #endif /* ACL_CENTRAL_H_ */

@@ -1,10 +1,10 @@
 /********************************************************************************************************
- * @file     ll_pm.h
+ * @file    ll_pm.h
  *
- * @brief    This is the header file for BLE SDK
+ * @brief   This is the header file for BLE SDK
  *
- * @author	 BLE GROUP
- * @date         2020.06
+ * @author  BLE GROUP
+ * @date    06,2022
  *
  * @par     Copyright (c) 2022, Telink Semiconductor (Shanghai) Co., Ltd. ("TELINK")
  *
@@ -19,12 +19,12 @@
  *          WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  *          See the License for the specific language governing permissions and
  *          limitations under the License.
+ *
  *******************************************************************************************************/
-
 #ifndef LL_PM_H_
 #define LL_PM_H_
 
-
+#include "types.h"
 
 /**
  *  @brief
@@ -82,14 +82,14 @@ void 		blc_pm_setSleepMask (sleep_mask_t mask);
  * @param	en -  deepSleep retention enable, 1: enable; 0: disable
  * @return	none
  */
-void 	blc_pm_setDeepsleepRetentionEnable (deep_retn_en_t en);
+void 		blc_pm_setDeepsleepRetentionEnable (deep_retn_en_t en);
 
 /**
  * @brief	for user to set low power mode wake up source
  * @param	wakeup_src - low power mode wake_up source
  * @return	none
  */
-void		blc_pm_setWakeupSource (SleepWakeupSrc_TypeDef wakeup_src);
+void		blc_pm_setWakeupSource (pm_sleep_wakeup_src_e wakeup_src);
 
 
 /**
@@ -108,10 +108,10 @@ void 		bls_pm_setManualLatency(u16 latency);
 
 /**
  * @brief	for user to set the threshold of sleep tick for entering deep retention mode
- * @param	thres_ms - the threshold of time for suspend or deepsleep retention
+ * @param	threshold_ms - the threshold of time for suspend or deepsleep retention
  * @return  none.
  */
-void 		blc_pm_setDeepsleepRetentionThreshold(u32 thres_ms);
+void 		blc_pm_setDeepsleepRetentionThreshold(u32 threshold_ms);
 
 /**
  * @brief	for user to set early wake up tick for deep retention mode
@@ -125,7 +125,7 @@ void 		blc_pm_setDeepsleepRetentionEarlyWakeupTiming(u32 earlyWakeup_us);
  * @param	sleep_type - the type of deep retention mode
  * @return  none.
  */
-void 		blc_pm_setDeepsleepRetentionType(SleepMode_TypeDef sleep_type);
+void 		blc_pm_setDeepsleepRetentionType(pm_sleep_mode_e sleep_type);
 
 
 
@@ -149,6 +149,11 @@ void 		blc_pm_setAppWakeupLowPower(u32 wakeup_tick, u8 enable);
  */
 void 		blc_pm_registerAppWakeupLowPowerCb(pm_appWakeupLowPower_callback_t cb);
 
-
+/**
+ * @brief	This function enables low power mode in OS usage
+ * @param	none
+ * @return	none
+ */
+void	blc_ll_enOsPowerManagement_module(void);
 
 #endif /* LL_PM_H_ */

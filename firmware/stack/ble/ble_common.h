@@ -1,10 +1,10 @@
 /********************************************************************************************************
- * @file     ble_common.h
+ * @file    ble_common.h
  *
- * @brief    This is the header file for BLE SDK
+ * @brief   This is the header file for BLE SDK
  *
- * @author	 BLE GROUP
- * @date         2020.06
+ * @author  BLE GROUP
+ * @date    06,2022
  *
  * @par     Copyright (c) 2022, Telink Semiconductor (Shanghai) Co., Ltd. ("TELINK")
  *
@@ -19,8 +19,8 @@
  *          WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  *          See the License for the specific language governing permissions and
  *          limitations under the License.
+ *
  *******************************************************************************************************/
-
 #ifndef BLE_COMMON_H
 #define BLE_COMMON_H
 
@@ -127,19 +127,25 @@ typedef enum {
     L2CAP_ERR_INSUFFICIENT_RESOURCES,
     L2CAP_ERR_PSM_NOT_REGISTER,
     L2CAP_ERR_CONTROL_NOT_READY,
-    L2CAP_ERR_PSM_HAVE_ESTABLISH,
+    L2CAP_ERR_COC_CREATING,
+	L2CAP_ERR_COC_DATA_STILL_SENT,
+	L2CAP_ERR_NO_CID_AVAILABLE,
+	L2CAP_ERR_ALL_CID_ALLOCATED,
+	L2CAP_ERR_NO_CREATE_COC_HANDLER,
 
     //SMP status
 	SMP_ERR_INVALID_PARAMETER 									   = 0xA0,
 	SMP_ERR_PAIRING_BUSY,
+	SMP_ERR_SC_MTU_TOO_SHORT,
 
 	//GATT status
 	GATT_ERR_INVALID_PARAMETER 									   = 0xB0,
 	GATT_ERR_PREVIOUS_INDICATE_DATA_HAS_NOT_CONFIRMED,
-	GATT_ERR_SERVICE_DISCOVERY_TIEMOUT,
-	GATT_ERR_NOTIFY_INDICATION_NOT_PERMITTED,
+	GATT_ERR_SERVICE_DISCOVERY_TIMEOUT,
+	GATT_ERR_NOTIFY_INDICATION_BUSY,
 	GATT_ERR_DATA_PENDING_DUE_TO_SERVICE_DISCOVERY_BUSY,
 	GATT_ERR_DATA_LENGTH_EXCEED_MTU_SIZE,
+	GATT_ERR_DATA_LENGTH_EXCEED_MEM_RESTRICTION,
 	GATT_ERR_UNSPECIFIED,
 
 	//GAP status
@@ -149,19 +155,24 @@ typedef enum {
 
 	//IAL
 	IAL_ERR_SDU_LEN_EXCEED_SDU_MAX,
-	IAL_ERR_LOSS_SDU_INTRVEL,
+	IAL_ERR_LOSS_SDU_INTERVAL,
 	IAL_ERR_ISO_TX_FIFO_NOT_ENOUGH,
 	IAL_ERR_SDU_BUFF_INVALID,
 	IAL_ERR_EVENT_PASSED,
+	IAL_ERR_INVALID_PDU,
 	IAL_HCI_BUFFER_INVALID,
 
 	//Service status
 	SERVICE_ERR_INVALID_PARAMETER 								   = 0xD0,
 
+	//Profile common error
+	PRF_ERR_INVALID_ATTR_HANDLE,
+	PRF_ERR_INVALID_PARAMETER,
+
 	//Audio Profile status
 	AUDIO_ERR_NO_MEMORY											   = 0xE0,
 	AUDIO_ERR_INVALID_PARAMETER,
-	AUDIO_ERR_DISCPVERY_FAILED,
+	AUDIO_ERR_DISCOVERY_FAILED,
 	AUDIO_ERR_BUSY,
 	AUDIO_ERR_STATUS,
 
@@ -221,8 +232,8 @@ typedef enum {
 typedef enum {
     INIT_SUCCESS = 0,
 
-	//Application buffer check error code
-	LL_ACL_RX_BUF_NO_INIT 							   	  		   = 0x10,
+	///////// Controller ///////////
+	LL_ACL_RX_BUF_NO_INIT                                          = 0x1001,
 	LL_ACL_RX_BUF_PARAM_INVALID,
 	LL_ACL_RX_BUF_SIZE_NOT_MEET_MAX_RX_OCT,
 	LL_ACL_TX_BUF_NO_INIT,
@@ -234,16 +245,10 @@ typedef enum {
 
 
 
-	LL_CIS_RX_BUF_NO_INIT 							   	  		   = 0x20,
-	LL_CIS_RX_BUF_PARAM_INVALID,
-	LL_CIS_TX_BUF_NO_INIT,
-	LL_CIS_TX_BUF_PARAM_INVALID,
-	LL_CIS_RX_EVT_BUF_NO_INIT,
-	LL_CIS_RX_EVT_BUF_PARAM_INVALID,
-	LL_CIS_RX_IAL_BUF_NO_INIT,
-	LL_CIS_TX_IAL_BUF_NO_INIT,
+	LL_ACL_TX_BUF_SIZE_MUL_NUM_EXCEED_4K						   = 0x1071,		/* special, B91 only */
 
-	LL_BIS_TX_BUF_NO_INIT							   	  		   = 0x30,
+
+	LL_BIS_TX_BUF_NO_INIT                                          = 0x1081,
 	LL_BIS_TX_BUF_PARAM_INVALID,
 	LL_BIS_RX_BUF_NO_INIT,
 	LL_BIS_RX_BUF_PARAM_INVALID,
@@ -256,9 +261,37 @@ typedef enum {
 
 
 
+	LL_CIS_RX_BUF_NO_INIT                                          = 0x1091,
+	LL_CIS_RX_BUF_PARAM_INVALID,
+	LL_CIS_TX_BUF_NO_INIT,
+	LL_CIS_TX_BUF_PARAM_INVALID,
+	LL_CIS_RX_EVT_BUF_NO_INIT,
+	LL_CIS_RX_EVT_BUF_PARAM_INVALID,
+	LL_CIS_RX_IAL_BUF_NO_INIT,
+	LL_CIS_TX_IAL_BUF_NO_INIT,
 
-	/* special */
-	LL_ACL_TX_BUF_SIZE_MUL_NUM_EXCEED_4K						   = 0xF0,
+
+
+	////////////////// Host /////////////////////
+	//GAP
+    INIT_ERR_GAP_PARAM_INVALID                                     = 0x2001,
+
+	//L2CAP
+    INIT_ERR_L2CAP_PARAM_INVALID                                   = 0x2101,
+
+
+
+	//ATT
+    INIT_ERR_ATT_PARAM_INVALID                                     = 0x2201,
+
+
+	//GATT
+    INIT_ERR_GATT_PARAM_INVALID                                    = 0x2301,
+
+	//SMP
+    INIT_ERR_SMP_PARAM_INVALID                                     = 0x2401,
+	INIT_ERR_SMP_BONDING_MAX_NUMBER_EXCEED,
+
 
 } init_err_t;
 
@@ -351,40 +384,6 @@ typedef enum{
 
 
 
-/******************************************** GAP ***************************************************************/
-
-// https://www.bluetooth.com/specifications/assigned-numbers/generic-access-profile/
-// EIR Data Type, Advertising Data Type (AD Type) and OOB Data Type Definitions
-
-typedef enum {
-	DT_FLAGS								= 0x01,		//	Flag
-	DT_INCOMPLT_LIST_16BIT_SERVICE_UUID		= 0x02,		//	Incomplete List of 16-bit Service Class UUIDs
-	DT_COMPLETE_LIST_16BIT_SERVICE_UUID	    = 0x03,		//	Complete List of 16-bit Service Class UUIDs
-	DT_INCOMPLT_LIST_32BIT_SERVICE_UUID    	= 0x04,		//	Incomplete List of 32-bit Service Class UUIDs
-	DT_COMPLETE_LIST_32BIT_SERVICE_UUID		= 0x05,		//	Complete List of 32-bit Service Class UUIDs
-	DT_INCOMPLT_LIST_128BIT_SERVICE_UUID   	= 0x06,		//	Incomplete List of 128-bit Service Class UUIDs
-	DT_COMPLETE_LIST_128BIT_SERVICE_UUID	= 0x07,		//	Complete List of 128-bit Service Class UUIDs
-	DT_SHORTENED_LOCAL_NAME					= 0x08,		//	Shortened Local Name
-	DT_COMPLETE_LOCAL_NAME					= 0x09,		//	Complete Local Name
-	DT_TX_POWER_LEVEL						= 0x0A,		//	Tx Power Level
-
-	DT_CLASS_OF_DEVICE						= 0x0D,		//	Class of Device
-	DT_SERVICE_DATA							= 0x16,		//	Service Data
-	DT_APPEARANCE							= 0x19,		//	Appearance
-
-	DT_CHM_UPT_IND							= 0x28,		//	Channel Map Update Indication
-	DT_BIGINFO								= 0x2C,		//	BIGInfo
-	DT_BROADCAST_CODE						= 0x2D,		// 	Broadcast_Code
-	DT_CSIP_RSI                             = 0x2E,
-	DT_BROADCAST_NAME						= 0x30,		//	Broadcast_Name
-	DT_3D_INFORMATION_DATA					= 0x3D,		//	3D Information Data
-
-	DATA_TYPE_MANUFACTURER_SPECIFIC_DATA 	= 0xFF,     //	Manufacturer Specific Data
-}data_type_t;
-
-
-
-
 
 
 
@@ -404,7 +403,7 @@ typedef enum {
 /**
  * @brief	12 = type(1) + len(1) + l2cap_len(2) + cid(2) + sud_len(2) + mic(4)
  */
-#define		L2CAP_ALLIGN4_KFRAM_DMA_BUFF(n)		(((n + 12) + 3) / 4 * 4)
+#define		L2CAP_ALIGN4_KFRAM_DMA_BUFF(n)		(((n + 12) + 3) / 4 * 4)
 
 /**
  * @brief	CIS TX FIFO Size = n + CIS_TX_PDU_BUF_EXT_LEN + TLK_RF_TX_EXT_LEN
@@ -412,11 +411,11 @@ typedef enum {
  * TLK_RF_TX_EXT_LEN depend on MCU
  * CIS TX FIFO do not use hardware FIFO, so no 16 byte align limitation
  * TX dma_len must be 4 byte align, so total buffer need 4 byte align */
-#define		CAL_LL_CIS_TX_FIFO_SIZE(n)			DATA_LENGTH_ALLIGN4(n + CIS_TX_PDU_BUF_EXT_LEN + TLK_RF_TX_EXT_LEN)
+#define		CAL_LL_CIS_TX_FIFO_SIZE(n)			DATA_LENGTH_ALIGN4(n + CIS_TX_PDU_BUF_EXT_LEN + TLK_RF_TX_EXT_LEN)
 
-#define		BIS_PDU_ALLIGN4_TXBUFF(n)			DATA_LENGTH_ALLIGN4((CAL_LL_ISO_TX_FIFO_SIZE(n) +12 ))//12=OFFSETOF(bis_tx_pdu_t, isoTxPdu)
+#define		BIS_PDU_ALIGN4_TXBUFF(n)			DATA_LENGTH_ALIGN4((CAL_LL_ISO_TX_FIFO_SIZE(n) +12 ))//12=OFFSETOF(bis_tx_pdu_t, isoTxPdu)
 
-#define		BIS_PDU_ALLIGN4_RXBUFF(n)			DATA_LENGTH_ALLIGN4(BIS_LL_RX_PDU_FIFO_SIZE(n))
+#define		BIS_PDU_ALIGN4_RXBUFF(n)			DATA_LENGTH_ALIGN4(BIS_LL_RX_PDU_FIFO_SIZE(n))
 
 
 /*
@@ -490,6 +489,43 @@ HCI TX fifo include ACL data report, HCI Event report (controller to host)
  */
 #define HCI_IN_FIFO_MAX_SIZE(acl_len_max, iso_len_max)			(max2(HCI_ACL_IN_FIFO_SIZE(acl_len_max), HCI_ISO_IN_FIFO_SIZE(iso_len_max)))
 
+
+
+
+
+
+
+
+/* for BLE B91 old SDK macro compatible with new SDK */
+/**
+ * @brief	6 = header(2)+l2cap_len(2)+CID(2)
+ */
+#define		CAL_MTU_BUFF_SIZE(n)				(((n + 6) + 3)/4 * 4)
+
+
+
+/**
+ * @brief      ota crc16 related function.
+ * @param[in]  pD: input data.
+ * @param[in]  len: data length.
+ * @return     crc result.
+ */
+unsigned short crc16 (const unsigned char *pD, int len); // BLE_SRC_TELINK_MESH_EN
+
+
+/**
+ * @brief      get SDK and Lib version. Now the version is 16Bytes.
+ * 						Struction				Example
+ * 					- SDK Version (4B)		:	"04 00 01 01" means V4.0.1.1
+ * 					- Patch Version (1B) 	:	"01" means Patch_01
+ * 					- Lib built date (5B)	:	"44 65 63 14 23" means Dec 14 2023
+ * 					- Lib built time (2B)	:	"20 56" means 20:46
+ * 					- Reserved (4B)			:	"FF FF FF FF"
+ * @param[in]  pbuf - the pointer to the verion buffer.
+ * @param[in]  number - the value is reserved for future use.
+ * @return     the length or version char array.
+ */
+unsigned char blc_get_sdk_version(unsigned char *pbuf, unsigned char number);
 
 
 #endif

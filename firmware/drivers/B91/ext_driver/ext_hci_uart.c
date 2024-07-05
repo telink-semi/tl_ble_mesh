@@ -1,10 +1,10 @@
 /********************************************************************************************************
- * @file     ext_hci_uart.c
+ * @file    ext_hci_uart.c
  *
- * @brief    This is the source file for BLE SDK
+ * @brief   This is the source file for BLE SDK
  *
- * @author	 BLE GROUP
- * @date         11,2022
+ * @author  BLE GROUP
+ * @date    06,2022
  *
  * @par     Copyright (c) 2022, Telink Semiconductor (Shanghai) Co., Ltd. ("TELINK")
  *
@@ -19,8 +19,8 @@
  *          WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  *          See the License for the specific language governing permissions and
  *          limitations under the License.
+ *
  *******************************************************************************************************/
-
 #include "ext_hci_uart.h"
 #include "clock.h"
 #include "drivers.h"
@@ -64,7 +64,7 @@ void HCI_UartInit(UartId_t uartId, u32 baudrate, u8 *rxBuf, u32 len)
 
 	if(1)//DMA Mode
 	{
-		uart_set_dma_rx_timeout(uartId, bwpc, 12, UART_BW_MUL3);//[!!important] //UART_BW_MUL2
+		uart_set_rx_timeout(uartId, bwpc, 12, UART_BW_MUL3);//[!!important] //UART_BW_MUL2
 
 		uart_set_rx_dma_config(uartId, UART_DMA_CHN_RX);
 		uart_set_tx_dma_config(uartId, UART_DMA_CHN_TX);
@@ -78,7 +78,7 @@ void HCI_UartInit(UartId_t uartId, u32 baudrate, u8 *rxBuf, u32 len)
 	uart_set_irq_mask(uartId, UART_RXDONE_MASK);//enable UART RX IRQ
 	uart_set_irq_mask(uartId, UART_TXDONE_MASK);//enable UART TX IRQ
 	//uart_clr_irq_mask(uartId, UART_TXDONE_MASK);
-	plic_interrupt_enable(uartId == UART0 ? IRQ19_UART0:IRQ18_UART1); //enable UART global IRQ
+	plic_interrupt_enable(uartId == UART0 ? IRQ_UART0:IRQ_UART1); //enable UART global IRQ
 
 	uart_receive_dma(uartId, rxBuf, len);   //set UART DMA RX buffer.
 }
@@ -86,7 +86,7 @@ void HCI_UartInit(UartId_t uartId, u32 baudrate, u8 *rxBuf, u32 len)
 
 
 
-void HCI_UartSetSoftwareRxdone(UartId_t uartId,gpio_pin_e RtsPin)
+void HCI_UartSetSoftwareRxDone(UartId_t uartId,gpio_pin_e RtsPin)
 {
 	uart_rx_timeout_disable(uartId);
 	SoftwareUartId = uartId;
@@ -233,7 +233,7 @@ void HCI_Tr_InitUart(u8 *rxBuf, u32 byteNum)
 
 	if(isDmaMode)
 	{
-		uart_set_dma_rx_timeout(HCI_TR_UART_ID, bwpc, 12, UART_BW_MUL3);//[!!important] //UART_BW_MUL2
+		uart_set_rx_timeout(HCI_TR_UART_ID, bwpc, 12, UART_BW_MUL3);//[!!important] //UART_BW_MUL2
 
 		uart_set_rx_dma_config(HCI_TR_UART_ID, UART_DMA_CHN_RX);
 		uart_set_tx_dma_config(HCI_TR_UART_ID, UART_DMA_CHN_TX);

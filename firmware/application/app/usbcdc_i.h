@@ -1,10 +1,10 @@
 /********************************************************************************************************
- * @file     usbcdc_i.h
+ * @file    usbcdc_i.h
  *
- * @brief    This is the header file for BLE SDK
+ * @brief   This is the header file for BLE SDK
  *
- * @author	 BLE GROUP
- * @date         2020.06
+ * @author  BLE GROUP
+ * @date    06,2022
  *
  * @par     Copyright (c) 2022, Telink Semiconductor (Shanghai) Co., Ltd. ("TELINK")
  *
@@ -19,13 +19,16 @@
  *          WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  *          See the License for the specific language governing permissions and
  *          limitations under the License.
+ *
  *******************************************************************************************************/
-
 #pragma once
 
 #include "usbcdc.h"
 #include "drivers.h"
 #include "application/usbstd/usb.h"
 
+void usb_cdc_irq_data_process(void);
 
+void usb_cdc_set_line_encoding(int data_request);
 
+void usb_cdc_get_line_encoding(void);

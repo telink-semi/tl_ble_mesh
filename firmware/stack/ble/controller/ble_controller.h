@@ -1,10 +1,10 @@
 /********************************************************************************************************
- * @file     ble_controller.h
+ * @file    ble_controller.h
  *
- * @brief    This is the header file for BLE SDK
+ * @brief   This is the header file for BLE SDK
  *
- * @author	 BLE GROUP
- * @date         2020.06
+ * @author  BLE GROUP
+ * @date    06,2022
  *
  * @par     Copyright (c) 2022, Telink Semiconductor (Shanghai) Co., Ltd. ("TELINK")
  *
@@ -19,8 +19,8 @@
  *          WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  *          See the License for the specific language governing permissions and
  *          limitations under the License.
+ *
  *******************************************************************************************************/
-
 #ifndef BLE_CONTROLLER_H_
 #define BLE_CONTROLLER_H_
 
@@ -42,11 +42,7 @@
 #include "stack/ble/controller/ll/acl_conn/acl_peripheral.h"
 #include "stack/ble/controller/ll/acl_conn/acl_central.h"
 
-#include "stack/ble/controller/ll/past/past.h"
 
-#include "stack/ble/controller/ll/pcl/pcl.h"
-
-#include "stack/ble/controller/ll/chn_class/chn_class.h"
 
 #include "stack/ble/controller/ll/adv/adv.h"
 #include "stack/ble/controller/ll/adv/leg_adv.h"
@@ -61,34 +57,14 @@
 #include "stack/ble/controller/ll/init/leg_init.h"
 #include "stack/ble/controller/ll/init/ext_init.h"
 
-
 #include "stack/ble/controller/ll/prdadv/pda.h"
-#include "stack/ble/controller/ll/prdadv/prd_adv.h"
 #include "stack/ble/controller/ll/prdadv/pda_sync.h"
 
-
-#include "stack/ble/controller/ial/ial.h"
-#include "stack/ble/controller/ll/iso/iso.h"
-
-#include "stack/ble/controller/ll/iso/bis.h"
-#include "stack/ble/controller/ll/iso/bis_bcst.h"
-#include "stack/ble/controller/ll/iso/bis_sync.h"
-#include "stack/ble/controller/ll/iso/cis.h"
-#include "stack/ble/controller/ll/iso/cis_central.h"
-#include "stack/ble/controller/ll/iso/cis_peripheral.h"
-#include "stack/ble/controller/ll/aoa_aod/aoa_aod.h"
-
-
 #include "stack/ble/controller/whitelist/whitelist.h"
-#include "stack/ble/controller/whitelist/resolvlist.h"
-
-#include "stack/ble/controller/csa/csa.h"
+#include "stack/ble/controller/whitelist/resolvelist.h"
 
 #include "stack/ble/controller/phy/phy.h"
 #include "stack/ble/controller/phy/phy_test.h"
-
-
-#include "stack/ble/controller/ll/subrate/subrate.h"
 
 #include "stack/ble/controller/contr_comp.h"
 
@@ -98,36 +74,5 @@
 
 #include "algorithm/algorithm.h"
 
-/*********************************************************/
-//Remove when file merge to SDK //
-#include "stack/ble/ble_config.h"
-#include "stack/ble/ble_stack.h"
-
-#include "stack/ble/controller/ll/ll_stack.h"
-#include "stack/ble/controller/ll/acl_conn/acl_stack.h"
-#include "stack/ble/controller/ll/adv/adv_stack.h"
-#include "stack/ble/controller/ll/scan/scan_stack.h"
-#include "stack/ble/controller/ll/init/init_stack.h"
-#include "stack/ble/controller/ll/prdadv/pda_stack.h"
-#include "stack/ble/controller/ial/ial_stack.h"
-#include "stack/ble/controller/ll/past/past_stack.h"
-#include "stack/ble/controller/ll/iso/iso_stack.h"
-#include "stack/ble/controller/ll/iso/bis_stack.h"
-#include "stack/ble/controller/ll/iso/cis_stack.h"
-#include "stack/ble/controller/whitelist/whitelist_stack.h"
-#include "stack/ble/controller/csa/csa_stack.h"
-#include "stack/ble/controller/phy/phy_stack.h"
-#include "stack/ble/hci/hci_stack.h"
-#include "stack/ble/controller/ll/subrate/subrate_stack.h"
-
-#include "stack/ble/device/device_stack.h"
-
-#include "stack/ble/controller/ll/ll_bqb_stack.h"
-
-#if (BQB_LOWER_TESTER_ENABLE)
-	#include "stack/ble/bqb/bqb.h"
-	#include "stack/ble/bqb/bqb_ll.h"
-#endif
-/*********************************************************/
 
 #endif /* BLE_H_ */

@@ -1,10 +1,10 @@
 /********************************************************************************************************
- * @file     ota.h
+ * @file    ota.h
  *
- * @brief    This is the header file for BLE SDK
+ * @brief   This is the header file for BLE SDK
  *
- * @author	 BLE GROUP
- * @date         11,2022
+ * @author  BLE GROUP
+ * @date    06,2022
  *
  * @par     Copyright (c) 2022, Telink Semiconductor (Shanghai) Co., Ltd. ("TELINK")
  *
@@ -19,8 +19,8 @@
  *          WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  *          See the License for the specific language governing permissions and
  *          limitations under the License.
+ *
  *******************************************************************************************************/
-
 #ifndef OTA_H_
 #define OTA_H_
 
@@ -43,6 +43,14 @@
 #define CMD_OTA_SCHEDULE_FW_SIZE			0xFF09	//server -> client
 
 
+/**
+ * @brief 	public key & signature for secure boot
+ * for MCU support secure boot function, client send public key & signature
+ * by OTA command FF10 ~ FF17, total 16 byte *8 = 128 byte
+ */
+#define CMD_OTA_SB_PUBKEY_SIGN_MIN			0xFF10	//client -> server
+#define CMD_OTA_SB_PUBKEY_SIGN_MAX			0xFF17	//client -> server
+
 
 /**
  * @brief	OTA result
@@ -56,7 +64,7 @@ enum{
 
 	//0x04
 	OTA_WRITE_FLASH_ERR,					//write OTA data to flash ERR
- 	OTA_DATA_UNCOMPLETE,					//lost last one or more OTA PDU
+ 	OTA_DATA_INCOMPLETE,					//lost last one or more OTA PDU
  	OTA_FLOW_ERR,		    				//peer device send OTA command or OTA data not in correct flow
  	OTA_FW_CHECK_ERR,						//firmware CRC check error
 
@@ -69,17 +77,37 @@ enum{
 	//0x0C
 	OTA_DATA_PACKET_TIMEOUT,	   			//time interval between two consequent packet exceed a value(user can adjust this value)
  	OTA_TIMEOUT,							//OTA flow total timeout
- 	OTA_FAIL_DUE_TO_CONNECTION_TERMIANTE,	//OTA fail due to current connection terminate(maybe connection timeout or local/peer device terminate connection)
+ 	OTA_FAIL_DUE_TO_CONNECTION_TERMINATE,	//OTA fail due to current connection terminate(maybe connection timeout or local/peer device terminate connection)
 	OTA_MCU_NOT_SUPPORTED,					//MCU does not support this OTA mode
 
 	//0x10
-	OTA_LOGIC_ERR,							//software logic error, please contact FAE of TeLink
+	OTA_LOGIC_ERR,							//software logic error, please contact FAE of Telink
 
 #if BLE_SRC_TELINK_MESH_EN 	// BLE_SRC_TELINK_MESH_EN
- 	OTA_ERR_STS,
-	OTA_SUCCESS_DEBUG,     //success
+	OTA_ERR_STS,
+	OTA_SUCCESS_DEBUG,	   //success
 	OTA_REBOOT_NO_LED,	// no LED indication, for quickly reboot.
 #endif
+
+	OTA_FW_FLASH_PROT_NEW_FW_NOT_MATCH_OLD_FW,	//firmware flash protection function: new firmware not match old firmware
+												//old firmware enable firmware flash protection, but new firmware do not enable
+												//Attention: old firmware do not enable but new firmware enable, this is allowed.
+
+	/* only secure boot mode involved from 0x80 */
+	OTA_SECBOOT_HW_ERR   = 0x80,			//OTA server device hardware error
+	OTA_SECBOOT_SYSTEM_ERR,					//OTA server device system error
+	OTA_SECBOOT_FUNC_NOT_ENABLE,			//OTA server device do not enable secure boot function
+	OTA_SECBOOT_PUBKEY_SIGN_SEQ_ERR,		//OTA public key & signature sequence number error: repeated or lost
+	OTA_SECBOOT_PUBKEY_SIGN_LEN_ERR,		//OTA public key & signature data packet length error
+	OTA_SECBOOT_PUBLIC_KEY_ERR,				//OTA client public key not match OTA server device local hash
+	OTA_SECBOOT_SIGN_VERIFY_FAIL,			//OTA signature verification fail
+	OTA_SECBOOT_WRITE_DESC_FAIL,			//write secure boot descriptor fail
+	OTA_SECBOOT_NEW_FW_NOT_MATCH_OLD_FW,	//secure boot function: new firmware not match old firmware
+											//1.  old firmware enable secure boot, but new firmware do not enable
+											//2.  old firmware do not enable secure boot, but new firmware enable
+	OTA_FWENC_NEW_FW_NOT_MATCH_OLD_FW,		//firmware encryption function: new firmware not match old firmware
+											//1.  old firmware enable firmware encryption, but new firmware do not enable
+											//2.  old firmware do not enable firmware encryption, but new firmware enable
 };
 
 
@@ -163,16 +191,8 @@ typedef struct {
 
 
 
-
-typedef struct{
-	u16 adr_index;
-	u8	data[16];
-	u16 crc_16;
-}ota_pdu16_t;
-
-
 /**
- * @brief      ota crc32 related fuinction.
+ * @brief      ota crc32 related function.
  * @param[in]  crc: initial crc value.
  * @param[in]  input: input data.
  * @param[in]  table: crc calculate table.
@@ -182,7 +202,7 @@ typedef struct{
 unsigned long crc32_half_cal(unsigned long crc, unsigned char* input, unsigned long* table, int len);
 
 /**
- * @brief      ota crc32 related fuinction.
+ * @brief      ota crc32 related function.
  * @param[in]  crc: initial crc value.
  * @param[in]  input: input data.
  * @param[in]  table: crc calculate table.
@@ -191,13 +211,7 @@ unsigned long crc32_half_cal(unsigned long crc, unsigned char* input, unsigned l
  */
 unsigned long crc32_cal(unsigned long crc, unsigned char* input, unsigned long* table, int len);
 
-/**
- * @brief      ota crc16 related fuinction.
- * @param[in]  pD: input data.
- * @param[in]  len: data length.
- * @return     crc result.
- */
-unsigned short crc16 (unsigned char *pD, int len);
+
 
 
 #endif /* OTA_H_ */

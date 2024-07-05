@@ -1,12 +1,12 @@
 /********************************************************************************************************
- * @file     analog.c
+ * @file    analog.c
  *
- * @brief    This is the source file for BLE SDK
+ * @brief   This is the source file for B91
  *
- * @author	 BLE GROUP
- * @date         11,2022
+ * @author  Driver Group
+ * @date    2019
  *
- * @par     Copyright (c) 2022, Telink Semiconductor (Shanghai) Co., Ltd. ("TELINK")
+ * @par     Copyright (c) 2019, Telink Semiconductor (Shanghai) Co., Ltd. ("TELINK")
  *
  *          Licensed under the Apache License, Version 2.0 (the "License");
  *          you may not use this file except in compliance with the License.
@@ -19,11 +19,11 @@
  *          WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  *          See the License for the specific language governing permissions and
  *          limitations under the License.
+ *
  *******************************************************************************************************/
-
+#include "lib/include/plic.h"
 #include "analog.h"
 #include "compiler.h"
-#include "plic.h"
 #include "stimer.h"
 /**********************************************************************************************************************
  *                                			  local constants                                                       *
@@ -102,7 +102,7 @@ static inline void analog_wait();
  * @param[in]  addr - address need to be read.
  * @return     the result of read.
  */
-unsigned char analog_read_reg8(unsigned char addr){
+_attribute_ram_code_sec_noinline_ unsigned char analog_read_reg8(unsigned char addr){
 	unsigned int r=core_interrupt_disable();
 	reg_ana_addr = addr;
 	reg_ana_len=0x1;
@@ -120,7 +120,7 @@ unsigned char analog_read_reg8(unsigned char addr){
  * @param[in]  data - the value need to be write.
  * @return     none.
  */
-void analog_write_reg8(unsigned char addr, unsigned char data){
+_attribute_ram_code_sec_noinline_ void analog_write_reg8(unsigned char addr, unsigned char data){
 	unsigned int r=core_interrupt_disable();
 	reg_ana_addr = addr;
     reg_ana_data(0) = data;
@@ -136,7 +136,7 @@ void analog_write_reg8(unsigned char addr, unsigned char data){
  * @param[in]  data - the value need to be write.
  * @return     none.
  */
-void analog_write_reg16(unsigned char addr, unsigned short data)
+_attribute_ram_code_sec_noinline_ void analog_write_reg16(unsigned char addr, unsigned short data)
 {
 	unsigned int r=core_interrupt_disable();
 	reg_ana_addr = addr;
@@ -151,7 +151,7 @@ void analog_write_reg16(unsigned char addr, unsigned short data)
  * @param[in]  addr - address need to be read.
  * @return     the result of read.
  */
-unsigned short analog_read_reg16(unsigned char addr)
+_attribute_ram_code_sec_noinline_ unsigned short analog_read_reg16(unsigned char addr)
 {
 	unsigned int r=core_interrupt_disable();
 	reg_ana_len=2;
@@ -170,7 +170,7 @@ unsigned short analog_read_reg16(unsigned char addr)
  * @param[in]  addr - address need to be read.
  * @return     the result of read.
  */
-unsigned int analog_read_reg32(unsigned char addr)
+_attribute_ram_code_sec_noinline_ unsigned int analog_read_reg32(unsigned char addr)
 {
 	unsigned int r=core_interrupt_disable();
 	reg_ana_len = 4;
@@ -189,7 +189,7 @@ unsigned int analog_read_reg32(unsigned char addr)
  * @param[in]  data - the value need to be write.
  * @return     none.
  */
-void analog_write_reg32(unsigned char addr, unsigned int data)
+_attribute_ram_code_sec_noinline_ void analog_write_reg32(unsigned char addr, unsigned int data)
 {
 	unsigned int r=core_interrupt_disable();
 	reg_ana_addr = addr;
@@ -212,8 +212,7 @@ void analog_read_reg32_dma(dma_chn_e chn, unsigned char addr, void *pdat)
 	reg_ana_len = 0x04;
 	reg_ana_addr = addr;
 	reg_ana_ctrl = FLD_ANA_CYC;
-	reg_dma_src_addr(chn) = 0x80140184;
-	reg_dma_dst_addr(chn) = convert_ram_addr_cpu2bus(pdat);
+	dma_set_address( chn,0x80140184, (unsigned int)pdat);
 	dma_set_size(chn, 4, DMA_WORD_WIDTH);
 	analog_rx_dma_config.dstwidth = DMA_CTR_WORD_WIDTH;
 	analog_rx_dma_config.srcwidth = DMA_CTR_WORD_WIDTH;
@@ -234,8 +233,7 @@ void analog_write_reg32_dma(dma_chn_e chn, unsigned char addr, void *pdat)
 {
 	unsigned int r=core_interrupt_disable();
 	reg_ana_addr = addr;
-	reg_dma_src_addr(chn) = convert_ram_addr_cpu2bus(pdat);
-	reg_dma_dst_addr(chn) = 0x80140184;
+	dma_set_address( chn,(unsigned int)pdat,0x80140184);
 	dma_set_size(chn, 4, DMA_WORD_WIDTH);
 	analog_tx_dma_config.dstwidth = DMA_CTR_WORD_WIDTH;
 	analog_tx_dma_config.srcwidth = DMA_CTR_WORD_WIDTH;
@@ -345,8 +343,7 @@ void analog_write_buff_dma(dma_chn_e chn, unsigned char addr, unsigned char * pd
 {
 	unsigned int r=core_interrupt_disable();
 	reg_ana_addr = addr;
-	reg_dma_src_addr(chn) = convert_ram_addr_cpu2bus(pdat);
-	reg_dma_dst_addr(chn) = 0x80140184;
+	dma_set_address( chn,(unsigned int)pdat,0x80140184);
 	dma_set_size(chn, len, DMA_WORD_WIDTH);
 	analog_tx_dma_config.dstwidth = DMA_CTR_WORD_WIDTH;
 	analog_tx_dma_config.srcwidth = DMA_CTR_WORD_WIDTH;
@@ -375,9 +372,7 @@ void analog_read_buff_dma(dma_chn_e chn, unsigned char addr, unsigned char *pdat
 	unsigned int r=core_interrupt_disable();
 	reg_ana_len = len;
 	reg_ana_addr = addr;
-
-	reg_dma_src_addr(chn) = 0x80140184;
-	reg_dma_dst_addr(chn) = convert_ram_addr_cpu2bus(pdat);
+	dma_set_address( chn,0x80140184,(unsigned int)pdat);
 	dma_set_size(chn, len, DMA_WORD_WIDTH);
 	analog_rx_dma_config.dstwidth = DMA_CTR_WORD_WIDTH;
 	analog_rx_dma_config.srcwidth = DMA_CTR_WORD_WIDTH;
@@ -409,9 +404,7 @@ void analog_read_buff_dma(dma_chn_e chn, unsigned char addr, unsigned char *pdat
 void analog_write_addr_data_dma(dma_chn_e chn, void *pdat, int len)
 {
 	unsigned int r=core_interrupt_disable();
-
-	reg_dma_src_addr(chn) = convert_ram_addr_cpu2bus(pdat);
-	reg_dma_dst_addr(chn) = 0x80140184;
+	dma_set_address( chn,(unsigned int)pdat,0x80140184);
 	dma_set_size(chn, len, DMA_WORD_WIDTH);
 	analog_tx_dma_config.dstwidth = DMA_CTR_WORD_WIDTH;
 	analog_tx_dma_config.srcwidth = DMA_CTR_WORD_WIDTH;

@@ -4,7 +4,7 @@
  * @brief    This is the header file for BLE SDK
  *
  * @author	 BLE GROUP
- * @date         11,2022
+ * @date         06,2022
  *
  * @par     Copyright (c) 2022, Telink Semiconductor (Shanghai) Co., Ltd. ("TELINK")
  *
@@ -24,30 +24,29 @@
 #pragma once
 #include "drivers.h"
 #include <stdio.h>
-#include "vendor/common/user_config.h"
-#define DEBUG_MODE	0 // BLE_SRC_TELINK_MESH_EN
+#define DEBUG_MODE	0 // modify by qifa, use u_printf.h. // BLE_SRC_TELINK_MESH_EN
 
 #if(DEBUG_MODE==1)
 
-	#define  DEBUG_IO		0
-	#define  DEBUG_USB		1
+#define  DEBUG_IO		0
+#define  DEBUG_USB		1
 
-	#define  DEBUG_BUS  	DEBUG_IO
+#define  DEBUG_BUS  	DEBUG_IO
 
 
-	#if (DEBUG_BUS==DEBUG_USB)
-		#define   EDPS_DAT   (0x100818 |0x80000000)
-		#define   USBFIFO    (0x10083d |0x80000000)
-		#define   FIFOTHRESHOLD  	4
-		#define   BLOCK_MODE   		0
-	#else /* DEBUG_IO */
-		#if (UART_PRINT_DEBUG_ENABLE)
-			void array_printf(unsigned char*data, unsigned int len);
-		#else
-			#define   	array_printf
-			#define		printf
-		#endif
+#if (DEBUG_BUS==DEBUG_USB)
+	#define   EDPS_DAT   (0x100818 |0x80000000)
+	#define   USBFIFO    (0x10083d |0x80000000)
+	#define   FIFOTHRESHOLD  	4
+	#define   BLOCK_MODE   		0
+#else /* DEBUG_IO */
+	#if (UART_PRINT_DEBUG_ENABLE)
+		void array_printf(unsigned char*data, unsigned int len);
+	#else
+		#define   	array_printf
+		#define		printf
 	#endif
+#endif
 
 #endif
 

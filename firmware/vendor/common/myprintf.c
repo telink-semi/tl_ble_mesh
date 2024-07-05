@@ -23,9 +23,6 @@
  *
  *******************************************************************************************************/
 #include "tl_common.h"  
-#if !__TLSR_RISCV_EN__
-#include "proj_lib/ble/service/ble_ll_ota.h"
-#endif
 
 #if PRINT_DEBUG_INFO
 
@@ -58,7 +55,7 @@ _attribute_ram_code_
 _attribute_no_inline_ 
 static void uart_do_put_char(u32 pcTxReg, u8 *bit)
 {
-#if 0//(BAUD_USE == SIMU_BAUD_1M)
+#if ((BAUD_USE == SIMU_BAUD_1M) && !BLE_MULTIPLE_CONNECTION_ENABLE)
 	/*! Make sure the following loop instruction starts at 4-byte alignment: (which is destination address of "tjne") */
 	// _ASM_NOP_; 
 	#if (CLOCK_SYS_CLOCK_HZ == 16000000)
@@ -189,7 +186,7 @@ _attribute_ram_code_ static void uart_put_char(u8 byte){
 }
 
 /**
- * @brief  Send serial datas.
+ * @brief  Send serial data.
  * @param  p: Data pointer to send.
  * @param  len: Data length to send.
  * @retval None

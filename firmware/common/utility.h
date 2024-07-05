@@ -1,10 +1,10 @@
-﻿/********************************************************************************************************
- * @file     utility.h
+/********************************************************************************************************
+ * @file    utility.h
  *
- * @brief    This is the header file for BLE SDK
+ * @brief   This is the header file for BLE SDK
  *
- * @author	 BLE GROUP
- * @date         2020.06
+ * @author  BLE GROUP
+ * @date    06,2022
  *
  * @par     Copyright (c) 2022, Telink Semiconductor (Shanghai) Co., Ltd. ("TELINK")
  *
@@ -19,12 +19,14 @@
  *          WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  *          See the License for the specific language governing permissions and
  *          limitations under the License.
+ *
  *******************************************************************************************************/
-
 #pragma once
 #include "types.h"
 
+#ifndef abs
 #define abs(a)   (((a)>0)?((a)):(-(a)))
+#endif
 
 #define cat2(i,j)       i##j
 #define cat3(i,j,k)     i##j##k
@@ -102,13 +104,13 @@
 #define SIGN(x) 				COMPARE(x, 0)
 #define SIZEOF_MEMBER(s, m)     (sizeof(((s *)0)->m))	// BLE_SRC_TELINK_MESH_EN
 
-// better than xor swap:  http://stackoverflow.com/questions/3912699/why-swap-with-xor-works-fine-in-c-but-in-java-doesnt-some-puzzle
+// better than xor swap:  http://stackoverflow.com/questions/3912699/why-swap-with-xor-works-fine-in-c-but-in-java-doesn't-some-puzzle
 #define SWAP(x, y, T) 			do { T tmp = (x); (x) = (y); (y) = tmp; } while(0)
 #define SORT2(a, b, T) 			do { if ((a) > (b)) SWAP((a), (b), T); } while (0)
 
 #define foreach(i, n) 			for(int i = 0; i < (n); ++i)
 #define foreach_range(i, s, e) 	for(int i = (s); i < (e); ++i)
-#define foreach_arr(i, arr) 	for(int i = 0; i < ARRAY_SIZE(arr); ++i)
+#define foreach_arr(i, arr) 	for(unsigned int i = 0; i < ARRAY_SIZE(arr); ++i)
 
 #define ARRAY_SIZE(a) 			(sizeof(a) / sizeof(*a))
 
@@ -223,66 +225,8 @@ void flip_addr(u8 *dest, u8 *src);
 
 static inline u64 mul64_32x32(u32 u, u32 v)
 {
-	//Kite/Vulture's HW do not support HW long mul, here must open
-#if(MCU_CORE_TYPE == MCU_CORE_825x || MCU_CORE_TYPE == MCU_CORE_827x)
-    u32  u0,   v0,   w0;
-    u32  u1,   v1,   w1,   w2,   t;
-    u32  x, y;
-
-    u0   =   u & 0xFFFF;
-    u1   =   u >> 16;
-    v0   =   v & 0xFFFF;
-    v1   =   v >> 16;
-    w0   =   u0 * v0;
-    t    =   u1 * v0 + (w0 >> 16);
-    w1   =   t & 0xFFFF;
-    w2   =   t >> 16;
-    w1   =   u0 * v1 + w1;
-
-    //x is high 32 bits, y is low 32 bits
-
-    x = u1 * v1 + w2 + (w1 >> 16);
-    y = u * v;
-
-
-    return(((u64)x << 32) | y);
-#elif((MCU_CORE_TYPE == MCU_CORE_B91) || (MCU_CORE_TYPE == MCU_CORE_B92))
     return (u64)u*v;
-#endif
 }
-
-#if(MCU_CORE_TYPE == MCU_CORE_825x || MCU_CORE_TYPE == MCU_CORE_827x)
-
-	u32 __div64_32(u64 *dividend, u32 divisor);
-	u64 __div64_64(u64 *dividend, u64 divisor);
-
-	static inline u64 div64_32(u64 dividend, u32 divisor)
-	{
-		u64 result = dividend;
-		__div64_32(&result, divisor);
-		return result;
-	}
-
-	static inline u32 div64_32mod(u64 dividend, u32 divisor)
-	{
-		u64 result = dividend;
-		return __div64_32(&result, divisor);
-	}
-
-	static inline u64 div64_64(u64 dividend, u64 divisor)
-	{
-		u64 result = dividend;
-		__div64_64(&result, divisor);
-		return result;
-	}
-
-	static inline u64 div64_64mod(u64 dividend, u64 divisor)
-	{
-		u64 result = dividend;
-		return __div64_64(&result, divisor);
-	}
-
-#endif ///#if(MCU_CORE_TYPE == MCU_CORE_825x || MCU_CORE_TYPE == MCU_CORE_827x)
 
 typedef	struct {
 	u32		size;
@@ -297,29 +241,29 @@ typedef	struct {		// BLE_SRC_TELINK_MESH_EN
 	u8		data[1];
 }	my_fifo_buf_t;
 
-
 void my_fifo_init (my_fifo_t *f, int s, u8 n, u8 *p);
 u8*  my_fifo_wptr (my_fifo_t *f);
 u8*  my_fifo_wptr_v2 (my_fifo_t *f);
 void my_fifo_next (my_fifo_t *f);
-int my_fifo_push (my_fifo_t *f, u8 *p, u16 n, u8 *head, u8 head_len);
+int my_fifo_push (my_fifo_t *f, u8 *p, u16 n, u8 *head, u8 head_len); // BLE_SRC_TELINK_MESH_EN
 void my_fifo_pop (my_fifo_t *f);
 u8 * my_fifo_get (my_fifo_t *f);
 
-#define		MYFIFO_INIT(name,size,n)			u8 name##_b[size * n]={0};my_fifo_t name = {size,n,0,0, name##_b};	\
+#define		MYFIFO_INIT(name,size,n)			u8 name##_b[(size) * (n)]={0};my_fifo_t name = {size,n,0,0, name##_b};	\
                                                 STATIC_ASSERT(BIT_IS_POW2(n))
-#define		MYFIFO_INIT_IRAM(name,size,n)		u8 name##_b[size * n]__attribute__((aligned(4)))/*={0}*/;my_fifo_t name = {size,n,0,0, name##_b}
+#define		MYFIFO_INIT_IRAM(name,size,n)		u8 name##_b[(size) * (n)]__attribute__((aligned(4)))/*={0}*/;my_fifo_t name = {size,n,0,0, name##_b}
 #define		MYFIFO_INIT_NO_RET(name,size,n)		_attribute_no_retention_bss_ u8 name##_b[(size) * (n)]={0};_attribute_no_retention_data_ my_fifo_t name = {size,n,0,0,name##_b};  \
 												STATIC_ASSERT(BIT_IS_POW2(n))
 
-
-#define		DATA_LENGTH_ALLIGN4(n)				(((n) + 3) / 4 * 4)
-#define		DATA_LENGTH_ALLIGN16(n)				(((n) + 15) / 16 * 16)
-
-u8 * my_fifo_get_offset (my_fifo_t *f, u8 offset);
+u8 * my_fifo_get_offset (my_fifo_t *f, u8 offset); // BLE_SRC_TELINK_MESH_EN
 u8 my_fifo_data_cnt_get (my_fifo_t *f);
 u8 my_fifo_free_cnt_get(my_fifo_t *f);
 void my_fifo_reset(my_fifo_t *f);
+
+#define		DATA_LENGTH_ALIGN4(n)				(((n) + 3) / 4 * 4)
+#define		DATA_LENGTH_ALIGN16(n)				(((n) + 15) / 16 * 16)
+
+
 ///////////////////////////////////////ring buf ///////////////////////////////////
 
 typedef	struct {
@@ -362,3 +306,4 @@ u8 my_ring_buffer_get(my_ring_buf_t *f, u16 size);
 
 
 const char *hex_to_str(const void *buf, u8 len);
+const char *addr_to_str(u8* addr);

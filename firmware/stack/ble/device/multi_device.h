@@ -1,10 +1,10 @@
 /********************************************************************************************************
- * @file     multi_device.h
+ * @file    multi_device.h
  *
- * @brief    This is the header file for BLE SDK
+ * @brief   This is the header file for BLE SDK
  *
- * @author	 BLE GROUP
- * @date         11,2022
+ * @author  BLE GROUP
+ * @date    06,2022
  *
  * @par     Copyright (c) 2022, Telink Semiconductor (Shanghai) Co., Ltd. ("TELINK")
  *
@@ -19,8 +19,8 @@
  *          WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  *          See the License for the specific language governing permissions and
  *          limitations under the License.
+ *
  *******************************************************************************************************/
-
 #ifndef STACK_BLE_DEVICE_MULTI_DEVICE_H_
 #define STACK_BLE_DEVICE_MULTI_DEVICE_H_
 
@@ -42,7 +42,7 @@ typedef enum {
 typedef enum {
 	MULTI_DEV_DISABLE = 0x00,
 	MULTI_DEV_ENABLE  = 0x01,
-} muti_dev_en_t;
+} multi_dev_en_t;
 
 
 /**
@@ -51,7 +51,7 @@ typedef enum {
  * @param[in]  enable - enable or disable.
  * @return     none
  */
-void 		blc_ll_setMultipleLocalDeviceEnable (muti_dev_en_t enable);
+void 		blc_ll_setMultipleLocalDeviceEnable (multi_dev_en_t enable);
 
 
 /**

@@ -1,10 +1,10 @@
 /********************************************************************************************************
- * @file     ext_hci_uart.h
+ * @file    ext_hci_uart.h
  *
- * @brief    This is the header file for BLE SDK
+ * @brief   This is the header file for BLE SDK
  *
- * @author	 BLE GROUP
- * @date         11,2022
+ * @author  BLE GROUP
+ * @date    06,2022
  *
  * @par     Copyright (c) 2022, Telink Semiconductor (Shanghai) Co., Ltd. ("TELINK")
  *
@@ -19,8 +19,8 @@
  *          WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  *          See the License for the specific language governing permissions and
  *          limitations under the License.
+ *
  *******************************************************************************************************/
-
 #ifndef DRIVERS_B91_EXT_DRIVER_EXT_HCI_UART_H_
 #define DRIVERS_B91_EXT_DRIVER_EXT_HCI_UART_H_
 
@@ -50,7 +50,7 @@ extern gpio_pin_e   SoftwareRtsPin;
 #define UART_RTS_DISABLE()         if(SoftwareRtsPin != 0){ gpio_set_low_level(SoftwareRtsPin);}
 
 
-void HCI_UartSetSoftwareRxdone(UartId_t uartId,gpio_pin_e RtsPin);
+void HCI_UartSetSoftwareRxDone(UartId_t uartId,gpio_pin_e RtsPin);
 
 void HCI_UartInit(UartId_t uartId,u32 baudrate, u8 *txBuf, u32 len);
 
@@ -78,10 +78,10 @@ static inline void HCI_UartSetRxDmaBuffer(UartId_t uartId, u8 *buf, u32 len)
 	uart_receive_dma(uartId, buf, len);
 }
 
-static inline void HCI_UartSetRxDmaBuffer_Rxdone(uart_num_e uart_num, unsigned char * addr,unsigned int rev_size)
+static inline void HCI_UartSetRxDmaBuffer_RxDone(uart_num_e uart_num, unsigned char * addr,unsigned int rev_size)
 {
 	dma_chn_dis(UART_DMA_CHN_RX);
-	/*In order to be able to receive data of unknown length(A0 doesn't suppport),the DMA SIZE is set to the longest value 0xffffffff.After entering suspend and wake up, and then continue to receive,
+	/*In order to be able to receive data of unknown length(A0 doesn't support),the DMA SIZE is set to the longest value 0xffffffff.After entering suspend and wake up, and then continue to receive,
 	DMA will no longer move data from uart fifo, because DMA thinks that the last transmission was not completed and must disable dma_chn first.modified by minghai,confirmed qiangkai 2020.11.26.*/
 	dma_set_address(UART_DMA_CHN_RX,reg_uart_data_buf_adr(uart_num),(unsigned int)convert_ram_addr_cpu2bus(addr));
 	dma_set_size(UART_DMA_CHN_RX, rev_size, DMA_WORD_WIDTH);
@@ -90,15 +90,7 @@ static inline void HCI_UartSetRxDmaBuffer_Rxdone(uart_num_e uart_num, unsigned c
 
 static inline u32 HCI_UartGetRxDataLen(UartId_t uartId)
 {
-	u32 rxLen = 0;
-
-	if(((reg_uart_status1(uartId) & FLD_UART_RBCNT) % 4)==0){
-		rxLen = 4 * (0xffffff - reg_dma_size(UART_DMA_CHN_RX));
-	}else{
-		rxLen = 4 * (0xffffff - reg_dma_size(UART_DMA_CHN_RX)-1) + (reg_uart_status1(uartId) & FLD_UART_RBCNT) % 4;
-	}
-
-	return rxLen;
+	return uart_get_dma_rev_data_len(uartId,UART_DMA_CHN_RX);
 }
 
 //Rx IRQ

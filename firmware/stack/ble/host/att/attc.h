@@ -1,10 +1,10 @@
 /********************************************************************************************************
- * @file     attc.h
+ * @file    attc.h
  *
- * @brief    This is the header file for BLE SDK
+ * @brief   This is the header file for BLE SDK
  *
- * @author	 BLE GROUP
- * @date         11,2022
+ * @author  BLE GROUP
+ * @date    06,2022
  *
  * @par     Copyright (c) 2022, Telink Semiconductor (Shanghai) Co., Ltd. ("TELINK")
  *
@@ -19,14 +19,10 @@
  *          WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  *          See the License for the specific language governing permissions and
  *          limitations under the License.
+ *
  *******************************************************************************************************/
-
 #pragma  once
 
-
-typedef struct {
-	u8 *attc;
-}attcCcb_t;
 
 
 
@@ -163,3 +159,11 @@ ble_sts_t	blc_attc_sendReadMultVarReq(u16 connHandle, u8 numHandles, u16 *pHandl
 ble_sts_t   blc_attc_sendAttHdlValueCfm (u16 connHandle);
 
 
+
+/**
+ * @brief      This function is used to set whether to hold the ATT Response PDU during the pairing phase 3.
+ * @param[in]  hold_enable - 1: enable, holding ATT Response PDU during in pairing phase
+ *                      0: disable, allowing ATT Response PDU during in pairing phase
+ * @return     none.
+ */
+void         blc_att_holdAttributeResponsePayloadDuringPairingPhase(u8 hold_enable);

@@ -1,12 +1,12 @@
 /********************************************************************************************************
- * @file     gpio.c
+ * @file    gpio.c
  *
- * @brief    This is the source file for BLE SDK
+ * @brief   This is the source file for B91
  *
- * @author	 BLE GROUP
- * @date         11,2022
+ * @author  Driver Group
+ * @date    2019
  *
- * @par     Copyright (c) 2022, Telink Semiconductor (Shanghai) Co., Ltd. ("TELINK")
+ * @par     Copyright (c) 2019, Telink Semiconductor (Shanghai) Co., Ltd. ("TELINK")
  *
  *          Licensed under the Apache License, Version 2.0 (the "License");
  *          you may not use this file except in compliance with the License.
@@ -19,8 +19,8 @@
  *          WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  *          See the License for the specific language governing permissions and
  *          limitations under the License.
+ *
  *******************************************************************************************************/
-
 #include "gpio.h"
 
 /**********************************************************************************************************************
@@ -165,7 +165,7 @@ void gpio_set_input(gpio_pin_e pin, unsigned char value)
 
 /**
  * @brief      This function servers to set the specified GPIO as high resistor.
- * @param[in]  pin  - select the specified GPIO
+ * @param[in]  pin  - select the specified GPIO, GPIOF group is not included in GPIO_ALL
  * @return     none.
  */
 void gpio_shutdown(gpio_pin_e pin)
@@ -175,30 +175,42 @@ void gpio_shutdown(gpio_pin_e pin)
 	switch(group)
 	{
 		case GPIO_GROUPA:
+			reg_gpio_pa_out &= (~bit);
 			reg_gpio_pa_oen |= bit;//disable output
-			reg_gpio_pa_out &= (~bit);//set low level
+ 			reg_gpio_pa_gpio |= bit;
 			reg_gpio_pa_ie &= (~bit);//disable input
 			break;
 		case GPIO_GROUPB:
-			reg_gpio_pb_oen |= bit;
 			reg_gpio_pb_out &= (~bit);
+			reg_gpio_pb_oen |= bit;
+			reg_gpio_pb_gpio |= bit;
 			reg_gpio_pb_ie &= (~bit);
 			break;
 		case GPIO_GROUPC:
-			reg_gpio_pc_oen |= bit;
 			reg_gpio_pc_out &= (~bit);
+			reg_gpio_pc_oen |= bit;
+			reg_gpio_pc_gpio |= bit;
 			analog_write_reg8(areg_gpio_pc_ie, analog_read_reg8(areg_gpio_pc_ie) & (~bit));
 			break;
 		case GPIO_GROUPD:
-			reg_gpio_pd_oen |= bit;
 			reg_gpio_pd_out &= (~bit);
+			reg_gpio_pd_oen |= bit;
+			reg_gpio_pd_gpio |= bit;
 			analog_write_reg8(areg_gpio_pd_ie, analog_read_reg8(areg_gpio_pd_ie) & (~bit));
 			break;
 
 		case GPIO_GROUPE:
-			reg_gpio_pe_oen |= bit;
 			reg_gpio_pe_out &= (~bit);
+			reg_gpio_pe_oen |= bit;
+			reg_gpio_pe_gpio |= bit;
 			reg_gpio_pe_ie &= (~bit);
+			break;
+
+		case GPIO_GROUPF:
+			reg_gpio_pf_out &= (~bit);
+			reg_gpio_pf_oen |= bit;
+			reg_gpio_pf_gpio |= bit;
+			reg_gpio_pf_ie &= (~bit);
 			break;
 
 		case GPIO_ALL:
@@ -210,19 +222,19 @@ void gpio_shutdown(gpio_pin_e pin)
 			reg_gpio_pd_gpio = 0xff;
 			reg_gpio_pe_gpio = 0xff;
 
-			//output disable
-			reg_gpio_pa_oen = 0xff;
-			reg_gpio_pb_oen = 0xff;
-			reg_gpio_pc_oen = 0xff;
-			reg_gpio_pd_oen = 0xff;
-			reg_gpio_pe_oen = 0xff;
-
 			//set low level
 			reg_gpio_pa_out = 0x00;
 			reg_gpio_pb_out = 0x00;
 			reg_gpio_pc_out = 0x00;
 			reg_gpio_pd_out = 0x00;
 			reg_gpio_pe_out = 0x00;
+
+			//output disable
+			reg_gpio_pa_oen = 0xff;
+			reg_gpio_pb_oen = 0xff;
+			reg_gpio_pc_oen = 0xff;
+			reg_gpio_pd_oen = 0xff;
+			reg_gpio_pe_oen = 0xff;
 
 			//disable input
 			reg_gpio_pa_ie = 0x80;					//SWS
@@ -248,6 +260,11 @@ void gpio_shutdown(gpio_pin_e pin)
  */
 void gpio_set_irq(gpio_pin_e pin, gpio_irq_trigger_type_e trigger_type)
 {
+	/*
+		When selecting pull-up resistance and rising edge to trigger gpio interrupt, gpio_irq_en should be placed before setting gpio_set_irq,
+		otherwise an interrupt will be triggered by mistake.
+	 */
+	gpio_irq_en(pin);
 	switch(trigger_type)
 	{
 	case INTR_RISING_EDGE:
@@ -269,8 +286,7 @@ void gpio_set_irq(gpio_pin_e pin, gpio_irq_trigger_type_e trigger_type)
 	}
 	reg_gpio_irq_ctrl |= FLD_GPIO_CORE_INTERRUPT_EN;
 	reg_gpio_irq_clr = FLD_GPIO_IRQ_CLR;//must clear cause to unexpected interrupt.
-	BM_SET(reg_gpio_irq_risc_mask, FLD_GPIO_IRQ_MASK_GPIO);
-
+	gpio_set_irq_mask(GPIO_IRQ_MASK_GPIO);
 }
 
 /**
@@ -281,7 +297,11 @@ void gpio_set_irq(gpio_pin_e pin, gpio_irq_trigger_type_e trigger_type)
  */
 void gpio_set_gpio2risc0_irq(gpio_pin_e pin, gpio_irq_trigger_type_e trigger_type)
 {
-
+	/*
+	   When selecting pull-up resistance and rising edge to trigger gpio interrupt, gpio_gpio2risc0_irq_en should be placed before setting gpio_set_gpio2risc0_irq,
+	   otherwise an interrupt will be triggered by mistake.
+	*/
+	gpio_gpio2risc0_irq_en(pin);
 	switch(trigger_type)
 	{
 	case INTR_RISING_EDGE:
@@ -302,7 +322,7 @@ void gpio_set_gpio2risc0_irq(gpio_pin_e pin, gpio_irq_trigger_type_e trigger_typ
 	   break;
 	}
 	reg_gpio_irq_clr = FLD_GPIO_IRQ_GPIO2RISC0_CLR;//must clear cause to unexpected interrupt.
-	BM_SET(reg_gpio_irq_risc_mask, FLD_GPIO_IRQ_MASK_GPIO2RISC0);
+	gpio_set_irq_mask(GPIO_IRQ_MASK_GPIO2RISC0);
 
 }
 
@@ -314,6 +334,11 @@ void gpio_set_gpio2risc0_irq(gpio_pin_e pin, gpio_irq_trigger_type_e trigger_typ
  */
 void gpio_set_gpio2risc1_irq(gpio_pin_e pin, gpio_irq_trigger_type_e trigger_type)
 {
+	/*
+	   When selecting pull-up resistance and rising edge to trigger gpio interrupt, gpio_gpio2risc1_irq_en should be placed before setting gpio_set_gpio2risc1_irq,
+	   otherwise an interrupt will be triggered by mistake.
+	*/
+	gpio_gpio2risc1_irq_en(pin);
 	switch(trigger_type)
 	{
 	case INTR_RISING_EDGE:
@@ -334,7 +359,7 @@ void gpio_set_gpio2risc1_irq(gpio_pin_e pin, gpio_irq_trigger_type_e trigger_typ
 	   break;
 	}
 	reg_gpio_irq_clr =FLD_GPIO_IRQ_GPIO2RISC1_CLR;//must clear cause to unexpected interrupt.
-	BM_SET(reg_gpio_irq_risc_mask, FLD_GPIO_IRQ_MASK_GPIO2RISC1);
+	gpio_set_irq_mask(GPIO_IRQ_MASK_GPIO2RISC1);
 
 }
 
@@ -374,8 +399,8 @@ void gpio_set_up_down_res(gpio_pin_e pin, gpio_pull_type_e up_down_res)
 }
 
 /**
- * @brief     This function set pin's 30k pull-up registor.
- * @param[in] pin - the pin needs to set its pull-up registor.
+ * @brief     This function set pin's 30k pull-up register.
+ * @param[in] pin - the pin needs to set its pull-up register.
  * @return    none.
   * @attention  This function sets the digital pull-up, it will not work after entering low power consumption.
  */

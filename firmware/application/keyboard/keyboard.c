@@ -1,10 +1,10 @@
 /********************************************************************************************************
- * @file     keyboard.c
+ * @file    keyboard.c
  *
- * @brief    This is the source file for BLE SDK
+ * @brief   This is the source file for BLE SDK
  *
- * @author	 BLE GROUP
- * @date         2020.06
+ * @author  BLE GROUP
+ * @date    06,2022
  *
  * @par     Copyright (c) 2022, Telink Semiconductor (Shanghai) Co., Ltd. ("TELINK")
  *
@@ -19,8 +19,8 @@
  *          WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  *          See the License for the specific language governing permissions and
  *          limitations under the License.
+ *
  *******************************************************************************************************/
-
 #include "tl_common.h"
 #include "drivers.h"
 #include "keyboard.h"
@@ -62,7 +62,7 @@ _attribute_data_retention_	u32 deepback_key_tick;
 #endif
 
 #ifndef		KB_HAS_CTRL_KEYS
-#define		KB_HAS_CTRL_KEYS		0 // BLE_SRC_TELINK_MESH_EN
+#define		KB_HAS_CTRL_KEYS		0	// BLE_SRC_TELINK_MESH_EN
 #endif
 
 #ifndef		KB_RM_GHOST_KEY_EN
@@ -209,7 +209,7 @@ kb_k_mp_t * kb_k_mp;
 void kb_rmv_ghost_key(u32 * pressed_matrix){
 	u32 mix_final = 0;
 	foreach_arr(i, drive_pins){
-		for(int j = (i+1); j < ARRAY_SIZE(drive_pins); ++j){
+		for(unsigned int j = (i+1); j < ARRAY_SIZE(drive_pins); ++j){
 			u32 mix = (pressed_matrix[i] & pressed_matrix[j]);
 			//four or three key at "#" is pressed at the same time, should remove ghost key
 			if( mix && (!BIT_IS_POW2(mix) || (pressed_matrix[i] ^ pressed_matrix[j])) ){
@@ -226,7 +226,7 @@ void kb_rmv_ghost_key(u32 * pressed_matrix){
 #if (LONG_PRESS_KEY_POWER_OPTIMIZE)
 int key_matrix_same_as_last_cnt = 0;  //record key matrix no change cnt
 #endif
-static u32 mtrx_pre[ARRAY_SIZE(drive_pins)]; 	// BLE_SRC_TELINK_MESH_EN
+static u32 mtrx_pre[ARRAY_SIZE(drive_pins)];
 static u32 mtrx_last[ARRAY_SIZE(drive_pins)];
 
 unsigned int key_debounce_filter( u32 mtrx_cur[], u32 filt_en ){
@@ -234,7 +234,7 @@ unsigned int key_debounce_filter( u32 mtrx_cur[], u32 filt_en ){
 #if (LONG_PRESS_KEY_POWER_OPTIMIZE)
     unsigned char matrix_differ = 0;
 #endif
-    
+
     foreach_arr(i, drive_pins){
         u32 mtrx_tmp = mtrx_cur[i];
 #if (STUCK_KEY_PROCESS_ENABLE)
@@ -304,7 +304,7 @@ static inline void kb_remap_key_row(int drv_ind, u32 m, int key_max, kb_data_t *
 }
 
 static inline void kb_remap_key_code(u32 * pressed_matrix, int key_max, kb_data_t *kb_data, int numlock_status){
-
+	(void)numlock_status;
 #if (KB_STANDARD_KEYBOARD)
 	kb_k_mp = kb_p_map[(numlock_status&1) | (kb_is_fn_pressed << 1)];
 #else
@@ -417,7 +417,7 @@ u32 kb_scan_key_value (int numlock_status, int read_key,unsigned char * gpio)
 		kb_k_mp = (kb_k_mp_t *)&kb_map_normal[0];
 #endif
 		kb_scan_row (0, gpio);
-		for (int i=0; i<=ARRAY_SIZE(drive_pins); i++) {
+		for (unsigned int i=0; i<=ARRAY_SIZE(drive_pins); i++) {
 			u32 r = kb_scan_row (i < ARRAY_SIZE(drive_pins) ? i : 0, gpio);
 			if (i) {
 				pressed_matrix[i - 1] = r;
@@ -458,7 +458,7 @@ u32 kb_scan_key_value (int numlock_status, int read_key,unsigned char * gpio)
 
 			/////////// push to matrix buffer /////////////////////////
 			pd = matrix_buff[matrix_wptr&3];
-			for (int k=0; k<ARRAY_SIZE(drive_pins); k++) {
+			for (unsigned int k=0; k<ARRAY_SIZE(drive_pins); k++) {
 				*pd++ = pressed_matrix[k];
 			}
 			matrix_wptr = (matrix_wptr + 1) & 7;
@@ -499,6 +499,28 @@ u32 kb_scan_key_value (int numlock_status, int read_key,unsigned char * gpio)
 		return 1;
 }
 
+u32 kb_scan_key(int numlock_status, int read_key)
+{
+	unsigned char gpio[8];
+
+#if(KB_LINE_MODE)
+	gpio_read_all (gpio);
+	scan_pin_need = (1 << ARRAY_SIZE(scan_pins)) - 1;
+#else
+	scan_pin_need = kb_key_pressed (gpio);
+#endif
+
+	if(scan_pin_need){
+		return  kb_scan_key_value(numlock_status,read_key,gpio);
+	}
+	else{
+#if (KB_REPEAT_KEY_ENABLE)
+		repeat_key.key_change_flg = KEY_NONE;
+#endif
+		return 0;
+	}
+}
+
 #if (PM_DEEPSLEEP_RETENTION_ENABLE)
 void global_var_no_ret_init_kb() // BLE_SRC_TELINK_MESH_EN
 {
@@ -508,9 +530,6 @@ void global_var_no_ret_init_kb() // BLE_SRC_TELINK_MESH_EN
     memset(mtrx_last, 0, sizeof(mtrx_last));
 }
 #endif
-
-
-
 
 #endif
 

@@ -1,10 +1,10 @@
 /********************************************************************************************************
- * @file     init.h
+ * @file    init.h
  *
- * @brief    This is the header file for BLE SDK
+ * @brief   This is the header file for BLE SDK
  *
- * @author	 BLE GROUP
- * @date         2020.06
+ * @author  BLE GROUP
+ * @date    06,2022
  *
  * @par     Copyright (c) 2022, Telink Semiconductor (Shanghai) Co., Ltd. ("TELINK")
  *
@@ -19,8 +19,8 @@
  *          WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  *          See the License for the specific language governing permissions and
  *          limitations under the License.
+ *
  *******************************************************************************************************/
-
 #ifndef INIT_H_
 #define INIT_H_
 
@@ -41,6 +41,24 @@ ble_sts_t 	blc_ll_createConnectionCancel (void);
  * @return     Status - 0x00: command succeeded; 0x01-0xFF: command failed
  */
 ble_sts_t 	blc_ll_setCreateConnectionTimeout (u32 timeout_ms);
+
+
+/**
+ * @brief      This function is used to check if initiation is busy
+ * @param[in]  none
+ * @return     1: initiation is ongoing;  0: no initiation or initiation finished
+ */
+bool		blc_ll_isInitiationBusy(void);
+
+
+
+/**
+ * @brief      This function is used to set create connection retry number
+ * @param[in]  number - retry number, must be in range of 0 ~ 5
+ * @return     Status - 0x00: command succeeded; 0x01-0xFF: command failed
+ */
+ble_sts_t 	blc_ll_setCreateConnectionRetryNumber(u8 number);
+
 
 /**
  * @brief      disable connection update high authority for master.

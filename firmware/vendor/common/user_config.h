@@ -1,12 +1,13 @@
 /********************************************************************************************************
- * @file     user_config.h
+ * @file	user_config.h
  *
- * @brief    This is the header file for BLE SDK
+ * @brief	for TLSR chips
  *
- * @author	 BLE GROUP
- * @date         2020.06
+ * @author	telink
+ * @date	Sep. 30, 2010
  *
- * @par     Copyright (c) 2022, Telink Semiconductor (Shanghai) Co., Ltd. ("TELINK")
+ * @par     Copyright (c) 2017, Telink Semiconductor (Shanghai) Co., Ltd. ("TELINK")
+ *          All rights reserved.
  *
  *          Licensed under the Apache License, Version 2.0 (the "License");
  *          you may not use this file except in compliance with the License.
@@ -19,39 +20,82 @@
  *          WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  *          See the License for the specific language governing permissions and
  *          limitations under the License.
+ *
  *******************************************************************************************************/
-
 #pragma once
 
-#if (__PROJECT_MESH__)
-	#include <vendor/mesh/app_config.h>
-#elif(__PROJECT_MESH_PRO__)
-	#include "vendor/mesh_provision/app_config.h"
-#elif(__PROJECT_ACL_CEN_DEMO__)
-	#include "vendor/acl_central_demo/app_config.h"
+#if ANDROID_APP_ENABLE || IOS_APP_ENABLE 
+#pragma pack(1)
+#endif
+#include "config.h"
+
+#if (__PROJECT_8266_MASTER_KMA_DONGLE__ || __PROJECT_8267_MASTER_KMA_DONGLE__)
+	#include "../8267_master_kma_dongle/app_config.h"
+#elif (__PROJECT_MESH__ || WIN32)	// include MESH / lib_sig_mesh.
+	#if((MCU_CORE_TYPE == MCU_CORE_8269) || WIN32)
+	#include "../mesh/app_config_8269.h"
+	#elif(MCU_CORE_TYPE == MCU_CORE_8258)
+	#include "../mesh/app_config_8258.h"
+	#elif(MCU_CORE_TYPE == MCU_CORE_8278)
+	#include "../mesh/app_config_8278.h"
+	#elif(MCU_CORE_TYPE == MCU_CORE_9518)
+	#include "../mesh/app_config_B91.h"
+	#endif
+#elif (__PROJECT_MESH_LPN__)		// include MESH_LPN / lib_sig_mesh_LPN.
+	#if(MCU_CORE_TYPE == MCU_CORE_8269)
+	#include "../mesh_lpn/app_config_8269.h"
+	#elif(MCU_CORE_TYPE == MCU_CORE_8258)
+	#include "../mesh_lpn/app_config_8258.h"
+	#elif(MCU_CORE_TYPE == MCU_CORE_8278)
+	#include "../mesh_lpn/app_config_8278.h"
+	#elif(MCU_CORE_TYPE == MCU_CORE_9518)
+	#include "../mesh_lpn/app_config_B91.h"
+	#endif
+#elif (__PROJECT_MESH_SWITCH__)
+	#if(MCU_CORE_TYPE == MCU_CORE_8269)
+	#include "../mesh_switch/app_config_8269.h"
+	#elif(MCU_CORE_TYPE == MCU_CORE_8258)
+	#include "../mesh_switch/app_config_8258.h"
+	#elif(MCU_CORE_TYPE == MCU_CORE_8278)
+	#include "../mesh_switch/app_config_8278.h"
+	#elif(MCU_CORE_TYPE == MCU_CORE_9518)
+	#include "../mesh_switch/app_config_B91.h"
+	#endif
+#elif (__PROJECT_MESH_PRO__ || __PROJECT_MESH_GW_NODE__)
+	#if(MCU_CORE_TYPE == MCU_CORE_8269)
+	#include "../mesh_provision/app_config_8269.h"
+	#elif(MCU_CORE_TYPE == MCU_CORE_8258)
+	#if(__PROJECT_MESH_GW_NODE_HK__)
+	#include "../mesh_gw_node_homekit/app_config_8258.h"
+	#else
+	#include "../mesh_provision/app_config_8258.h"
+	#endif
+	#elif(MCU_CORE_TYPE == MCU_CORE_8278)
+	#include "../mesh_provision/app_config_8278.h"
+	#elif(MCU_CORE_TYPE == MCU_CORE_9518)
+	#include "../mesh_provision/app_config_B91.h"
+	#endif
+#elif (__PROJECT_SPIRIT_LPN__)
+	#if(MCU_CORE_TYPE == MCU_CORE_8258)
+	#include "../spirit_lpn/app_config_8258.h"
+	#elif(MCU_CORE_TYPE == MCU_CORE_8278)
+	#include "../spirit_lpn/app_config_8278.h"
+	#elif(MCU_CORE_TYPE == MCU_CORE_9518)
+	#include "../spirit_lpn/app_config_B91.h"
+	#endif
+#elif (__PROJECT_BOOTLOADER__)
+	#if(MCU_CORE_TYPE == MCU_CORE_8269)
+	#include "../boot_loader/app_config_8269.h"
+	#elif(MCU_CORE_TYPE == MCU_CORE_8258)
+	#include "../boot_loader/app_config_8258.h"
+	#elif(MCU_CORE_TYPE == MCU_CORE_8278)
+	#include "../boot_loader/app_config_8278.h"
+	#elif(MCU_CORE_TYPE == MCU_CORE_9518)
+	#include "../boot_loader/app_config_B91.h"
+	#endif
 #elif(__PROJECT_ACL_PER_DEMO__)
 	#include "vendor/acl_peripheral_demo/app_config.h"
-#elif (__PROJECT_FEATURE_DEMO__)
-	#include "vendor/feature_demo/app_config.h"
-#elif (__PROJECT_INTERNAL_TEST__)
-	#include "vendor/internal_test/app_config.h"
-#elif (__PROJECT_AUDIO_UNICAST_CLIENT__)
-	#include "vendor/audio_unicast_client/app_config.h"
-#elif (__PROJECT_AUDIO_UNICAST_SERVER__)
-	#include "vendor/audio_unicast_server/app_config.h"
-#elif (__PROJECT_AUDIO_BROADCAST_SOURCE__)
-	#include "vendor/audio_broadcast_source/app_config.h"
-#elif (__PROJECT_AUDIO_BROADCAST_SINK__)
-	#include "vendor/audio_broadcast_sink/app_config.h"
-#elif(__PROJECT_BQB_CONTROLLER__)
-	#include "vendor/BQB_controller/app_config.h"
-#elif (__PROJECT_CIS_CEN__)
-	#include "vendor/cis_central/app_config.h"
-#elif (__PROJECT_CIS_PER__)
-	#include "vendor/cis_peripheral/app_config.h"
-#elif(__PROJECT_AUDIO_BROADCAST_ASSISTANT__)
-	#include "vendor/audio_broadcast_assistant/app_config.h"
 #else
-	#include "vendor/common/default_config.h"
+	#include "../common/default_config.h"
 #endif
 

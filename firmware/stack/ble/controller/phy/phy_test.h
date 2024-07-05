@@ -1,10 +1,10 @@
 /********************************************************************************************************
- * @file     phy_test.h
+ * @file    phy_test.h
  *
- * @brief    This is the header file for BLE SDK
+ * @brief   This is the header file for BLE SDK
  *
- * @author	 BLE GROUP
- * @date         2020.06
+ * @author  BLE GROUP
+ * @date    06,2022
  *
  * @par     Copyright (c) 2022, Telink Semiconductor (Shanghai) Co., Ltd. ("TELINK")
  *
@@ -19,50 +19,15 @@
  *          WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  *          See the License for the specific language governing permissions and
  *          limitations under the License.
+ *
  *******************************************************************************************************/
-
 #ifndef PHY_TEST_H_
 #define PHY_TEST_H_
 
 #include "tl_common.h"
 
-
-
-/**
- * @brief	PHY test mode
- */
-#ifndef			PHYTEST_MODE_DISABLE
-#define			PHYTEST_MODE_DISABLE					0
-#endif
-
-#ifndef			PHYTEST_MODE_THROUGH_2_WIRE_UART
-#define 		PHYTEST_MODE_THROUGH_2_WIRE_UART		1   //Direct Test Mode through a 2-wire UART interface
-#endif
-
-#ifndef			PHYTEST_MODE_OVER_HCI_WITH_USB
-#define 		PHYTEST_MODE_OVER_HCI_WITH_USB			2   //Direct Test Mode over HCI(UART hardware interface)
-#endif
-
-#ifndef			PHYTEST_MODE_OVER_HCI_WITH_UART
-#define 		PHYTEST_MODE_OVER_HCI_WITH_UART			3   //Direct Test Mode over HCI(USB  hardware interface)
-#endif
-
-
-
-
-/**
- * @brief	PHY test mode enableor disable
- */
 #define 		BLC_PHYTEST_DISABLE						0
 #define 		BLC_PHYTEST_ENABLE						1
-
-
-
-
-
-
-
-
 
 /**
  * @brief      for user to initialize PHY test module
@@ -87,48 +52,12 @@ ble_sts_t blc_phy_setPhyTestEnable (u8 en);
  */
 bool 	  blc_phy_isPhyTestEnable(void);
 
-
-#if ((MCU_CORE_TYPE == MCU_CORE_B91) || (MCU_CORE_TYPE == MCU_CORE_B92))
-	/**
-	 * @brief      uart RX data process for PHY test 2 wire UART mode
-	 * @param      none
-	 * @return     always 0
-	 */
-	int 	 blc_phyTest_2wire_rxUartCb (void);
-
-
-	/**
-	 * @brief      uart TX data process for PHY test 2 wire UART mode
-	 * @param      none
-	 * @return     always 0
-	 */
-	int 	 blc_phyTest_2wire_txUartCb (void);
-
-
-	/**
-	 * @brief      uart RX data process for PHY test hci UART mode
-	 * @param      none
-	 * @return     always 0
-	 */
-	int blc_phyTest_hci_rxUartCb (void);
-#elif (MCU_CORE_TYPE == MCU_CORE_825x || MCU_CORE_TYPE == MCU_CORE_827x)
-	/**
-	 * @brief      uart RX data process for PHY test 2 wire UART mode
-	 * @param      none
-	 * @return     always 0
-	 */
-	int 	 phy_test_2_wire_rx_from_uart (void);
-
-
-	/**
-	 * @brief      uart TX data process for PHY test 2 wire UART mode
-	 * @param      none
-	 * @return     always 0
-	 */
-	int 	 phy_test_2_wire_tx_to_uart (void);
-#endif
-
-
-
+/**
+ * @brief      This function is used to manipulate "phytest"
+ * @param[in]  *p - the phy test Command packet
+ * @param[in]  n  - Reserved for future use
+ * @return     0
+ */
+int blc_phytest_cmd_handler (u8 *p, int n);
 
 #endif /* PHY_TEST_H_ */

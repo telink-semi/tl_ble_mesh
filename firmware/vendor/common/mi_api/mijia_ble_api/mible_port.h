@@ -18,7 +18,9 @@
 #include <stdbool.h>
 #endif
 #include <stdint.h>
-#include "common/compiler.h" // for B91
+#if (__TLSR_RISCV_EN__)
+#include "common/compiler.h"
+#endif
 #include "vendor/common/user_config.h"
 #ifndef NULL
 #define NULL 0

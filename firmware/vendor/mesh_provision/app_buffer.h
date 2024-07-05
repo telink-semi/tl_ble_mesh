@@ -1,10 +1,10 @@
 /********************************************************************************************************
- * @file     app_buffer.h
+ * @file    app_buffer.h
  *
- * @brief    This is the header file for BLE SDK
+ * @brief   This is the header file for BLE SDK
  *
- * @author	 BLE GROUP
- * @date         11,2022
+ * @author  BLE GROUP
+ * @date    06,2022
  *
  * @par     Copyright (c) 2022, Telink Semiconductor (Shanghai) Co., Ltd. ("TELINK")
  *
@@ -19,13 +19,12 @@
  *          WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  *          See the License for the specific language governing permissions and
  *          limitations under the License.
+ *
  *******************************************************************************************************/
-
 #ifndef APP_BUFFER_H_
 #define APP_BUFFER_H_
 
 #include "tl_common.h"
-#include "app_config.h"
 
 
 
@@ -37,7 +36,7 @@
  * 1. should be in range of 27 ~ 251
  * 2. for CIS peripheral, receive ll_cis_req(36Byte), must be equal to or greater than 36
  */
-#define ACL_CONN_MAX_RX_OCTETS			27	//user set value
+#define ACL_CONN_MAX_RX_OCTETS			DLE_LEN_MAX_RX	//user set value
 
 
 /**
@@ -51,8 +50,8 @@
  * 1. should be in range of 27 ~ 251
  * 2. for CIS central, send ll_cis_req(36Byte), ACL_CENTRAL_MAX_TX_OCTETS must be equal to or greater than 36
  */
-#define ACL_CENTRAL_MAX_TX_OCTETS		27	//user set value
-#define ACL_PERIPHR_MAX_TX_OCTETS		27	//user set value
+#define ACL_CENTRAL_MAX_TX_OCTETS		DLE_LEN_MAX_TX	//user set value
+#define ACL_PERIPHR_MAX_TX_OCTETS		DLE_LEN_MAX_TX	//user set value
 
 
 
@@ -86,9 +85,6 @@
  * 1. (ACL_xxx_TX_FIFO_SIZE * (ACL_xxx_TX_FIFO_NUM - 1)) must be less than 4096 (4K)
  *    so when ACL TX FIFO size equal to or bigger than 256, ACL TX FIFO number can only be 9(can not use 17 or 33), cause 256*(17-1)=4096
  */
-#define ACL_CENTRAL_TX_FIFO_SIZE		CAL_LL_ACL_TX_FIFO_SIZE(ACL_CENTRAL_MAX_TX_OCTETS) //user can not change !!!
-#define ACL_CENTRAL_TX_FIFO_NUM			9	//user set value
-
 #define ACL_PERIPHR_TX_FIFO_SIZE		CAL_LL_ACL_TX_FIFO_SIZE(ACL_PERIPHR_MAX_TX_OCTETS) //user can not change !!!
 #define ACL_PERIPHR_TX_FIFO_NUM			9   //user set value
 
@@ -96,9 +92,10 @@
 
 
 extern	u8	app_acl_rx_fifo[];
-extern	u8	app_acl_cen_tx_fifo[];
 extern	u8	app_acl_per_tx_fifo[];
 /******************** ACL connection LinkLayer TX & RX data FIFO allocation, End ***************************************************/
+
+
 
 
 
@@ -113,25 +110,20 @@ extern	u8	app_acl_per_tx_fifo[];
  *
  * CENTRAL_ATT_RX_MTU & PERIPHR_ATT_RX_MTU
  * 1. must equal to or bigger than 23
- * 2. if support LE Secure Connections, must equal to or bigger than 64
+ * 2. if support LE Secure Connections, must equal to or bigger than 65
  *
  * CENTRAL_L2CAP_BUFF_SIZE & PERIPHR_L2CAP_BUFF_SIZE
  * 1. must use CAL_L2CAP_BUFF_SIZE to calculate, user can not change !!!
  */
-#define CENTRAL_ATT_RX_MTU		  		23	//user set value
-#define PERIPHR_ATT_RX_MTU   			23	//user set value
+#define PERIPHR_ATT_RX_MTU   			250	//user set value
 
 
-#define	CENTRAL_L2CAP_BUFF_SIZE			CAL_L2CAP_BUFF_SIZE(CENTRAL_ATT_RX_MTU)	//user can not change !!!
 #define	PERIPHR_L2CAP_BUFF_SIZE			CAL_L2CAP_BUFF_SIZE(PERIPHR_ATT_RX_MTU)	//user can not change !!!
 
-
-extern	u8 app_cen_l2cap_rx_buf[]; //ACL Central L2cap RX data buffer
 
 extern	u8 app_per_l2cap_rx_buf[]; //ACL Peripheral L2cap RX data buffer
 extern	u8 app_per_l2cap_tx_buf[]; //ACL Peripheral L2cap TX data buffer
 /***************** ACL connection L2CAP RX & TX data Buffer allocation, End ****************************************/
-
 
 
 

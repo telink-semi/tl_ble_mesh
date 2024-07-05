@@ -1,10 +1,10 @@
 /********************************************************************************************************
- * @file     hci_tr_h5.c
+ * @file    hci_tr_h5.c
  *
- * @brief    This is the source file for BLE SDK
+ * @brief   This is the source file for BLE SDK
  *
- * @author	 BLE GROUP
- * @date         11,2022
+ * @author  BLE GROUP
+ * @date    06,2022
  *
  * @par     Copyright (c) 2022, Telink Semiconductor (Shanghai) Co., Ltd. ("TELINK")
  *
@@ -19,8 +19,8 @@
  *          WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  *          See the License for the specific language governing permissions and
  *          limitations under the License.
+ *
  *******************************************************************************************************/
-
 #include "hci_tr_h5.h"
 #include "hci_tr_def.h"
 #include "hci_slip.h"
@@ -72,9 +72,10 @@ static HciH5TrCb_t hciH5TrCb;
 void HCI_Tr_DefaultSlipHandler(u8 *pPacket, u32 len)
 {
 }
-
+void HCI_Tr_H5UartRxIRQHandler(unsigned int * param);
+ext_hci_InitTypeDef  hci_h5_uart;
 /**
- * @brief : H5 protocol initializaiton.
+ * @brief : H5 protocol initialization.
  * @param : none.
  * @param : none.
  */
@@ -87,13 +88,20 @@ void HCI_Tr_H5Init(void)
 
 	hciH5TrCb.HCI_Tr_SlipHandler = HCI_Tr_DefaultSlipHandler;
 
-#if 0
-	/* UART configuration. */
-	HCI_Tr_InitUart(1, (hciH5TrCb.pRxFifo->p+4),  hciH5TrCb.pRxFifo->size - 4);
-#else
-	HCI_UartSetPin(HCI_TR_UART_ID, HCI_TR_TX_PIN, HCI_TR_RX_PIN);
-	HCI_UartInit(HCI_TR_UART_ID, HCI_TR_BAUDRATE, (hciH5TrCb.pRxFifo->p+4),  hciH5TrCb.pRxFifo->size - 4);
-#endif
+	//UART HARDWARE INIT
+	memset(&hci_h5_uart, 0, sizeof(ext_hci_InitTypeDef));
+	hci_h5_uart.baudrate  = HCI_TR_BAUDRATE;
+	hci_h5_uart.tx_Pin = HCI_TR_TX_PIN;      //
+	hci_h5_uart.rx_Pin = HCI_TR_RX_PIN;      //
+	hci_h5_uart.HwFlowCtl = 0;
+	hci_h5_uart.cts_Pin = 0;
+	hci_h5_uart.rts_Pin = 0;
+	hci_h5_uart.RxCpltCallback = HCI_Tr_H5UartRxIRQHandler;
+	hci_h5_uart.TxCpltCallback = NULL;
+	ext_hci_uartInit(&hci_h5_uart);
+
+	ext_hci_uartReceData((hciH5TrCb.pRxFifo->p + 4), hciH5TrCb.pRxFifo->size - 4);
+
 }
 
 /**
@@ -132,7 +140,7 @@ static u8 *HCI_Tr_H5FindSlipHeadFlag(u8 *pPacket, u32 len)
 }
 
 /**
- * @brief : Find slip delimiiter
+ * @brief : Find slip delimiter
  * @param : pPacket     Pointer point to slip packet buffer.
  * @param : len         the length of data.
  * @param : none.
@@ -316,53 +324,29 @@ void HCI_Tr_H5RxHandler(void)
  * @param : none.
  */
 _attribute_ram_code_
-void HCI_Tr_H5UartIRQHandler(void)
+void HCI_Tr_H5UartRxIRQHandler(unsigned int * param)
 {
-	/* UART TX IRQ */
-	if(HCI_UartGetTxIrqFlag(HCI_TR_UART_ID))
-	{
-		HCI_UartClearTxIrqFlag(HCI_TR_UART_ID);
+	(void)* param;
+	/* Get the length of Rx data */
+	u32 rxLen = 0;
+	hci_fifo_t *pRxFifo = hciH5TrCb.pRxFifo;
+	u8 *p = pRxFifo->p + (pRxFifo->wptr & pRxFifo->mask) * pRxFifo->size;
 
-		uart_txDone_tick   = clock_time()|0x01;
-		isUartTxDone = 1;
+	if((u8)(pRxFifo->wptr - pRxFifo->rptr) >= pRxFifo->num){
+		ext_hci_uartReceData((p+4), pRxFifo->size - 4);//[!!important]
+		tlkapi_send_string_data(DBG_HCI_TR, "[I] UART Rx overflow", 0, 0);
+
+		return; //have no memory.
 	}
-
-	/* UART RX err IRQ */
-	if(HCI_UartGetRxErrorIrqFlag(HCI_TR_UART_ID))
+	BSTREAM_TO_UINT32(rxLen,p);
+	if(rxLen)
 	{
-		HCI_UartClearRxErrorIrqFlag(HCI_TR_UART_ID);
+		pRxFifo->wptr++;
+		p = pRxFifo->p + (pRxFifo->wptr & pRxFifo->mask) * pRxFifo->size;
 
-		hci_fifo_t *pRxFifo = hciH5TrCb.pRxFifo;
-		u8 *p = pRxFifo->p + (pRxFifo->wptr & pRxFifo->mask) * pRxFifo->size;
-		HCI_UartSetRxDmaBuffer(HCI_TR_UART_ID, (p+4), pRxFifo->size - 4);//[!!important]
 	}
-	/* UART RX IRQ */
-	else if(HCI_UartGetRxIrqFlag(HCI_TR_UART_ID)) //A0-SOC can't use RX-DONE status,so this interrupt can only used in A1-SOC.
-	{
-		/* Get the length of Rx data */
-		u32 rxLen = 0;
-		rxLen = HCI_UartGetRxDataLen(HCI_TR_UART_ID);
+	ext_hci_uartReceData( (p+4), pRxFifo->size - 4);//[!!important]
 
-		/* Clear RxDone state */
-		HCI_UartClearRxIrqFlag(HCI_TR_UART_ID);
-
-		hci_fifo_t *pRxFifo = hciH5TrCb.pRxFifo;
-		u8 *p = pRxFifo->p + (pRxFifo->wptr & pRxFifo->mask) * pRxFifo->size;
-
-		if((u8)(pRxFifo->wptr - pRxFifo->rptr) >= pRxFifo->num){
-			HCI_UartSetRxDmaBuffer(HCI_TR_UART_ID, (p+4), pRxFifo->size - 4);//[!!important]
-			return; //have no memory.
-		}
-
-		if(rxLen)
-		{
-			UINT32_TO_BSTREAM(p, rxLen);
-
-			pRxFifo->wptr++;
-			p = pRxFifo->p + (pRxFifo->wptr & pRxFifo->mask) * pRxFifo->size;
-		}
-		HCI_UartSetRxDmaBuffer(HCI_TR_UART_ID, (p+4), pRxFifo->size - 4);//[!!important]
-	}
 }
 
 #endif /* End of HCI_TR_EN */

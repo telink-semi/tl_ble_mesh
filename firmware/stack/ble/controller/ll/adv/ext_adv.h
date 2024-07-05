@@ -1,10 +1,10 @@
 /********************************************************************************************************
- * @file     ext_adv.h
+ * @file    ext_adv.h
  *
- * @brief    This is the header file for BLE SDK
+ * @brief   This is the header file for BLE SDK
  *
- * @author	 BLE GROUP
- * @date         2020.06
+ * @author  BLE GROUP
+ * @date    06,2022
  *
  * @par     Copyright (c) 2022, Telink Semiconductor (Shanghai) Co., Ltd. ("TELINK")
  *
@@ -19,11 +19,10 @@
  *          WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  *          See the License for the specific language governing permissions and
  *          limitations under the License.
+ *
  *******************************************************************************************************/
-
 #ifndef LL_EXT_ADV_H_
 #define LL_EXT_ADV_H_
-
 
 #include "stack/ble/hci/hci_cmd.h"
 
@@ -33,7 +32,7 @@
 
 
 /* extended ADV parameters buffer length for each ADV set */
-#define 		ADV_SET_PARAM_LENGTH							492 //user can't modify this value !!!
+#define 		ADV_SET_PARAM_LENGTH						    (536) //user can't modify this value !!!
 
 
 
@@ -66,8 +65,6 @@ void 		blc_ll_initExtendedAdvDataBuffer(u8 *pExtAdvData, int max_len_advData);
 void 		blc_ll_initExtendedScanRspDataBuffer(u8 *pScanRspData, int max_len_scanRspData);
 
 
-
-
 /**
  * @brief      This function is used to set the advertising parameters
  * @param[in]  adv_handle - Used to identify an advertising set
@@ -84,7 +81,7 @@ void 		blc_ll_initExtendedScanRspDataBuffer(u8 *pScanRspData, int max_len_scanRs
  * @param[in]  sec_adv_max_skip - Maximum advertising events the Controller can skip
  * @param[in]  sec_adv_phy - Secondary advertisement PHY
  * @param[in]  adv_sid - Value of the Advertising SID subfield in the ADI field of the PDU
- * @param[in]  scan_req_noti_en - Scan Request Notification Enable
+ * @param[in]  scan_req_notify_en - Scan Request Notification Enable
  * @return     Status - 0x00: command succeeded;
  * 						0x12:  1. adv_handle out of range;
  * 						       2. pri_advChnMap out of range
@@ -93,7 +90,7 @@ void 		blc_ll_initExtendedScanRspDataBuffer(u8 *pScanRspData, int max_len_scanRs
 ble_sts_t 	blc_ll_setExtAdvParam(  u8 adv_handle, 		 			advEvtProp_type_t adv_evt_prop,	u32 pri_advInter_min, 		u32 pri_advInter_max,
 									adv_chn_map_t pri_advChnMap,	own_addr_type_t ownAddrType, 	u8 peerAddrType, 			u8  *peerAddr,
 									adv_fp_type_t advFilterPolicy,  tx_power_t adv_tx_pow,			le_phy_type_t pri_adv_phy, 	u8 sec_adv_max_skip,
-									le_phy_type_t sec_adv_phy, 	 	u8 adv_sid, 					u8 scan_req_noti_en);
+									le_phy_type_t sec_adv_phy, 	 	u8 adv_sid, 					u8 scan_req_notify_en);
 
 
 
@@ -105,7 +102,7 @@ ble_sts_t 	blc_ll_setExtAdvParam(  u8 adv_handle, 		 			advEvtProp_type_t adv_ev
  * @param[in]  *advData - Advertising data
  * @return     Status - 0x00: command succeeded; 0x01-0xFF: command failed
  */
-ble_sts_t	blc_ll_setExtAdvData (u8 adv_handle, int advData_len, u8 *advData);
+ble_sts_t	blc_ll_setExtAdvData (u8 adv_handle, int advData_len, const u8 *advData);
 
 
 
@@ -120,7 +117,7 @@ ble_sts_t	blc_ll_setExtAdvData (u8 adv_handle, int advData_len, u8 *advData);
  * @param[in]  *scanRspData - Scan response data
  * @return     Status - 0x00: command succeeded; 0x01-0xFF: command failed
  */
-ble_sts_t 	blc_ll_setExtScanRspData(u8 adv_handle, int scanRspData_len, u8 *scanRspData);
+ble_sts_t 	blc_ll_setExtScanRspData(u8 adv_handle, int scanRspData_len, const u8 *scanRspData);
 
 
 
@@ -169,7 +166,14 @@ ble_sts_t	blc_ll_removeAdvSet(u8 adv_handle);
 ble_sts_t	blc_ll_clearAdvSets(void);
 
 
-
+/**
+ * @brief      If one connection Peripheral is established by Extended ADV, user can use this API to locate the Extended ADV set
+ * @param[in]  connHandle - connection handle of ACL connection.
+ * @return     Extended ADV handle:
+ * 					0xFF: invalid ADV handle, e.g. connection is not Peripheral role, or Peripheral is established by legacy ADV
+ * 			   		Others: Extended ADV handle
+ */
+u8			blc_ll_getExtendedAdvHandleForAclConnection(u16 connHandle);
 
 
 #endif /* LL_EXT_ADV_H_ */

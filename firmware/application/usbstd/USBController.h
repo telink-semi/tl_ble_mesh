@@ -1,10 +1,10 @@
 /********************************************************************************************************
- * @file     USBController.h
+ * @file    USBController.h
  *
- * @brief    This is the header file for BLE SDK
+ * @brief   This is the header file for BLE SDK
  *
- * @author	 BLE GROUP
- * @date         2020.06
+ * @author  BLE GROUP
+ * @date    06,2022
  *
  * @par     Copyright (c) 2022, Telink Semiconductor (Shanghai) Co., Ltd. ("TELINK")
  *
@@ -19,8 +19,8 @@
  *          WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  *          See the License for the specific language governing permissions and
  *          limitations under the License.
+ *
  *******************************************************************************************************/
-
 #pragma once
 
 /* Enable C linkage for C++ Compilers: */
@@ -31,7 +31,7 @@ extern "C" {
 
 /**If Isochronous endpoint,
 Bits 3..2 = Synchronisation Type (Iso Mode)
-00 = No Synchonisation
+00 = No Synchronisation
 01 = Asynchronous
 10 = Adaptive
 11 = Synchronous

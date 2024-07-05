@@ -1,12 +1,12 @@
 /********************************************************************************************************
- * @file     emi.c
+ * @file    emi.c
  *
- * @brief    This is the source file for BLE SDK
+ * @brief   This is the source file for B91
  *
- * @author	 BLE GROUP
- * @date         11,2022
+ * @author  Driver Group
+ * @date    2019
  *
- * @par     Copyright (c) 2022, Telink Semiconductor (Shanghai) Co., Ltd. ("TELINK")
+ * @par     Copyright (c) 2019, Telink Semiconductor (Shanghai) Co., Ltd. ("TELINK")
  *
  *          Licensed under the Apache License, Version 2.0 (the "License");
  *          you may not use this file except in compliance with the License.
@@ -19,8 +19,8 @@
  *          WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  *          See the License for the specific language governing permissions and
  *          limitations under the License.
+ *
  *******************************************************************************************************/
-
 #include "emi.h"
 #include "stimer.h"
 /**********************************************************************************************************************
@@ -30,14 +30,30 @@
 #define EMI_STATE1		                     0x5678
 #define EMI_TX_FIFO_ADDR                     0x14081c
 #define EMI_TX_PKT_PAYLOAD		             37
+/**
+ * @brief This definition is used to set the maximum payload for rx
+ * @note  When using it, it should be noted that the packet length sent by tx should not exceed the maximum buffer of rx
+ *
+ *        packet_length = DMA_length + header_length + payload_length + crc_length + hd_info_length
+ *
+ *        Common package structure:
+ *
+ *              | DMA_length | header_length | payload_length               | crc_length | hd_info_length
+ *       ble    |   4 byte   |    2 byte     |   N byte                     |   3 byte   | 8 byte
+ *       private|   4 byte   |    1 byte     |   N byte                     |   2 byte   | 8 byte
+ *       zigbee |   4 byte   |    1 byte     |   N-2(crc_length) byte       |   2 byte   | 8 byte
+ *
+ */
+#define EMI_RX_MAX_PKT_PAYLOAD		             255
 
 /**********************************************************************************************************************
  *                                           global constants                                                        *
  *********************************************************************************************************************/
 
-static unsigned char  emi_rx_packet[128] __attribute__ ((aligned (4)));
+static unsigned char  emi_rx_packet[280] __attribute__ ((aligned (4)));
 static unsigned char  emi_ble_tx_packet [48]  __attribute__ ((aligned (4))) = {3,0,0,0,0,10};
 static unsigned char  emi_zigbee_tx_packet[48]  __attribute__ ((aligned (4))) = {19,0,0,0,20,0,0};
+static unsigned char  Private_TPLL_tx_packet[48] __attribute__ ((aligned (4))) = {3,0,0,0,0,10};
 static unsigned int   s_emi_rx_cnt  __attribute__ ((aligned (4))) = 0;
 static unsigned int   s_emi_rssibuf = 0;
 static signed  char   s_emi_rssi = 0;
@@ -150,6 +166,12 @@ void rf_emi_tx_continue_update_data(rf_mode_e rf_mode,rf_power_level_e power_lev
 		case RF_MODE_ZIGBEE_250K:
 			rf_set_zigbee_250K_mode();
 			break;
+		case RF_MODE_PRIVATE_1M:
+			rf_set_pri_1M_mode();
+			break;
+		case RF_MODE_PRIVATE_2M:
+			rf_set_pri_2M_mode();
+			break;
 
 		default:break;
 	}
@@ -177,7 +199,8 @@ unsigned int emi_pn_gen(unsigned int state)
 }
 
 /**
- * @brief      This function serves to continue to run the CD mode
+ * @brief      This function serves to continue to run the CD mode..The missing three in the program is because 
+ *			   the original writing is problematic and will 
  * @return     none
  */
 void rf_continue_mode_run(void)
@@ -186,8 +209,6 @@ void rf_continue_mode_run(void)
 		write_reg32(EMI_TX_FIFO_ADDR, 0x0f0f0f0f);
 	}else if(read_reg8(0x140808)==2){
 		write_reg32(EMI_TX_FIFO_ADDR, 0x55555555);
-	}else if(read_reg8(0x140808)==3){
-		write_reg32(EMI_TX_FIFO_ADDR, read_reg32(0x140809));
 	}else if(read_reg8(0x140808)==4){
 		write_reg32(EMI_TX_FIFO_ADDR, 0);
 	}else if(read_reg8(0x140808)==5){
@@ -202,6 +223,7 @@ void rf_continue_mode_run(void)
 	}
 }
 
+static unsigned char rxpara_flag = 1;
 /**
  * @brief      This function serves to set rx mode and channel
  * @param[in]  mode   - mode of RF.
@@ -228,17 +250,39 @@ void rf_emi_rx_setup(rf_mode_e mode,signed char rf_chn)
 		case RF_MODE_ZIGBEE_250K:
 			rf_set_zigbee_250K_mode();
 			break;
+		case RF_MODE_PRIVATE_1M:
+			rf_set_pri_1M_mode();
+			break;
+		case RF_MODE_PRIVATE_2M:
+			rf_set_pri_2M_mode();
+			break;
 
 		default:break;
 	}
-	rf_set_rx_dma(emi_rx_packet,3,64);
+	rf_set_rx_maxlen(EMI_RX_MAX_PKT_PAYLOAD-2);//Rx mode in EMI is manual mode, and only one DMA fifo is used in manual mode.
+	                                    //If multiple DMA fifo are used, it should be noted that rx packet length cannot be greater than the depth of DMA fifo
+	rf_set_rx_dma(emi_rx_packet,0,253);
 	rf_pn_disable();
 	rf_set_chn(rf_chn);//set freq
 	if(mode != RF_MODE_ZIGBEE_250K)
-		rf_access_code_comm(EMI_ACCESS_CODE); 	//accesscode
+		rf_access_code_comm(EMI_ACCESS_CODE); 	//access code
 	rf_set_tx_rx_off();
 	rf_set_rxmode();
 	delay_us(150);
+	if(rxpara_flag == 1)
+	{
+		rf_set_rxpara();
+		rxpara_flag = 0;
+	}
+
+	if(rf_chn == 24 || rf_chn == 48 || rf_chn == 72)
+	{
+		rf_ldot_ldo_rxtxlf_bypass_en();
+	}
+	else
+	{
+		rf_ldot_ldo_rxtxlf_bypass_dis();
+	}
 	s_emi_rssi = 0;
 	s_emi_rssibuf = 0;
 	s_emi_rx_cnt = 0;
@@ -405,6 +449,24 @@ void rf_emi_tx_burst_loop(rf_mode_e rf_mode,unsigned char pkt_type)
 	    if(pkt_type == 0)
 	    	rf_phy_test_prbs9(&emi_zigbee_tx_packet[5],37);
 	}
+	else if((rf_mode == RF_MODE_PRIVATE_1M) || (rf_mode == RF_MODE_PRIVATE_2M))
+	{
+		rf_data_len = EMI_TX_PKT_PAYLOAD+1;
+		Private_TPLL_tx_packet[4]=EMI_TX_PKT_PAYLOAD;
+		rf_tx_dma_len = rf_tx_packet_dma_len(rf_data_len);
+		Private_TPLL_tx_packet[3] = (rf_tx_dma_len >> 24)&0xff;
+		Private_TPLL_tx_packet[2] = (rf_tx_dma_len >> 16)&0xff;
+		Private_TPLL_tx_packet[1] = (rf_tx_dma_len >> 8)&0xff;
+		Private_TPLL_tx_packet[0] = rf_tx_dma_len&0xff;
+		rf_start_stx((void *)Private_TPLL_tx_packet, read_reg32(0x140200) + 10);
+		while(!(rf_get_irq_status(FLD_RF_IRQ_TX)));
+		rf_clr_irq_status(FLD_RF_IRQ_TX);
+
+
+		delay_ms(1);
+		if(pkt_type == 0)
+			rf_phy_test_prbs9(&Private_TPLL_tx_packet[5],37);
+	}
 }
 
 
@@ -444,11 +506,16 @@ void rf_emi_tx_burst_setup(rf_mode_e rf_mode,rf_power_level_e power_level,signed
 		case RF_MODE_ZIGBEE_250K:
 			rf_set_zigbee_250K_mode();
 			break;
-
+		case RF_MODE_PRIVATE_1M:
+			rf_set_pri_1M_mode();
+			break;
+		case RF_MODE_PRIVATE_2M:
+			rf_set_pri_2M_mode();
+			break;
 		default:break;
 	}
 	if(rf_mode != RF_MODE_ZIGBEE_250K)
-		rf_access_code_comm(EMI_ACCESS_CODE); 	//accesscode
+		rf_access_code_comm(EMI_ACCESS_CODE); 	//access code
 
 	rf_pn_disable();
 	rf_set_power_level (power_level);
@@ -460,7 +527,13 @@ void rf_emi_tx_burst_setup(rf_mode_e rf_mode,rf_power_level_e power_level,signed
 	{
 		tx_data = 0x55;
 	}
-
+	else if(pkt_type == 3)
+	{
+		tx_data = 0xaa;
+	}
+	else if(pkt_type==4){
+		tx_data = 0xf0;
+	}
 	switch(rf_mode)
 	{
 	    case RF_MODE_LR_S2_500K:
@@ -479,6 +552,14 @@ void rf_emi_tx_burst_setup(rf_mode_e rf_mode,rf_power_level_e power_level,signed
 	    	{
 	    		emi_zigbee_tx_packet[5 + i] = tx_data;
 	    	}
+	    	break;
+	    case RF_MODE_PRIVATE_1M:
+	    case RF_MODE_PRIVATE_2M:
+	    	Private_TPLL_tx_packet[5] = pkt_type; // type
+			for(i = 0;i < 37;i++)
+			{
+				Private_TPLL_tx_packet[5 + i] = tx_data;
+			}
 	    	break;
 
 	    default:

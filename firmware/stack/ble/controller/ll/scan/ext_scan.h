@@ -1,10 +1,10 @@
 /********************************************************************************************************
- * @file     ext_scan.h
+ * @file    ext_scan.h
  *
- * @brief    This is the header file for BLE SDK
+ * @brief   This is the header file for BLE SDK
  *
- * @author	 BLE GROUP
- * @date         2020.06
+ * @author  BLE GROUP
+ * @date    06,2022
  *
  * @par     Copyright (c) 2022, Telink Semiconductor (Shanghai) Co., Ltd. ("TELINK")
  *
@@ -19,8 +19,8 @@
  *          WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  *          See the License for the specific language governing permissions and
  *          limitations under the License.
+ *
  *******************************************************************************************************/
-
 #ifndef LL_SCAN_EXT_H_
 #define LL_SCAN_EXT_H_
 
@@ -92,6 +92,10 @@ ble_sts_t 	blc_ll_setExtScanEnable (scan_en_t  extScan_en,	dupe_fltr_en_t filter
 
 
 
+
+
+/* special use API */
+void 		blc_ll_setExtendedScanSecondaryChannelRxDataProcessEnable(u8 enable);
 
 
 #endif /* LL_SCAN_EXT_H_ */

@@ -1,10 +1,10 @@
 /********************************************************************************************************
- * @file     hci_dfu_def.h
+ * @file    hci_dfu_def.h
  *
- * @brief    This is the header file for BLE SDK
+ * @brief   This is the header file for BLE SDK
  *
- * @author	 BLE GROUP
- * @date         11,2022
+ * @author  BLE GROUP
+ * @date    06,2022
  *
  * @par     Copyright (c) 2022, Telink Semiconductor (Shanghai) Co., Ltd. ("TELINK")
  *
@@ -19,8 +19,8 @@
  *          WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  *          See the License for the specific language governing permissions and
  *          limitations under the License.
+ *
  *******************************************************************************************************/
-
 #ifndef HCI_DFU_DEF_H_
 #define HCI_DFU_DEF_H_
 
@@ -84,7 +84,7 @@
 	#define DFU_TRACK(format, ...)          printf(format, ##__VA_ARGS__)
 	#define DFU_TRACK_ERR(format, ...)      printf("[ERR -DFU ] "format, ##__VA_ARGS__)
 	#define DFU_TRACK_INFO(format, ...)     printf("[INFO-DFU ] "format, ##__VA_ARGS__)
-	#define DFU_TRACK_WRN(format, ...)      printf("[WRAN-DFU ] "format, ##__VA_ARGS__)
+	#define DFU_TRACK_WRN(format, ...)      printf("[WARN-DFU ] "format, ##__VA_ARGS__)
 #else
 	#define DFU_TRACK_DATA(pData, len)
 

@@ -23,9 +23,6 @@
  *
  *******************************************************************************************************/
 #include "tl_common.h"
-#ifndef WIN32
-#include "proj/mcu/watchdog_i.h"
-#endif 
 #include "proj_lib/ble/ll/ll.h"
 #include "proj_lib/ble/blt_config.h"
 #include "vendor/common/user_config.h"
@@ -84,7 +81,7 @@ para:
 	adr_dst: the adr for the dst (can be group adr or the unicast adr)
 	rsp_max: the rsp cnt for the cmd ,if the adr_dst is unicast adr ,it will be the 1,if it's the group adr
 			 the cnt will be the cnt you need .
-Descryption: for the example of the cmd sending part for the light on and other model operation ,can
+Description: for the example of the cmd sending part for the light on and other model operation ,can
 			see the interface in the cmd_interface.h
 ****************************************************************************/
 int mesh_tx_cmd2normal_primary(u16 op, u8 *par, u32 par_len, u16 adr_dst, int rsp_max);

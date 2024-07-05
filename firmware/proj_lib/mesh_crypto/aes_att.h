@@ -25,13 +25,8 @@
 #pragma once
 
 #include "tl_common.h"
-#if __TLSR_RISCV_EN__
-#include "common/types.h"
-#else
-#include "proj/common/types.h"
-#endif
 
-#if (MCU_CORE_TYPE == MCU_CORE_B91)
+#if (MCU_CORE_TYPE == MCU_CORE_9518)
 typedef unsigned char           word8;
 typedef unsigned short          word16;
 typedef unsigned long           word32;

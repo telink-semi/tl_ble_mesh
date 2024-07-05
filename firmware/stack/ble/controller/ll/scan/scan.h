@@ -1,10 +1,10 @@
 /********************************************************************************************************
- * @file     scan.h
+ * @file    scan.h
  *
- * @brief    This is the header file for BLE SDK
+ * @brief   This is the header file for BLE SDK
  *
- * @author	 BLE GROUP
- * @date         2020.06
+ * @author  BLE GROUP
+ * @date    06,2022
  *
  * @par     Copyright (c) 2022, Telink Semiconductor (Shanghai) Co., Ltd. ("TELINK")
  *
@@ -19,8 +19,8 @@
  *          WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  *          See the License for the specific language governing permissions and
  *          limitations under the License.
+ *
  *******************************************************************************************************/
-
 #ifndef SCAN_H_
 #define SCAN_H_
 
@@ -33,9 +33,9 @@ typedef enum{
 	                              "blc_ll_setExtScanEnable" or "blc_ll_setScanEnable". >!*/
 }scan_en_strtg_t;
 
+typedef     int (*ll_procScanPkt_callback_t)(u8 *, u8 *);  // BLE_SRC_TELINK_MESH_EN
 
 void 		blc_ll_configScanEnableStrategy (scan_en_strtg_t scanStrategy);
-typedef int (*ll_procScanPkt_callback_t)(u8 *, u8 *);
 
 
 #endif /* SCAN_H_ */

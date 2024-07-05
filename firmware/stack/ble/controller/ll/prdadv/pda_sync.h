@@ -1,10 +1,10 @@
 /********************************************************************************************************
- * @file     pda_sync.h
+ * @file    pda_sync.h
  *
- * @brief    This is the header file for BLE SDK
+ * @brief   This is the header file for BLE SDK
  *
- * @author	 BLE GROUP
- * @date         11,2022
+ * @author  BLE GROUP
+ * @date    06,2022
  *
  * @par     Copyright (c) 2022, Telink Semiconductor (Shanghai) Co., Ltd. ("TELINK")
  *
@@ -19,8 +19,8 @@
  *          WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  *          See the License for the specific language governing permissions and
  *          limitations under the License.
+ *
  *******************************************************************************************************/
-
 #ifndef STACK_BLE_CONTROLLER_LL_PRDADV_PDA_SYNC_H_
 #define STACK_BLE_CONTROLLER_LL_PRDADV_PDA_SYNC_H_
 
@@ -73,7 +73,7 @@ ble_sts_t 	blc_ll_periodicAdvertisingTerminateSync (u16 sync_handle);
  * @param[in]  adv_sid - Advertising_SID
  * @return     Status - 0x00: command succeeded; 0x01-0xFF: command failed
  */
-ble_sts_t 	blc_ll_addDeivceToPeriodicAdvertiserList (u8 adv_adrType, u8 *adv_addr, u8 adv_sid);
+ble_sts_t 	blc_ll_addDeviceToPeriodicAdvertiserList (u8 adv_adrType, u8 *adv_addr, u8 adv_sid);
 
 /**
  * @brief      This function is used to remove one entry from the list of Periodic Advertisers
@@ -83,7 +83,7 @@ ble_sts_t 	blc_ll_addDeivceToPeriodicAdvertiserList (u8 adv_adrType, u8 *adv_add
  * @param[in]  adv_sid - Advertising_SID
  * @return     Status - 0x00: command succeeded; 0x01-0xFF: command failed
  */
-ble_sts_t 	blc_ll_removeDeivceFromPeriodicAdvertiserList (u8 adv_adrType, u8 *adv_addr, u8 adv_sid);
+ble_sts_t 	blc_ll_removeDeviceFromPeriodicAdvertiserList (u8 adv_adrType, u8 *adv_addr, u8 adv_sid);
 
 /**
  * @brief      This function is used to remove all entries from the list of Periodic Advertisers.

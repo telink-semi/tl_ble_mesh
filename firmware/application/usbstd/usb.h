@@ -1,10 +1,10 @@
 /********************************************************************************************************
- * @file     usb.h
+ * @file    usb.h
  *
- * @brief    This is the header file for BLE SDK
+ * @brief   This is the header file for BLE SDK
  *
- * @author	 BLE GROUP
- * @date         2020.06
+ * @author  BLE GROUP
+ * @date    06,2022
  *
  * @par     Copyright (c) 2022, Telink Semiconductor (Shanghai) Co., Ltd. ("TELINK")
  *
@@ -19,8 +19,8 @@
  *          WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  *          See the License for the specific language governing permissions and
  *          limitations under the License.
+ *
  *******************************************************************************************************/
-
 #pragma once
 
 
@@ -65,6 +65,8 @@ void usb_init(void);
 
 void usb_handle_irq(void);
 
+void usb_init_interrupt(void);
+
 #ifndef		USB_SOFTWARE_CRC_CHECK
 #define		USB_SOFTWARE_CRC_CHECK		0
 #endif
@@ -72,8 +74,13 @@ void usb_handle_irq(void);
 #define MS_VENDORCODE            'T'    //This must match the char after the "MSFT100"
 #define STRING_MSFT              L"MSFT100T"
 
+#ifndef MS_OS_DESCRIPTOR_ENABLE
 #define MS_OS_DESCRIPTOR_ENABLE        0
+#endif
 
+#ifndef USB_RESUME_HOST
+#define USB_RESUME_HOST                0
+#endif
 /* Disable C linkage for C++ Compilers: */
 #if defined(__cplusplus)
 }

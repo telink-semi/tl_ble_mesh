@@ -1,10 +1,10 @@
 /********************************************************************************************************
- * @file     ext_misc.h
+ * @file    ext_misc.h
  *
- * @brief    This is the header file for BLE SDK
+ * @brief   This is the header file for BLE SDK
  *
- * @author	 BLE GROUP
- * @date         11,2022
+ * @author  BLE GROUP
+ * @date    06,2022
  *
  * @par     Copyright (c) 2022, Telink Semiconductor (Shanghai) Co., Ltd. ("TELINK")
  *
@@ -19,8 +19,8 @@
  *          WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  *          See the License for the specific language governing permissions and
  *          limitations under the License.
+ *
  *******************************************************************************************************/
-
 #ifndef DRIVERS_B91_EXT_MISC_H_
 #define DRIVERS_B91_EXT_MISC_H_
 
@@ -29,136 +29,33 @@
 #include "../analog.h"
 #include "../dma.h"
 #include "../gpio.h"
-#include "../pm.h"
+#include "../lib/include/pm.h"
 #include "../timer.h"
 #include "../flash.h"
 #include "../mdec.h"
-#include "../trng.h"
-#include "../sys.h"
-#include "../plic.h"
+#include "../lib/include/trng.h"
+#include "../lib/include/sys.h"
+#include "../lib/include/plic.h"
 #include "../stimer.h"
 #include "../clock.h"
 #include "../uart.h"
 #include "types.h"
 #include "compiler.h"
+#include "../compatibility_pack/cmpt.h"
+#include "common/static_assert.h" 			   // BLE_SRC_TELINK_MESH_EN
 
-/* for debug */
+
+/******************************* dbgErrorCode start ******************************************************************/
+/* SRAM 0x00014 ~ 0x0001F can be used to write some debug information */
+
 #define	DBG_SRAM_ADDR					0x00014
 
+#define write_log32(err_code)   		write_sram32(DBG_SRAM_ADDR, err_code)
 
-/*
- * addr - only 0x00012 ~ 0x00021 can be used !!! */
+/*addr - only 0x00014/0x00018/0x0001C can be used !!! */
 #define write_dbg32(addr, value)   		write_sram32(addr, value)
+/******************************* dbgErrorCode end ********************************************************************/
 
-#define write_log32(err_code)   		write_sram32(0x00014, err_code)
-
-
-
-/******************************* stimer_start ******************************************************************/
-#define	SYSTICK_NUM_PER_US				16
-
-#define	SSLOT_TICK_NUM					625/2     //attention: not use "()" for purpose !!!    625uS*16/32=625/2=312.5
-#define	SSLOT_TICK_REVERSE				2/625	  //attention: not use "()" for purpose !!!
-
-
-#define reg_system_tick_irq				reg_system_irq_level
-
-typedef enum {
-	STIMER_IRQ_MASK     		=   BIT(0),
-	STIMER_32K_CAL_IRQ_MASK     =   BIT(1),
-}stimer_irq_mask_e;
-
-typedef enum {
-	FLD_IRQ_SYSTEM_TIMER     		=   BIT(0),
-}system_timer_irq_mask_e;
-
-
-typedef enum {
-	STIMER_IRQ_CLR	     		=   BIT(0),
-	STIMER_32K_CAL_IRQ_CLR     	=   BIT(1),
-}stimer_irq_clr_e;
-
-
-/**
- * @brief    This function serves to enable system timer interrupt.
- * @return  none
- */
-static inline void systimer_irq_enable(void)
-{
-	reg_irq_src0 |= BIT(IRQ1_SYSTIMER);
-	//plic_interrupt_enable(IRQ1_SYSTIMER);
-}
-
-/**
- * @brief    This function serves to disable system timer interrupt.
- * @return  none
- */
-static inline void systimer_irq_disable(void)
-{
-	reg_irq_src0 &= ~BIT(IRQ1_SYSTIMER);
-	//plic_interrupt_disable(IRQ1_SYSTIMER);
-}
-
-static inline void systimer_set_irq_mask(void)
-{
-	reg_system_irq_mask |= STIMER_IRQ_MASK;
-}
-
-static inline void systimer_clr_irq_mask(void)
-{
-	reg_system_irq_mask &= (~STIMER_IRQ_MASK);
-}
-
-static inline unsigned char systimer_get_irq_status(void)
-{
-	return reg_system_cal_irq & FLD_IRQ_SYSTEM_TIMER;
-}
-
-static inline void systimer_clr_irq_status(void)
-{
-	reg_system_cal_irq = STIMER_IRQ_CLR;
-}
-
-static inline void systimer_set_irq_capture(unsigned int tick)
-{
-	reg_system_irq_level = tick;
-}
-
-static inline unsigned int systimer_get_irq_capture(void)
-{
-	return reg_system_irq_level;
-}
-
-static inline int tick1_exceed_tick2(unsigned int tick1, unsigned int tick2)
-{
-	return (unsigned int)(tick1 - tick2) < BIT(30);
-}
-
-
-static inline int tick1_closed_to_tick2(unsigned int tick1, unsigned int tick2, unsigned int tick_distance)
-{
-	return (unsigned int)(tick1 + tick_distance - tick2) < (tick_distance<<1);
-}
-
-static inline int tick1_out_range_of_tick2(unsigned int tick1, unsigned int tick2, unsigned int tick_distance)
-{
-	return (unsigned int)(tick1 + tick_distance - tick2) > (tick_distance<<1);
-}
-/******************************* stimer_end ********************************************************************/
-
-
-
-/******************************* aes_start ******************************************************************/
-extern unsigned int aes_data_buff[8];
-/******************************* aes_end ********************************************************************/
-
-
-
-/******************************* core_start ******************************************************************/
-#define  irq_disable		core_interrupt_disable
-#define	 irq_enable			core_interrupt_enable
-#define  irq_restore(en)	core_restore_interrupt(en)
-/******************************* core_end ********************************************************************/
 
 
 
@@ -169,21 +66,81 @@ extern unsigned int aes_data_buff[8];
 /******************************* analog_end ********************************************************************/
 
 
+/******************************* core_start ******************************************************************/
+#define  irq_disable		core_interrupt_disable
+#define	 irq_enable			core_interrupt_enable
+#define  irq_restore(en)	do{STATIC_ASSERT(sizeof(en) == sizeof(unsigned int)); core_restore_interrupt(en);}while(0)
+/******************************* core_end ********************************************************************/
 
-/******************************* clock_start ******************************************************************/
-typedef enum{
-	SYSCLK_16M    =    16,
-	SYSCLK_24M    =    24,
-	SYSCLK_32M    =    32,
-	SYSCLK_48M    =    48,
-	SYSCLK_64M    =    64,
-}sys_clk_fre_t;
 
-static inline unsigned char clock_get_system_clk()
+/******************************* mtime register start*********************************************************/
+#define ext_reg_mtime_low              0xe6000000
+#define ext_reg_mtime_high             0xe6000004
+
+#define ext_reg_mtimecmp               0xe6000008
+/******************************* mtime register end************************************************************/
+
+
+/******************************* gpio start ******************************************************************/
+/**
+ * @brief     This function read a pin's cache from the buffer.
+ * @param[in] pin - the pin needs to read.
+ * @param[in] p - the buffer from which to read the pin's level.
+ * @return    the state of the pin.
+ */
+static inline unsigned int gpio_read_cache(gpio_pin_e pin, unsigned char *p)
 {
-	return sys_clk.cclk;
+	return p[pin>>8] & (pin & 0xff);
 }
-/******************************* clock_end ********************************************************************/
+
+/**
+ * @brief      This function read all the pins' input level.
+ * @param[out] p - the buffer used to store all the pins' input level
+ * @return     none
+ */
+static inline void gpio_read_all(unsigned char *p)
+{
+	p[0] = REG_ADDR8(0x140300);
+	p[1] = REG_ADDR8(0x140308);
+	p[2] = REG_ADDR8(0x140310);
+	p[3] = REG_ADDR8(0x140318);
+	p[4] = REG_ADDR8(0x140320);
+}
+
+/**
+ *  @brief  Define pull up or down types
+ */
+typedef enum {
+	PM_PIN_UP_DOWN_FLOAT    = 0,
+	PM_PIN_PULLUP_1M     	= 1,
+	PM_PIN_PULLDOWN_100K  	= 2,
+	PM_PIN_PULLUP_10K 		= 3,
+}gpio_pull_type;
+
+/**
+ * @brief     This function set a pin's pull-up/down resistor.
+ * @param[in] gpio - the pin needs to set its pull-up/down resistor
+ * @param[in] up_down - the type of the pull-up/down resistor
+ * @return    none
+ */
+void gpio_setup_up_down_resistor(gpio_pin_e gpio, gpio_pull_type up_down);
+/******************************* gpio end ********************************************************************/
+
+
+
+
+/******************************* rf tart **********************************************************************/
+/**
+ * @brief     This function serves to set BLE mode of RF.
+ * @return	  none.
+ */
+void rf_drv_ble_init(void);
+
+
+#define RF_POWER_P9dBm   RF_POWER_INDEX_P9p11dBm
+#define RF_POWER_P3dBm   RF_POWER_INDEX_P3p25dBm
+#define RF_POWER_P0dBm   RF_POWER_INDEX_P0p01dBm
+/******************************* rf end  **********************************************************************/
 
 
 
@@ -203,19 +160,19 @@ void generateRandomNum(int len, unsigned char *data);
 /******************************* trng_end ********************************************************************/
 
 
-
-/******************************* sys_start ******************************************************************/
+/******************************* stimer start ******************************************************************/
 #define sleep_us(x)					delay_us(x)
 #define sleep_ms(x)					delay_ms(x)
+/******************************* stimer end ********************************************************************/
 
 
-/******************************* sys_end ********************************************************************/
-
-
+/******************************* usb_end *********************************************************************/
+#define reg_usb_irq	REG_ADDR8(0x100839)
+/******************************* usb_end *********************************************************************/
 
 /******************************* dma_start ***************************************************************/
 
-//4(DMA_len) + 2(BLE header) + ISORxOct + 4(MIC) + 3(CRC) + 8(ExtraInfor)
+//4(DMA_len) + 2(BLE header) + ISORxOct + 4(MIC) + 3(CRC) + 8(ExtraInfo)
 #define		TLK_RF_RX_EXT_LEN		(21)
 
 //10 = 4(DMA_len) + 2(BLE header) + 4(MIC)
@@ -224,7 +181,7 @@ void generateRandomNum(int len, unsigned char *data);
 
 /**
  * @brief	RX Data buffer length = n + 21, then 16 Byte align
- *			n + 21 = 4(DMA_len) + 2(BLE header) + n + 4(MIC) + 3(CRC) + 8(ExtraInfor)
+ *			n + 21 = 4(DMA_len) + 2(BLE header) + n + 4(MIC) + 3(CRC) + 8(ExtraInfo)
 			RX buffer size must be be 16*n, due to MCU design
  */
 #define 	CAL_LL_COMMON_RX_FIFO_SIZE(n)		(((n + TLK_RF_RX_EXT_LEN) + 15) / 16 *16)
@@ -250,7 +207,7 @@ void generateRandomNum(int len, unsigned char *data);
 
 /*
  * @brief	ISO RX Data buffer length = ISORxOct + 21, then 16 Byte align
- *			ISORxOct + 21 = 4(DMA_len) + 2(BLE header) + ISORxOct + 4(MIC) + 3(CRC) + 8(ExtraInfor)
+ *			ISORxOct + 21 = 4(DMA_len) + 2(BLE header) + ISORxOct + 4(MIC) + 3(CRC) + 8(ExtraInfo)
  *			RX buffer size must be be 16*n, due to MCU design
  */
 #define		CAL_LL_ISO_RX_FIFO_SIZE(n)			(((n + TLK_RF_RX_EXT_LEN) + 15) / 16 * 16)
@@ -268,7 +225,7 @@ void generateRandomNum(int len, unsigned char *data);
 * DMA_LEN(4B)+Hdr(2B)+PLD(251B)+MIC(4B)+CRC(3B)+TLK_PKT_INFO(12B)
 *             **use 2B enough**
 */
-#define		ISO_BIS_RX_PDU_SIZE_ALLIGN16(n)			(((n + 25) + 15) / 16 * 16) //4+2+4+2+4+3+12
+#define		ISO_BIS_RX_PDU_SIZE_ALIGN16(n)			(((n + 25) + 15) / 16 * 16) //4+2+4+2+4+3+12
 
 //12 = 4(struct bis_rx_pdu_tag	*next) + 4(u32 payloadNum) + 4(u32 idealPldAnchorTick) in bis_rx_pdu_t
 #define		BIS_LL_RX_PDU_FIFO_SIZE(n)				(CAL_LL_ISO_RX_FIFO_SIZE(n) + 12)
@@ -276,112 +233,28 @@ void generateRandomNum(int len, unsigned char *data);
 /******************************* dma_end ********************************************************************/
 
 
+/******************************* adc start ********************************************************************/
+ //ADC reference voltage cfg
+typedef struct {
+ 	unsigned short adc_vref; //default: 1175 mV
+ 	unsigned short adc_vref_offset; ////ADC calibration value voltage offset (unit:mV).
+ 	unsigned short adc_calib_en;
+}adc_vref_ctr_t;
 
-/******************************* plic_start ******************************************************************/
-enum{//todo
-	FLD_IRQ_EXCEPTION_EN ,
-	FLD_IRQ_SYSTIMER_EN,
-	FLD_IRQ_ALG_EN,
-	FLD_IRQ_TIMER1_EN,
-	FLD_IRQ_TIMER0_EN,
-	FLD_IRQ_DMA_EN,
-	FLD_IRQ_BMC_EN,
-	FLD_IRQ_USB_CTRL_EP_SETUP_EN,
-	FLD_IRQ_USB_CTRL_EP_DATA_EN,
-	FLD_IRQ_USB_CTRL_EP_STATUS_EN,
-	FLD_IRQ_USB_CTRL_EP_SETINF_EN,
-	FLD_IRQ_USB_ENDPOINT_EN,
-	FLD_IRQ_ZB_DM_EN,
-	FLD_IRQ_ZB_BLE_EN,
-	FLD_IRQ_ZB_BT_EN,
-	FLD_IRQ_ZB_RT_EN,
-	FLD_IRQ_PWM_EN,
-	FLD_IRQ_PKE_EN,//add
-	FLD_IRQ_UART1_EN,
-	FLD_IRQ_UART0_EN,
-	FLD_IRQ_DFIFO_EN,
-	FLD_IRQ_I2C_EN,
-	FLD_IRQ_SPI_APB_EN,
-	FLD_IRQ_USB_PWDN_EN,
-	FLD_IRQ_EN,
-	FLD_IRQ_GPIO2RISC0_EN,
-	FLD_IRQ_GPIO2RISC1_EN,
-	FLD_IRQ_SOFT_EN,
-
-	FLD_IRQ_NPE_BUS0_EN,
-	FLD_IRQ_NPE_BUS1_EN,
-	FLD_IRQ_NPE_BUS2_EN,
-	FLD_IRQ_NPE_BUS3_EN,
-	FLD_IRQ_NPE_BUS4_EN,
-
-	FLD_IRQ_USB_250US_EN,
-	FLD_IRQ_USB_RESET_EN,
-	FLD_IRQ_NPE_BUS7_EN,
-	FLD_IRQ_NPE_BUS8_EN,
-
-	FLD_IRQ_NPE_BUS13_EN=42,
-	FLD_IRQ_NPE_BUS14_EN,
-	FLD_IRQ_NPE_BUS15_EN,
-
-	FLD_IRQ_NPE_BUS17_EN=46,
-
-	FLD_IRQ_NPE_BUS21_EN=50,
-	FLD_IRQ_NPE_BUS22_EN,
-	FLD_IRQ_NPE_BUS23_EN,
-	FLD_IRQ_NPE_BUS24_EN,
-	FLD_IRQ_NPE_BUS25_EN,
-	FLD_IRQ_NPE_BUS26_EN,
-	FLD_IRQ_NPE_BUS27_EN,
-	FLD_IRQ_NPE_BUS28_EN,
-	FLD_IRQ_NPE_BUS29_EN,
-	FLD_IRQ_NPE_BUS30_EN,
-	FLD_IRQ_NPE_BUS31_EN,
-
-	FLD_IRQ_NPE_COMB_EN,
-	FLD_IRQ_PM_TM_EN,
-	FLD_IRQ_EOC_EN,
-
-};
-
-/******************************* plic_end ********************************************************************/
+extern adc_vref_ctr_t adc_vref_cfg;
 
 
-
-/******************************* flash_start *****************************************************************/
-/**
- * @brief     flash capacity definition
- * Call flash_read_mid function to get the size of flash capacity.
- * Example is as follows:
- * unsigned char temp_buf[4];
- * flash_read_mid(temp_buf);
- * The value of temp_buf[2] reflects flash capacity.
- */
-typedef enum {
-	FLASH_CAPACITY_64K     = 0x10,
-	FLASH_CAPACITY_128K    = 0x11,
-	FLASH_CAPACITY_256K    = 0x12,
-	FLASH_CAPACITY_512K    = 0x13,
-	FLASH_CAPACITY_1M      = 0x14,
-	FLASH_CAPACITY_2M      = 0x15,
-	FLASH_CAPACITY_4M      = 0x16,
-	FLASH_CAPACITY_8M      = 0x17,
-} Flash_CapacityDef;
-void flash_set_capacity(Flash_CapacityDef flash_cap);
-Flash_CapacityDef flash_get_capacity(void);
-
-/******************************* flash_end *******************************************************************/
+  /**
+   * @brief       This function enable adc reference voltage calibration
+   * @param[in] en - 1 enable  0 disable
+   * @return     none.
+   */
+void adc_calib_vref_enable(unsigned char en);
 
 
-
-/******************************* usb_end *********************************************************************/
-#define reg_usb_irq	REG_ADDR8(0x100839)
-/******************************* usb_end *********************************************************************/
+/******************************* adc end ********************************************************************/
 
 
-
-/******************************* core_start ******************************************************************/
-#define	SUPPORT_PFT_ARCH		1
-/******************************* core_end ********************************************************************/
 
 
 

@@ -1,10 +1,10 @@
 /********************************************************************************************************
- * @file     blt_fw_sign.c
+ * @file    blt_fw_sign.c
  *
- * @brief    This is the source file for BLE SDK
+ * @brief   This is the source file for BLE SDK
  *
- * @author	 BLE GROUP
- * @date         2020.06
+ * @author  BLE GROUP
+ * @date    06,2022
  *
  * @par     Copyright (c) 2022, Telink Semiconductor (Shanghai) Co., Ltd. ("TELINK")
  *
@@ -19,13 +19,13 @@
  *          WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  *          See the License for the specific language governing permissions and
  *          limitations under the License.
+ *
  *******************************************************************************************************/
-
 #include "tl_common.h"
 #include "drivers.h"
 #include "blt_fw_sign.h"
-#include "blt_common.h"
 #include "proj_lib/firmware_encrypt.h"
+#include "ble_flash.h"
 
 /**
  * @brief		This function is used to check digital signature of firmware
@@ -37,7 +37,13 @@ void blt_firmware_signature_check(void)
 		unsigned int flash_mid;
 		unsigned char flash_uid[16];
 		unsigned char signature_enc_key[16];
+#if(MCU_CORE_TYPE == MCU_CORE_B91||MCU_CORE_TYPE == MCU_CORE_B92)
 		int flag = flash_read_mid_uid_with_check(&flash_mid, flash_uid);
+#elif((MCU_CORE_TYPE == MCU_CORE_B930)|| (MCU_CORE_TYPE == MCU_CORE_B95)||(MCU_CORE_TYPE == MCU_CORE_B931))
+	    int flag = flash_read_mid_uid_with_check(APP_FLASH_SLAVE_DEVICE_NUM,&flash_mid, flash_uid);
+#else
+        #error "Confirm api interface (flash_read_mid_uid_with_check)"
+#endif
 
 		if(flag==0){  //reading flash UID error
 			while(1);

@@ -1,10 +1,10 @@
 /********************************************************************************************************
- * @file     gatts.h
+ * @file    gatts.h
  *
- * @brief    This is the header file for BLE SDK
+ * @brief   This is the header file for BLE SDK
  *
- * @author	 BLE GROUP
- * @date         11,2022
+ * @author  BLE GROUP
+ * @date    06,2022
  *
  * @par     Copyright (c) 2022, Telink Semiconductor (Shanghai) Co., Ltd. ("TELINK")
  *
@@ -19,17 +19,17 @@
  *          WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  *          See the License for the specific language governing permissions and
  *          limitations under the License.
+ *
  *******************************************************************************************************/
-
 #pragma  once
 
-
-
-#include "common/tl_queue.h"
-#include "stack/ble/host/att/atts.h"
-
-
-
+/**
+ * @brief
+ * @param[in]
+ * @param[out]
+ * @return      ble_sts_t.
+ */
+atts_group_t *blc_gatts_getAttributeServiceGroup(u16 connHandle);
 
 /**
  * @brief
@@ -37,7 +37,7 @@
  * @param[out]
  * @return      ble_sts_t.
  */
-queue_t *blc_gatts_getAttSrvGroup(u16 connHandle);
+void    blc_gatts_addAttributeServiceGroup(atts_group_t *pGroup);
 
 /**
  * @brief
@@ -45,15 +45,7 @@ queue_t *blc_gatts_getAttSrvGroup(u16 connHandle);
  * @param[out]
  * @return      ble_sts_t.
  */
-void    blc_gatts_addAttSrvGroup(atts_group_t *pGroup);
-
-/**
- * @brief
- * @param[in]
- * @param[out]
- * @return      ble_sts_t.
- */
-void	blc_gatts_removeAttSrvGroup(u16 startHandle);
+void	blc_gatts_removeAttributeServiceGroup(u16 startHandle);
 
 /**
  * @brief gatt server get attribute value and attribute value length
@@ -63,15 +55,28 @@ void	blc_gatts_removeAttSrvGroup(u16 startHandle);
  * @param[out] attrValueLen --- the attribute value length pointer
  * @return      ble_sts_t.
  */
-ble_sts_t blc_gatts_getHandleInfo(u16 connHandle, u16 handle, u8** attrValue, u16** attrValueLen);
+ble_sts_t blc_gatts_getAttributeInformationByHandle(u16 connHandle, u16 handle, u8** attrValue, u16** attrValueLen);
 
-u8* blc_gatts_getHandleValueInfo(u16 connHandle, u16 handle);
+u8* blc_gatts_getAttributeValueByHandle(u16 connHandle, u16 handle);
+u8* blc_gatts_getReportReferenceValue(u16 connHandle, u16 handle);
 
-/** @brief GATT notify procedure parameters configuration */
-typedef struct gatts_notify_cfg{
-    u16 attrhandle;
-    u16 valueLen;
-    u8* value;
-} gatts_notify_cfg_t;
+bool blc_gatts_calculateDatabaseHash(u16 connHandle, u8* databaseHash);
 
-ble_sts_t blc_gatts_notify(u16 connHandle, gatts_notify_cfg_t * pNtfCfg);
+
+ble_sts_t blc_gatts_notifyValue(u16 connHandle, u16 handle, u8* value, u16 valueLen);
+ble_sts_t blc_gatts_notifyAttr(u16 connHandle, u16 handle);
+void blc_gatts_notifyLoop(void);
+void blc_gatts_notifyDisconnect(u16 connHandle);
+
+typedef void (*gatts_cfmCb)(u16 connHandle, u16 scid);
+
+typedef struct __attribute__((packed)){
+	u16 connHandle;
+	u16 scid;
+	u16 attrHandle;
+	void* value;
+	u16 valueLen;
+	gatts_cfmCb cb;
+} gattsIndValue_t;
+
+ble_sts_t blc_gatts_indicateValue(gattsIndValue_t* ind);

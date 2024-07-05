@@ -1,10 +1,10 @@
 /********************************************************************************************************
- * @file     hci_tr_def.h
+ * @file    hci_tr_def.h
  *
- * @brief    This is the header file for BLE SDK
+ * @brief   This is the header file for BLE SDK
  *
- * @author	 BLE GROUP
- * @date         11,2022
+ * @author  BLE GROUP
+ * @date    06,2022
  *
  * @par     Copyright (c) 2022, Telink Semiconductor (Shanghai) Co., Ltd. ("TELINK")
  *
@@ -19,8 +19,8 @@
  *          WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  *          See the License for the specific language governing permissions and
  *          limitations under the License.
+ *
  *******************************************************************************************************/
-
 #ifndef HCI_TR_DEF_H_
 #define HCI_TR_DEF_H_
 
@@ -131,17 +131,17 @@ do{ \
 #define H5_TRACK(format, ...)          printf(format, ##__VA_ARGS__)
 #define H5_TRACK_ERR(format, ...)      printf("[ERR -H5  ] "format, ##__VA_ARGS__)
 #define H5_TRACK_INFO(format, ...)     printf("[INFO-H5  ] "format, ##__VA_ARGS__)
-#define H5_TRACK_WRN(format, ...)      printf("[WRAN-H5  ] "format, ##__VA_ARGS__)
+#define H5_TRACK_WRN(format, ...)      printf("[WARN-H5  ] "format, ##__VA_ARGS__)
 
 #define SLIP_TRACK(format, ...)        printf(format, ##__VA_ARGS__)
 #define SLIP_TRACK_ERR(format, ...)    printf("[ERR -SLIP] "format, ##__VA_ARGS__)
 #define SLIP_TRACK_INFO(format, ...)   printf("[INFO-SLIP] "format, ##__VA_ARGS__)
-#define SLIP_TRACK_WRN(format, ...)    printf("[WRAN-SLIP] "format, ##__VA_ARGS__)
+#define SLIP_TRACK_WRN(format, ...)    printf("[WARN-SLIP] "format, ##__VA_ARGS__)
 
 #define TR_TRACK(format, ...)          printf(format, ##__VA_ARGS__)
 #define TR_TRACK_ERR(format, ...)      printf("[ERR -TR  ] "format, ##__VA_ARGS__)
 #define TR_TRACK_INFO(format, ...)     printf("[INFO-TR  ] "format, ##__VA_ARGS__)
-#define TR_TRACK_WRN(format, ...)      printf("[WRAN-TR  ] "format, ##__VA_ARGS__)
+#define TR_TRACK_WRN(format, ...)      printf("[WARN-TR  ] "format, ##__VA_ARGS__)
 
 #else
 #define HCI_TRACK_DATA(pData, len)

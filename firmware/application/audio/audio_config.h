@@ -1,10 +1,10 @@
 /********************************************************************************************************
- * @file     audio_config.h
+ * @file    audio_config.h
  *
- * @brief    This is the header file for BLE SDK
+ * @brief   This is the header file for BLE SDK
  *
- * @author	 BLE GROUP
- * @date         2020.06
+ * @author  BLE GROUP
+ * @date    06,2022
  *
  * @par     Copyright (c) 2022, Telink Semiconductor (Shanghai) Co., Ltd. ("TELINK")
  *
@@ -19,8 +19,8 @@
  *          WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  *          See the License for the specific language governing permissions and
  *          limitations under the License.
+ *
  *******************************************************************************************************/
-
  
 #include  "application/audio/audio_common.h"
 #include  "tl_common.h"
@@ -31,7 +31,7 @@
 #endif
 
 #if (TL_AUDIO_MODE & RCU_PROJECT)						//RCU
-	#if (TL_AUDIO_MODE == TL_AUDIO_RCU_ADPCM_GATT_TLEINK)
+	#if (TL_AUDIO_MODE == TL_AUDIO_RCU_ADPCM_GATT_TELINK)
 		#define	ADPCM_PACKET_LEN				128
 		#define TL_MIC_ADPCM_UNIT_SIZE			248
 		#define	TL_MIC_BUFFER_SIZE				992

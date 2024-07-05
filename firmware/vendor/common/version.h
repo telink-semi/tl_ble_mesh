@@ -28,23 +28,32 @@
 
 //#define   BUILD_VERSION  	"Revision: 45:49M"
 //#define   BUILD_TIME  		"2012-07-24-21:37:43"
-#if __TLSR_RISCV_EN__
-#include "config.h"
-#else
-#include "../../proj/mcu/config.h"
-#endif
+
+#include "../../config.h"
 #include "mesh_config.h"
 
 #if __TLSR_RISCV_EN__
-#define SW_VERSION_SPEC			(0)		// "4" means SIG MESH 1.1.x
-#define SW_VERSION_MAJOR		(2)		// 
+	#if MESH_IRONMAN_AP2T31F80_EN
+#define SW_VERSION_SPEC			(4)		// "3" means SIG MESH 1.0.x, "4" means SIG MESH 1.1.x; 0 mean beta version.
+#define SW_VERSION_MAJOR		(1)		// "1" means single connection"2", means multi connection.
 #define SW_VERSION_MINOR		(0)		// 
 #define SW_VERSION_2ND_MINOR	(0)		// second minor
+	#elif BLE_MULTIPLE_CONNECTION_ENABLE
+#define SW_VERSION_SPEC			(4)		// "3" means SIG MESH 1.0.x, "4" means SIG MESH 1.1.x; 0 mean beta version.
+#define SW_VERSION_MAJOR		(2)		// "2" means multi connection, "1" means single connection.
+#define SW_VERSION_MINOR		(0)		// 
+#define SW_VERSION_2ND_MINOR	(0)		// second minor
+	#else
+#define SW_VERSION_SPEC			(4)		// "3" means SIG MESH 1.0.x, "4" means SIG MESH 1.1.x; 0 mean beta version.
+#define SW_VERSION_MAJOR		(1)		// "1" means single connection"2", means multi connection.
+#define SW_VERSION_MINOR		(0)		// 
+#define SW_VERSION_2ND_MINOR	(0)		// second minor
+	#endif
 #else
-#define SW_VERSION_SPEC			(3)		// "3" means SIG MESH 1.0.x
-#define SW_VERSION_MAJOR		(3)		// 
-#define SW_VERSION_MINOR		(3)		// 
-#define SW_VERSION_2ND_MINOR	(5)		// second minor
+#define SW_VERSION_SPEC			(4)		// "3" means SIG MESH 1.0.x, "4" means SIG MESH 1.1.x; 0 mean beta version.
+#define SW_VERSION_MAJOR		(1)		// "1" means single connection"2", means multi connection. 
+#define SW_VERSION_MINOR		(0)		// 
+#define SW_VERSION_2ND_MINOR	(0)		// second minor
 #endif
 
 // big endian
@@ -55,6 +64,7 @@
 #define U8_HIGH2CHAR(v_u8)		(VER_NUM2CHAR(((v_u8) >> 4) & 0x0f))
 #define U8_LOW2CHAR(v_u8)		(VER_NUM2CHAR((v_u8) & 0x0f))
 #define U8_2CHAR(v_u8)			((U8_HIGH2CHAR((v_u8)) << 8) + U8_LOW2CHAR((v_u8)))
+#define VER_CHAR2NUM(c)		    ((((c) >= '0')&&((c) <= '9')) ? ((c) - '0') : ((((c) >= 'a')&&((c) <= 'f')) ? ((c)-'a' + 0x0a) : ((((c) >= 'A')&&((c) <= 'F')) ? ((c)-'A' + 0x0a) : (c))))
 
 #if(CHIP_TYPE == CHIP_TYPE_8258)
 #define PID_CHIP_TYPE			0 // set 0 for compatibility.
@@ -62,7 +72,7 @@
 #define PID_CHIP_TYPE			1
 #elif(CHIP_TYPE == CHIP_TYPE_8269)
 #define PID_CHIP_TYPE			2
-#elif(CHIP_TYPE == CHIP_TYPE_B91)
+#elif(CHIP_TYPE == CHIP_TYPE_9518)
 #define PID_CHIP_TYPE			3
 #else
 #error error mcu core type
@@ -76,19 +86,20 @@
  *     MCU chip type	    : 4
  * }
 */
+#define PID_DEV_TYPE_LEN		(12)
 #define PID_UNKNOW              (0x0000)
 // ------ light ------
-#define PID_LIGHT				((PID_CHIP_TYPE << 12) | LIGHT_TYPE_SEL)
+#define PID_LIGHT				((PID_CHIP_TYPE << PID_DEV_TYPE_LEN) | LIGHT_TYPE_SEL)
 // ------ gateway ------
-#define PID_GATEWAY             ((PID_CHIP_TYPE << 12) | 0x0101)
+#define PID_GATEWAY             ((PID_CHIP_TYPE << PID_DEV_TYPE_LEN) | 0x0101)
 // ------ LPN ------
-#define PID_LPN                 ((PID_CHIP_TYPE << 12) | 0x0201)
+#define PID_LPN                 ((PID_CHIP_TYPE << PID_DEV_TYPE_LEN) | 0x0201)
 // ------ SWITCH ------
-#define PID_SWITCH              ((PID_CHIP_TYPE << 12) | 0x0301)
+#define PID_SWITCH              ((PID_CHIP_TYPE << PID_DEV_TYPE_LEN) | 0x0301)
 // ------ SPIRIT_LPN ------
-#define PID_SPIRIT_LPN          ((PID_CHIP_TYPE << 12) | 0x0401)
+#define PID_SPIRIT_LPN          ((PID_CHIP_TYPE << PID_DEV_TYPE_LEN) | 0x0401)
 // ------ gateway node with homekit ------
-#define PID_GW_NODE_HK          ((PID_CHIP_TYPE << 12) | 0x0501)
+#define PID_GW_NODE_HK          ((PID_CHIP_TYPE << PID_DEV_TYPE_LEN) | 0x0501)
 
 // ------ HOME KIT ------
 // from 0xC000 -- 0xFFFF
@@ -106,16 +117,16 @@ user can be allowed to redefined PID and VID if needed.
 #if (WIN32)
 #define MESH_PID_SEL		(PID_LIGHT)
 #define MESH_VID		    FW_VERSION_TELINK_RELEASE       // user can redefine
-#elif (__PROJECT_MESH_PRO__ || __PROJECT_MESH_GW_NODE__)  // must define in TC32_CC_Assember ->General , too. because cstartup.s can't read predefine value in TC32_compiler-->symbols
+#elif (__PROJECT_MESH_PRO__ || __PROJECT_MESH_GW_NODE__)  // must define in TC32_CC_Assembler ->General , too. because cstartup.s can't read predefine value in TC32_compiler-->symbols
 #define MESH_PID_SEL		(PID_GATEWAY)
 #define MESH_VID		    FW_VERSION_TELINK_RELEASE       // user can redefine
-#elif (__PROJECT_MESH_LPN__)  // must define in TC32_CC_Assember ->General , too. because cstartup.s can't read predefine value in TC32_compiler-->symbols
+#elif (__PROJECT_MESH_LPN__)  // must define in TC32_CC_Assembler ->General , too. because cstartup.s can't read predefine value in TC32_compiler-->symbols
 #define MESH_PID_SEL		(PID_LPN)
 #define MESH_VID		    FW_VERSION_TELINK_RELEASE       // user can redefine
-#elif (__PROJECT_MESH_SWITCH__)  // must define in TC32_CC_Assember ->General , too. because cstartup.s can't read predefine value in TC32_compiler-->symbols
+#elif (__PROJECT_MESH_SWITCH__)  // must define in TC32_CC_Assembler ->General , too. because cstartup.s can't read predefine value in TC32_compiler-->symbols
 #define MESH_PID_SEL		(PID_SWITCH)
 #define MESH_VID		    FW_VERSION_TELINK_RELEASE       // user can redefine
-#elif (__PROJECT_SPIRIT_LPN__)  // must define in TC32_CC_Assember ->General , too. because cstartup.s can't read predefine value in TC32_compiler-->symbols
+#elif (__PROJECT_SPIRIT_LPN__)  // must define in TC32_CC_Assembler ->General , too. because cstartup.s can't read predefine value in TC32_compiler-->symbols
 #define MESH_PID_SEL		(PID_SPIRIT_LPN)
 #define MESH_VID		    FW_VERSION_TELINK_RELEASE       // user can redefine
 #elif (__PROJECT_8267_MASTER_KMA_DONGLE__)
@@ -131,7 +142,7 @@ user can be allowed to redefined PID and VID if needed.
 #elif (__PROJECT_MESH_GW_NODE_HK__)   // light
 #define MESH_PID_SEL		(PID_GW_NODE_HK)
 #define MESH_VID		    FW_VERSION_TELINK_RELEASE       // user can redefine
-#elif (__PROJECT_BOOTLOADER__)   // light
+#elif (__PROJECT_BOOTLOADER__ || __PROJECT_ACL_PER_DEMO__)   // light
 #define MESH_PID_SEL		(PID_LIGHT)						// 
 #define MESH_VID		    FW_VERSION_TELINK_RELEASE       // user can redefine
 #else
@@ -166,5 +177,17 @@ user can be allowed to redefined PID and VID if needed.
 // must set ram size according to the chip type
 #ifndef RAM_SIZE_MAX
 #define RAM_SIZE_MAX            		(64*1024)
+#endif
+
+#ifndef __IRQ_STACK_SIZE__
+	#ifdef __PROJECT_MESH_GW_NODE_HK__
+#define __IRQ_STACK_SIZE__            	(0x400)
+	#else
+		#if EXTENDED_ADV_ENABLE
+#define __IRQ_STACK_SIZE__            	(0x280)	// cost about 0x1D0 for demo SDK. // because call irq_mesh_sec_msg_check_cache in irq state.
+		#else
+#define __IRQ_STACK_SIZE__            	(0x180)
+		#endif
+	#endif
 #endif
 #endif

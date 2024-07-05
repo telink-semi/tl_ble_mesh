@@ -1,12 +1,12 @@
 /********************************************************************************************************
- * @file     pwm_reg.h
+ * @file    pwm_reg.h
  *
- * @brief    This is the header file for BLE SDK
+ * @brief   This is the header file for B91
  *
- * @author	 BLE GROUP
- * @date         11,2022
+ * @author  Driver Group
+ * @date    2019
  *
- * @par     Copyright (c) 2022, Telink Semiconductor (Shanghai) Co., Ltd. ("TELINK")
+ * @par     Copyright (c) 2019, Telink Semiconductor (Shanghai) Co., Ltd. ("TELINK")
  *
  *          Licensed under the Apache License, Version 2.0 (the "License");
  *          you may not use this file except in compliance with the License.
@@ -19,12 +19,12 @@
  *          WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  *          See the License for the specific language governing permissions and
  *          limitations under the License.
+ *
  *******************************************************************************************************/
-
 #ifndef PWM_REG_H
 #define PWM_REG_H
 
-#include "../sys.h"
+#include "soc.h"
 
 
 
@@ -39,25 +39,18 @@
 
 
 /**
- * This register is used to enable PWM5 ~ PWM1
+ * This register is used to enable PWM0~PWM5.
  */
-#define reg_pwm_enable			REG_ADDR8(REG_PWM_BASE)
-enum{
-	FLD_PWM1_EN  = 				BIT(1),
-	FLD_PWM2_EN  = 				BIT(2),
-	FLD_PWM3_EN  = 				BIT(3),
-	FLD_PWM4_EN  = 				BIT(4),
-	FLD_PWM5_EN  = 				BIT(5),
-};
+#define reg_pwm_enable			REG_ADDR16(REG_PWM_BASE)
+typedef enum{
+	FLD_PWM1_EN = BIT(1),
+	FLD_PWM2_EN = BIT(2),
+	FLD_PWM3_EN = BIT(3),
+	FLD_PWM4_EN = BIT(4),
+	FLD_PWM5_EN = BIT(5),
+	FLD_PWM0_EN = BIT(8),
+}pwm_en_e;
 
-
-/**
- * This register is used to enable PWM0.
- */
-#define reg_pwm0_enable			REG_ADDR8(REG_PWM_BASE+0x01)
-enum{
-	FLD_PWM0_EN  = 				BIT(0),
-};
 
 
 /**
@@ -168,27 +161,9 @@ enum{
 /**
  * When PWM0 is in count mode or ir mode, the total number of pulse_number is set by the following two registers.
  */
-#define reg_pwm0_pulse_num0		REG_ADDR8(REG_PWM_BASE+0x2c)//0x2c[7:0]
-#define reg_pwm0_pulse_num1		REG_ADDR8(REG_PWM_BASE+0x2d)//0x2d[5:0]
+#define reg_pwm0_pulse_num		REG_ADDR16(REG_PWM_BASE+0x2c)//0x2c[7:0] 0x2d[5:0]
 
 
-/**
- *   PWM interrupt mask or interrupt status
- */
-
-typedef enum{
-	FLD_PWM0_PNUM_IRQ 			         =		BIT(0),
-	FLD_PWM0_IR_DMA_FIFO_IRQ 	  		 =		BIT(1),
-	FLD_PWM0_FRAME_DONE_IRQ              =		BIT(2),
-	FLD_PWM1_FRAME_DONE_IRQ              =		BIT(3),
-	FLD_PWM2_FRAME_DONE_IRQ 		  	 =		BIT(4),
-	FLD_PWM3_FRAME_DONE_IRQ             =		BIT(5),
-	FLD_PWM4_FRAME_DONE_IRQ             =		BIT(6),
-	FLD_PWM5_FRAME_DONE_IRQ             =		BIT(7),
-
-	FLD_PWM0_IR_FIFO_IRQ 	  	        =        BIT(16),
-
-}pwm_irq_e;
 
 /**
  * This register is used to configure the PWM interrupt function.
@@ -220,23 +195,43 @@ typedef enum{
  */
 #define reg_pwm_irq_sta(i)		        REG_ADDR8(REG_PWM_BASE+0x31+i*2)
 
+typedef enum{
+	FLD_PWM0_PNUM_IRQ 			         =		BIT(0),
+	FLD_PWM0_IR_DMA_FIFO_IRQ 	  		 =		BIT(1),
+	FLD_PWM0_FRAME_DONE_IRQ              =		BIT(2),
+	FLD_PWM1_FRAME_DONE_IRQ              =		BIT(3),
+	FLD_PWM2_FRAME_DONE_IRQ 		  	 =		BIT(4),
+	FLD_PWM3_FRAME_DONE_IRQ             =		BIT(5),
+	FLD_PWM4_FRAME_DONE_IRQ             =		BIT(6),
+	FLD_PWM5_FRAME_DONE_IRQ             =		BIT(7),
+
+	FLD_PWM0_IR_FIFO_IRQ 	  	        =        BIT(16),
+
+}pwm_irq_e;
+
+
+
 
 /**
- * This register is used to count the number of PWM5~PWM0 pulses.The number of pulses of each PWM consists of 16 bits
+ * PWM0~PWM5, counting from 0 at the beginning of each cycle, and adding 1 for each system clock.
  */
 #define reg_pwm_cnt(i)		    REG_ADDR16(REG_PWM_BASE+0x34 +(i << 1))
 
+/*
+ * when update the duty cycle in 32K, this register bit(0) set 1.
+ */
+#define reg_pwm_cnt5_l      REG_ADDR8(REG_PWM_BASE+0x3e)
+
+enum{
+	FLD_PWM_32K_DUTY_CYCLE_UPDATE   =   BIT(0),
+};
 
 /**
- * PWM0 pulse_cnt value BIT[7:0].
+ * In count mode, each period is incremented by one.
  */
-#define reg_pwm_ncnt_l		    REG_ADDR8(REG_PWM_BASE+0x40)
+#define reg_pwm_ncnt		    REG_ADDR16(REG_PWM_BASE+0x40)
 
 
-/**
- * PWM0 pulse_cnt value BIT[15:8].
- */
-#define reg_pwm_ncnt_h		    REG_ADDR8(REG_PWM_BASE+0x41)
 
 
 /**
@@ -263,7 +258,7 @@ typedef enum{
  */
 #define reg_pwm_ir_fifo_irq_trig_level	REG_ADDR8(REG_PWM_BASE+0x4c)
 enum{
-	FLD_PWM0_FIFO_NUM_OF_TRIGGLE_LEVEL 	=		BIT_RNG(0,3),
+	FLD_PWM0_FIFO_NUM_OF_TRIGGER_LEVEL 	=		BIT_RNG(0,3),
 };
 
 

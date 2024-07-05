@@ -1,12 +1,12 @@
 /********************************************************************************************************
- * @file     adc.c
+ * @file    adc.c
  *
- * @brief    This is the source file for BLE SDK
+ * @brief   This is the source file for B91
  *
- * @author	 BLE GROUP
- * @date         11,2022
+ * @author  Driver Group
+ * @date    2019
  *
- * @par     Copyright (c) 2022, Telink Semiconductor (Shanghai) Co., Ltd. ("TELINK")
+ * @par     Copyright (c) 2019, Telink Semiconductor (Shanghai) Co., Ltd. ("TELINK")
  *
  *          Licensed under the Apache License, Version 2.0 (the "License");
  *          you may not use this file except in compliance with the License.
@@ -19,16 +19,23 @@
  *          WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  *          See the License for the specific language governing permissions and
  *          limitations under the License.
+ *
  *******************************************************************************************************/
-
 #include "adc.h"
 #include "audio.h"
 #include "compiler.h"
 
+/**
+ * Note: When the reference voltage is configured to 1.2V, the calculated ADC voltage value is closest to the actual voltage value using 1175 as the coefficient default.
+ * 1175 is the value obtained by ATE through big data statistics, which is more in line with most chips than 1200.
+ */
 _attribute_data_retention_sec_ unsigned short g_adc_vref = 1175; //default ADC ref voltage (unit:mV)
+_attribute_data_retention_sec_ signed char g_adc_vref_offset = 0;//ADC calibration value voltage offset (unit:mV).
 volatile unsigned char g_adc_pre_scale;
 volatile unsigned char g_adc_vbat_divider;
-
+_attribute_data_retention_sec_ unsigned short g_adc_gpio_calib_vref = 1175;//ADC gpio calibration value voltage (unit:mV)(used for gpio voltage sample).
+_attribute_data_retention_sec_ signed char g_adc_gpio_calib_vref_offset = 0;//ADC gpio calibration value voltage offset (unit:mV)(used for gpio voltage sample).
+_attribute_data_retention_sec_ unsigned short g_adc_vbat_calib_vref = 1175;//ADC vbat calibration value voltage (unit:mV)(used for vbat voltage sample).
 dma_chn_e adc_dma_chn;
 dma_config_t adc_rx_dma_config=
 {
@@ -57,18 +64,22 @@ void adc_set_dma_config(dma_chn_e chn)
 	dma_config(chn, &adc_rx_dma_config);
 	dma_clr_irq_mask(adc_dma_chn,TC_MASK|ERR_MASK|ABT_MASK);
 	dma_set_irq_mask(adc_dma_chn, TC_MASK);
-
+/*
+ * sar_adc can only use audio's fifo1 (not fifo0), and fifo1 cannot be used on both sar_adc and audio at the same time.
+ * Fifo0 can only be used by audio.
+ */
 	audio_data_fifo1_path_sel(SAR_ADC_DATA_IN_FIFO,OUT_NO_USE);//connect DMA and ADC by audio input fifo1.
 }
 /**
- * @brief     This function serves to start sample with adc DMA channel.
- * @param[in] adc_data_buf 	- the address of data buffer
- * @param[in] data_byte_len - the length of data size by byte
- * @return    none
+ * @brief      This function serves to start sample with adc DMA channel.
+ * @param[out] adc_data_buf  - This parameter is the first address of the received data buffer, which must be 4 bytes aligned, otherwise the program will enter an exception.
+ *                             and the actual buffer size defined by the user needs to be not smaller than the data_byte_len, otherwise there may be an out-of-bounds problem.
+ * @param[in]  data_byte_len - This parameter is used to set the size of the received dma and must be set to a multiple of 4. The maximum value that can be set is 0xFFFFFC.
+ * @return     none
  */
 void adc_start_sample_dma(unsigned short *adc_data_buf,unsigned int data_byte_len)
 {
-	dma_set_address(adc_dma_chn,reg_fifo_buf_adr(1),(unsigned int)convert_ram_addr_cpu2bus(adc_data_buf));
+	dma_set_address(adc_dma_chn,reg_fifo_buf_adr(1),(unsigned int)(adc_data_buf));
 	dma_set_size(adc_dma_chn,data_byte_len,DMA_WORD_WIDTH);
 	dma_chn_en(adc_dma_chn);
 	adc_fifo_enable();
@@ -138,6 +149,28 @@ void adc_set_diff_pin(adc_input_pin_def_e p_pin, adc_input_pin_def_e n_pin)
 	adc_set_diff_input(p_pin >> 12, n_pin >> 12);
 }
 /**
+ * @brief     This function is serves to set the reference voltage for one-point calibration.
+ *            ADC calibration environment: GPIO sampling, the pre_scale is 1/4, and the sampling frequency is 48K.
+ * 		      Therefore, the voltage value measured using the calibration interface in this environment is the most accurate.
+ * @param[in] data - GPIO sampling one-point calibration value.
+ * @return none
+ */
+void adc_set_gpio_calib_vref(unsigned short data)
+{
+	g_adc_gpio_calib_vref = data;
+}
+
+/**
+ * @brief This function is used to calib ADC 1.2V vref offset for GPIO two-point.
+ * @param[in] offset - GPIO sampling two-point calibration value offset.
+ * @return none
+ */
+void adc_set_gpio_two_point_calib_offset(signed char offset)
+{
+	g_adc_gpio_calib_vref_offset = offset;
+}
+
+/**
  * @brief This function serves to set the channel reference voltage.
  * @param[in]  v_ref - enum variable of ADC reference voltage.
  * @return none
@@ -150,7 +183,6 @@ void adc_set_ref_voltage(adc_ref_vol_e v_ref)
 		//Vref buffer bias current trimming: 		150%
 		//Comparator preamp bias current trimming:  100%
 		analog_write_reg8(areg_ain_scale  , (analog_read_reg8( areg_ain_scale  )&(0xC0)) | 0x3d );
-		g_adc_vref = 1175;
 	}
 	else if(v_ref == ADC_VREF_0P9V)
 	{
@@ -171,12 +203,23 @@ void adc_set_sample_rate(adc_sample_freq_e sample_freq)
 	{
 		case ADC_SAMPLE_FREQ_23K :
 			adc_set_state_length(1023, 15);
+	/**
+	* 		The length of Tsample should match the sampling frequency.
+	*		changed by chaofan,confirmed by haitao.20201230.
+	**/
+			adc_set_tsample_cycle(ADC_SAMPLE_CYC_24);//24 adc clocks for sample cycle
 			break;
 		case ADC_SAMPLE_FREQ_48K :
 			adc_set_state_length(490, 10);
+			adc_set_tsample_cycle(ADC_SAMPLE_CYC_12);//12 adc clocks for sample cycle
 			break;
 		case ADC_SAMPLE_FREQ_96K :
 			adc_set_state_length(240, 10);
+			adc_set_tsample_cycle(ADC_SAMPLE_CYC_6);//6 adc clocks for sample cycle
+			break;
+		case ADC_SAMPLE_FREQ_192K :
+			adc_set_state_length(115, 10);
+			adc_set_tsample_cycle(ADC_SAMPLE_CYC_3);//3 adc clocks for sample cycle
 			break;
 	}
 }
@@ -227,7 +270,10 @@ void adc_init(adc_ref_vol_e v_ref,adc_pre_scale_e pre_scale,adc_sample_freq_e sa
 	adc_set_scale_factor(pre_scale);//set Analog input pre-scaling
 	adc_set_sample_rate(sample_freq);//set sample frequency.
 	adc_set_resolution(ADC_RES14);//default adc_resolution set as 14bit ,BIT(13) is sign bit
-	adc_set_tsample_cycle(ADC_SAMPLE_CYC_6);//6 adc clocks for sample cycle
+	/**
+	* 		Move the Tsample set to function adc_set_sample_rate(),because of the length of Tsample should match the sampling frequency.
+	*		changed by chaofan,confirmed by haitao.20201230.
+	**/
 	adc_set_m_chn_en();//enable adc channel.
 }
 /**
@@ -237,16 +283,14 @@ void adc_init(adc_ref_vol_e v_ref,adc_pre_scale_e pre_scale,adc_sample_freq_e sa
  * @param[in]  pre_scale - enum variable of ADC pre_scaling factor.
  * @param[in]  sample_freq - enum variable of ADC sample frequency.
  * @return none
- * @attention gpio voltage sample suggested initial setting are Vref = 1.2V, pre_scale = 1/8.
- * 			0.9V Vref pre_scale must be 1.
- * 			The sampling range are as follows:
- * 			Vref        pre_scale        sampling range
- * 			1.2V			1				0 ~ 1.1V (suggest)
- * 			1.2V			1/8				0 ~ 3.5V (suggest)
- * 			0.9V            1				0 ~ 0.8V
+ * @attention gpio voltage sample suggested initial setting are Vref = 1.2V, pre_scale = 1/4. 
+ *			changed by chaofan.20201230.
+ *		      In order to switch the pin of the ADC, it can be done by calling the interface 'adc_pin_config' and 'adc_set_diff_input'.
  */
 void adc_gpio_sample_init(adc_input_pin_def_e pin,adc_ref_vol_e v_ref,adc_pre_scale_e pre_scale,adc_sample_freq_e sample_freq)
 {
+	g_adc_vref = g_adc_gpio_calib_vref;//set gpio sample calib vref
+	g_adc_vref_offset = g_adc_gpio_calib_vref_offset;//set adc_vref_offset as adc_gpio_calib_vref_offset
 	adc_init(v_ref,pre_scale,sample_freq);
 	adc_set_vbat_divider(ADC_VBAT_DIV_OFF);
 	adc_pin_config(ADC_GPIO_MODE, pin);
@@ -262,30 +306,38 @@ void adc_gpio_sample_init(adc_input_pin_def_e pin,adc_ref_vol_e v_ref,adc_pre_sc
 void adc_temperature_sample_init(void)
 {
 	adc_init(ADC_VREF_1P2V, ADC_PRESCALE_1, ADC_SAMPLE_FREQ_96K);
-	adc_set_diff_input(ADC_TEMSENSORP_EE, ADC_TEMSENSORN_EE);
+	adc_set_diff_input(ADC_TEMPSENSORP_EE, ADC_TEMPSENSORN_EE);
 	adc_set_vbat_divider(ADC_VBAT_DIV_OFF);
 	adc_temp_sensor_power_on();
 }
 
 /**
- * @brief This function servers to set ADC configuration for ADC supply voltage sampling.
+ * @brief This function servers to set ADC configuration with internal Vbat channel for ADC supply voltage sampling.
  * @return none
- * @attention battery voltage sample suggested initial setting are Vref = 1.2V, pre_scale = 1, vbat_div = 1/3.
- * 			Which has higher accuracy, user don't need to change it.
- * 			The battery voltage sample range is 1.8~3.5V,
+ * @attention Vbat channel battery voltage sample suggested initial setting are Vref = 1.2V, pre_scale = 1/4, vbat_div = off.
+ * 			The Vbat channel battery voltage sample range is 1.8~3.5V and is low accuracy,
  * 			and must set sys_init with the mode for battery voltage less than 3.6V.
- * 			For battery voltage > 3.6V, should take some external voltage divider.
+ * 			For accurate battery voltage sampling or battery voltage > 3.6V, should use gpio sampling with some external voltage divider.
+ *			Recommended configuration parameters:
+ *			--3/4 external resistor voltage divider(total resistance 400k, without any capacitance),
+ *			--1.2V Vref,
+ *			--1/4 Scale
+ *			--Sampling frequency below 48K.
+ *			changed by chaofan.20201230.
  */
 void adc_battery_voltage_sample_init(void)
 {
-	adc_init(ADC_VREF_1P2V, ADC_PRESCALE_1, ADC_SAMPLE_FREQ_96K);
-	adc_set_vbat_divider(ADC_VBAT_DIV_1F3);
+	g_adc_vref = g_adc_vbat_calib_vref;//set vbat sample calib vref
+	g_adc_vref_offset = 0;//Vbat has no two-point calibration, offset must be set to 0.
+	adc_init(ADC_VREF_1P2V, ADC_PRESCALE_1F4, ADC_SAMPLE_FREQ_96K);
+	adc_set_vbat_divider(ADC_VBAT_DIV_OFF);
 	adc_set_diff_input(ADC_VBAT, GND);
 }
 /**
  * @brief This function serves to start adc sample and get raw adc sample code.
- * @param[in]   sample_buffer 		- pointer to the buffer adc sample code need to store.
- * @param[in]   sample_num 			- the number of adc sample code.
+ * @param[out]  sample_buffer - This parameter is the first address of the received data buffer, which must be 4 bytes aligned, otherwise the program will enter an exception.
+ *                              and the actual buffer size defined by the user needs to be not smaller than the sample_num, otherwise there may be an out-of-bounds problem.
+ * @param[in]   sample_num 	  - This parameter is used to set the size of the received dma and must be set to a multiple of 4. The maximum value that can be set is 0xFFFFFC.
  * @return 		none
  */
 void adc_get_code_dma(unsigned short *sample_buffer, unsigned short sample_num)
@@ -294,7 +346,7 @@ void adc_get_code_dma(unsigned short *sample_buffer, unsigned short sample_num)
 	adc_start_sample_dma((unsigned short *)sample_buffer, sample_num<<1);
 	/******wait for adc sample finish********/
 	while(!adc_get_sample_status_dma());
-	/******stop dma smaple********/
+	/******stop dma sample********/
 	adc_stop_sample_dma();
 	/******clear adc sample finished status********/
 	adc_clr_sample_status_dma();//must
@@ -336,15 +388,23 @@ unsigned short adc_get_code(void)
 /**
  * @brief This function serves to calculate voltage from adc sample code.
  * @param[in]   adc_code	- the adc sample code.
- * @return 		adc_vol_mv 	- the average value of adc voltage value.
+ * @return 		adc_vol_mv 	- the average value of adc voltage value.Unit is 'mv'.
  */
 unsigned short adc_calculate_voltage(unsigned short adc_code)
 {
-	//////////////// adc sample data convert to voltage(mv) ////////////////
-	//                          (Vref, adc_pre_scale)   (BIT<12~0> valid data)
-	//			 =  adc_code * Vref * adc_pre_scale / 0x2000
-	//           =  adc_code * Vref * adc_pre_scale >>13
-	return ((adc_code * g_adc_vbat_divider * g_adc_pre_scale * g_adc_vref)>>13);
+	//When the code value is 0, the returned voltage value should be 0.
+	if(adc_code == 0)
+	{
+		return 0;
+	}
+	else
+	{
+		//////////////// adc sample data convert to voltage(mv) ////////////////
+		//                          (Vref, adc_pre_scale)   (BIT<12~0> valid data)
+		//			 =  (adc_code * Vref * adc_pre_scale / 0x2000) + offset
+		//           =  (adc_code * Vref*adc_pre_scale >>13) + offset
+		return (((adc_code * g_adc_vbat_divider * g_adc_pre_scale * g_adc_vref)>>13) + g_adc_vref_offset);
+	}
 }
 /**
  * @brief This function serves to calculate temperature from temperature sensor adc sample code.

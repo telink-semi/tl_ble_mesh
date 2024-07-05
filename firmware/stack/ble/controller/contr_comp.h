@@ -1,10 +1,10 @@
 /********************************************************************************************************
- * @file     contr_comp.h
+ * @file    contr_comp.h
  *
- * @brief    This is the header file for BLE SDK
+ * @brief   This is the header file for BLE SDK
  *
- * @author	 BLE GROUP
- * @date         11,2022
+ * @author  BLE GROUP
+ * @date    06,2022
  *
  * @par     Copyright (c) 2022, Telink Semiconductor (Shanghai) Co., Ltd. ("TELINK")
  *
@@ -19,8 +19,8 @@
  *          WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  *          See the License for the specific language governing permissions and
  *          limitations under the License.
+ *
  *******************************************************************************************************/
-
 #ifndef STACK_BLE_CONTROLLER_CONTR_API_COMP_H_
 #define STACK_BLE_CONTROLLER_CONTR_API_COMP_H_
 
@@ -43,6 +43,15 @@
 #define blc_ll_initAclMasterRole_module				blc_ll_initAclCentralRole_module
 #define blc_ll_initAclConnMasterTxFifo				blc_ll_initAclCentralTxFifo
 #define	blc_ll_setAclMasterConnectionInterval		blc_ll_setAclCentralBaseConnectionInterval
+
+
+#define blc_ll_setAdvCustomedChannel               blc_ll_setCustomizedAdvertisingScanningChannel
+
+
+
+#define	ll_whiteList_reset		                    blc_ll_clearWhiteList
+#define	ll_whiteList_add		                    blc_ll_addDeviceToWhiteList
+#define	ll_whiteList_delete		                    blc_ll_removeDeviceFromWhiteList
 
 
 #endif /* STACK_BLE_CONTROLLER_CONTR_API_COMP_H_ */

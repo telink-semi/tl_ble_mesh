@@ -1,10 +1,10 @@
 /********************************************************************************************************
- * @file     atts.h
+ * @file    atts.h
  *
- * @brief    This is the header file for BLE SDK
+ * @brief   This is the header file for BLE SDK
  *
- * @author	 BLE GROUP
- * @date         11,2022
+ * @author  BLE GROUP
+ * @date    06,2022
  *
  * @par     Copyright (c) 2022, Telink Semiconductor (Shanghai) Co., Ltd. ("TELINK")
  *
@@ -19,8 +19,8 @@
  *          WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  *          See the License for the specific language governing permissions and
  *          limitations under the License.
+ *
  *******************************************************************************************************/
-
 #pragma  once
 
 #include "att.h"
@@ -29,42 +29,33 @@
 #define ATTS_SET_READ_CBACK             0x02
 #define ATTS_SET_VARIABLE_LEN			0x04	//allow write value length is variable and can change length
 #define ATTS_SET_ALLOW_WRITE			0x08	//allow write value copy to attribute value ptr
-
+#define ATTS_SET_ATTR_VALUE_PROPERTIES	0x10	//attribute value is Characteristic attribute properties
 
 typedef struct
 {
     u8      perm;
     u8      uuidLen;        //UUID size only set 2 on 16
     u8*     uuid;
-    u16*    attrValueLen;    //4 bytes aligned
+    u16*    attrValueLen;
     u16     maxAttrLen;
     u8*     attrValue;
     u8      settings;
 } atts_attribute_t;
 
 
-typedef int (*atts_r_cb_t)(u16 connHandle, u16 attrHandle, u8** outValue, u16* outValueLen);
+typedef int (*atts_r_cb_t)(u16 connHandle, u8 opcode, u16 attrHandle, u8** outValue, u16* outValueLen);
 typedef int (*atts_w_cb_t)(u16 connHandle, u8 opcode, u16 attrHandle, u8* writeValue, u16 valueLen);
 
 typedef struct atts_group
 {
     struct atts_group			*pNext;
-    atts_attribute_t			*pAttr;
+    const atts_attribute_t			*pAttr;
 
     atts_r_cb_t					readCback;
     atts_w_cb_t					writeCback;
     u16							startHandle;
     u16							endHandle;
 } atts_group_t;
-
-
-typedef struct {
-    u8  atts;
-    u8  attCtrl;
-    u16 resverd;
-
-
-}attsCcb_t;
 
 
 typedef struct{
@@ -103,7 +94,11 @@ typedef struct{
 	const atts_findInclList_t* inclList[5];
 }atts_findServiceList_t;
 
-
+typedef struct{
+	u16 handle;
+	u16 length;
+	u8* value;
+}atts_multHandleNtf_t;
 
 
 /**
@@ -145,14 +140,14 @@ ble_sts_t   blc_atts_sendHandleValueIndicate (u16 connHandle, u16 attHandle, u8 
  * @param[in]   p -
  * @return      ble_sts_t.
  */
-int			blc_atts_findCharByServiceUuid(u8 *serviceUuid, u8 uuidLen, const atts_findCharList_t *charList, u16 charListLen, void *p);
+int			blc_atts_findCharacteristicByServiceUuid(const u8 *serviceUuid, u8 uuidLen, const atts_findCharList_t *charList, u16 charListLen, void *p);
 
 
 
 /**
- * @brief       Find character UUID.
+ * @brief       Find characteristic UUID.
  * @param[in]   serviceList -
  * @param[in]   p -
  * @return      ble_sts_t.
  */
-int blc_atts_findChar(const atts_findServiceList_t *serviceList, void *p);
+int blc_atts_findCharacteristic(const atts_findServiceList_t *serviceList, void *p);

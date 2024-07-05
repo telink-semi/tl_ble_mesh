@@ -25,10 +25,6 @@
 #ifndef __USER_PROC_H
 #define __USER_PROC_H
 #include "tl_common.h"
-#if (!__TLSR_RISCV_EN__)
-#include "proj_lib/ble/ll/ll.h"
-#endif
-#include "proj_lib/ble/blt_config.h"
 #include "vendor/common/user_config.h"
 #include "user_ali.h"
 #include "nl_api/nl_common.h"

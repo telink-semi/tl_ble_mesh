@@ -1,10 +1,10 @@
 /********************************************************************************************************
- * @file     hci_h5.c
+ * @file    hci_h5.c
  *
- * @brief    This is the source file for BLE SDK
+ * @brief   This is the source file for BLE SDK
  *
- * @author	 BLE GROUP
- * @date         11,2022
+ * @author  BLE GROUP
+ * @date    06,2022
  *
  * @par     Copyright (c) 2022, Telink Semiconductor (Shanghai) Co., Ltd. ("TELINK")
  *
@@ -19,8 +19,8 @@
  *          WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  *          See the License for the specific language governing permissions and
  *          limitations under the License.
+ *
  *******************************************************************************************************/
-
 #include "hci_h5.h"
 #include "hci_slip.h"
 #include "hci_tr_def.h"
@@ -46,7 +46,7 @@ static HciH5Config_t hciH5Config = {
 /*! H5 transport tx buffer define. */
 u8 h5TxBuf[HCI_H5_TX_BUF_SIZE] = {0};
 
-/*! HCI H5 Main Conrol Block. */
+/*! HCI H5 Main Control Block. */
 typedef struct{
 	hci_fifo_t    *pHciRxFifo;
 	hci_fifo_t    *pHciTxFifo;
@@ -71,7 +71,7 @@ typedef struct{
 static HciH5Cb_t hciH5Cb;
 
 /*! function declaration. */
-static void HCI_H5_PakcetHandler(u8 *pPacket, u32 len);
+static void HCI_H5_PacketHandler(u8 *pPacket, u32 len);
 
 /**
  * @brief : H5 protocol initialization.
@@ -100,7 +100,7 @@ void HCI_H5_Init(hci_fifo_t *pHciRxFifo, hci_fifo_t *pHciTxFifo)
 	hciH5Cb.resendTick = 0;
 
 	/* Register Slip handler. */
-	HCI_Slip_RegisterPktHandler(HCI_H5_PakcetHandler);
+	HCI_Slip_RegisterPktHandler(HCI_H5_PacketHandler);
 
 	HCI_SLip_SetFlowCtrlEnable(false);
 }
@@ -589,7 +589,7 @@ void HCI_H5_ReSendCheck(void)
 
 	if(hciH5Cb.rxAck == hciH5Cb.txSeq)
 	{
-		H5_TRACK_INFO("local packet is received by peer corrently...\n");
+		H5_TRACK_INFO("local packet is received by peer correctly...\n");
 		pHciTxFifo->rptr += hciH5Cb.txSlidWinSize;
 		hciH5Cb.txSlidWinSize = 0;
 
@@ -682,7 +682,7 @@ void HCI_H5_DecodeDataPdu(HciH5Head_t *pHciH5Head, u8 *pPacket, u32 len)
 
 		if(pHciH5Head->ackNum == hciH5Cb.txSeq)
 		{
-			H5_TRACK_INFO("local packet is received by peer corrently...\n");
+			H5_TRACK_INFO("local packet is received by peer correctly...\n");
 			hciH5Cb.rxAck = pHciH5Head->ackNum;
 
 			pHciTxFifo->rptr += hciH5Cb.txSlidWinSize;
@@ -722,7 +722,7 @@ void HCI_H5_DecodeDataPdu(HciH5Head_t *pHciH5Head, u8 *pPacket, u32 len)
  * @param : len           The length of data.
  * @return: none
  */
-void HCI_H5_PakcetHandler(u8 *pPacket, u32 len)
+void HCI_H5_PacketHandler(u8 *pPacket, u32 len)
 {
 	H5_TRACK_INFO("==== H5 Rx Handler Start ====\n");
 

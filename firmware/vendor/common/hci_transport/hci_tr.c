@@ -1,10 +1,10 @@
 /********************************************************************************************************
- * @file     hci_tr.c
+ * @file    hci_tr.c
  *
- * @brief    This is the source file for BLE SDK
+ * @brief   This is the source file for BLE SDK
  *
- * @author	 BLE GROUP
- * @date         11,2022
+ * @author  BLE GROUP
+ * @date    06,2022
  *
  * @par     Copyright (c) 2022, Telink Semiconductor (Shanghai) Co., Ltd. ("TELINK")
  *
@@ -19,8 +19,8 @@
  *          WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  *          See the License for the specific language governing permissions and
  *          limitations under the License.
+ *
  *******************************************************************************************************/
-
 #include "hci_tr.h"
 #include "hci_tr_def.h"
 #include "hci_tr_h4.h"
@@ -32,13 +32,11 @@
 
 #if HCI_TR_EN
 
-_attribute_data_retention_ u32 uart_txDone_tick = 0;
-_attribute_data_retention_ u8  isUartTxDone = 1;
 
 void HCI_Handler(void);
 
 /**
- * @brief : HCI transport initializaiton.
+ * @brief : HCI transport initialization.
  * @param : none.
  * @param : none.
  */
@@ -63,7 +61,7 @@ void HCI_TransportInit(void)
  * @param : none.
  * @param : none.
  */
-#if (TIFS_VERIATION_WORKAROUND_MLP_CODE_IN_RAM)
+#if (TIFS_VARIATION_WORKAROUND_MLP_CODE_IN_RAM)
 _attribute_ram_code_
 #endif
 void HCI_TransportPoll(void)
@@ -84,72 +82,7 @@ void HCI_TransportPoll(void)
 }
 
 
-_attribute_ram_code_
-void HCI_UART_IRQHandler(void)
-{
-#if 1
-	#if HCI_TR_MODE == HCI_TR_H4
-		HCI_Tr_H4UartIRQHandler();
-
-	#elif HCI_TR_MODE == HCI_TR_H5
-		HCI_Tr_H5UartIRQHandler();
-
-	#elif HCI_TR_MODE == HCI_TR_USB
-		//TODO:
-
-	#endif
-
-#else//for test
-    if(uart_get_irq_status(HCI_TR_UART_ID, UART_RXDONE)) //A0-SOC can't use RX-DONE status,so this interrupt can only used in A1-SOC.
-    {
-		if((uart_get_irq_status(HCI_TR_UART_ID, UART_RX_ERR)))
-    	{
-    		uart_clr_irq_status(HCI_TR_UART_ID, UART_CLR_RX);//it will clear rx_fifo and rx_err_status,rx_done_irq.
-    	}
-
-		/* Get the length of Rx data */
-		u32 rxLen = 0;
-    	if(((reg_uart_status1(HCI_TR_UART_ID) & FLD_UART_RBCNT) % 4)==0){
-    		rxLen = 4 * (0xffffff - reg_dma_size(UART_DMA_CHN_RX));
-    	}
-    	else{
-    		rxLen = 4 * (0xffffff - reg_dma_size(UART_DMA_CHN_RX)-1) + (reg_uart_status1(HCI_TR_UART_ID) & FLD_UART_RBCNT) % 4;
-    	}
-
-    	if(rxLen && !uart_tx_is_busy(HCI_TR_UART_ID)){
-    		uart_send_dma(HCI_TR_UART_ID, rxBuf, rxLen);
-    	}
-
-    	/* Clear RxDone state */
-    	uart_clr_irq_status(HCI_TR_UART_ID, UART_CLR_RX);
-    	uart_receive_dma(HCI_TR_UART_ID, rxBuf, sizeof(rxBuf));//[!!important - must]
-    }
-
-    if(uart_get_irq_status(HCI_TR_UART_ID, UART_TXDONE))
-	{
-	    uart_clr_tx_done(HCI_TR_UART_ID);
-	}
-#endif
-}
-
-#if 0
-_attribute_ram_code_
-void HCI_TIMER_IRQHandler(void)
-{
-#if HCI_TR_MODE == HCI_TR_H4
-	HCI_Tr_H4TimerIRQHandler();
-
-#elif HCI_TR_MODE == HCI_TR_H5
-	HCI_Tr_H5TimerIRQHandler();
-
-#elif HCI_TR_MODE == HCI_TR_USB
-	//TODO:
-
-#endif
-}
-#endif
-
-#if (TIFS_VERIATION_WORKAROUND_MLP_CODE_IN_RAM)
+#if (TIFS_VARIATION_WORKAROUND_MLP_CODE_IN_RAM)
 _attribute_ram_code_
 #endif
 void HCI_RxHandler(void)
@@ -174,7 +107,7 @@ void HCI_RxHandler(void)
 #endif
 }
 
-#if (TIFS_VERIATION_WORKAROUND_MLP_CODE_IN_RAM)
+#if (TIFS_VARIATION_WORKAROUND_MLP_CODE_IN_RAM)
 _attribute_ram_code_
 #endif
 void HCI_TxHandler(void)
@@ -183,13 +116,9 @@ void HCI_TxHandler(void)
 
 	static u8 uartTxBuf[4 + HCI_TR_TX_BUF_SIZE] = {0}; //[!!important]
 
-	if(!isUartTxDone){
+	if(!ext_hci_getTxCompleteDone()){
 		return ;
 	}
-
-//	if(!clock_time_exceed(uart_txDone_tick, MIN_TIME_TWO_PACKET)){ //avoid time too short between two UART packet
-//		return 0;
-//	}
 
 	u8 *pBuf = uartTxBuf;
 
@@ -211,17 +140,14 @@ void HCI_TxHandler(void)
 		u32 len = 0;
 		BSTREAM_TO_UINT16(len, p);
 
-	#if (TIFS_VERIATION_WORKAROUND_MLP_CODE_IN_RAM)
+	#if (TIFS_VARIATION_WORKAROUND_MLP_CODE_IN_RAM)
 		smemcpy(pBuf, p, len);
 	#else
 		memcpy(pBuf, p, len);
 	#endif
 
 		ASSERT(len <= HCI_TX_FIFO_SIZE, HCI_TR_ERR_TR_TX_BUF);
-
-		isUartTxDone = 0;
-
-		if(uart_send_dma(HCI_TR_UART_ID, pBuf, len))
+		if(ext_hci_uartSendData( pBuf, len))
 		{
 			if(type == HCI_TYPE_ACL_DATA)
 			{
@@ -245,7 +171,7 @@ void HCI_TxHandler(void)
 #endif
 }
 
-#if (TIFS_VERIATION_WORKAROUND_MLP_CODE_IN_RAM)
+#if (TIFS_VARIATION_WORKAROUND_MLP_CODE_IN_RAM)
 _attribute_ram_code_
 #endif
 void HCI_Handler(void)

@@ -1,10 +1,10 @@
 /********************************************************************************************************
- * @file     myudb_usbdesc.h
+ * @file    myudb_usbdesc.h
  *
- * @brief    This is the header file for BLE SDK
+ * @brief   This is the header file for BLE SDK
  *
- * @author	 BLE GROUP
- * @date         11,2022
+ * @author  BLE GROUP
+ * @date    06,2022
  *
  * @par     Copyright (c) 2022, Telink Semiconductor (Shanghai) Co., Ltd. ("TELINK")
  *
@@ -19,8 +19,8 @@
  *          WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  *          See the License for the specific language governing permissions and
  *          limitations under the License.
+ *
  *******************************************************************************************************/
-
 #pragma once
 
 #include "drivers.h"
@@ -248,7 +248,7 @@
 /** \name USB Configuration Descriptor Attribute Masks */
 //@{
 /** Mask for the reserved bit in the Configuration Descriptor's \c ConfigAttributes field, which must be set on all
- *  devices for historial purposes.
+ *  devices for historical purposes.
  */
 #define USB_CONFIG_ATTR_RESERVED          0x80
 /** Can be masked with other configuration descriptor attributes for a \ref USB_Descriptor_Configuration_Header_t
@@ -581,7 +581,7 @@ typedef struct
 	                               *   current configuration, calculated by the \ref USB_CONFIG_POWER_MA()
 	                               *   macro.
 	                               */
-}__attribute__((packed)) USB_Descriptor_Configuration_Header_t;
+} USB_Descriptor_Configuration_Header_t;
 
 /** \brief Standard USB Configuration Descriptor (USB-IF naming conventions).
  *
@@ -639,7 +639,7 @@ typedef struct
 	u8 Protocol; /**< Interface protocol ID. */
 
 	u8 InterfaceStrIndex; /**< Index of the string descriptor describing the interface. */
-}__attribute__((packed))USB_Descriptor_Interface_t;
+}USB_Descriptor_Interface_t;
 
 /** \brief Standard USB Interface Descriptor (USB-IF naming conventions).
  *
@@ -759,7 +759,7 @@ typedef struct
 	u8  PollingIntervalMS; /**< Polling interval in milliseconds for the endpoint if it is an INTERRUPT
 	                             *   or ISOCHRONOUS type.
 	                             */
-}__attribute__((packed)) USB_Descriptor_Endpoint_t;
+} USB_Descriptor_Endpoint_t;
 
 /** \brief Standard USB Endpoint Descriptor (USB-IF naming conventions).
  *
@@ -789,7 +789,7 @@ typedef struct
 	u8  bInterval; /**< Polling interval in milliseconds for the endpoint if it is an INTERRUPT or
 	                     *   ISOCHRONOUS type.
 	                     */
-}__attribute__((packed)) USB_StdDescriptor_Endpoint_t;
+} USB_StdDescriptor_Endpoint_t;
 
 /** \brief Standard USB String Descriptor (LUFA naming conventions).
  *

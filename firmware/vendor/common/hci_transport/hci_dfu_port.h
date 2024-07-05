@@ -1,10 +1,10 @@
 /********************************************************************************************************
- * @file     hci_dfu_port.h
+ * @file    hci_dfu_port.h
  *
- * @brief    This is the header file for BLE SDK
+ * @brief   This is the header file for BLE SDK
  *
- * @author	 BLE GROUP
- * @date         11,2022
+ * @author  BLE GROUP
+ * @date    06,2022
  *
  * @par     Copyright (c) 2022, Telink Semiconductor (Shanghai) Co., Ltd. ("TELINK")
  *
@@ -19,8 +19,8 @@
  *          WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  *          See the License for the specific language governing permissions and
  *          limitations under the License.
+ *
  *******************************************************************************************************/
-
 #ifndef HCI_DFU_PORT_H_
 #define HCI_DFU_PORT_H_
 
@@ -34,7 +34,7 @@ bool UART_IsBusy(void);
 
 void Hci_Reset(void);
 u16  Hci_Revision(void);
-void Hci_SetRevision(u16 revison);
+void Hci_SetRevision(u16 revision);
 void Hci_SendCmdCmplEvt(u16 opcode, u8 *pParam, u32 len);
 void Hci_SendCmdCmplStatusEvt(u16 opcode, u8 status);
 void Hci_SendCmdStatusEvt(u16 opcode, u8 status);

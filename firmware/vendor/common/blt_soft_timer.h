@@ -1,12 +1,13 @@
 /********************************************************************************************************
- * @file     blt_soft_timer.h
+ * @file	blt_soft_timer.h
  *
- * @brief    This is the header file for BLE SDK
+ * @brief	for TLSR chips
  *
- * @author	 BLE GROUP
- * @date         2020.06
+ * @author	public@telink-semi.com;
+ * @date	Sep. 18, 2015
  *
- * @par     Copyright (c) 2022, Telink Semiconductor (Shanghai) Co., Ltd. ("TELINK")
+ * @par     Copyright (c) 2017, Telink Semiconductor (Shanghai) Co., Ltd. ("TELINK")
+ *          All rights reserved.
  *
  *          Licensed under the Apache License, Version 2.0 (the "License");
  *          you may not use this file except in compliance with the License.
@@ -19,10 +20,19 @@
  *          WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  *          See the License for the specific language governing permissions and
  *          limitations under the License.
+ *
  *******************************************************************************************************/
+/*
+ * blt_soft_timer.h
+ *
+ *  Created on: 2016-10-28
+ *      Author: Administrator
+ */
 
 #ifndef BLT_SOFT_TIMER_H_
 #define BLT_SOFT_TIMER_H_
+#include "config.h"
+#if(MCU_CORE_TYPE != MCU_CORE_8269)
 
 
 //user define
@@ -46,9 +56,8 @@
 #define		TIME_COMPARE_BIG(t1,t2)   ( (u32)((t1) - (t2)) < BIT(30)  )
 
 
-#define		BLT_TIMER_SAFE_MARGIN_PRE	  (SYSTEM_TIMER_TICK_1US<<7)  //128 us
-#define		BLT_TIMER_SAFE_MARGIN_POST	  (SYSTEM_TIMER_TICK_1S<<2)   // 4S
-
+#define		BLT_TIMER_SAFE_MARGIN_PRE	  (CLOCK_16M_SYS_TIMER_CLK_1US<<7)  //128 us
+#define		BLT_TIMER_SAFE_MARGIN_POST	  (CLOCK_16M_SYS_TIMER_CLK_1S<<3)   // 8S
 /**
  * @brief		This function is used to check the current time is what the timer expects or not
  * @param[in]	t - the time is expired for setting
@@ -61,11 +70,13 @@ static int inline blt_is_timer_expired(u32 t, u32 now) {
 }
 
 
-/**
- * @brief	callback function for software timer task
- */
-typedef int (*blt_timer_callback_t)(void);
 
+#include "tl_common.h"
+#if LLSYNC_ENABLE
+typedef void (*blt_timer_callback_t)(void *param);	//#define blt_timer_callback_t	ble_timer_cb
+#else
+typedef int (*blt_timer_callback_t)(void);
+#endif
 
 
 
@@ -103,7 +114,11 @@ int 	blt_soft_timer_add(blt_timer_callback_t func, u32 interval_us);
  * 				1 - delete successfully
  */
 int 	blt_soft_timer_delete(blt_timer_callback_t func);
-
+#if 1
+#define blt_soft_timer_update	blt_soft_timer_add // to be compatible with legacy version.
+#else
+int 	blt_soft_timer_update(blt_timer_callback_t func, u32 interval_us);
+#endif
 
 
 
@@ -139,6 +154,8 @@ int 	blt_soft_timer_delete_by_index(u8 index);
  * @return		none
  */
 int is_timer_expired(blt_timer_callback_t *e);
+int is_soft_timer_exist(blt_timer_callback_t func);
+u8 blt_soft_timer_cur_num();
 
-
+#endif
 #endif /* BLT_SOFT_TIMER_H_ */

@@ -1,12 +1,12 @@
 /********************************************************************************************************
- * @file     watchdog.h
+ * @file    watchdog.h
  *
- * @brief    This is the header file for BLE SDK
+ * @brief   This is the header file for B91
  *
- * @author	 BLE GROUP
- * @date         11,2022
+ * @author  Driver Group
+ * @date    2019
  *
- * @par     Copyright (c) 2022, Telink Semiconductor (Shanghai) Co., Ltd. ("TELINK")
+ * @par     Copyright (c) 2019, Telink Semiconductor (Shanghai) Co., Ltd. ("TELINK")
  *
  *          Licensed under the Apache License, Version 2.0 (the "License");
  *          you may not use this file except in compliance with the License.
@@ -19,12 +19,15 @@
  *          WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  *          See the License for the specific language governing permissions and
  *          limitations under the License.
+ *
  *******************************************************************************************************/
-
 #ifndef WATCHDOG_H_
 #define WATCHDOG_H_
 #include "analog.h"
 #include "gpio.h"
+#include "clock.h"
+
+#define wd_clear_cnt		wd_clear
 
 /**
  * @brief     start watchdog.
@@ -44,25 +47,36 @@ static inline void wd_stop(void){
 	BM_CLR(reg_tmr_ctrl2, FLD_TMR_WD_EN);
 }
 
-
 /**
- * @brief     clear watchdog.
- * @return    none
+ * @brief     get watchdog overflow status.
+ * @return    watchdog overflow status.
+ * @note      -# After the timer watchdog reboot returns, the status is set to 1,before the mcu enters the next state, wd_clear_status() must be used to clear the status,
+ *               otherwise, the next status judgment of the mcu will be affected;
+ *            -# When the status is set to 1, if it is not cleared by calling wd_clear_status():
+ *                - software reboot(sys_reboot()) come back,the interface status remains;
+ *                - deep/deepretation/power cyele/reset pin come back, the status of the interface is lost;
  */
-static inline void wd_clear(void)
+static inline unsigned char wd_get_status(void)
 {
-	reg_tmr_sta = FLD_TMR_STA_WD|FLD_TMR_WD_CNT_CLR;
-
+	return (reg_tmr_sta & FLD_TMR_STA_WD);
 }
 
 /**
- * @brief     clear watchdog timer tick cnt.
- * @return    none
+ * @brief     Clear the reset state caused by the watchdog overflow.
+ * @return    none.
  */
-static inline void wd_clear_cnt(void)
+static inline void wd_clear_status(void)
+{
+	reg_tmr_sta = FLD_TMR_STA_WD;
+}
+
+/**
+ * @brief     Feed the dog. Clear watchdog timer tick count.
+ * @return    none.
+ */
+static inline void wd_clear(void)
 {
 	reg_tmr_sta = FLD_TMR_WD_CNT_CLR;
-
 }
 
 /**
@@ -71,7 +85,7 @@ static inline void wd_clear_cnt(void)
 			  The time error = (0x00~0xff)/(APB clock frequency)
  * @param[in] period_ms - The watchdog trigger time. Unit is  millisecond
  * @return    none
- * @attention  The clock source of watchdog comes from pclk, when pclk changes it needs to be reconfigured.
+ * @attention The clock source of watchdog comes from pclk, when pclk changes it needs to be reconfigured.
  */
 static inline void wd_set_interval_ms(unsigned int period_ms)
 {

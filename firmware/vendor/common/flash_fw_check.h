@@ -1,12 +1,13 @@
 /********************************************************************************************************
- * @file     flash_fw_check.h
+ * @file	flash_fw_check.h
  *
- * @brief    This is the header file for BLE SDK
+ * @brief	for TLSR chips
  *
- * @author	 BLE GROUP
- * @date         2020.06
+ * @author	BLE Group
+ * @date	May. 12, 2018
  *
- * @par     Copyright (c) 2022, Telink Semiconductor (Shanghai) Co., Ltd. ("TELINK")
+ * @par     Copyright (c) 2017, Telink Semiconductor (Shanghai) Co., Ltd. ("TELINK")
+ *          All rights reserved.
  *
  *          Licensed under the Apache License, Version 2.0 (the "License");
  *          you may not use this file except in compliance with the License.
@@ -19,13 +20,10 @@
  *          WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  *          See the License for the specific language governing permissions and
  *          limitations under the License.
+ *
  *******************************************************************************************************/
-
 #ifndef _FLASH_FW_CHECK_H_
 #define _FLASH_FW_CHECK_H_
-
-
-#include "../../common/types.h"
 
 
 /**
@@ -37,5 +35,6 @@
 bool flash_fw_check( u32 crc_init_value );
 
 
+void blt_firmware_completeness_check(void);
 
 #endif

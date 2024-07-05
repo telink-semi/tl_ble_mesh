@@ -52,12 +52,12 @@
 #define LIGHTNESS_LINEAR_STATUS		    0x5282
 #define LIGHTNESS_LAST_GET		    	0x5382
 #define LIGHTNESS_LAST_STATUS		    0x5482
-#define LIGHTNESS_DEFULT_GET		    0x5582
-#define LIGHTNESS_DEFULT_STATUS		    0x5682
+#define LIGHTNESS_DEFAULT_GET		    0x5582
+#define LIGHTNESS_DEFAULT_STATUS		0x5682
 #define LIGHTNESS_RANGE_GET		    	0x5782
 #define LIGHTNESS_RANGE_STATUS		    0x5882
-#define LIGHTNESS_DEFULT_SET		    0x5982
-#define LIGHTNESS_DEFULT_SET_NOACK		0x5A82
+#define LIGHTNESS_DEFAULT_SET		    0x5982
+#define LIGHTNESS_DEFAULT_SET_NOACK		0x5A82
 #define LIGHTNESS_RANGE_SET		    	0x5B82
 #define LIGHTNESS_RANGE_SET_NOACK		0x5C82
 #define LIGHT_CTL_GET		        	0x5D82
@@ -70,10 +70,10 @@
 #define LIGHT_CTL_TEMP_SET				0x6482
 #define LIGHT_CTL_TEMP_SET_NOACK		0x6582
 #define LIGHT_CTL_TEMP_STATUS			0x6682
-#define LIGHT_CTL_DEFULT_GET			0x6782
-#define LIGHT_CTL_DEFULT_STATUS		    0x6882
-#define LIGHT_CTL_DEFULT_SET			0x6982
-#define LIGHT_CTL_DEFULT_SET_NOACK		0x6A82
+#define LIGHT_CTL_DEFAULT_GET			0x6782
+#define LIGHT_CTL_DEFAULT_STATUS		0x6882
+#define LIGHT_CTL_DEFAULT_SET			0x6982
+#define LIGHT_CTL_DEFAULT_SET_NOACK		0x6A82
 #define LIGHT_CTL_TEMP_RANGE_SET		0x6B82
 #define LIGHT_CTL_TEMP_RANGE_SET_NOACK	0x6C82
 
@@ -204,7 +204,7 @@ int is_valid_lum(u8 lum);
 
 int g_level_set(u8 *par, int par_len, u16 op, int idx, bool4 retransaction, int st_trans_type, int force, st_pub_list_t *pub_list);
 int g_level_set_and_update_last(u8 *par, int par_len, u16 op, int idx, bool4 retransaction, int st_trans_type, int force, st_pub_list_t *pub_list);
-s16 get_val_with_check_range(s32 level_target, s16 min, s16 max, int st_trans_type);
+s16 get_val_with_check_range(s32 level_target, s16 min, s16 max, int st_trans_type, u16 op);
 void mesh_g_level_st_rsp_par_fill(mesh_cmd_g_level_st_t *rsp, u8 idx);
 int is_valid_transition_step(u8 transit_t);
 void model_pub_check_set_bind_all(st_pub_list_t *pub_flag, mesh_cb_fun_par_t *cb_par, int linear);
@@ -291,6 +291,8 @@ int mesh_level_def_u16_st_rsp(mesh_cb_fun_par_t *cb_par, int st_trans_type);
 int mesh_range_st_rsp(u8 st, mesh_cb_fun_par_t *cb_par, int st_trans_type);
 void lightness_rsp_data_reformat(mesh_cmd_lightness_st_t *rsp);
 void lightness_set_data_reformat(mesh_cmd_lightness_set_t *p_set, int par_len, u16 op, int idx, bool4 retransaction);
+int is_dim2dark_set_op(u16 op);
+void light_res_sw_g_level_set(int idx, s16 level, int init_time_flag, int st_trans_type);
 
 
 // access_cmd

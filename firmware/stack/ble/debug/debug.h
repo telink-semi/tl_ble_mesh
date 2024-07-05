@@ -1,10 +1,10 @@
 /********************************************************************************************************
- * @file     debug.h
+ * @file    debug.h
  *
- * @brief    This is the header file for BLE SDK
+ * @brief   This is the header file for BLE SDK
  *
- * @author	 BLE GROUP
- * @date         11,2022
+ * @author  BLE GROUP
+ * @date    06,2022
  *
  * @par     Copyright (c) 2022, Telink Semiconductor (Shanghai) Co., Ltd. ("TELINK")
  *
@@ -19,19 +19,37 @@
  *          WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  *          See the License for the specific language governing permissions and
  *          limitations under the License.
+ *
  *******************************************************************************************************/
-
 #ifndef STACK_BLE_DEBUG_H_
 #define STACK_BLE_DEBUG_H_
 
 
 /**
- *  @brief debug information type
+ *  @brief stack log
  */
 typedef enum {
-	DBG_INFOR_HCI_EVENT		 	= BIT(0),
-	DBG_INFOR_ALL		 		= 0xFFFFFFFF,
-}dbg_infor_msk_t;
+	STK_LOG_NONE		 		= 0,
+
+	STK_LOG_LL_CMD		 		= BIT(0),
+
+	STK_LOG_ATT_RX		 		= BIT(5),
+	STK_LOG_ATT_TX		 		= BIT(6),
+
+	STK_LOG_SMP_LTK				= BIT(10),
+
+	STK_LOG_PRF_CS				= BIT(12),
+
+	STK_LOG_OTA_FLOW			= BIT(15),
+	STK_LOG_OTA_DATA			= BIT(16),
+
+	STK_LOG_HCI_CS				= BIT(20),
+
+	STK_LOG_LL_RX		 		= BIT(26),
+	STK_LOG_LL_TX		 		= BIT(27),
+
+	STK_LOG_ALL		 			= 0xFFFFFFFF,
+}stk_log_msk_t;
 
 
 
@@ -40,31 +58,31 @@ typedef enum {
  * @param[in]  mask - debug information combination
  * @return     none
  */
-void blc_debug_configStackPrintInformationMask(dbg_infor_msk_t mask);
+void blc_debug_enableStackLog(stk_log_msk_t mask);
+
+
+/**
+ * @brief      for user to add some type of stack print information they want
+ * @param[in]  mask - debug information combination
+ * @return     none
+ */
+void blc_debug_addStackLog(stk_log_msk_t mask);
+
+
+
+/**
+ * @brief      for user to remove some type of stack print information they want
+ * @param[in]  mask - debug information combination
+ * @return     none
+ */
+void blc_debug_removeStackLog(stk_log_msk_t mask);
 
 
 
 
 
-/*********************************************************/
-//Remove when file merge to SDK //
-//#include "vcd.h"
-#include "vcd_def.h"
-#include "vcd_def_cis.h"
-#include "vcd_def_cis_per.h"
-#include "vcd_def_cis_cen.h"
-#include "vcd_def_bis.h"
-#include "vcd_def_extended.h"
-#include "debug_cfg.h"
 
 
-#include "gpio_private.h"
-
-#include "sihui_vcd.h"
-#include "sihui_vcd_def.h"
-
-#include "vcd_fanqh_cis_cen.h"
-/*********************************************************/
 
 
 

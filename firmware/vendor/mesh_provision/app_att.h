@@ -164,6 +164,42 @@ typedef enum
 	PVT_PAIR_DESC_H, 						//UUID: 2901,	VALUE: private mesh pair service descriptor
 #endif
 
+#if MESH_CDTP_ENABLE//(BLC_AUDIO_OTP_ROLE_SWICH_ENABLE)
+	//// OTS ////
+	/**********************************************************************************************/
+	#if 1//(BLC_AUDIO_OTS_ENABLE)
+	OTS_PS_H, //
+	
+	OTS_FEATURE_CD_H, //M Mandatory:Read; Optional:
+	OTS_FEATURE_DP_H,
+	OTS_OBJECT_NAME_CD_H, //M Mandatory:Read; Optional:Write
+	OTS_OBJECT_NAME_DP_H,
+	OTS_OBJECT_TYPE_CD_H, //M Mandatory:Read; Optional:
+	OTS_OBJECT_TYPE_DP_H,
+	OTS_OBJECT_SIZE_CD_H, //M Mandatory:Read; Optional:
+	OTS_OBJECT_SIZE_DP_H,
+	OTS_OBJECT_FIRST_CREATED_CD_H, //O Mandatory:Read; Optional:Write
+	OTS_OBJECT_FIRST_CREATED_DP_H,
+	OTS_OBJECT_LAST_CREATED_CD_H,  //O Mandatory:Read; Optional:Write
+	OTS_OBJECT_LAST_CREATED_DP_H,
+	OTS_OBJECT_ID_CD_H, //O Mandatory:Read; Optional:
+	OTS_OBJECT_ID_DP_H,
+	OTS_OBJECT_PROPERTIES_CD_H, //M Mandatory:Read; Optional:Write
+	OTS_OBJECT_PROPERTIES_DP_H,
+	OTS_OBJECT_ACTION_CP_CD_H, //M Mandatory:Write,Indicate; Optional:
+	OTS_OBJECT_ACTION_CP_DP_H,
+	OTS_OBJECT_ACTION_CP_CCC_H,
+	OTS_OBJECT_LIST_CP_CD_H, //O Mandatory:Write,Indicate; Optional:
+	OTS_OBJECT_LIST_CP_DP_H,
+	OTS_OBJECT_LIST_CP_CCC_H,
+	OTS_OBJECT_LIST_FILTER_CD_H, //O Mandatory:Read,Write; Optional:
+	OTS_OBJECT_LIST_FILTER_DP_H,
+	OTS_OBJECT_CHANGED_CD_H, //O Mandatory:Indicate; Optional:
+	OTS_OBJECT_CHANGED_DP_H,
+	OTS_OBJECT_CHANGED_CCC_H,
+	#endif
+#endif
+
 	ATT_END_H,
 
 }ATT_HANDLE;
@@ -180,28 +216,5 @@ typedef enum
  */
 void my_gatt_init (void);
 ble_sts_t 	bls_att_setDeviceName(u8* pName,u8 len);
-
-
-
-
-
-///////////////////////////////////// central-role ATT client HANDLER define ///////////////////////////////////////
-
-/**
- * @brief       This function is used to send keyboard HID report by USB.
- * @param[in]   conn     - connection handle
- * @param[in]   p        - Pointer point to data buffer.
- * @return
- */
-void	att_keyboard (u16 conn, u8 *p);
-
-/**
- * @brief       This function is used to send consumer HID report by USB.
- * @param[in]   conn     - connection handle
- * @param[in]   p        - Pointer point to data buffer.
- * @return
- */
-void	att_keyboard_media (u16 conn, u8 *p);
-
 
 #endif /* BLM_ATT_H_ */

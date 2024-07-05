@@ -1,10 +1,10 @@
 /********************************************************************************************************
- * @file     custom_pair.h
+ * @file    custom_pair.h
  *
- * @brief    This is the header file for BLE SDK
+ * @brief   This is the header file for BLE SDK
  *
- * @author	 BLE GROUP
- * @date         2020.06
+ * @author  BLE GROUP
+ * @date    06,2022
  *
  * @par     Copyright (c) 2022, Telink Semiconductor (Shanghai) Co., Ltd. ("TELINK")
  *
@@ -19,21 +19,24 @@
  *          WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  *          See the License for the specific language governing permissions and
  *          limitations under the License.
+ *
  *******************************************************************************************************/
-
 #ifndef BLM_PAIR_H_
 #define BLM_PAIR_H_
 
 #include "vendor/common/user_config.h"
 
 
-#ifndef FLASH_ADR_CUSTOM_PAIRING
-#define FLASH_ADR_CUSTOM_PAIRING         		0xF8000
+
+#ifndef ACL_CENTRAL_CUSTOM_PAIR_ENABLE
+#define ACL_CENTRAL_CUSTOM_PAIR_ENABLE					0
 #endif
 
+
 #ifndef FLASH_CUSTOM_PAIRING_MAX_SIZE
-#define FLASH_CUSTOM_PAIRING_MAX_SIZE     		4096
+#define FLASH_CUSTOM_PAIRING_MAX_SIZE     				4096
 #endif
+
 
 /*!  Pair parameter manager type */
 typedef struct{
@@ -88,10 +91,15 @@ int user_tbl_peripheral_mac_delete_by_adr(u8 adr_type, u8 *adr);
  * @param      none.
  * @return     none.
  */
-void user_tbl_periperal_mac_delete_all(void);
+void user_tbl_peripheral_mac_delete_all(void);
 
 
 
-
+/* compatible with previous released SDK */
+#define user_master_host_pairing_management_init	user_central_host_pairing_management_init
+#define user_tbl_slave_mac_search					user_tbl_peripheral_mac_search
+#define user_tbl_slave_mac_add						user_tbl_peripheral_mac_add
+#define user_tbl_slave_mac_delete_by_adr			user_tbl_peripheral_mac_delete_by_adr
+#define user_tbl_slave_mac_delete_all				user_tbl_peripheral_mac_delete_all
 
 #endif /* APP_PAIR_H_ */

@@ -1,12 +1,12 @@
 /********************************************************************************************************
- * @file     npe_reg.h
+ * @file    npe_reg.h
  *
- * @brief    This is the header file for BLE SDK
+ * @brief   This is the header file for B91
  *
- * @author	 BLE GROUP
- * @date         11,2022
+ * @author  Driver Group
+ * @date    2019
  *
- * @par     Copyright (c) 2022, Telink Semiconductor (Shanghai) Co., Ltd. ("TELINK")
+ * @par     Copyright (c) 2019, Telink Semiconductor (Shanghai) Co., Ltd. ("TELINK")
  *
  *          Licensed under the Apache License, Version 2.0 (the "License");
  *          you may not use this file except in compliance with the License.
@@ -19,11 +19,11 @@
  *          WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  *          See the License for the specific language governing permissions and
  *          limitations under the License.
+ *
  *******************************************************************************************************/
-
 #ifndef NPE_REG_H
 #define NPE_REG_H
-#include "../sys.h"
+#include "soc.h"
 #define  NPE_BASE_ADDR			         0x112000
 #define reg_npe_addr(addr)		((addr)-CPU_DLM_BASE+DLM_BASE)
 #define reg_npe_0x40			REG_ADDR32(NPE_BASE_ADDR+0x40)
