@@ -1,5 +1,5 @@
 /********************************************************************************************************
- * @file JoinedNetworkListFragment.java
+ * @file MeshInfoUpdateEvent.java
  *
  * @brief for TLSR chips
  *
