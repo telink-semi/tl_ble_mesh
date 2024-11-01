@@ -554,7 +554,7 @@
     },
     {
       "id": "13:290183085493963579",
-      "lastPropertyId": "3:5778465881033196699",
+      "lastPropertyId": "4:8172139637499398864",
       "name": "Scheduler",
       "properties": [
         {
@@ -575,6 +575,11 @@
           "type": 11,
           "flags": 520,
           "relationTarget": "SchedulerRegister"
+        },
+        {
+          "id": "4:8172139637499398864",
+          "name": "elementOffset",
+          "type": 5
         }
       ],
       "relations": []
@@ -743,7 +748,7 @@
     },
     {
       "id": "18:2912109651191137768",
-      "lastPropertyId": "12:4993378234604267159",
+      "lastPropertyId": "20:7318923027092914925",
       "name": "NodeLcProps",
       "properties": [
         {
@@ -800,6 +805,46 @@
         {
           "id": "12:4993378234604267159",
           "name": "timeRunOn",
+          "type": 5
+        },
+        {
+          "id": "13:4144016339766823901",
+          "name": "luxLevelOn",
+          "type": 5
+        },
+        {
+          "id": "14:8978774410143894428",
+          "name": "luxLevelProlong",
+          "type": 5
+        },
+        {
+          "id": "15:5909357586147874633",
+          "name": "luxLevelStandby",
+          "type": 5
+        },
+        {
+          "id": "16:6838433904484039458",
+          "name": "regulatorAccuracy",
+          "type": 5
+        },
+        {
+          "id": "17:6879158230550264254",
+          "name": "regulatorKid",
+          "type": 5
+        },
+        {
+          "id": "18:7840152046112822786",
+          "name": "regulatorKiu",
+          "type": 5
+        },
+        {
+          "id": "19:3431812833893510419",
+          "name": "regulatorKpd",
+          "type": 5
+        },
+        {
+          "id": "20:7318923027092914925",
+          "name": "regulatorKpu",
           "type": 5
         }
       ],

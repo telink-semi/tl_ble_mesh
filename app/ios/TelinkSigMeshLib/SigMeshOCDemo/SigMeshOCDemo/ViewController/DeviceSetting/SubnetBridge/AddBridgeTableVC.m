@@ -239,53 +239,69 @@
         case 0:
         {
             // 方向
-            BRStringPickerView *stringPickerView = [[BRStringPickerView alloc] init];
-            stringPickerView.pickerMode = BRStringPickerComponentSingle;
+            BRTextPickerView *stringPickerView = [[BRTextPickerView alloc] initWithPickerMode:BRTextPickerComponentSingle];
+//            BRStringPickerView *stringPickerView = [[BRStringPickerView alloc] initWithPickerMode:BRStringPickerComponentSingle];
+//            BRStringPickerView *stringPickerView = [[BRStringPickerView alloc] init];
+//            stringPickerView.pickerMode = BRStringPickerComponentSingle;
             stringPickerView.title = @"please choose directions";
             stringPickerView.dataSourceArr = @[@"Unidirectional(0x1)", @"Directional(0x2)"];
             stringPickerView.selectIndex = self.bridgeModel.directions == SigDirectionsFieldValues_unidirectional ? 0 : 1;
             stringPickerView.pickerStyle.cancelBtnTitle = kDefaultAlertCancel;
             stringPickerView.pickerStyle.doneBtnTitle = kDefaultAlertOK;
-            stringPickerView.resultModelBlock = ^(BRResultModel *resultModel) {
-                weakSelf.bridgeModel.directions = resultModel.index == 0 ? SigDirectionsFieldValues_unidirectional : SigDirectionsFieldValues_bidirectional;
-                textField.text = resultModel.value;
+            stringPickerView.singleResultBlock = ^(BRTextModel * _Nullable model, NSInteger index) {
+                weakSelf.bridgeModel.directions = index == 0 ? SigDirectionsFieldValues_unidirectional : SigDirectionsFieldValues_bidirectional;
+                textField.text = model.text;
             };
+//            stringPickerView.resultModelBlock = ^(BRResultModel *resultModel) {
+//                weakSelf.bridgeModel.directions = resultModel.index == 0 ? SigDirectionsFieldValues_unidirectional : SigDirectionsFieldValues_bidirectional;
+//                textField.text = resultModel.value;
+//            };
             [stringPickerView show];
         }
             break;
         case 1:
         {
             // Net Key 1
-            BRStringPickerView *stringPickerView = [[BRStringPickerView alloc] init];
-            stringPickerView.pickerMode = BRStringPickerComponentSingle;
+            BRTextPickerView *stringPickerView = [[BRTextPickerView alloc] initWithPickerMode:BRTextPickerComponentSingle];
+//            BRStringPickerView *stringPickerView = [[BRStringPickerView alloc] init];
+//            stringPickerView.pickerMode = BRStringPickerComponentSingle;
             stringPickerView.title = @"please choose Net Key 1";
             stringPickerView.dataSourceArr = self.netkeyArr;
             SigNetkeyModel *selectModel = [SigDataSource.share getNetkeyModelWithNetkeyIndex:self.bridgeModel.netKeyIndex1];
             stringPickerView.selectIndex = [SigDataSource.share.netKeys indexOfObject:selectModel];
             stringPickerView.pickerStyle.cancelBtnTitle = kDefaultAlertCancel;
             stringPickerView.pickerStyle.doneBtnTitle = kDefaultAlertOK;
-            stringPickerView.resultModelBlock = ^(BRResultModel *resultModel) {
-                self.bridgeModel.netKeyIndex1 = SigDataSource.share.netKeys[resultModel.index].index;
-                textField.text = resultModel.value;
+            stringPickerView.singleResultBlock = ^(BRTextModel * _Nullable model, NSInteger index) {
+                weakSelf.bridgeModel.netKeyIndex1 = SigDataSource.share.netKeys[index].index;
+                textField.text = model.text;
             };
+//            stringPickerView.resultModelBlock = ^(BRResultModel *resultModel) {
+//                self.bridgeModel.netKeyIndex1 = SigDataSource.share.netKeys[resultModel.index].index;
+//                textField.text = resultModel.value;
+//            };
             [stringPickerView show];
         }
             break;
         case 2:
         {
             // Net Key 2
-            BRStringPickerView *stringPickerView = [[BRStringPickerView alloc] init];
-            stringPickerView.pickerMode = BRStringPickerComponentSingle;
+            BRTextPickerView *stringPickerView = [[BRTextPickerView alloc] initWithPickerMode:BRTextPickerComponentSingle];
+//            BRStringPickerView *stringPickerView = [[BRStringPickerView alloc] init];
+//            stringPickerView.pickerMode = BRStringPickerComponentSingle;
             stringPickerView.title = @"please choose Net Key 2";
             stringPickerView.dataSourceArr = self.netkeyArr;
             SigNetkeyModel *selectModel = [SigDataSource.share getNetkeyModelWithNetkeyIndex:self.bridgeModel.netKeyIndex2];
             stringPickerView.selectIndex = [SigDataSource.share.netKeys indexOfObject:selectModel];
             stringPickerView.pickerStyle.cancelBtnTitle = kDefaultAlertCancel;
             stringPickerView.pickerStyle.doneBtnTitle = kDefaultAlertOK;
-            stringPickerView.resultModelBlock = ^(BRResultModel *resultModel) {
-                self.bridgeModel.netKeyIndex2 = SigDataSource.share.netKeys[resultModel.index].index;
-                textField.text = resultModel.value;
+            stringPickerView.singleResultBlock = ^(BRTextModel * _Nullable model, NSInteger index) {
+                weakSelf.bridgeModel.netKeyIndex2 = SigDataSource.share.netKeys[index].index;
+                textField.text = model.text;
             };
+//            stringPickerView.resultModelBlock = ^(BRResultModel *resultModel) {
+//                self.bridgeModel.netKeyIndex2 = SigDataSource.share.netKeys[resultModel.index].index;
+//                textField.text = resultModel.value;
+//            };
             [stringPickerView show];
         }
             break;

@@ -27,20 +27,20 @@ import android.content.DialogInterface;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
-import android.view.WindowMetrics;
 import android.widget.ImageView;
 import android.widget.TextView;
 
 import androidx.appcompat.app.AlertDialog;
 
 import com.google.gson.Gson;
-import com.telink.ble.mesh.TelinkMeshApplication;
+import com.telink.ble.mesh.SharedPreferenceHelper;
 import com.telink.ble.mesh.demo.R;
 import com.telink.ble.mesh.model.MeshInfo;
 import com.telink.ble.mesh.model.MeshNetKey;
 import com.telink.ble.mesh.model.db.MeshInfoService;
 import com.telink.ble.mesh.model.json.MeshStorageService;
 import com.telink.ble.mesh.ui.BaseActivity;
+import com.telink.ble.mesh.util.ContextUtil;
 import com.telink.ble.mesh.util.MeshLogger;
 
 import java.io.IOException;
@@ -172,7 +172,8 @@ public class QRCodeShareActivity extends BaseActivity {
         showWaitingDialog("uploading...");
         String jsonStr = MeshStorageService.getInstance().meshToJsonString(meshInfo, meshNetKeyList);
         MeshLogger.d("upload json string: " + jsonStr);
-        TelinkHttpClient.getInstance().upload(jsonStr, QRCODE_TIMEOUT, uploadCallback);
+        String baseUrl = SharedPreferenceHelper.getBaseUrl(this) + "/";
+        TelinkHttpClient.getInstance().upload(baseUrl, jsonStr, QRCODE_TIMEOUT, uploadCallback);
     }
 
 
@@ -194,18 +195,9 @@ public class QRCodeShareActivity extends BaseActivity {
             builder.setTitle("Warning")
                     .setMessage(desc)
                     .setCancelable(false)
-                    .setPositiveButton("Retry", new DialogInterface.OnClickListener() {
-                        @Override
-                        public void onClick(DialogInterface dialog, int which) {
-                            upload(meshNetKeyList);
-                        }
-                    })
-                    .setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
-                        @Override
-                        public void onClick(DialogInterface dialog, int which) {
-                            finish();
-                        }
-                    });
+                    .setPositiveButton("Retry", (dialog, which) -> upload(meshNetKeyList))
+                    .setNegativeButton("Cancel",
+                            (dialog, which) -> finish());
             builder.show();
         });
 
@@ -216,7 +208,8 @@ public class QRCodeShareActivity extends BaseActivity {
         @Override
         public void onFailure(Call call, IOException e) {
             MeshLogger.d("upload fail: " + e.toString());
-            onUploadFail("request fail, pls check network");
+            boolean isNetworkOk = ContextUtil.isNetworkAvailable(getApplicationContext());
+            onUploadFail(!isNetworkOk ? "request fail, pls check network" : "request fail, pls check the URL");
         }
 
         @Override

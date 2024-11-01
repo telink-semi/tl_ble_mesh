@@ -136,6 +136,7 @@ public class BaseActivity extends AppCompatActivity implements EventListener<Str
     }
 
     public void toastMsg(CharSequence s) {
+        MeshLogger.d("toast : " + s.toString());
         if (this.toast != null) {
             this.toast.cancel();
         }
@@ -147,11 +148,32 @@ public class BaseActivity extends AppCompatActivity implements EventListener<Str
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
         builder.setCancelable(true);
         builder.setTitle("Warning");
-        builder.setPositiveButton("Confirm", confirmClick);
+        builder.setPositiveButton("OK", confirmClick);
         builder.setNegativeButton("Cancel", (dialog, which) -> dialog.dismiss());
         builder.setMessage(msg);
         builder.show();
     }
+
+    public void showConfirmDialog(String msg, DialogInterface.OnClickListener confirmClick, DialogInterface.OnClickListener cancelClick) {
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        builder.setCancelable(true);
+        builder.setTitle("Warning");
+        builder.setPositiveButton("OK", confirmClick);
+        builder.setNegativeButton("Cancel", cancelClick);
+        builder.setMessage(msg);
+        builder.show();
+    }
+
+    public void showConfirmDialog(String msg, DialogInterface.OnClickListener confirmClick, String cancelText, DialogInterface.OnClickListener cancelClick) {
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        builder.setCancelable(true);
+        builder.setTitle("Warning");
+        builder.setPositiveButton("OK", confirmClick);
+        builder.setNegativeButton(cancelText, cancelClick);
+        builder.setMessage(msg);
+        builder.show();
+    }
+
 
     public void dismissConfirmDialog() {
         if (confirmDialogBuilder != null && confirmDialogBuilder.isShowing()) {

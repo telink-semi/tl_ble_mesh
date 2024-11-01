@@ -27,10 +27,6 @@
 #import <Photos/Photos.h>
 #import "UIViewController+Message.h"
 
-@interface ScanCodeVC ()
-@property (nonatomic, strong) ScanView *scanView;
-@end
-
 @implementation ScanCodeVC
 
 + (instancetype)scanCodeVC {
@@ -75,7 +71,6 @@
     NSString *mediaType = AVMediaTypeVideo;//读取媒体类型
     AVAuthorizationStatus authStatus = [AVCaptureDevice authorizationStatusForMediaType:mediaType];//读取设备授权状态
     if(authStatus == AVAuthorizationStatusRestricted || authStatus == AVAuthorizationStatusDenied){
-//        NSString *errorStr = @"应用相机权限受限,请在设置中启用";
         return NO;
     } else if (authStatus == AVAuthorizationStatusNotDetermined) {
         [AVCaptureDevice requestAccessForMediaType:mediaType completionHandler:^(BOOL granted) {
@@ -87,14 +82,13 @@
     return YES;
 }
 
-- (void)backToMain{
+- (void)backToMain {
     dispatch_async(dispatch_get_main_queue(), ^{
         [self.navigationController popViewControllerAnimated:YES];
     });
 }
 
-- (void)viewWillAppear:(BOOL)animated
-{
+- (void)viewWillAppear:(BOOL)animated {
     [super viewWillAppear: animated];
     if (_scanView) {
         [self.scanView start];
@@ -110,8 +104,7 @@
     }
 }
 
-- (void)viewDidDisappear:(BOOL)animated
-{
+- (void)viewDidDisappear:(BOOL)animated {
     [super viewDidDisappear: animated];
     if (_scanView) {
         [self.scanView stop];
@@ -123,8 +116,7 @@
     [super didReceiveMemoryWarning];
 }
 
-- (void)dealloc
-{
+- (void)dealloc {
     TelinkLogVerbose(@"");
     if (_scanView) {
         [self.scanView stop];

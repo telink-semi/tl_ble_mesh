@@ -31,6 +31,7 @@ import android.widget.Toast;
 
 import com.telink.ble.mesh.TelinkMeshApplication;
 import com.telink.ble.mesh.core.message.MeshMessage;
+import com.telink.ble.mesh.core.message.Opcode;
 import com.telink.ble.mesh.core.message.config.BeaconSetMessage;
 import com.telink.ble.mesh.core.message.config.BeaconStatusMessage;
 import com.telink.ble.mesh.core.message.config.GattProxySetMessage;
@@ -43,6 +44,7 @@ import com.telink.ble.mesh.core.message.privatebeacon.PrivateGattProxySetMessage
 import com.telink.ble.mesh.core.message.privatebeacon.PrivateGattProxyStatusMessage;
 import com.telink.ble.mesh.core.message.privatebeacon.PrivateNodeIdentitySetMessage;
 import com.telink.ble.mesh.core.message.privatebeacon.PrivateNodeIdentityStatusMessage;
+import com.telink.ble.mesh.core.networking.AccessType;
 import com.telink.ble.mesh.demo.R;
 import com.telink.ble.mesh.foundation.Event;
 import com.telink.ble.mesh.foundation.EventListener;
@@ -50,6 +52,7 @@ import com.telink.ble.mesh.foundation.MeshService;
 import com.telink.ble.mesh.foundation.event.StatusNotificationEvent;
 import com.telink.ble.mesh.model.MeshInfo;
 import com.telink.ble.mesh.model.NodeInfo;
+import com.telink.ble.mesh.util.MeshLogger;
 
 /**
  * network key in target device
@@ -142,16 +145,45 @@ public class PrivateBeaconSettingActivity extends BaseActivity implements EventL
         }
     };
 
-
+    boolean skipChange = false;
     CompoundButton.OnCheckedChangeListener SWITCH_CHANGED = (view, isChecked) -> {
         MeshMessage message = null;
         switch (view.getId()) {
             case R.id.sw_gatt_prx:
+                MeshLogger.d(String.format("sw_gatt_prx isChecked=%b skipChange=%b", isChecked, skipChange));
+                if (!isChecked && skipChange) {
+                    skipChange = false;
+                    return;
+                }
                 message = GattProxySetMessage.getSimple(meshAddress, (byte) (isChecked ? 1 : 0));
+                if (isChecked && sw_pvt_gatt_prx.isChecked()) {
+                    skipChange = true;
+                    sw_pvt_gatt_prx.setChecked(false);
+                }
                 break;
 
             case R.id.sw_pvt_gatt_prx:
-                message = PrivateGattProxySetMessage.getSimple(meshAddress, (byte) (isChecked ? 1 : 0));
+                MeshLogger.d(String.format("sw_pvt_gatt_prx isChecked=%b skipChange=%b", isChecked, skipChange));
+                if (!isChecked && skipChange) {
+                    skipChange = false;
+                    return;
+                }
+                long delay = 0;
+                if (isChecked && sw_gatt_prx.isChecked()) {
+                    skipChange = true;
+                    sw_gatt_prx.setChecked(false);
+                    delay = 200;
+//                    GattProxySetMessage.getSimple(meshAddress, (byte) 0);
+                    MeshMessage msg = new MeshMessage();
+                    msg.setAccessType(AccessType.DEVICE);
+                    msg.setDestinationAddress(meshAddress);
+                    msg.setOpcode(Opcode.CFG_GATT_PROXY_SET.value);
+                    msg.setParams(new byte[]{0x00});
+                    msg.setResponseOpcode(-1);
+                    MeshService.getInstance().sendMeshMessage(msg);
+                }
+//                handler.postDelayed(() -> , delay);
+                MeshService.getInstance().sendMeshMessage(PrivateGattProxySetMessage.getSimple(meshAddress, (byte) (isChecked ? 1 : 0)));
                 break;
 
             case R.id.sw_node_id:
@@ -201,6 +233,9 @@ public class PrivateBeaconSettingActivity extends BaseActivity implements EventL
             handler.removeCallbacksAndMessages(null);
             if (nodeInfo != null) {
                 nodeInfo.gattProxyEnable = stMessage.gattProxy == 1;
+                if (nodeInfo.gattProxyEnable) {
+                    nodeInfo.privateGattProxyEnable = false;
+                }
                 nodeInfo.save();
             }
         } else if (event.getType().equals(PrivateGattProxyStatusMessage.class.getName())) {
@@ -208,6 +243,9 @@ public class PrivateBeaconSettingActivity extends BaseActivity implements EventL
             handler.removeCallbacksAndMessages(null);
             if (nodeInfo != null) {
                 nodeInfo.privateGattProxyEnable = stMessage.privateGattProxy == 1;
+                if (nodeInfo.privateGattProxyEnable) {
+                    nodeInfo.gattProxyEnable = false;
+                }
                 nodeInfo.save();
             }
         } else if (event.getType().equals(NodeIdentityStatusMessage.class.getName())) {

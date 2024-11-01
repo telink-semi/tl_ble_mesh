@@ -183,14 +183,14 @@
     [self.detailSource addObject:@"used in certificate-based provisioning"];
     [self.iconSource addObject:@"setting_certificate"];
     [self.vcIdentifiers addObject:@""];
-    [self.titleSource addObject:kSettingsTitle];
-    [self.detailSource addObject:@"other settings..."];
-    [self.iconSource addObject:@"ic_setting"];
-    [self.vcIdentifiers addObject:ViewControllerIdentifiers_SettingsViewControllerID];
     [self.titleSource addObject:kLogTitle];
     [self.detailSource addObject:@"show all log..."];
     [self.iconSource addObject:@"ic_log"];
     [self.vcIdentifiers addObject:ViewControllerIdentifiers_LogViewControllerID];
+    [self.titleSource addObject:kSettingsTitle];
+    [self.detailSource addObject:@"other settings..."];
+    [self.iconSource addObject:@"ic_setting"];
+    [self.vcIdentifiers addObject:ViewControllerIdentifiers_SettingsViewControllerID];
 
     if (kshowTest) {
         [self.titleSource addObject:kTestTitle];

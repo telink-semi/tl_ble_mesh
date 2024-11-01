@@ -307,6 +307,7 @@ public class FUController implements FUActionHandler {
      */
     public void clear() {
         currentState = FUState.IDLE;
+        firstIndexInList = 0;
         log("clear FU --------");
         if (initiator.isRunning()) {
             initiator.clear();
@@ -425,7 +426,9 @@ public class FUController implements FUActionHandler {
     @Override
     public void onDeviceUpdate(MeshUpdatingDevice device, String desc) {
         log("device state update : " + desc);
-        configuration.dispatchDeviceState(device, desc);
+        if (configuration != null) {
+            configuration.dispatchDeviceState(device, desc);
+        }
 //        onStateUpdate(STATE_DEVICE_FAIL, String.format("node updating fail: %04X -- ", device.getMeshAddress()), device);
     }
 

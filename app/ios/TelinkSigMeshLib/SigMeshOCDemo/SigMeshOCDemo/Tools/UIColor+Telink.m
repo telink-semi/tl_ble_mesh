@@ -41,11 +41,35 @@
     }
 }
 
++ (UIColor *)telinkBackground {
+    if (@available(iOS 11.0, *)) {
+        return [UIColor colorNamed:@"telinkBackground"];
+    } else {
+        return HEX(#FFFFFF);
+    }
+}
+
++ (UIColor *)telinkTitleBlue {
+    if (@available(iOS 11.0, *)) {
+        return [UIColor colorNamed:@"telinkTitleBlue"];
+    } else {
+        return HEX(#4A87EE);
+    }
+}
+
 + (UIColor *)telinkBlue {
     if (@available(iOS 11.0, *)) {
         return [UIColor colorNamed:@"telinkBlue"];
     } else {
         return HEX(#4A87EE);
+    }
+}
+
++ (UIColor *)telinkLightGray {
+    if (@available(iOS 11.0, *)) {
+        return [UIColor colorNamed:@"telinkLightGray"];
+    } else {
+        return HEX(#EBEBEB);
     }
 }
 
@@ -110,6 +134,14 @@
         return [UIColor colorNamed:@"telinkTitleGray"];
     } else {
         return HEX(#626262);
+    }
+}
+
++ (UIColor *)telinkTabBarBackgroundColor {
+    if (@available(iOS 11.0, *)) {
+        return [UIColor colorNamed:@"telinkTabBarBackgroundColor"];
+    } else {
+        return HEX(#F7F7F7);
     }
 }
 

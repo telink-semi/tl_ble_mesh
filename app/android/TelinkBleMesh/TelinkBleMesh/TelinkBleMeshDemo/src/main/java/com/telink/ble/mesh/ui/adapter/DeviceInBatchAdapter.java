@@ -88,8 +88,10 @@ public class DeviceInBatchAdapter extends BaseRecyclerViewAdapter<DeviceInBatchA
 //        holder.tv_device_adr.setText(deviceDesc);
         if (deviceInfo.meshAddress == MeshService.getInstance().getDirectConnectedNodeAddress()) {
             holder.tv_device_adr.setTextColor(mContext.getResources().getColor(R.color.colorPrimary));
+            holder.tv_device_name.setTextColor(mContext.getResources().getColor(R.color.colorPrimary));
         } else {
             holder.tv_device_adr.setTextColor(mContext.getResources().getColor(R.color.black));
+            holder.tv_device_name.setTextColor(mContext.getResources().getColor(R.color.black));
         }
         holder.tv_device_name.setText(deviceInfo.getName());
         holder.iv_rename.setOnClickListener(v -> ((DeviceBatchSettingActivity) mContext).showNameInputDialog(deviceInfo));

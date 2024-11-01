@@ -29,6 +29,7 @@ import com.telink.ble.mesh.model.NodeInfo;
 import com.telink.ble.mesh.model.NodeLcProps;
 import com.telink.ble.mesh.model.OobInfo;
 import com.telink.ble.mesh.model.Scene;
+import com.telink.ble.mesh.ui.eh.SwitchAction;
 import com.telink.ble.mesh.util.Arrays;
 import com.telink.ble.mesh.util.MeshLogger;
 
@@ -49,6 +50,7 @@ public class MeshInfoService {
     private Box<OobInfo> oobInfoBox;
     private Query<MeshInfo> meshInfoQuery;
     private Query<OobInfo> oobInfoQuery;
+    private Box<SwitchAction> switchActionBox;
 
     private MeshInfoService() {
     }
@@ -65,6 +67,7 @@ public class MeshInfoService {
         sceneBox = store.boxFor(Scene.class);
         nodeLcPropsBox = store.boxFor(NodeLcProps.class);
         groupInfoBox = store.boxFor(GroupInfo.class);
+        switchActionBox = store.boxFor(SwitchAction.class);
         oobInfoQuery = oobInfoBox.query().build();
     }
 
@@ -113,6 +116,13 @@ public class MeshInfoService {
         MeshLogger.d("updateNodeInfo - " + node.id);
         nodeInfoBox.put(node);
     }
+
+    public void updateSwitchAction(SwitchAction action) {
+        MeshLogger.d("updateSwitchAction - " + action.id);
+        switchActionBox.put(action);
+    }
+
+
 
     public void updateNodeLcProps(NodeLcProps props) {
         MeshLogger.d("updateNodeLcProps - " + props.id);

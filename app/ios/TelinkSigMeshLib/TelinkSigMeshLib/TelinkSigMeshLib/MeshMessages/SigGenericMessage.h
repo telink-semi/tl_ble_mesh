@@ -8192,4 +8192,131 @@ NS_ASSUME_NONNULL_BEGIN
 @end
 
 
+@interface SigEnOceanBaseMessage : SigMeshMessage
+@property (nonatomic,assign) VendorSubOpCode vendorSubOpCode;
+@end
+
+
+@interface SigEnOceanResponseMessage : SigEnOceanBaseMessage
+@property (nonatomic,assign) EnOceanPairStatus status;
+
+- (instancetype)initWithParameters:(NSData *)parameters;
+
+@end
+
+
+@interface SigEnOceanPairMacAddressAndKeyRequestMessage : SigEnOceanBaseMessage
+@property (nonatomic,assign) UInt16 unicastAddressOfEnOcean;
+@property (nonatomic,strong) NSData *macAddressDataOfEnOcean;
+@property (nonatomic,strong) NSData *keyOfEnOcean;
+
+/// init PairMacAddressAndKeyRequest message
+/// - Parameters:
+///   - unicastAddressOfEnOcean: energy harvest address,
+///   - macAddressDataOfEnOcean: energy harvest MacAddress,
+///   - keyOfEnOcean: energy harvest key,
+- (instancetype)initWithUnicastAddressOfEnOcean:(UInt16)unicastAddressOfEnOcean macAddressDataOfEnOcean:(NSData *)macAddressDataOfEnOcean keyOfEnOcean:(NSData *)keyOfEnOcean;
+
+@end
+
+
+@interface SigEnOceanPairDeleteRequestMessage : SigEnOceanBaseMessage
+@property (nonatomic,assign) UInt16 unicastAddressOfEnOcean;
+- (instancetype)initWithUnicastAddressOfEnOcean:(UInt16)unicastAddressOfEnOcean;
+@end
+
+
+@interface SigEnOceanPublishSetBaseRequestMessage : SigEnOceanBaseMessage
+/// Publish command length. The size is 1 byte.
+@property (nonatomic,assign) UInt8 commandLength;
+/// Publish command type. The size is 4 bits.
+@property (nonatomic,assign) EnOceanPublishSetType commandType;
+/// energy harvest address,
+@property (nonatomic,assign) UInt16 unicastAddressOfEnOcean;
+@end
+
+
+@interface SigEnOceanPublishSetGenericRequestMessage : SigEnOceanPublishSetBaseRequestMessage
+///  button index of energy harvest device. The size is 4 bits.
+@property (nonatomic,assign) UInt8 buttonIndex;
+/// publish address,
+@property (nonatomic,assign) UInt16 publishAddress;
+/// only  OnOff / lightness delta / CT delta now.
+/// SigOpCode_genericOnOffSet /
+@property (nonatomic,assign) SigOpCode opCodeType;
+/// for publish onOff
+@property (nonatomic, assign) BOOL onOff;
+/// for scene recall
+@property (nonatomic, assign) UInt16 sceneId;
+/// deltaLightness or deltaCT, delta value range: -65535 ~ 65535
+@property (nonatomic, assign) SInt32 deltaValue;
+/// optional, transition time
+@property (nonatomic,strong) NSNumber *transitionTime;//UInt8
+/// optional, unit 5ms, delay time
+@property (nonatomic,strong) NSNumber *delayTime;//UInt8
+
+/// init OnOff PublishSetGenericRequest
+/// - Parameters:
+///   - buttonIndex: button index of energy harvest device. The size is 4 bits.
+///   - unicastAddressOfEnOcean: energy harvest address,
+///   - publishAddress: publish address,
+///   - onOff: for publish onOff
+- (instancetype)initButtonIndex:(UInt8)buttonIndex unicastAddressOfEnOcean:(UInt16)unicastAddressOfEnOcean publishAddress:(UInt16)publishAddress onOff:(BOOL)onOff;
+
+/// init sceneRecall PublishSetGenericRequest
+/// - Parameters:
+///   - buttonIndex: button index of energy harvest device. The size is 4 bits.
+///   - unicastAddressOfEnOcean: energy harvest address,
+///   - publishAddress: publish address,
+///   - sceneId: for scene recall
+- (instancetype)initButtonIndex:(UInt8)buttonIndex unicastAddressOfEnOcean:(UInt16)unicastAddressOfEnOcean publishAddress:(UInt16)publishAddress sceneId:(UInt16)sceneId;
+
+/// init lightness delta / CT delta PublishSetGenericRequest (send to lightness unicastAddress is lightness delta, send to CT unicastAddress is CT delta)
+/// - Parameters:
+///   - buttonIndex: button index of energy harvest device. The size is 4 bits.
+///   - unicastAddressOfEnOcean: energy harvest address,
+///   - publishAddress: publish address,
+///   - deltaValue: delta value of lightness or CT
+- (instancetype)initButtonIndex:(UInt8)buttonIndex unicastAddressOfEnOcean:(UInt16)unicastAddressOfEnOcean publishAddress:(UInt16)publishAddress deltaValue:(SInt32)deltaValue;
+
+@end
+
+
+@interface SigEnOceanPublishSetSpecialRequestMessage : SigEnOceanPublishSetBaseRequestMessage
+///  reserve for future use. The size is 4 bits.
+@property (nonatomic,assign) UInt8 rfu0;
+/// key value of EnOcean
+@property (nonatomic, assign) struct EnOceanKeyStruct enOceanKeyStruct;
+/// address of publish1
+@property (nonatomic, assign) UInt16 addressOfPublish1;
+/// address of publish2
+@property (nonatomic, assign) UInt16 addressOfPublish2;
+@property (nonatomic, assign) BOOL onOff;
+@property (nonatomic, assign) SInt32 deltaValue;
+/// optional, transition time
+@property (nonatomic,strong) NSNumber *transitionTime;//UInt8
+/// optional, unit 5ms, delay time
+@property (nonatomic,strong) NSNumber *delayTime;//UInt8
+
+/// init OnOff PublishSetSpecialRequest
+/// - Parameters:
+///   - unicastAddressOfEnOcean: unicast address of EnOcean
+///   - enOceanKeyStruct: key value of EnOcean
+///   - addressOfPublish1: address of publish1
+///   - addressOfPublish2: address of publish2
+///   - onOff: On Off
+- (instancetype)initOnOffPublishWithUnicastAddressOfEnOcean:(UInt16)unicastAddressOfEnOcean enOceanKeyStruct:(struct EnOceanKeyStruct)enOceanKeyStruct addressOfPublish1:(UInt16)addressOfPublish1 addressOfPublish2:(UInt16)addressOfPublish2 onOff:(BOOL)onOff;
+
+/// init lightness delta / CT delta PublishSetSpecialRequest (send to lightness unicastAddress is lightness delta, send to CT unicastAddress is CT delta)
+/// - Parameters:
+///   - unicastAddressOfEnOcean: unicast address of EnOcean
+///   - enOceanKeyStruct: key value of EnOcean
+///   - addressOfPublish1: address of publish1
+///   - addressOfPublish2: address of publish2
+///   - deltaValue: delta value of lightness or CT
+- (instancetype)initLightnessDeltaPublishWithUnicastAddressOfEnOcean:(UInt16)unicastAddressOfEnOcean enOceanKeyStruct:(struct EnOceanKeyStruct)enOceanKeyStruct addressOfPublish1:(UInt16)addressOfPublish1 addressOfPublish2:(UInt16)addressOfPublish2 deltaValue:(SInt32)deltaValue;
+
+@end
+
+
 NS_ASSUME_NONNULL_END

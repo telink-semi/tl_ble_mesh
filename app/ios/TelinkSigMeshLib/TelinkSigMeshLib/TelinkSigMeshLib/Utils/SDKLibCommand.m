@@ -4281,6 +4281,151 @@
     [SigBearer.share stopMeshConnectWithComplete:complete];
 }
 
+/**
+ * @brief   Manager GroupAddress of node.
+ * @param   groupAddress group address
+ * @param   isAdd YES means add, NO means delete.
+ * @param   nodeAddress node address
+ * @param   modelIDList modelID list, nil means use SigDataSource.share.defaultGroupSubscriptionModels.
+ * @param   singleStatusResponseCallback callback of single command response.
+ * @param   singleResultCallback callback of single command finish.
+ * @param   finishCallback callback of all commands finish.
+ * @note    SDK will cache message of success command to SigDataSource.share, and save local.
+ */
++ (void)managerGroupAddress:(UInt16)groupAddress isAdd:(BOOL)isAdd nodeAddress:(UInt16)nodeAddress modelIDList:(nullable NSArray <NSNumber *>*)modelIDList singleStatusResponseCallback:(_Nullable responseConfigModelSubscriptionStatusMessageBlock)singleStatusResponseCallback singleResultCallback:(_Nullable resultBlock)singleResultCallback finishCallback:(resultBlock)finishCallback {
+    if (modelIDList == nil || modelIDList.count == 0) {
+        modelIDList = [NSArray arrayWithArray:SigDataSource.share.defaultGroupSubscriptionModels];
+    }
+    SigNodeModel *node = [SigDataSource.share getNodeWithAddress:nodeAddress];
+    //子线程执行Subscribe
+    NSOperationQueue *operationQueue = [[NSOperationQueue alloc] init];
+    [operationQueue addOperationWithBlock:^{
+        for (NSNumber *modelIdNumber in modelIDList) {
+            UInt16 modelIdentifier = 0,companyIdentifier = 0;
+            if (modelIdNumber.intValue >= 0x1000 && modelIdNumber.intValue <= 0x13ff) {
+                //sig model
+                modelIdentifier = modelIdNumber.intValue;
+            } else {
+                //vendor model
+                modelIdentifier = (modelIdNumber.intValue >> 16) & 0xFFFF;
+                companyIdentifier = modelIdNumber.intValue & 0xFFFF;
+            }
+            UInt16 retryCount = SigDataSource.share.defaultRetryCount;
+            UInt16 responseMaxCount = 1;
+            NSArray *elementAddresses = [node getAddressesWithModelID:modelIdNumber];
+            __block int i = 0;
+            for ( ; i<elementAddresses.count; i++) {
+                __block BOOL isFail = NO;
+                __block BOOL isSuccess = NO;
+                NSNumber *elementNumber = elementAddresses[i];
+                UInt16 elementAddress = elementNumber.intValue;
+                elementAddress = elementNumber.intValue;
+                UInt16 gAddress = groupAddress;
+                if (modelIdNumber.intValue == kSigModel_GenericLevelServer_ID) {
+                    SigElementModel *elementModel = node.elements[elementAddress-nodeAddress];
+                    if ([elementModel hasModelIdString:[SigHelper.share getUint16String:kSigModel_LightCTLServer_ID]] || [elementModel hasModelIdString:[SigHelper.share getUint16String:kSigModel_LightLightnessServer_ID]]) {
+                        gAddress = [SigDataSource.share getExtendGroupAddressWithBaseGroupAddress:groupAddress];
+                    } else if ([elementModel hasModelIdString:[SigHelper.share getUint16String:kSigModel_LightCTLTemperatureServer_ID]]) {
+                        gAddress = [SigDataSource.share getExtendGroupAddressWithBaseGroupAddress:groupAddress] + 1;
+                    } else if ([elementModel hasModelIdString:[SigHelper.share getUint16String:kSigModel_LightHSLHueServer_ID]]) {
+                        gAddress = [SigDataSource.share getExtendGroupAddressWithBaseGroupAddress:groupAddress] + 2;
+                    } else if ([elementModel hasModelIdString:[SigHelper.share getUint16String:kSigModel_LightHSLSaturationServer_ID]]) {
+                        gAddress = [SigDataSource.share getExtendGroupAddressWithBaseGroupAddress:groupAddress] + 3;
+                    }
+                }
+                __block NSError *managerError = nil;
+                dispatch_semaphore_t semaphore = dispatch_semaphore_create(0);
+                SigMessageHandle *messageHandle = nil;
+                if (isAdd) {
+                    messageHandle = [SDKLibCommand configModelSubscriptionAddWithDestination:nodeAddress toGroupAddress:gAddress elementAddress:elementAddress modelIdentifier:modelIdentifier companyIdentifier:companyIdentifier retryCount:retryCount responseMaxCount:responseMaxCount successCallback:^(UInt16 source, UInt16 destination, SigConfigModelSubscriptionStatus * _Nonnull responseMessage) {
+                        if (responseMessage.elementAddress == elementAddress && responseMessage.address == gAddress) {
+                            if (responseMessage.modelIdentifier == modelIdentifier && responseMessage.companyIdentifier == companyIdentifier) {
+                                if (singleStatusResponseCallback) {
+                                    singleStatusResponseCallback(source, destination, responseMessage);
+                                }
+                                if (responseMessage.status == SigConfigMessageStatus_success && isSuccess == NO) {
+                                    isSuccess = YES;
+                                } else if (isFail == NO) {
+                                    isFail = YES;
+                                    TelinkLogError(@"订阅组号失败：error code=%d",responseMessage.status);
+                                    if (responseMessage.status == SigConfigMessageStatus_insufficientResources) {
+                                        //资源不足，设备的组号已经添加满了。
+                                        managerError = [NSError errorWithDomain:@"Insufficient Resources!" code:-1 userInfo:nil];
+                                    } else {
+                                        managerError = [NSError errorWithDomain:[NSString stringWithFormat:@"SubscriptionAdd responseMessage.status=%X", responseMessage.status] code:-1 userInfo:nil];
+                                    }
+                                }
+                            }
+                        }
+                    } resultCallback:^(BOOL isResponseAll, NSError * _Nullable error) {
+                        if (error) {
+                            managerError = error;
+                        } else if (!isSuccess && !isFail) {
+                            i--;
+                        }
+                        dispatch_semaphore_signal(semaphore);
+                    }];
+                } else {
+                    messageHandle = [SDKLibCommand configModelSubscriptionDeleteWithDestination:nodeAddress groupAddress:gAddress elementAddress:elementAddress modelIdentifier:modelIdentifier companyIdentifier:companyIdentifier retryCount:retryCount responseMaxCount:responseMaxCount successCallback:^(UInt16 source, UInt16 destination, SigConfigModelSubscriptionStatus * _Nonnull responseMessage) {
+                        if (responseMessage.elementAddress == elementAddress && responseMessage.address == gAddress) {
+                            if (responseMessage.modelIdentifier == modelIdentifier && responseMessage.companyIdentifier == companyIdentifier) {
+                                if (singleStatusResponseCallback) {
+                                    singleStatusResponseCallback(source, destination, responseMessage);
+                                }
+                                if (responseMessage.status == SigConfigMessageStatus_success && isSuccess == NO) {
+                                    isSuccess = YES;
+                                } else if (isFail == NO) {
+                                    isFail = YES;
+                                    TelinkLogError(@"订阅组号失败：error code=%d",responseMessage.status);
+                                    if (responseMessage.status == SigConfigMessageStatus_insufficientResources) {
+                                        //资源不足，设备的组号已经添加满了。
+                                        managerError = [NSError errorWithDomain:@"Insufficient Resources!" code:-1 userInfo:nil];
+                                    } else {
+                                        managerError = [NSError errorWithDomain:@"SubscriptionDelete responseMessage.status=%X" code:-1 userInfo:nil];
+                                    }
+                                }
+                            }
+                        }
+                    } resultCallback:^(BOOL isResponseAll, NSError * _Nullable error) {
+                        if (error) {
+                            managerError = error;
+                        } else if (!isSuccess && !isFail) {
+                            i--;
+                        }
+                        dispatch_semaphore_signal(semaphore);
+                    }];
+                }
+                if (messageHandle == nil) {
+                    managerError = [NSError errorWithDomain:@"Subscription send fail!" code:-1 userInfo:nil];
+                    isFail = YES;
+                    if (messageHandle) {
+                        [messageHandle cancel];
+                    }
+                    if (finishCallback) {
+                        finishCallback(NO, managerError);
+                    }
+                    return;
+                } else {
+                    dispatch_semaphore_wait(semaphore, dispatch_time(DISPATCH_TIME_NOW, NSEC_PER_SEC * 10.0));
+                }
+                if (managerError != nil) {
+                    isFail = YES;
+                    if (messageHandle) {
+                        [messageHandle cancel];
+                    }
+                    if (finishCallback) {
+                        finishCallback(NO, managerError);
+                    }
+                    return;
+                }
+            }
+        }
+        [SigDataSource.share editGroupIDsOfDevice:isAdd unicastAddress:@(nodeAddress) groupAddress:@(groupAddress)];
+        if (finishCallback) {
+            finishCallback(YES, nil);
+        }
+    }];
+}
 
 #pragma mark - Scan API
 

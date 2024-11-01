@@ -38,10 +38,15 @@ import com.telink.ble.mesh.TelinkMeshApplication;
 import com.telink.ble.mesh.core.message.config.NodeResetMessage;
 import com.telink.ble.mesh.core.message.config.NodeResetStatusMessage;
 import com.telink.ble.mesh.demo.R;
+import com.telink.ble.mesh.entity.ConnectionFilter;
+import com.telink.ble.mesh.entity.MeshAdvFilter;
 import com.telink.ble.mesh.foundation.Event;
 import com.telink.ble.mesh.foundation.EventListener;
 import com.telink.ble.mesh.foundation.MeshService;
+import com.telink.ble.mesh.foundation.event.GattConnectionEvent;
 import com.telink.ble.mesh.foundation.event.MeshEvent;
+import com.telink.ble.mesh.foundation.parameter.AutoConnectParameters;
+import com.telink.ble.mesh.foundation.parameter.GattConnectionParameters;
 import com.telink.ble.mesh.model.MeshInfo;
 import com.telink.ble.mesh.model.NodeInfo;
 import com.telink.ble.mesh.model.NodeStatusChangedEvent;
@@ -85,6 +90,35 @@ public class DeviceBatchSettingActivity extends BaseActivity implements View.OnC
 
         deviceSelectAdapter = new DeviceInBatchAdapter(this, mesh.nodes);
         rv_device.setAdapter(deviceSelectAdapter);
+        deviceSelectAdapter.setOnItemLongClickListener(position -> {
+            NodeInfo nodeInfo = mesh.nodes.get(position);
+            String title = String.format("select action for %s-%04X", nodeInfo.getName(), nodeInfo.meshAddress);
+            String[] items = {"kick out", "edit name", "connect to this node over GATT"};
+            showItemSelectDialog(title, items, (dialog, which) -> {
+                switch (which) {
+                    case 0:
+                        showKickConfirmDialog(nodeInfo);
+                        break;
+                    case 1:
+                        showNameInputDialog(nodeInfo);
+                        break;
+                    case 2:
+                        if (nodeInfo.meshAddress == MeshService.getInstance().getDirectConnectedNodeAddress()) {
+                            toastMsg("already connected to this node over GATT ");
+                            return;
+                        }
+                        showConfirmDialog("connect to this node?", (dialog1, which1) -> {
+                            showWaitingDialog("connecting target");
+                            ConnectionFilter connectionFilter = new ConnectionFilter(ConnectionFilter.TYPE_MESH_ADDRESS, nodeInfo.meshAddress);
+                            // remote device only use node identity
+                            connectionFilter.advFilter = MeshAdvFilter.NODE_ID_ONLY;
+                            MeshService.getInstance().startGattConnection(new GattConnectionParameters(connectionFilter));
+                        });
+                        break;
+                }
+            });
+            return false;
+        });
     }
 
     private void addEventListeners() {
@@ -92,6 +126,9 @@ public class DeviceBatchSettingActivity extends BaseActivity implements View.OnC
         TelinkMeshApplication.getInstance().addEventListener(MeshEvent.EVENT_TYPE_DISCONNECTED, this);
 
         TelinkMeshApplication.getInstance().addEventListener(NodeResetStatusMessage.class.getName(), this);
+
+        TelinkMeshApplication.getInstance().addEventListener(GattConnectionEvent.EVENT_TYPE_CONNECT_SUCCESS, this);
+        TelinkMeshApplication.getInstance().addEventListener(GattConnectionEvent.EVENT_TYPE_CONNECT_FAIL, this);
     }
 
     private void kickOut(NodeInfo deviceInfo) {
@@ -181,6 +218,17 @@ public class DeviceBatchSettingActivity extends BaseActivity implements View.OnC
             if (!kickDirect) {
                 onKickOutFinish();
             }
+        } else if (event.getType().equals(GattConnectionEvent.EVENT_TYPE_CONNECT_SUCCESS)) {
+            runOnUiThread(() -> {
+                dismissWaitingDialog();
+                toastMsg("connect target success");
+            });
+            MeshService.getInstance().autoConnect(new AutoConnectParameters());
+        } else if (event.getType().equals(GattConnectionEvent.EVENT_TYPE_CONNECT_FAIL)) {
+            runOnUiThread(() -> {
+                dismissWaitingDialog();
+                toastMsg("connect target fail");
+            });
         }
     }
 

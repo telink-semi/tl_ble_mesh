@@ -22,18 +22,24 @@
  *******************************************************************************************************/
 package com.telink.ble.mesh.ui;
 
+import android.annotation.SuppressLint;
 import android.os.Bundle;
 import android.os.Handler;
+import android.os.Message;
 import android.view.MenuItem;
+import android.view.View;
+import android.widget.TextView;
 
 import androidx.appcompat.widget.Toolbar;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.google.android.material.bottomsheet.BottomSheetDialog;
 import com.telink.ble.mesh.SharedPreferenceHelper;
 import com.telink.ble.mesh.TelinkMeshApplication;
 import com.telink.ble.mesh.core.MeshUtils;
 import com.telink.ble.mesh.core.access.BindingBearer;
+import com.telink.ble.mesh.core.message.MeshSigModel;
 import com.telink.ble.mesh.core.message.NotificationMessage;
 import com.telink.ble.mesh.core.message.rp.ScanReportStatusMessage;
 import com.telink.ble.mesh.core.message.rp.ScanStartMessage;
@@ -63,13 +69,16 @@ import com.telink.ble.mesh.model.NodeInfo;
 import com.telink.ble.mesh.model.PrivateDevice;
 import com.telink.ble.mesh.model.db.MeshInfoService;
 import com.telink.ble.mesh.ui.adapter.DeviceRemoteProvisionListAdapter;
+import com.telink.ble.mesh.ui.adapter.LogInfoAdapter;
 import com.telink.ble.mesh.util.Arrays;
+import com.telink.ble.mesh.util.LogInfo;
 import com.telink.ble.mesh.util.MeshLogger;
 
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Locale;
 
 /**
  * remote provision
@@ -99,6 +108,40 @@ public class RemoteProvisionActivity extends BaseActivity implements EventListen
 
     private Handler delayHandler = new Handler();
 
+    /**
+     * log info
+     */
+    private BottomSheetDialog bottomDialog;
+    private RecyclerView rv_log;
+
+    private TextView tv_info;
+    private List<LogInfo> logInfoList = new ArrayList<>();
+
+    private LogInfoAdapter logInfoAdapter;
+    /**
+     * message code : info
+     */
+    private static final int MSG_INFO = 0;
+    @SuppressLint("HandlerLeak")
+    private Handler infoHandler = new Handler() {
+        @Override
+        public void handleMessage(Message msg) {
+            super.handleMessage(msg);
+            if (msg.what == MSG_INFO) {
+                // update info
+                String info = msg.obj.toString();
+                tv_info.setText(info);
+
+                // insert log
+                logInfoList.add(new LogInfo("FW-UPDATE", info, MeshLogger.LEVEL_DEBUG));
+                if (bottomDialog.isShowing()) {
+                    logInfoAdapter.notifyDataSetChanged();
+                    rv_log.smoothScrollToPosition(logInfoList.size() - 1);
+                }
+            }
+        }
+    };
+
     private boolean proxyComplete = false;
 
     private static final byte THRESHOLD_REMOTE_RSSI = -90;
@@ -112,8 +155,9 @@ public class RemoteProvisionActivity extends BaseActivity implements EventListen
         if (!validateNormalStart(savedInstanceState)) {
             return;
         }
-        setContentView(R.layout.activity_device_provision);
+        setContentView(R.layout.activity_remote_provision);
         initTitle();
+        initLog();
         RecyclerView rv_devices = findViewById(R.id.rv_devices);
 
         mListAdapter = new DeviceRemoteProvisionListAdapter(this, devices);
@@ -151,7 +195,7 @@ public class RemoteProvisionActivity extends BaseActivity implements EventListen
         enableUI(false);
 
         boolean proxyLogin = MeshService.getInstance().isProxyLogin();
-        MeshLogger.log("remote provision action start: login? " + proxyLogin);
+        appendLog("start remote provision : is proxy login? " + proxyLogin);
         if (proxyLogin) {
             proxyComplete = true;
             startRemoteScan();
@@ -161,6 +205,27 @@ public class RemoteProvisionActivity extends BaseActivity implements EventListen
         }
     }
 
+    private void initLog() {
+        tv_info = findViewById(R.id.tv_info);
+        tv_info.setOnClickListener(v -> {
+            logInfoAdapter.notifyDataSetChanged();
+            bottomDialog.show();
+        });
+        bottomDialog = new BottomSheetDialog(this);
+        View view = getLayoutInflater().inflate(R.layout.dialog_bottom_list, null);
+//        BottomSheetBehavior behavior = BottomSheetBehavior.from((View)dialog.getParent());
+        bottomDialog.setContentView(view);
+        logInfoAdapter = new LogInfoAdapter(this, logInfoList);
+        rv_log = view.findViewById(R.id.rv_log_sheet);
+        rv_log.setLayoutManager(new LinearLayoutManager(this));
+        rv_log.setAdapter(logInfoAdapter);
+        view.findViewById(R.id.iv_close).setOnClickListener(v -> bottomDialog.dismiss());
+    }
+
+    private void appendLog(String logInfo) {
+        MeshLogger.d("fast provision -> appendLog: " + logInfo);
+        infoHandler.obtainMessage(MSG_INFO, logInfo).sendToTarget();
+    }
 
     private void enableUI(boolean enable) {
         MeshLogger.d("remote - enable ui: " + enable);
@@ -170,11 +235,22 @@ public class RemoteProvisionActivity extends BaseActivity implements EventListen
     /******************************************************************************
      * normal provisioning
      ******************************************************************************/
+
+    /**
+     * advertising device for normal provision
+     */
+    private AdvertisingDevice advDeviceForNormalPv = null;
+    private long scanStartTimestamp = 0;
+
     private void startScan() {
+        advDeviceForNormalPv = null;
+        scanStartTimestamp = System.currentTimeMillis();
+        appendLog("start scan for gatt provision");
         ScanParameters parameters = ScanParameters.getDefault(false, false);
         parameters.setScanTimeout(10 * 1000);
         MeshService.getInstance().startScan(parameters);
     }
+
 
     private void onDeviceFound(AdvertisingDevice advertisingDevice) {
         // provision service data: 15:16:28:18:[16-uuid]:[2-oobInfo]
@@ -183,9 +259,30 @@ public class RemoteProvisionActivity extends BaseActivity implements EventListen
             MeshLogger.log("serviceData error", MeshLogger.LEVEL_ERROR);
             return;
         }
+        long during = System.currentTimeMillis() - scanStartTimestamp;
+        if (during < 2000) {
+            if (advDeviceForNormalPv == null || advDeviceForNormalPv.rssi < advertisingDevice.rssi) {
+                advDeviceForNormalPv = advertisingDevice;
+                appendLog("device found(for gatt provision) : " + advertisingDevice.device.getAddress());
+                delayHandler.removeCallbacks(SCAN_COL_TASK);
+                delayHandler.postDelayed(SCAN_COL_TASK, 2000 - during);
+            } else {
+                appendLog("not the best device : " + advertisingDevice.device.getAddress());
+            }
+            return;
+        }
+
+        startGattProvision(advertisingDevice);
+
+    }
+
+    private Runnable SCAN_COL_TASK = () -> startGattProvision(advDeviceForNormalPv);
+
+    private void startGattProvision(AdvertisingDevice advertisingDevice) {
+
         final int uuidLen = 16;
         byte[] deviceUUID = new byte[uuidLen];
-
+        byte[] serviceData = MeshUtils.getMeshServiceData(advertisingDevice.scanRecord, true);
 
         System.arraycopy(serviceData, 0, deviceUUID, 0, uuidLen);
         NetworkingDevice localNode = getNodeByUUID(deviceUUID);
@@ -202,7 +299,7 @@ public class RemoteProvisionActivity extends BaseActivity implements EventListen
             enableUI(true);
             return;
         }
-
+        appendLog("start gatt provision : " + advertisingDevice.device.getAddress());
         ProvisioningDevice provisioningDevice = new ProvisioningDevice(advertisingDevice.device, deviceUUID, address);
 
         // check if oob exists
@@ -270,6 +367,7 @@ public class RemoteProvisionActivity extends BaseActivity implements EventListen
 
     private void onProvisionFail(ProvisioningEvent event) {
         ProvisioningDevice deviceInfo = event.getProvisioningDevice();
+        appendLog("provision fail : " + Arrays.bytesToHexString(deviceInfo.getDeviceUUID()));
         NetworkingDevice pvDevice = getProcessingNode();
         pvDevice.state = NetworkingState.PROVISION_FAIL;
         pvDevice.addLog("Provisioning", event.getDesc());
@@ -278,6 +376,7 @@ public class RemoteProvisionActivity extends BaseActivity implements EventListen
 
     private void onKeyBindSuccess(BindingEvent event) {
         BindingDevice remote = event.getBindingDevice();
+        appendLog("key bind success : " + Arrays.bytesToHexString(remote.getDeviceUUID()));
         NetworkingDevice deviceInList = getProcessingNode();
         deviceInList.state = NetworkingState.BIND_SUCCESS;
         deviceInList.nodeInfo.bound = true;
@@ -292,6 +391,7 @@ public class RemoteProvisionActivity extends BaseActivity implements EventListen
 
     private void onKeyBindFail(BindingEvent event) {
         BindingDevice remote = event.getBindingDevice();
+        appendLog("key bind fail : " + Arrays.bytesToHexString(remote.getDeviceUUID()));
         NetworkingDevice deviceInList = getProcessingNode();
         deviceInList.state = NetworkingState.BIND_FAIL;
         deviceInList.addLog("Binding", event.getDesc());
@@ -312,45 +412,30 @@ public class RemoteProvisionActivity extends BaseActivity implements EventListen
 
         HashSet<Integer> serverAddresses = getAvailableServerAddresses();
         if (serverAddresses.size() == 0) {
-            MeshLogger.e("no Available server address");
+            appendLog("no Available server address");
             return;
         }
-        long delay = 0;
+        long delay = 10;
         for (int address : serverAddresses) {
             ScanStartMessage remoteScanMessage = ScanStartMessage.getSimple(address, 1, SCAN_LIMIT, SCAN_TIMEOUT);
 //            MeshService.getInstance().sendMeshMessage(remoteScanMessage);
             delayHandler.postDelayed(() -> MeshService.getInstance().sendMeshMessage(remoteScanMessage), delay);
             delay += 3000;
         }
-
+        appendLog(String.format(Locale.getDefault(), "send scan start cmd to %d nodes", delay / 3000 + 1));
         delayHandler.removeCallbacks(remoteScanTimeoutTask);
         delayHandler.postDelayed(remoteScanTimeoutTask, (SCAN_TIMEOUT + 5) * 1000 + delay);
     }
 
     private void onRemoteComplete() {
-        MeshLogger.d("remote prov - remote complete : rest - " + remoteDevices.size());
+        appendLog("remote provision complete : rest - " + remoteDevices.size());
         if (!MeshService.getInstance().isProxyLogin()) {
             enableUI(true);
             return;
         }
+        appendLog("clear the list and restart scan");
         remoteDevices.clear();
         startRemoteScan();
-        /*if (remoteDevices.size() > 0) {
-            remoteDevices.remove(0);
-        }
-
-        if (remoteDevices.size() == 0) {
-            startRemoteScan();
-        } else {
-            delayHandler.removeCallbacksAndMessages(null);
-            delayHandler.postDelayed(new Runnable() {
-                @Override
-                public void run() {
-                    provisionNextRemoteDevice(remoteDevices.get(0));
-                }
-            }, 500);
-
-        }*/
     }
 
 
@@ -370,7 +455,7 @@ public class RemoteProvisionActivity extends BaseActivity implements EventListen
     private void onRemoteDeviceScanned(int src, ScanReportStatusMessage scanReportStatusMessage) {
         final byte rssi = scanReportStatusMessage.getRssi();
         final byte[] uuid = scanReportStatusMessage.getUuid();
-        MeshLogger.log("remote device found: " + Integer.toHexString(src) + " -- " + Arrays.bytesToHexString(uuid) + " -- rssi: " + rssi);
+        appendLog(String.format(Locale.getDefault(), "remote device found: server=%04X uuid=%s rssi=%d", src, Arrays.bytesToHexString(uuid), rssi));
         /*if (rssi < THRESHOLD_REMOTE_RSSI) {
             MeshLogger.log("scan report ignore because of RSSI limit");
             return;
@@ -381,7 +466,7 @@ public class RemoteProvisionActivity extends BaseActivity implements EventListen
         // check if device exists
         NetworkingDevice networkingDevice = getNodeByUUID(remoteProvisioningDevice.getUuid());
         if (networkingDevice != null) {
-            MeshLogger.d("device already exists");
+            appendLog("device already exists(been provisioned)");
             return;
         }
 
@@ -415,7 +500,7 @@ public class RemoteProvisionActivity extends BaseActivity implements EventListen
                 }
             }
         } else {
-            MeshLogger.log("remote device add");
+            MeshLogger.log("add remote device to list");
             remoteDevices.add(remoteProvisioningDevice);
         }
 
@@ -428,11 +513,12 @@ public class RemoteProvisionActivity extends BaseActivity implements EventListen
 
 
     private void provisionNextRemoteDevice(RemoteProvisioningDevice device) {
-        MeshLogger.log(String.format("provision next: server -- %04X uuid -- %s",
+        appendLog(String.format("start remote provision: server -- %04X uuid -- %s",
                 device.getServerAddress(),
                 Arrays.bytesToHexString(device.getUuid())));
         int address = meshInfo.getProvisionIndex();
         if (address > MeshUtils.UNICAST_ADDRESS_MAX) {
+            appendLog("error : unicast address overflow");
             enableUI(true);
             return;
         }
@@ -469,10 +555,10 @@ public class RemoteProvisionActivity extends BaseActivity implements EventListen
 
     private Runnable remoteScanTimeoutTask = () -> {
         if (remoteDevices.size() == 0) {
-            MeshLogger.log("no device found by remote scan");
+            appendLog("no device found by remote scan");
             enableUI(true);
         } else {
-            MeshLogger.log("remote devices scanned: " + remoteDevices.size());
+            appendLog("remote devices scanned: " + remoteDevices.size());
             RemoteProvisioningDevice dev = remoteDevices.get(0);
             if (dev.getRssi() < THRESHOLD_REMOTE_RSSI) {
                 StringBuilder sb = new StringBuilder("All devices are weak-signal : \n");
@@ -482,7 +568,9 @@ public class RemoteProvisionActivity extends BaseActivity implements EventListen
                             .append(" server-").append(Integer.toHexString(rpd.getServerAddress()))
                             .append("\n");
                 }
-                showTipDialog(sb.toString());
+                String tip = sb.toString();
+                appendLog(tip);
+                showTipDialog(tip);
                 enableUI(true);
             } else {
                 provisionNextRemoteDevice(remoteDevices.get(0));
@@ -546,7 +634,7 @@ public class RemoteProvisionActivity extends BaseActivity implements EventListen
     private void onRemoteProvisioningSuccess(RemoteProvisioningEvent event) {
         // start remote binding
         RemoteProvisioningDevice remote = event.getRemoteProvisioningDevice();
-        MeshLogger.log("remote act success: " + Arrays.bytesToHexString(remote.getUuid()));
+        appendLog("device remote provision success: " + Arrays.bytesToHexString(remote.getUuid()));
         NetworkingDevice networkingDevice = getProcessingNode();
         networkingDevice.state = NetworkingState.BINDING;
         networkingDevice.nodeInfo.elementCnt = remote.getDeviceCapability().eleNum;
@@ -564,7 +652,7 @@ public class RemoteProvisionActivity extends BaseActivity implements EventListen
 
     private void onRemoteProvisioningFail(RemoteProvisioningEvent event) {
         //
-        MeshLogger.log("remote act fail: " + Arrays.bytesToHexString(event.getRemoteProvisioningDevice().getUuid()));
+        appendLog("remote act fail: " + Arrays.bytesToHexString(event.getRemoteProvisioningDevice().getUuid()));
 
         RemoteProvisioningDevice deviceInfo = event.getRemoteProvisioningDevice();
         NetworkingDevice pvDevice = getProcessingNode();
@@ -589,7 +677,8 @@ public class RemoteProvisionActivity extends BaseActivity implements EventListen
     private HashSet<Integer> getAvailableServerAddresses() {
         HashSet<Integer> serverAddresses = new HashSet<>();
         for (NodeInfo nodeInfo : meshInfo.nodes) {
-            if (!nodeInfo.isOffline()) {
+            // only the node is online and supports remote provision
+            if (!nodeInfo.isOffline() && nodeInfo.getTargetEleAdr(MeshSigModel.SIG_MD_REMOTE_PROV_SERVER.modelId) != -1) {
                 serverAddresses.add(nodeInfo.meshAddress);
             }
         }

@@ -64,14 +64,7 @@
 @interface SigFastProvisionAddManager ()
 @property (nonatomic, assign) SigFastProvisionStatus  fastProvisionStatus;
 @property (nonatomic, assign) UInt16 provisionAddress;
-//@property (nonatomic, assign) UInt16 productId;
 @property (nonatomic, strong) NSArray <NSNumber *>* productIds;
-//@property (nonatomic, strong) SigPage0 *page0;
-@property (nonatomic, copy) ScanCallbackOfFastProvisionCallBack scanResponseBlock;
-@property (nonatomic, copy) StartProvisionCallbackOfFastProvisionCallBack startProvisionBlock;
-@property (nonatomic, copy) AddSingleDeviceSuccessOfFastProvisionCallBack singleSuccessBlock;
-@property (nonatomic, copy) ErrorBlock finishBlock;
-//@property (nonatomic, strong) NSData *compositionData;
 @property (nonatomic, strong) NSMutableArray <SigFastProvisionModel *>*scanMacAddressList;
 @property (nonatomic, strong) NSMutableArray <SigFastProvisionModel *>*setAddressList;
 @property (nonatomic, assign) BOOL currentConnectedNodeIsUnprovisioned;
@@ -150,7 +143,12 @@
         [NSObject cancelPreviousPerformRequestsWithTarget:self selector:@selector(fastProvisionTimeoutAction) object:nil];
         [self performSelector:@selector(fastProvisionTimeoutAction) withObject:nil afterDelay:60.0];
     });
-    [self resetNetwork];
+    self.setAddressList = [NSMutableArray array];
+    if (self.currentConnectedNodeIsUnprovisioned) {
+        [self getAddress];
+    } else {
+        [self resetNetwork];
+    }
 }
 
 - (void)startFastProvisionWithProvisionAddress:(UInt16)provisionAddress productIds:(NSArray <NSNumber *>*)productIds currentConnectedNodeIsUnprovisioned:(BOOL)unprovisioned scanResponseCallback:(ScanCallbackOfFastProvisionCallBack)scanResponseBlock startProvisionCallback:(StartProvisionCallbackOfFastProvisionCallBack)startProvisionBlock addSingleDeviceSuccessCallback:(AddSingleDeviceSuccessOfFastProvisionCallBack)singleSuccess finish:(ErrorBlock)finish {
@@ -176,15 +174,22 @@
         [NSObject cancelPreviousPerformRequestsWithTarget:self selector:@selector(fastProvisionTimeoutAction) object:nil];
         [self performSelector:@selector(fastProvisionTimeoutAction) withObject:nil afterDelay:60.0];
     });
-    [self resetNetwork];
+    self.setAddressList = [NSMutableArray array];
+    if (self.currentConnectedNodeIsUnprovisioned) {
+        [self getAddress];
+    } else {
+        [self resetNetwork];
+    }
 }
 
 #pragma mark step1: resetNetwork
 - (void)resetNetwork {
     TelinkLogInfo(@"\n\n==========fast provision:step1\n\n");
     self.fastProvisionStatus = SigFastProvisionStatus_resetNetwork;
-    self.setAddressList = [NSMutableArray array];
     UInt16 delayMillisecond = 1000;
+    if (self.resetNetworkBlock) {
+        self.resetNetworkBlock();
+    }
     [self fastProvisionResetNetworkWithDelayMillisecond:delayMillisecond successCallback:^(UInt16 source, UInt16 destination, SigMeshMessage * _Nonnull responseMessage) {
 //        TelinkLogVerbose(@"source=0x%x,destination=0x%x,opCode=0x%x,parameters=%@",responseMessage.opCode,[LibTools convertDataToHexStr:responseMessage.parameters]);
     } resultCallback:^(BOOL isResponseAll, NSError * _Nullable error) {
@@ -213,17 +218,19 @@
                 Byte *dataByte = (Byte *)responseMessage.parameters.bytes;
                 memcpy(&tem, dataByte+6, 2);
                 model.productId = tem;
-                if ([self.productIds containsObject:@(tem)]) {
+                struct TelinkPID temPid = {};
+                temPid.value = tem;
+                temPid.MCUChipType = 0;
+                if ([self.productIds containsObject:@(temPid.value)]) {
                     [weakSelf.scanMacAddressList addObject:model];
                     if (weakSelf.scanResponseBlock) {
                         weakSelf.scanResponseBlock(model.deviceKey, [LibTools convertDataToHexStr:[LibTools turnOverData:model.macAddress]], 0, model.productId);
                     }
-                } else {
-                    dispatch_async(dispatch_get_main_queue(), ^{
-                        [NSObject cancelPreviousPerformRequestsWithTarget:weakSelf selector:@selector(checkScanMacAddressList) object:nil];
-                        [weakSelf performSelector:@selector(checkScanMacAddressList) withObject:nil afterDelay:2.0+0.2];
-                    });
                 }
+                dispatch_async(dispatch_get_main_queue(), ^{
+                    [NSObject cancelPreviousPerformRequestsWithTarget:weakSelf selector:@selector(checkScanMacAddressList) object:nil];
+                    [weakSelf performSelector:@selector(checkScanMacAddressList) withObject:nil afterDelay:2.0+0.2];
+                });
             }
         }
     } resultCallback:^(BOOL isResponseAll, NSError * _Nullable error) {
@@ -249,7 +256,11 @@
     TelinkLogInfo(@"\n\n==========fast provision:step3\n\n");
     self.fastProvisionStatus = SigFastProvisionStatus_setAddress;
     SigFastProvisionModel *model = self.scanMacAddressList.firstObject;
+    if (self.setAddressRequestBlock) {
+        self.setAddressRequestBlock(model.deviceKey, [LibTools convertDataToHexStr:[LibTools turnOverData:model.macAddress]], self.provisionAddress, model.productId);
+    }
     __weak typeof(self) weakSelf = self;
+    __block BOOL isSuccess = NO;
     [self fastProvisionSetAddressWithProvisionAddress:self.provisionAddress macAddressData:model.macAddress toDestination:kMeshAddress_allNodes successCallback:^(UInt16 source, UInt16 destination, SigMeshMessage * _Nonnull responseMessage) {
         TelinkLogInfo(@"source=0x%x,destination=0x%x,opCode=0x%x,parameters=%@",source,destination,responseMessage.opCode,[LibTools convertDataToHexStr:responseMessage.parameters]);
         if (((responseMessage.opCode >> 16) & 0xFF) == SigOpCode_VendorID_MeshAddressSetStatus) {
@@ -262,9 +273,16 @@
                     model.address = weakSelf.provisionAddress;
                     [weakSelf.setAddressList addObject:model];
                     DeviceTypeModel *typeModel = [SigDataSource.share getNodeInfoWithCID:kCompanyID PID:model.productId];
+                    if (typeModel == nil) {
+                        typeModel = [[DeviceTypeModel alloc] initWithCID:kCompanyID PID:model.productId compositionData:nil];
+                    }
                     weakSelf.provisionAddress += typeModel.defaultCompositionData.elements.count;
+                    if (weakSelf.setAddressResponseBlock) {
+                        self.setAddressResponseBlock(model.deviceKey, [LibTools convertDataToHexStr:[LibTools turnOverData:model.macAddress]], model.address, model.productId);
+                    }
                     [weakSelf.scanMacAddressList removeObjectAtIndex:0];
                     [weakSelf performSelector:@selector(setSingleAddressFinish) withObject:nil afterDelay:0.01];
+                    isSuccess = YES;
                 } else {
                     TelinkLogInfo(@"set address response error!");
                 }
@@ -276,6 +294,18 @@
         }
     } resultCallback:^(BOOL isResponseAll, NSError * _Nullable error) {
         TelinkLogInfo(@"isResponseAll=%d,error=%@",isResponseAll,error);
+        if (isSuccess == NO) {
+            TelinkLogInfo(@"set address no response! Change this device to success state.");
+            model.address = weakSelf.provisionAddress;
+            [weakSelf.setAddressList addObject:model];
+            DeviceTypeModel *typeModel = [SigDataSource.share getNodeInfoWithCID:kCompanyID PID:model.productId];
+            if (typeModel == nil) {
+                typeModel = [[DeviceTypeModel alloc] initWithCID:kCompanyID PID:model.productId compositionData:nil];
+            }
+            weakSelf.provisionAddress += typeModel.defaultCompositionData.elements.count;
+            [weakSelf.scanMacAddressList removeObjectAtIndex:0];
+            [weakSelf performSelector:@selector(setSingleAddressFinish) withObject:nil afterDelay:0.01];
+        }
     }];
 }
 
@@ -304,7 +334,10 @@
                 Byte *dataByte = (Byte *)responseMessage.parameters.bytes;
                 memcpy(&tem, dataByte+6, 2);
                 model.productId = tem;
-                if ([self.productIds containsObject:@(tem)]) {
+                struct TelinkPID temPid = {};
+                temPid.value = tem;
+                temPid.MCUChipType = 0;
+                if ([self.productIds containsObject:@(temPid.value)]) {
                     [weakSelf.scanMacAddressList addObject:model];
                     if (weakSelf.scanResponseBlock) {
                         weakSelf.scanResponseBlock(model.deviceKey, [LibTools convertDataToHexStr:[LibTools turnOverData:model.macAddress]], 0, model.productId);
@@ -416,7 +449,10 @@
         SigNodeModel *model = [[SigNodeModel alloc] init];
         [model setAddress:fastModel.address];
         [model setAddSigAppkeyModelSuccess:SigMeshLib.share.dataSource.curAppkeyModel];
-        DeviceTypeModel *typeModel = [SigDataSource.share getNodeInfoWithCID:kCompanyID PID:fastModel.productId ];
+        DeviceTypeModel *typeModel = [SigDataSource.share getNodeInfoWithCID:kCompanyID PID:fastModel.productId];
+        if (typeModel == nil) {
+            typeModel = [[DeviceTypeModel alloc] initWithCID:kCompanyID PID:fastModel.productId compositionData:nil];
+        }
         [model setCompositionData:typeModel.defaultCompositionData];
         model.deviceKey = [LibTools convertDataToHexStr:fastModel.deviceKey];
         model.UUID = [LibTools convertDataToHexStr:[LibTools calcUuidByMac:[LibTools turnOverData:fastModel.macAddress]]];
@@ -497,15 +533,9 @@
     UInt16 tem = delayMillisecond;
     NSData *temData = [NSData dataWithBytes:&tem length:2];
     IniCommandModel *model = [[IniCommandModel alloc] initVendorModelIniCommandWithNetkeyIndex:SigMeshLib.share.dataSource.defaultNetKeyA.index appkeyIndex:SigMeshLib.share.dataSource.defaultAppKeyA.index retryCount:SigMeshLib.share.dataSource.defaultRetryCount responseMax:0 address:kMeshAddress_allNodes opcode:SigOpCode_VendorID_MeshResetNetwork vendorId:kCompanyID responseOpcode:0 tidPosition:0 tid:0 commandData:temData];
-//    if (self.currentConnectedNodeIsUnprovisioned) {
-//        model.curNetkey = SigMeshLib.share.dataSource.defaultNetKeyA;
-//        model.curAppkey = SigMeshLib.share.dataSource.defaultAppKeyA;
-//        model.curIvIndex = SigMeshLib.share.dataSource.defaultIvIndexA;
-//    } else {
-        model.curNetkey = SigMeshLib.share.dataSource.curNetkeyModel;
-        model.curAppkey = SigMeshLib.share.dataSource.curAppkeyModel;
-        model.curIvIndex = SigMeshLib.share.dataSource.curNetkeyModel.ivIndex;
-//    }
+    model.curNetkey = SigMeshLib.share.dataSource.curNetkeyModel;
+    model.curAppkey = SigMeshLib.share.dataSource.curAppkeyModel;
+    model.curIvIndex = SigMeshLib.share.dataSource.curNetkeyModel.ivIndex;
     [SDKLibCommand sendIniCommandModel:model successCallback:successCallback resultCallback:resultCallback];
 }
 

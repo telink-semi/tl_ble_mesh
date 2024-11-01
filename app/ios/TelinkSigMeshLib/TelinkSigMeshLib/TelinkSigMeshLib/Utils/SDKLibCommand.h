@@ -2731,6 +2731,18 @@ typedef enum : UInt8 {
  */
 + (void)stopMeshConnectWithComplete:(nullable stopMeshConnectResultBlock)complete;
 
+/**
+ * @brief   Manager GroupAddress of node.
+ * @param   groupAddress group address
+ * @param   isAdd YES means add, NO means delete.
+ * @param   nodeAddress node address
+ * @param   modelIDList modelID list, nil means use SigDataSource.share.defaultGroupSubscriptionModels.
+ * @param   singleStatusResponseCallback callback of single command response.
+ * @param   singleResultCallback callback of single command finish.
+ * @param   finishCallback callback of all commands finish.
+ * @note    SDK will cache message of success command to SigDataSource.share, and save local.
+ */
++ (void)managerGroupAddress:(UInt16)groupAddress isAdd:(BOOL)isAdd nodeAddress:(UInt16)nodeAddress modelIDList:(nullable NSArray <NSNumber *>*)modelIDList singleStatusResponseCallback:(_Nullable responseConfigModelSubscriptionStatusMessageBlock)singleStatusResponseCallback singleResultCallback:(_Nullable resultBlock)singleResultCallback finishCallback:(resultBlock)finishCallback;
 
 #pragma mark - Scan API
 

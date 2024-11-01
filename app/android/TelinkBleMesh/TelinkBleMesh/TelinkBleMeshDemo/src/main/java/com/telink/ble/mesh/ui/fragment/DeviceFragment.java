@@ -68,6 +68,8 @@ import com.telink.ble.mesh.ui.MainActivity;
 import com.telink.ble.mesh.ui.RemoteControlSettingActivity;
 import com.telink.ble.mesh.ui.RemoteProvisionActivity;
 import com.telink.ble.mesh.ui.adapter.OnlineDeviceListAdapter;
+import com.telink.ble.mesh.ui.eh.SwitchSettingActivity;
+import com.telink.ble.mesh.ui.eh.SwitchUtils;
 import com.telink.ble.mesh.ui.test.OnOffTestActivity;
 import com.telink.ble.mesh.util.Arrays;
 import com.telink.ble.mesh.util.MeshLogger;
@@ -204,7 +206,9 @@ public class DeviceFragment extends BaseFragment implements View.OnClickListener
             Intent intent;
             if (deviceInfo.bound) {
                 // remote control device
-                if (AppSettings.isRemote(deviceInfo.compositionData.pid)) {
+                if (SwitchUtils.isSwitch(deviceInfo)) {
+                    intent = new Intent(getActivity(), SwitchSettingActivity.class);
+                } else if (AppSettings.isRemote(deviceInfo.compositionData.pid)) {
                     intent = new Intent(getActivity(), RemoteControlSettingActivity.class);
                 } else {
                     intent = new Intent(getActivity(), DeviceSettingActivity.class);

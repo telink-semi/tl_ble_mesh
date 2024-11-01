@@ -22,6 +22,8 @@
  *******************************************************************************************************/
 
 #import <UIKit/UIKit.h>
+#import "UIViewController+Message.h"
+
 #ifdef kIsTelinkCloudSigMeshLib
 #import "UIButton+extension.h"
 #import "CustomCircularButton.h"

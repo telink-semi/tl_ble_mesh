@@ -777,7 +777,9 @@
     for (SigNodeModel *node in array) {
         if (node.address >= rangeModel.lowIntAddress && node.lastUnicastAddress <= rangeModel.heightIntAddress) {
             if ((node.lastUnicastAddress + elementCount) <= rangeModel.heightIntAddress) {
-                maxUnicastAddress = node.lastUnicastAddress + 1;
+                if (maxUnicastAddress < node.lastUnicastAddress + 1) {
+                    maxUnicastAddress = node.lastUnicastAddress + 1;
+                }
             } else {
                 // The allocatedUnicastRange of provision has been exhausted, need add a new allocatedUnicastRange.
                 // if can not allocated a new UnicastRange, return 0.
@@ -2248,6 +2250,134 @@
     return ((baseGroupAddress & 0xFF) << 4) | 0xD000;
 }
 
+#pragma mark - EnOcean API
+
+- (NSMutableArray <SigEnOceanPublishSetBaseRequestMessage *>*)getRequestCommandListWithEnOceanInfo:(EnOceanInfo *)info {
+    NSMutableArray *mArray = [NSMutableArray array];
+    EnOceanButtonItemInfo *item0 = info.buttonInfo.buttonConfigList[0];
+    EnOceanButtonItemInfo *item1 = info.buttonInfo.buttonConfigList[1];
+    if (info.buttonInfo.actionLayoutType == EnOceanActionLayoutType_12_34 && info.buttonInfo.buttonConfigList.count == 2) {
+        //四合一
+        if (item1.type == item0.type && item1.value == item0.value) {
+            struct EnOceanKeyStruct enOceanKeyStruct = {};
+            enOceanKeyStruct.KeyPairEnable = (item0.publishAddress == 0 ? 0 : 0b01) | (item1.publishAddress == 0 ? 0 : 0b10);
+            SigEnOceanPublishSetBaseRequestMessage *command = [self getMergeCommandWithEnOceanButtonItemInfo:item0 addressOfEnOcean:info.deviceAddress enOceanKeyStruct:enOceanKeyStruct addressOfPublish1:item0.publishAddress addressOfPublish2:item1.publishAddress value:item0.value];
+            if (command) {
+                [mArray addObject:command];
+            }
+            return mArray;
+        }
+    } else if (info.buttonInfo.actionLayoutType == EnOceanActionLayoutType_1_2_3_4 && info.buttonInfo.buttonConfigList.count == 4) {
+        //四合一
+        EnOceanButtonItemInfo *item2 = info.buttonInfo.buttonConfigList[2];
+        EnOceanButtonItemInfo *item3 = info.buttonInfo.buttonConfigList[3];
+        //判断指令是否可以4合一发送。
+        if (item0.type == item1.type && item1.type == item2.type && item2.type == item3.type && item0.value == item2.value && item1.value == item3.value && item0.publishAddress == item1.publishAddress && item2.publishAddress == item3.publishAddress && ((item0.type == EnOceanButtonItemType_OnOff && (item0.value ^ item1.value)) || ((item0.type == EnOceanButtonItemType_Light || EnOceanButtonItemType_CT) && (item0.value == -item1.value)))) {
+            struct EnOceanKeyStruct enOceanKeyStruct = {};
+            enOceanKeyStruct.KeyPairEnable = (item0.publishAddress == 0 ? 0 : 0b01) | (item2.publishAddress == 0 ? 0 : 0b10);
+            SigEnOceanPublishSetBaseRequestMessage *command = [self getMergeCommandWithEnOceanButtonItemInfo:item0 addressOfEnOcean:info.deviceAddress enOceanKeyStruct:enOceanKeyStruct addressOfPublish1:item0.publishAddress addressOfPublish2:item2.publishAddress value:item0.value];
+            if (command) {
+                [mArray addObject:command];
+            }
+            return mArray;
+        }
+    } else if ((info.buttonInfo.actionLayoutType == EnOceanActionLayoutType_1_2_34 || info.buttonInfo.actionLayoutType == EnOceanActionLayoutType_12_3_4) && info.buttonInfo.buttonConfigList.count == 3) {
+        //四合一
+        EnOceanButtonItemInfo *item2 = info.buttonInfo.buttonConfigList[2];
+        struct EnOceanKeyStruct enOceanKeyStruct = {};
+        enOceanKeyStruct.KeyPairEnable = (item0.publishAddress == 0 ? 0 : 0b01) | (item2.publishAddress == 0 ? 0 : 0b10);
+        if ((info.buttonInfo.actionLayoutType == EnOceanActionLayoutType_1_2_34 && item0.type == item1.type && item1.type == item2.type && item0.value == item2.value && item0.publishAddress == item1.publishAddress && ((item0.type == EnOceanButtonItemType_OnOff && (item0.value ^ item1.value)) || ((item0.type == EnOceanButtonItemType_Light || EnOceanButtonItemType_CT) && (item0.value == -item1.value))))
+            || (info.buttonInfo.actionLayoutType == EnOceanActionLayoutType_1_2_34 && item0.type == item1.type && item1.type == item2.type && item0.value == item2.value && item1.publishAddress == item2.publishAddress && ((item0.type == EnOceanButtonItemType_OnOff && (item0.value ^ item1.value)) || ((item0.type == EnOceanButtonItemType_Light || EnOceanButtonItemType_CT) && (item0.value == -item1.value))))) {
+            SigEnOceanPublishSetBaseRequestMessage *command = [self getMergeCommandWithEnOceanButtonItemInfo:item0 addressOfEnOcean:info.deviceAddress enOceanKeyStruct:enOceanKeyStruct addressOfPublish1:item0.publishAddress addressOfPublish2:item2.publishAddress value:item0.value];
+            if (command) {
+                [mArray addObject:command];
+            }
+            return mArray;
+        }
+    }
+    for (int i=0; i<info.buttonInfo.buttonConfigList.count; i++) {
+        EnOceanButtonItemInfo *item = info.buttonInfo.buttonConfigList[i];
+        if (item.isActionMerge) {
+            SigEnOceanPublishSetBaseRequestMessage *command = [self getRequestCommandWithEnOceanButtonItemInfo:item enOceanInfo:info isActionMerge:YES];
+            [mArray addObject:command];
+        } else {
+            if (item.index % 2 == 0 && i+1 < info.buttonInfo.buttonConfigList.count) {
+                //has next item
+                EnOceanButtonItemInfo *nextItem = info.buttonInfo.buttonConfigList[i+1];
+                if (!nextItem.isActionMerge) {
+                    if (item.publishAddress == nextItem.publishAddress && item.type == nextItem.type && item.type != EnOceanButtonItemType_SceneRecall && ((item.type == EnOceanButtonItemType_OnOff && (item.value ^ nextItem.value)) || ((item.type == EnOceanButtonItemType_Light || EnOceanButtonItemType_CT) && (item.value == -nextItem.value)))) {
+                        SigEnOceanPublishSetBaseRequestMessage *command = [self getRequestCommandWithEnOceanButtonItemInfo:item enOceanInfo:info isActionMerge:YES];
+                        [mArray addObject:command];
+                        //判断0和1 或者 2和3两个指令是否可以2合一发送。
+                        //跳过nextItem
+                        i++;
+                    } else {
+                        //不可2合一
+                        SigEnOceanPublishSetBaseRequestMessage *command = [self getRequestCommandWithEnOceanButtonItemInfo:item enOceanInfo:info isActionMerge:NO];
+                        [mArray addObject:command];
+                    }
+                }
+            } else {
+                //last item
+                SigEnOceanPublishSetBaseRequestMessage *command = [self getRequestCommandWithEnOceanButtonItemInfo:item enOceanInfo:info isActionMerge:item.isActionMerge];
+                [mArray addObject:command];
+            }
+        }
+    }
+    return mArray;
+}
+
+- (SigEnOceanPublishSetBaseRequestMessage *)getMergeCommandWithEnOceanButtonItemInfo:(EnOceanButtonItemInfo *)itemInfo addressOfEnOcean:(UInt16)addressOfEnOcean enOceanKeyStruct:(struct EnOceanKeyStruct)enOceanKeyStruct addressOfPublish1:(UInt16)addressOfPublish1 addressOfPublish2:(UInt16)addressOfPublish2 value:(SInt8)value {
+    SigEnOceanPublishSetBaseRequestMessage *command = nil;
+    if (itemInfo.type == EnOceanButtonItemType_OnOff) {
+        command = [[SigEnOceanPublishSetSpecialRequestMessage alloc] initOnOffPublishWithUnicastAddressOfEnOcean:addressOfEnOcean enOceanKeyStruct:enOceanKeyStruct addressOfPublish1:addressOfPublish1 addressOfPublish2:addressOfPublish2 onOff:value == 0 ? NO : YES];
+    } else if (itemInfo.type == EnOceanButtonItemType_Light) {
+        SInt32 deltaValue = ceil(0xFFFF/100.0)*deltaValue;//向上取整
+        command = [[SigEnOceanPublishSetSpecialRequestMessage alloc] initLightnessDeltaPublishWithUnicastAddressOfEnOcean:addressOfEnOcean enOceanKeyStruct:enOceanKeyStruct addressOfPublish1:addressOfPublish1 addressOfPublish2:addressOfPublish2 deltaValue:deltaValue];
+    } else if (itemInfo.type == EnOceanButtonItemType_CT) {
+        SInt32 deltaValue = ceil(0xFFFF/100.0)*deltaValue;//向上取整
+        command = [[SigEnOceanPublishSetSpecialRequestMessage alloc] initLightnessDeltaPublishWithUnicastAddressOfEnOcean:addressOfEnOcean enOceanKeyStruct:enOceanKeyStruct addressOfPublish1:addressOfPublish1 addressOfPublish2:addressOfPublish2 deltaValue:deltaValue];
+    }
+    return command;
+}
+
+/// isActionMerge表示是否使用Merge的方式生成指令。
+- (SigEnOceanPublishSetBaseRequestMessage *)getRequestCommandWithEnOceanButtonItemInfo:(EnOceanButtonItemInfo *)item enOceanInfo:(EnOceanInfo *)info isActionMerge:(BOOL)isActionMerge {
+    SigEnOceanPublishSetBaseRequestMessage *command = nil;
+    struct EnOceanKeyStruct enOceanKeyStruct = {};
+    UInt16 publishAddress1 = 0;
+    UInt16 publishAddress2 = 0;
+    if (isActionMerge) {
+        enOceanKeyStruct.KeyPairEnable = item.publishAddress == 0 ? 0 : (item.index == 0 ? 0b01 : 0b10);
+        publishAddress1 = item.index == 0 ? item.publishAddress : 0;
+        publishAddress2 = item.index == 0 ? 0 : item.publishAddress;
+    } else {
+        enOceanKeyStruct.KeyPairEnable = item.index/2 == 0 ? 0 : (item.index/2 == 0 ? 0b01 : 0b10);
+        publishAddress1 = item.index/2 == 0 ? item.publishAddress : 0;
+        publishAddress2 = item.index/2 == 0 ? 0 : item.publishAddress;
+    }
+
+    if (item.type == EnOceanButtonItemType_OnOff) {
+        if (isActionMerge) {
+            command = [[SigEnOceanPublishSetSpecialRequestMessage alloc] initOnOffPublishWithUnicastAddressOfEnOcean:info.deviceAddress enOceanKeyStruct:enOceanKeyStruct addressOfPublish1:publishAddress1 addressOfPublish2:publishAddress2 onOff:item.value == 0 ? NO : YES];
+        } else {
+            command = [[SigEnOceanPublishSetGenericRequestMessage alloc] initButtonIndex:item.index unicastAddressOfEnOcean:info.deviceAddress publishAddress:item.publishAddress onOff:item.value == 0 ? NO : YES];
+        }
+    } else if (item.type == EnOceanButtonItemType_Light || item.type == EnOceanButtonItemType_CT) {
+        SInt32 deltaValue = ceil(0xFFFF/100.0)*item.value;//向上取整
+        if (isActionMerge) {
+            command = [[SigEnOceanPublishSetSpecialRequestMessage alloc] initLightnessDeltaPublishWithUnicastAddressOfEnOcean:info.deviceAddress enOceanKeyStruct:enOceanKeyStruct addressOfPublish1:publishAddress1 addressOfPublish2:publishAddress2 deltaValue:deltaValue];
+        } else {
+            command = [[SigEnOceanPublishSetGenericRequestMessage alloc] initButtonIndex:item.index unicastAddressOfEnOcean:info.deviceAddress publishAddress:item.publishAddress deltaValue:deltaValue];
+        }
+    } else if (item.type == EnOceanButtonItemType_SceneRecall) {
+        if (!isActionMerge) {
+            command = [[SigEnOceanPublishSetGenericRequestMessage alloc] initButtonIndex:item.index unicastAddressOfEnOcean:info.deviceAddress publishAddress:item.publishAddress sceneId:item.value];
+        }
+    }
+    return command;
+}
+
 #pragma mark - Special handling: store the PrivateGattProxy+ConfigGattProxy+PrivateBeacon+ConfigBeacon of node in current mesh
 
 /**
@@ -2597,7 +2727,8 @@
  * @brief   Get the node object through the bluetooth macAddress of node.
  * @param   macAddress    the bluetooth macAddress of node.
  * @return  A SigNodeModel that save node information. nil means there are no node with this macAddress in mesh network.
- * @note    The unprovision beacon UUID is the unique identifier of the node, macAddress information is no longer stored in the JSON data.
+ * @note    1.The unprovision beacon UUID is the unique identifier of the node, macAddress information is no longer stored in the JSON data.
+ * 2.The macAddress is identifier of EnOcean Switch device.
  */
 - (SigNodeModel * _Nullable)getDeviceWithMacAddress:(NSString *)macAddress {
     NSArray *nodes = [NSArray arrayWithArray:_nodes];

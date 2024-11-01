@@ -122,7 +122,13 @@ public class FUDeviceSelectActivity extends BaseActivity implements View.OnClick
         normalDeviceAdapter = new FUDeviceSelectAdapter(this, normalDevices);
         normalDeviceAdapter.setStatusChangedListener(this);
         rv_device.setAdapter(normalDeviceAdapter);
+        if (normalDevices.size() == 0) {
+            cb_device.setVisibility(View.GONE);
+        } else {
+            cb_device.setVisibility(View.VISIBLE);
+        }
         cb_device.setChecked(normalDeviceAdapter.allSelected());
+//        cb_device.setChecked(normalDevices.size() != 0 && normalDeviceAdapter.allSelected());
 
         lpnDeviceAdapter = new FUDeviceSelectAdapter(this, lpnDevices);
         lpnDeviceAdapter.setStatusChangedListener(this);

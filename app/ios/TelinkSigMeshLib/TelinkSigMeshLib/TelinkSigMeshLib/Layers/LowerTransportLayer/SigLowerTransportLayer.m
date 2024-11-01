@@ -501,7 +501,13 @@
 
             // If the Lower Transport Layer receives any segment while the acknowledgment
             // timer is inactive, it shall restart the timer. Active timer should not be restarted.
-            if (_acknowledgmentTimers[@(key)] == nil) {
+//            if (_acknowledgmentTimers[@(key)] == nil) {
+            if (_acknowledgmentTimers[@(key)] != nil) {
+                BackgroundTimer *timer5 = _acknowledgmentTimers[@(key)];
+                if (timer5) {
+                    [timer5 invalidate];
+                }
+            }
                 UInt8 ttl = provisionerNode.defaultTTL;
                 if (![SigHelper.share isRelayedTTL:ttl]) {
                     ttl = _networkManager.defaultTtl;
@@ -520,7 +526,7 @@
                     [weakSelf.acknowledgmentTimers removeObjectForKey:@(key)];
                 }];
                 _acknowledgmentTimers[@(key)] = timer3;
-            }
+//            }
             return nil;
         }
     }
@@ -620,6 +626,9 @@
 /// @param segments The array of message segments, of which at least one has to be not `nil`.
 /// @param ttl Initial Time To Live (TTL) value.
 - (void)sendAckForSegments:(NSArray <SigSegmentedMessage *>*)segments withTtl:(UInt8)ttl {
+    if (segments == nil || segments.count == 0) {
+        return;
+    }
     SigSegmentAcknowledgmentMessage *ack = [[SigSegmentAcknowledgmentMessage alloc] initForSegments:[NSArray arrayWithArray:segments]];
     ack.ivIndex = SigMeshLib.share.dataSource.curNetkeyModel.ivIndex;
     ack.networkKey = SigMeshLib.share.dataSource.curNetkeyModel;
@@ -672,12 +681,11 @@
             }
             ackExpected = [SigHelper.share isUnicastAddress:segment.destination];
             [_networkManager.networkLayer sendLowerTransportPdu:segment ofType:SigPduType_networkPdu withTtl:ttl ivIndex:segment.ivIndex];
-            //==========test==========//
-            //因为非直连设备地址的segment包需要在mesh网络内部进行转发，且设备不一定存在ack返回。（BLOBChunkTransfer目标地址为组播地址时）
-            if (segment.destination != SigMeshLib.share.dataSource.getCurrentConnectedNode.address) {
+            //1.因为非直连设备地址的segment包需要proxy节点转发到mesh网络转发时间为maxNetworkTransmitInterval，且设备不一定存在ack返回(BLOBChunkTransfer目标地址为组播地址时)，所以添加延时maxNetworkTransmitInterval。
+            //2.发送到手机本地地址的PDU不需要延时。发送到直连节点即proxy节点也不需要延时。
+            if (segment.destination != SigMeshLib.share.dataSource.getCurrentConnectedNode.address && segment.destination != SigMeshLib.share.dataSource.curLocationNodeModel.address) {
                 [NSThread sleepForTimeInterval:SigMeshLib.share.maxNetworkTransmitInterval];
             }
-            //==========test==========//
         }
     }
 //    TelinkLogVerbose(@"==========发送seg count=%d结束",count);
@@ -767,6 +775,9 @@
 ///                         on Network Layer.
 /// - parameter ttl:        Initial Time To Live (TTL) value.
 - (void)sendAckForSegments:(NSArray <SigSegmentedMessage *>*)segments usingNetworkKey:(SigNetkeyModel *)networkKey withTtl:(UInt8)ttl {
+    if (segments == nil || segments.count == 0) {
+        return;
+    }
     SigSegmentAcknowledgmentMessage *ack = [[SigSegmentAcknowledgmentMessage alloc] initForSegments:[NSArray arrayWithArray:segments]];
     if ([self segmentsArrayIsComplete:segments]) {
         _acknowledgments[@(ack.destination)] = ack;

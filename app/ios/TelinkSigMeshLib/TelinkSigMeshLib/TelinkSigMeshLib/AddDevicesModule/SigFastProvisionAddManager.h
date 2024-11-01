@@ -25,11 +25,28 @@
 
 NS_ASSUME_NONNULL_BEGIN
 
+typedef void(^FastProvisionCallBack)(NSData *deviceKey,NSString *macAddress,UInt16 address,UInt16 pid);
 typedef void(^ScanCallbackOfFastProvisionCallBack)(NSData *deviceKey,NSString *macAddress,UInt16 address,UInt16 pid);
 typedef void(^StartProvisionCallbackOfFastProvisionCallBack)(void);
 typedef void(^AddSingleDeviceSuccessOfFastProvisionCallBack)(NSData *deviceKey,NSString *macAddress,UInt16 address,UInt16 pid);
+typedef void(^FastProvisionResetNetworkCallBack)(void);
 
 @interface SigFastProvisionAddManager : NSObject
+/// callback when SDK scanned unProvision device.
+@property (nonatomic, copy) ScanCallbackOfFastProvisionCallBack scanResponseBlock;
+/// callback when SDK start send provision data.
+@property (nonatomic, copy) StartProvisionCallbackOfFastProvisionCallBack startProvisionBlock;
+/// callback when SDK device provision suucee.
+@property (nonatomic, copy) AddSingleDeviceSuccessOfFastProvisionCallBack singleSuccessBlock;
+/// callback when SDK fast provision finish, success if error is nil, other is fail.
+@property (nonatomic, copy) ErrorBlock finishBlock;
+
+/// callback when SDK start reset network.
+@property (nonatomic, copy) FastProvisionResetNetworkCallBack resetNetworkBlock;
+/// callback when SDK start set device unicast address.
+@property (nonatomic, copy) FastProvisionCallBack setAddressRequestBlock;
+/// callback when set device unicast address response notify from device.
+@property (nonatomic, copy) FastProvisionCallBack setAddressResponseBlock;
 
 
 + (instancetype)new __attribute__((unavailable("please initialize by use .share or .share()")));

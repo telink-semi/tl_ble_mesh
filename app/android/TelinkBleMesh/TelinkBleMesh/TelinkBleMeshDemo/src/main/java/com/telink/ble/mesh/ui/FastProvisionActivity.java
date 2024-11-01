@@ -22,15 +22,20 @@
  *******************************************************************************************************/
 package com.telink.ble.mesh.ui;
 
+import android.annotation.SuppressLint;
 import android.os.Bundle;
 import android.os.Handler;
+import android.os.Message;
 import android.util.SparseIntArray;
 import android.view.MenuItem;
+import android.view.View;
+import android.widget.TextView;
 
 import androidx.appcompat.widget.Toolbar;
-import androidx.recyclerview.widget.GridLayoutManager;
+import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.google.android.material.bottomsheet.BottomSheetDialog;
 import com.telink.ble.mesh.TelinkMeshApplication;
 import com.telink.ble.mesh.core.Encipher;
 import com.telink.ble.mesh.demo.R;
@@ -48,8 +53,10 @@ import com.telink.ble.mesh.model.NetworkingDevice;
 import com.telink.ble.mesh.model.NetworkingState;
 import com.telink.ble.mesh.model.NodeInfo;
 import com.telink.ble.mesh.model.PrivateDevice;
-import com.telink.ble.mesh.ui.adapter.DeviceAutoProvisionListAdapter;
+import com.telink.ble.mesh.ui.adapter.FastProvisionDeviceAdapter;
+import com.telink.ble.mesh.ui.adapter.LogInfoAdapter;
 import com.telink.ble.mesh.util.Arrays;
+import com.telink.ble.mesh.util.LogInfo;
 import com.telink.ble.mesh.util.MeshLogger;
 
 import java.util.ArrayList;
@@ -57,6 +64,14 @@ import java.util.List;
 
 /**
  * fast provision
+ * Procedure for changing the device status:
+ * 1. {@link NetworkingState#WAITING} = device found by get address response {@link FastProvisioningEvent#EVENT_TYPE_FAST_PROVISIONING_GET_ADDRESS_RSP}
+ * 2. {@link NetworkingState#PROVISIONING} = setting device address {@link FastProvisioningEvent#EVENT_TYPE_FAST_PROVISIONING_SET_ADDRESS}
+ * 3. {@link NetworkingState#PROVISION_FAIL} = set address fail {@link FastProvisioningEvent#EVENT_TYPE_FAST_PROVISIONING_SET_ADDRESS_FAIL}
+ * 4. {@link NetworkingState#PROVISION_SUCCESS} = set address success {@link FastProvisioningEvent#EVENT_TYPE_FAST_PROVISIONING_SET_ADDRESS_SUCCESS}
+ * 5. {@link NetworkingState#BINDING} = setting provision data {@link FastProvisioningEvent#EVENT_TYPE_FAST_PROVISIONING_SET_DATA}
+ * 6. {@link NetworkingState#BIND_SUCCESS} = set provision data success {@link FastProvisioningEvent#EVENT_TYPE_FAST_PROVISIONING_SUCCESS}
+ * 7. {@link NetworkingState#BIND_FAIL} = set provision data fail {@link FastProvisioningEvent#EVENT_TYPE_FAST_PROVISIONING_FAIL}
  */
 public class FastProvisionActivity extends BaseActivity implements EventListener<String> {
 
@@ -67,11 +82,46 @@ public class FastProvisionActivity extends BaseActivity implements EventListener
      */
     private List<NetworkingDevice> devices = new ArrayList<>();
 
-    private DeviceAutoProvisionListAdapter mListAdapter;
+    private FastProvisionDeviceAdapter mListAdapter;
 
     private Handler delayHandler = new Handler();
 
     private PrivateDevice[] targetDevices = PrivateDevice.values();
+
+    /**
+     * log info
+     */
+    private BottomSheetDialog bottomDialog;
+    private RecyclerView rv_log;
+
+    private TextView tv_info;
+    private List<LogInfo> logInfoList = new ArrayList<>();
+
+    private LogInfoAdapter logInfoAdapter;
+    /**
+     * message code : info
+     */
+    private static final int MSG_INFO = 0;
+
+    @SuppressLint("HandlerLeak")
+    private Handler infoHandler = new Handler() {
+        @Override
+        public void handleMessage(Message msg) {
+            super.handleMessage(msg);
+            if (msg.what == MSG_INFO) {
+                // update info
+                String info = msg.obj.toString();
+                tv_info.setText(info);
+
+                // insert log
+                logInfoList.add(new LogInfo("FW-UPDATE", info, MeshLogger.LEVEL_DEBUG));
+                if (bottomDialog.isShowing()) {
+                    logInfoAdapter.notifyDataSetChanged();
+                    rv_log.smoothScrollToPosition(logInfoList.size() - 1);
+                }
+            }
+        }
+    };
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -80,21 +130,27 @@ public class FastProvisionActivity extends BaseActivity implements EventListener
         if (!validateNormalStart(savedInstanceState)) {
             return;
         }
-        setContentView(R.layout.activity_device_provision);
+        setContentView(R.layout.activity_fast_provision);
         initTitle();
+
+        initLog();
+
         RecyclerView rv_devices = findViewById(R.id.rv_devices);
 
-        mListAdapter = new DeviceAutoProvisionListAdapter(this, devices);
-        rv_devices.setLayoutManager(new GridLayoutManager(this, 2));
+        mListAdapter = new FastProvisionDeviceAdapter(this, devices);
+        rv_devices.setLayoutManager(new LinearLayoutManager(this));
         rv_devices.setAdapter(mListAdapter);
-//        btn_back = findViewById(R.id.btn_back);
-//        btn_back.setOnClickListener(this);
 
         meshInfo = TelinkMeshApplication.getInstance().getMeshInfo();
         TelinkMeshApplication.getInstance().addEventListener(MeshEvent.EVENT_TYPE_DISCONNECTED, this);
-
-        TelinkMeshApplication.getInstance().addEventListener(FastProvisioningEvent.EVENT_TYPE_FAST_PROVISIONING_ADDRESS_SET, this);
-        TelinkMeshApplication.getInstance().addEventListener(FastProvisioningEvent.EVENT_TYPE_FAST_PROVISIONING_ADDRESS_SET_FAIL, this);
+        TelinkMeshApplication.getInstance().addEventListener(FastProvisioningEvent.EVENT_TYPE_FAST_PROVISIONING_CONNECTING, this);
+        TelinkMeshApplication.getInstance().addEventListener(FastProvisioningEvent.EVENT_TYPE_FAST_PROVISIONING_RESET_NWK, this);
+        TelinkMeshApplication.getInstance().addEventListener(FastProvisioningEvent.EVENT_TYPE_FAST_PROVISIONING_GET_ADDRESS, this);
+        TelinkMeshApplication.getInstance().addEventListener(FastProvisioningEvent.EVENT_TYPE_FAST_PROVISIONING_GET_ADDRESS_RSP, this);
+        TelinkMeshApplication.getInstance().addEventListener(FastProvisioningEvent.EVENT_TYPE_FAST_PROVISIONING_SET_ADDRESS, this);
+        TelinkMeshApplication.getInstance().addEventListener(FastProvisioningEvent.EVENT_TYPE_FAST_PROVISIONING_SET_ADDRESS_SUCCESS, this);
+        TelinkMeshApplication.getInstance().addEventListener(FastProvisioningEvent.EVENT_TYPE_FAST_PROVISIONING_SET_ADDRESS_FAIL, this);
+        TelinkMeshApplication.getInstance().addEventListener(FastProvisioningEvent.EVENT_TYPE_FAST_PROVISIONING_SET_DATA, this);
         TelinkMeshApplication.getInstance().addEventListener(FastProvisioningEvent.EVENT_TYPE_FAST_PROVISIONING_FAIL, this);
         TelinkMeshApplication.getInstance().addEventListener(FastProvisioningEvent.EVENT_TYPE_FAST_PROVISIONING_SUCCESS, this);
 
@@ -111,10 +167,32 @@ public class FastProvisionActivity extends BaseActivity implements EventListener
         toolbar.setNavigationIcon(null);
     }
 
+    private void initLog() {
+        tv_info = findViewById(R.id.tv_info);
+        tv_info.setOnClickListener(v -> {
+            logInfoAdapter.notifyDataSetChanged();
+            bottomDialog.show();
+        });
+        bottomDialog = new BottomSheetDialog(this);
+        View view = getLayoutInflater().inflate(R.layout.dialog_bottom_list, null);
+//        BottomSheetBehavior behavior = BottomSheetBehavior.from((View)dialog.getParent());
+        bottomDialog.setContentView(view);
+        logInfoAdapter = new LogInfoAdapter(this, logInfoList);
+        rv_log = view.findViewById(R.id.rv_log_sheet);
+        rv_log.setLayoutManager(new LinearLayoutManager(this));
+        rv_log.setAdapter(logInfoAdapter);
+        view.findViewById(R.id.iv_close).setOnClickListener(v -> bottomDialog.dismiss());
+    }
+
+    private void appendLog(String logInfo) {
+        MeshLogger.d("fast provision -> appendLog: " + logInfo);
+        infoHandler.obtainMessage(MSG_INFO, logInfo).sendToTarget();
+    }
+
     private void actionStart() {
         enableUI(false);
         int provisionIndex = meshInfo.getProvisionIndex();
-        MeshLogger.d(String.format("adr index : %04X", provisionIndex));
+        appendLog(String.format("start fast provision => adr index : %04X", provisionIndex));
         SparseIntArray targetDevicePid = new SparseIntArray(targetDevices.length);
 
         CompositionData compositionData;
@@ -135,6 +213,13 @@ public class FastProvisionActivity extends BaseActivity implements EventListener
 
 
     private void onDeviceFound(FastProvisioningDevice fastProvisioningDevice) {
+
+
+        appendLog(
+                String.format("get address rsp -  origin adr=%04X mac=%s", fastProvisioningDevice.getOriginAddress()
+                        , Arrays.bytesToHexString(fastProvisioningDevice.getMac()))
+        );
+
         NodeInfo nodeInfo = new NodeInfo();
         nodeInfo.meshAddress = fastProvisioningDevice.getNewAddress();
 
@@ -150,14 +235,65 @@ public class FastProvisionActivity extends BaseActivity implements EventListener
         nodeInfo.compositionData = cpsData;
 
         NetworkingDevice device = new NetworkingDevice(nodeInfo);
-        device.state = NetworkingState.PROVISIONING;
+        device.state = NetworkingState.WAITING;
+        device.addLog("", "device found");
         devices.add(device);
-        mListAdapter.notifyDataSetChanged();
+        updateList();
         meshInfo.increaseProvisionIndex(fastProvisioningDevice.getElementCount());
     }
 
-    private void onDeviceSetAddressFail(FastProvisioningDevice fastProvisioningDevice) {
+    private void onSetAddressStart(FastProvisioningDevice fastProvisioningDevice) {
         meshInfo.increaseProvisionIndex(fastProvisioningDevice.getElementCount());
+        NetworkingDevice device = getNetworkingDevice(fastProvisioningDevice);
+        if (device == null) {
+            appendLog("err : set address start -> fast provision device not found  " + Arrays.bytesToHexString(fastProvisioningDevice.getMac()));
+            return;
+        }
+        appendLog(String.format("set address start -  mac=%s originAdr=%04X newAdr=%04X", Arrays.bytesToHexString(fastProvisioningDevice.getMac()), fastProvisioningDevice.getOriginAddress(), fastProvisioningDevice.getNewAddress()));
+        device.state = NetworkingState.PROVISIONING;
+        device.addLog("", "setting address");
+        updateList();
+    }
+
+    private void onSetAddressFail(FastProvisioningDevice fastProvisioningDevice) {
+        meshInfo.increaseProvisionIndex(fastProvisioningDevice.getElementCount());
+        NetworkingDevice device = getNetworkingDevice(fastProvisioningDevice);
+        if (device == null) {
+            appendLog("err : set address fail -> fast provision device not found  " + Arrays.bytesToHexString(fastProvisioningDevice.getMac()));
+            return;
+        }
+        appendLog(String.format("set address fail -  mac=%s originAdr=%04X newAdr=%04X", Arrays.bytesToHexString(fastProvisioningDevice.getMac()), fastProvisioningDevice.getOriginAddress(), fastProvisioningDevice.getNewAddress()));
+        device.state = NetworkingState.PROVISION_FAIL;
+        device.addLog("", "set address fail");
+        updateList();
+    }
+
+    private void onSetAddressSuccess(FastProvisioningDevice fastProvisioningDevice) {
+        NetworkingDevice device = getNetworkingDevice(fastProvisioningDevice);
+        if (device == null) {
+            appendLog("err : set address success -> fast provision device not found  " + Arrays.bytesToHexString(fastProvisioningDevice.getMac()));
+            return;
+        }
+        appendLog(String.format("set address success -  mac=%s originAdr=%04X newAdr=%04X", Arrays.bytesToHexString(fastProvisioningDevice.getMac()), fastProvisioningDevice.getOriginAddress(), fastProvisioningDevice.getNewAddress()));
+        device.state = NetworkingState.PROVISION_SUCCESS;
+        device.addLog("", "set address success");
+        updateList();
+    }
+
+    private void onSetDataStart() {
+        appendLog("setting provision data");
+        for (NetworkingDevice dev : devices) {
+            if (dev.state == NetworkingState.PROVISION_SUCCESS) {
+                dev.state = NetworkingState.BINDING;
+                dev.addLog("", "setting provision data");
+            }
+        }
+        updateList();
+    }
+
+    private void updateList() {
+        runOnUiThread(() -> mListAdapter.notifyDataSetChanged());
+
     }
 
     @Override
@@ -170,31 +306,80 @@ public class FastProvisionActivity extends BaseActivity implements EventListener
     @Override
     public void performed(final Event<String> event) {
         super.performed(event);
+
         String eventType = event.getType();
 
-        if (eventType.equals(FastProvisioningEvent.EVENT_TYPE_FAST_PROVISIONING_ADDRESS_SET)) {
-            onDeviceFound(((FastProvisioningEvent) event).getFastProvisioningDevice());
-        } else if (eventType.equals(FastProvisioningEvent.EVENT_TYPE_FAST_PROVISIONING_FAIL)) {
-            onFastProvisionComplete(false);
-        } else if (eventType.equals(FastProvisioningEvent.EVENT_TYPE_FAST_PROVISIONING_SUCCESS)) {
-            onFastProvisionComplete(true);
-        } else if (eventType.equals(FastProvisioningEvent.EVENT_TYPE_FAST_PROVISIONING_ADDRESS_SET_FAIL)) {
-            onDeviceSetAddressFail(((FastProvisioningEvent) event).getFastProvisioningDevice());
+        switch (eventType) {
+            case FastProvisioningEvent.EVENT_TYPE_FAST_PROVISIONING_CONNECTING:
+                appendLog("scan and connecting...");
+                break;
+
+            case FastProvisioningEvent.EVENT_TYPE_FAST_PROVISIONING_RESET_NWK:
+                appendLog("resetting network...");
+                break;
+            case FastProvisioningEvent.EVENT_TYPE_FAST_PROVISIONING_GET_ADDRESS:
+                appendLog("get address - start");
+                break;
+
+            case FastProvisioningEvent.EVENT_TYPE_FAST_PROVISIONING_GET_ADDRESS_RSP:
+                FastProvisioningDevice device = ((FastProvisioningEvent) event).getFastProvisioningDevice();
+                onDeviceFound(device);
+                break;
+
+            case FastProvisioningEvent.EVENT_TYPE_FAST_PROVISIONING_SET_ADDRESS:
+                onSetAddressStart(((FastProvisioningEvent) event).getFastProvisioningDevice());
+                break;
+
+            case FastProvisioningEvent.EVENT_TYPE_FAST_PROVISIONING_SET_ADDRESS_FAIL:
+                onSetAddressFail(((FastProvisioningEvent) event).getFastProvisioningDevice());
+                break;
+
+
+            case FastProvisioningEvent.EVENT_TYPE_FAST_PROVISIONING_SET_ADDRESS_SUCCESS:
+                onSetAddressSuccess(((FastProvisioningEvent) event).getFastProvisioningDevice());
+                break;
+
+            case FastProvisioningEvent.EVENT_TYPE_FAST_PROVISIONING_SET_DATA:
+                onSetDataStart();
+                break;
+
+            case FastProvisioningEvent.EVENT_TYPE_FAST_PROVISIONING_FAIL:
+                onFastProvisionComplete(false, ((FastProvisioningEvent) event).getDesc());
+                break;
+
+            case FastProvisioningEvent.EVENT_TYPE_FAST_PROVISIONING_SUCCESS:
+                onFastProvisionComplete(true, "success");
+                break;
+
+
         }
     }
 
-    private void onFastProvisionComplete(boolean success) {
+    private void onFastProvisionComplete(boolean success, String desc) {
+        appendLog("fast provision complete - " + desc);
         for (NetworkingDevice networkingDevice : devices) {
             if (success) {
                 networkingDevice.state = NetworkingState.BIND_SUCCESS;
                 networkingDevice.nodeInfo.bound = true;
+                networkingDevice.addLog("", "provision success");
                 meshInfo.insertDevice(networkingDevice.nodeInfo, false);
             } else {
                 networkingDevice.state = NetworkingState.PROVISION_FAIL;
+                networkingDevice.addLog("", "provision fail");
             }
         }
-        mListAdapter.notifyDataSetChanged();
+        updateList();
         enableUI(true);
+    }
+
+
+    private NetworkingDevice getNetworkingDevice(FastProvisioningDevice fastProvisioningDevice) {
+        for (NetworkingDevice networkingDevice : devices) {
+            if (networkingDevice.nodeInfo.macAddress.equals(Arrays.bytesToHexString(fastProvisioningDevice.getMac(), ":"))) {
+                return networkingDevice;
+            }
+        }
+        return null;
     }
 
     private byte[] getCompositionData(int pid) {

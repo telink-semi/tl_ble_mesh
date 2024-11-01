@@ -17330,3 +17330,327 @@ SigGenericDeltaSet|SigGenericDeltaSetUnacknowledged|SigGenericLevelSet|SigGeneri
     return self;
 }
 @end
+
+
+@implementation SigEnOceanBaseMessage
+
+- (instancetype)init {
+    /// Use the init method of the parent class to initialize some properties of the parent class of the subclass instance.
+    if (self = [super init]) {
+        /// Initialize self.
+        self.opCode = VendorOpCode_setWithAck;
+    }
+    return self;
+}
+
+@end
+
+
+@implementation SigEnOceanResponseMessage
+
+- (instancetype)init {
+    /// Use the init method of the parent class to initialize some properties of the parent class of the subclass instance.
+    if (self = [super init]) {
+        /// Initialize self.
+        self.opCode = VendorOpCode_response;
+    }
+    return self;
+}
+
+- (instancetype)initWithParameters:(NSData *)parameters {
+    /// Use the init method of the parent class to initialize some properties of the parent class of the subclass instance.
+    if (self = [super init]) {
+        /// Initialize self.
+        self.opCode = VendorOpCode_response;
+        if (parameters == nil || parameters.length != 2) {
+            return nil;
+        }
+        if (parameters) {
+            self.parameters = [NSData dataWithData:parameters];
+        }
+        UInt8 tem8 = 0;
+        Byte *dataByte = (Byte *)parameters.bytes;
+        memcpy(&tem8, dataByte, 1);
+        self.vendorSubOpCode = tem8;
+        memcpy(&tem8, dataByte+1, 1);
+        _status = tem8;
+    }
+    return self;
+}
+
+@end
+
+
+@implementation SigEnOceanPairMacAddressAndKeyRequestMessage
+
+/// init PairMacAddressAndKeyRequest message
+/// - Parameters:
+///   - unicastAddressOfEnOcean: energy harvest address,
+///   - macAddressDataOfEnOcean: energy harvest MacAddress,
+///   - keyOfEnOcean: energy harvest key,
+- (instancetype)initWithUnicastAddressOfEnOcean:(UInt16)unicastAddressOfEnOcean macAddressDataOfEnOcean:(NSData *)macAddressDataOfEnOcean keyOfEnOcean:(NSData *)keyOfEnOcean {
+    /// Use the init method of the parent class to initialize some properties of the parent class of the subclass instance.
+    if (self = [super init]) {
+        /// Initialize self.
+        self.opCode = VendorOpCode_setWithAck;
+        self.vendorSubOpCode = VendorSubOpCode_pairMacAddressAndKey;
+        _unicastAddressOfEnOcean = unicastAddressOfEnOcean;
+        _macAddressDataOfEnOcean = macAddressDataOfEnOcean;
+        _keyOfEnOcean = keyOfEnOcean;
+    }
+    return self;
+}
+
+- (NSData *)parameters {
+    NSMutableData *mData = [NSMutableData data];
+    UInt8 length = self.vendorSubOpCode;
+    [mData appendBytes:&length length:1];
+    UInt16 tem16 = self.unicastAddressOfEnOcean;
+    [mData appendBytes:&tem16 length:2];
+    if (_macAddressDataOfEnOcean && _macAddressDataOfEnOcean.length == 6) {
+        [mData appendData:_macAddressDataOfEnOcean];
+    }
+    if (_keyOfEnOcean && _keyOfEnOcean.length == 16) {
+        [mData appendData:_keyOfEnOcean];
+    }
+    return mData;
+}
+
+@end
+
+
+@implementation SigEnOceanPairDeleteRequestMessage
+
+- (instancetype)initWithUnicastAddressOfEnOcean:(UInt16)unicastAddressOfEnOcean {
+    /// Use the init method of the parent class to initialize some properties of the parent class of the subclass instance.
+    if (self = [super init]) {
+        /// Initialize self.
+        self.opCode = VendorOpCode_setWithAck;
+        self.vendorSubOpCode = VendorSubOpCode_pairDelete;
+        _unicastAddressOfEnOcean = unicastAddressOfEnOcean;
+    }
+    return self;
+}
+
+- (NSData *)parameters {
+    NSMutableData *mData = [NSMutableData data];
+    UInt8 length = self.vendorSubOpCode;
+    [mData appendBytes:&length length:1];
+    UInt16 tem16 = self.unicastAddressOfEnOcean;
+    [mData appendBytes:&tem16 length:2];
+    return mData;
+}
+
+@end
+
+
+@implementation SigEnOceanPublishSetBaseRequestMessage
+
+- (instancetype)init {
+    /// Use the init method of the parent class to initialize some properties of the parent class of the subclass instance.
+    if (self = [super init]) {
+        /// Initialize self.
+        self.opCode = VendorOpCode_setWithAck;
+        self.vendorSubOpCode = VendorSubOpCode_publishSet;
+    }
+    return self;
+}
+
+@end
+
+
+@implementation SigEnOceanPublishSetGenericRequestMessage
+
+/// init OnOff PublishSetGenericRequest
+/// - Parameters:
+///   - buttonIndex: button index of energy harvest device. The size is 4 bits.
+///   - unicastAddressOfEnOcean: energy harvest address,
+///   - publishAddress: publish address,
+///   - onOff: for publish onOff
+- (instancetype)initButtonIndex:(UInt8)buttonIndex unicastAddressOfEnOcean:(UInt16)unicastAddressOfEnOcean publishAddress:(UInt16)publishAddress onOff:(BOOL)onOff {
+    /// Use the init method of the parent class to initialize some properties of the parent class of the subclass instance.
+    if (self = [super init]) {
+        /// Initialize self.
+        self.commandLength = 8+1;
+        self.commandType = EnOceanPublishSetType_generic;
+        _buttonIndex = buttonIndex;
+        self.unicastAddressOfEnOcean = unicastAddressOfEnOcean;
+        _publishAddress = publishAddress;
+        _onOff = onOff;
+        _opCodeType = SigOpCode_genericOnOffSetUnacknowledged;
+    }
+    return self;
+}
+
+/// init sceneRecall PublishSetGenericRequest
+/// - Parameters:
+///   - buttonIndex: button index of energy harvest device. The size is 4 bits.
+///   - unicastAddressOfEnOcean: energy harvest address,
+///   - publishAddress: publish address,
+///   - sceneId: for scene recall
+- (instancetype)initButtonIndex:(UInt8)buttonIndex unicastAddressOfEnOcean:(UInt16)unicastAddressOfEnOcean publishAddress:(UInt16)publishAddress sceneId:(UInt16)sceneId {
+    /// Use the init method of the parent class to initialize some properties of the parent class of the subclass instance.
+    if (self = [super init]) {
+        /// Initialize self.
+        self.commandLength = 9;
+        self.commandType = EnOceanPublishSetType_generic;
+        _buttonIndex = buttonIndex;
+        self.unicastAddressOfEnOcean = unicastAddressOfEnOcean;
+        _publishAddress = publishAddress;
+        _sceneId = sceneId;
+        _opCodeType = SigOpCode_sceneRecallUnacknowledged;
+    }
+    return self;
+}
+
+/// init lightness delta / CT delta PublishSetGenericRequest (send to lightness unicastAddress is lightness delta, send to CT unicastAddress is CT delta)
+/// - Parameters:
+///   - buttonIndex: button index of energy harvest device. The size is 4 bits.
+///   - unicastAddressOfEnOcean: energy harvest address,
+///   - publishAddress: publish address,
+///   - deltaValue: delta value of lightness or CT
+- (instancetype)initButtonIndex:(UInt8)buttonIndex unicastAddressOfEnOcean:(UInt16)unicastAddressOfEnOcean publishAddress:(UInt16)publishAddress deltaValue:(SInt32)deltaValue {
+    /// Use the init method of the parent class to initialize some properties of the parent class of the subclass instance.
+    if (self = [super init]) {
+        /// Initialize self.
+        self.commandLength = 11+1;
+        self.commandType = EnOceanPublishSetType_generic;
+        _buttonIndex = buttonIndex;
+        self.unicastAddressOfEnOcean = unicastAddressOfEnOcean;
+        _publishAddress = publishAddress;
+        _deltaValue = deltaValue;
+        _opCodeType = SigOpCode_genericDeltaSetUnacknowledged;
+    }
+    return self;
+}
+
+- (NSData *)parameters {
+    NSMutableData *mData = [NSMutableData data];
+    UInt8 tem8 = self.vendorSubOpCode;
+    [mData appendBytes:&tem8 length:1];
+    tem8 = self.commandLength;
+    [mData appendBytes:&tem8 length:1];
+    tem8 = (self.commandType & 0xF) | ((_buttonIndex & 0xF) << 4);
+    [mData appendBytes:&tem8 length:1];
+    UInt16 tem16 = self.unicastAddressOfEnOcean;
+    [mData appendBytes:&tem16 length:2];
+    tem16 = _publishAddress;
+    [mData appendBytes:&tem16 length:2];
+    tem16 = CFSwapInt16HostToBig(_opCodeType);
+    [mData appendBytes:&tem16 length:2];
+    if (_opCodeType == SigOpCode_genericOnOffSetUnacknowledged) {
+        tem8 = _onOff ? 1 : 0;
+        [mData appendBytes:&tem8 length:1];
+        // tid=0
+        tem8 = 0;
+        [mData appendBytes:&tem8 length:1];
+    } else if (_opCodeType == SigOpCode_sceneRecallUnacknowledged) {
+        tem16 = _sceneId;
+        [mData appendBytes:&tem16 length:2];
+    } else if (_opCodeType == SigOpCode_genericDeltaSetUnacknowledged) {
+        UInt32 tem32 = _deltaValue;
+        [mData appendBytes:&tem32 length:4];
+        // tid=0
+        tem8 = 0;
+        [mData appendBytes:&tem8 length:1];
+    }
+    // transitionTime
+    if (self.transitionTime != nil) {
+        tem8 = self.transitionTime.intValue;
+        [mData appendBytes:&tem8 length:1];
+    }
+    // delayTime
+    if (self.delayTime != nil) {
+        tem8 = self.delayTime.intValue;
+        [mData appendBytes:&tem8 length:1];
+    }
+    return mData;
+}
+
+@end
+
+
+@implementation SigEnOceanPublishSetSpecialRequestMessage
+
+/// init OnOff PublishSetSpecialRequest
+/// - Parameters:
+///   - unicastAddressOfEnOcean: unicast address of EnOcean
+///   - enOceanKeyStruct: key value of EnOcean
+///   - addressOfPublish1: address of publish1
+///   - addressOfPublish2: address of publish2
+///   - onOff: On Off
+- (instancetype)initOnOffPublishWithUnicastAddressOfEnOcean:(UInt16)unicastAddressOfEnOcean enOceanKeyStruct:(struct EnOceanKeyStruct)enOceanKeyStruct addressOfPublish1:(UInt16)addressOfPublish1 addressOfPublish2:(UInt16)addressOfPublish2 onOff:(BOOL)onOff {
+    /// Use the init method of the parent class to initialize some properties of the parent class of the subclass instance.
+    if (self = [super init]) {
+        /// Initialize self.
+        self.commandLength = 9+1;
+        self.commandType = enOceanKeyStruct.KeyPairEnable == 3 ? EnOceanPublishSetType_onOffFourButtons : EnOceanPublishSetType_onOffTwoButtons;
+        self.unicastAddressOfEnOcean = unicastAddressOfEnOcean;
+        _enOceanKeyStruct = enOceanKeyStruct;
+        _addressOfPublish1 = addressOfPublish1;
+        _addressOfPublish2 = addressOfPublish2;
+        _onOff = onOff;
+    }
+    return self;
+}
+
+/// init lightness delta / CT delta PublishSetSpecialRequest (send to lightness unicastAddress is lightness delta, send to CT unicastAddress is CT delta)
+/// - Parameters:
+///   - unicastAddressOfEnOcean: unicast address of EnOcean
+///   - enOceanKeyStruct: key value of EnOcean
+///   - addressOfPublish1: address of publish1
+///   - addressOfPublish2: address of publish2
+///   - deltaValue: delta value of lightness or CT
+- (instancetype)initLightnessDeltaPublishWithUnicastAddressOfEnOcean:(UInt16)unicastAddressOfEnOcean enOceanKeyStruct:(struct EnOceanKeyStruct)enOceanKeyStruct addressOfPublish1:(UInt16)addressOfPublish1 addressOfPublish2:(UInt16)addressOfPublish2 deltaValue:(SInt32)deltaValue {
+    /// Use the init method of the parent class to initialize some properties of the parent class of the subclass instance.
+    if (self = [super init]) {
+        /// Initialize self.
+        self.commandLength = 12+1;
+        self.commandType = enOceanKeyStruct.KeyPairEnable == 3 ? EnOceanPublishSetType_DeltaLightnessFourButtons : EnOceanPublishSetType_DeltaLightnessTwoButtons;
+        self.unicastAddressOfEnOcean = unicastAddressOfEnOcean;
+        _enOceanKeyStruct = enOceanKeyStruct;
+        _addressOfPublish1 = addressOfPublish1;
+        _addressOfPublish2 = addressOfPublish2;
+        _deltaValue = deltaValue;
+    }
+    return self;
+}
+
+- (NSData *)parameters {
+    NSMutableData *mData = [NSMutableData data];
+    UInt8 tem8 = self.vendorSubOpCode;
+    [mData appendBytes:&tem8 length:1];
+    tem8 = self.commandLength;
+    [mData appendBytes:&tem8 length:1];
+    tem8 = (self.commandType & 0xF) | ((self.rfu0 & 0xF) << 4);
+    [mData appendBytes:&tem8 length:1];
+    UInt16 tem16 = self.unicastAddressOfEnOcean;
+    [mData appendBytes:&tem16 length:2];
+    tem8 = self.enOceanKeyStruct.value;
+    [mData appendBytes:&tem8 length:1];
+    tem16 = _addressOfPublish1;
+    [mData appendBytes:&tem16 length:2];
+    tem16 = _addressOfPublish2;
+    [mData appendBytes:&tem16 length:2];
+    if (self.commandType == EnOceanPublishSetType_onOffTwoButtons || self.commandType == EnOceanPublishSetType_onOffFourButtons) {
+        tem8 = self.onOff ? 1 : 0;
+        [mData appendBytes:&tem8 length:1];
+    } else if (self.commandType == EnOceanPublishSetType_DeltaLightnessTwoButtons || self.commandType == EnOceanPublishSetType_DeltaLightnessFourButtons) {
+        SInt32 tem32 = _deltaValue;
+        [mData appendBytes:&tem32 length:4];
+    }
+    // tid=0
+    tem8 = 0;
+    [mData appendBytes:&tem8 length:1];
+    if (self.transitionTime != nil) {
+        tem8 = self.transitionTime.intValue;
+        [mData appendBytes:&tem8 length:1];
+    }
+    if (self.delayTime != nil) {
+        tem8 = self.delayTime.intValue;
+        [mData appendBytes:&tem8 length:1];
+    }
+    return mData;
+}
+
+@end

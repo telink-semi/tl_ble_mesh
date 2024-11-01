@@ -24,14 +24,18 @@ package com.telink.ble.mesh.ui;
 
 import android.content.Intent;
 import android.os.Bundle;
+import android.text.TextUtils;
 import android.view.View;
 import android.widget.SeekBar;
 import android.widget.Switch;
 import android.widget.TextView;
 
+import androidx.appcompat.app.AlertDialog;
+import androidx.appcompat.widget.Toolbar;
 import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.google.android.material.textfield.TextInputEditText;
 import com.telink.ble.mesh.TelinkMeshApplication;
 import com.telink.ble.mesh.core.MeshUtils;
 import com.telink.ble.mesh.core.message.MeshMessage;
@@ -52,6 +56,7 @@ import com.telink.ble.mesh.model.MeshInfo;
 import com.telink.ble.mesh.model.NodeInfo;
 import com.telink.ble.mesh.model.NodeStatusChangedEvent;
 import com.telink.ble.mesh.model.UnitConvert;
+import com.telink.ble.mesh.model.db.MeshInfoService;
 import com.telink.ble.mesh.ui.adapter.OnlineDeviceListAdapter;
 import com.telink.ble.mesh.util.MeshLogger;
 
@@ -144,8 +149,9 @@ public class GroupSettingActivity extends BaseActivity implements EventListener<
         double stepCnt = 10;
         delta = (int) Math.ceil(max / stepCnt);
         final Intent intent = getIntent();
-        if (intent.hasExtra("group")) {
-            group = (GroupInfo) intent.getSerializableExtra("group");
+        if (intent.hasExtra("groupAddress")) {
+            int address = intent.getIntExtra("groupAddress", 0);
+            group = TelinkMeshApplication.getInstance().getMeshInfo().getGroupByAddress(address);
         } else {
             toastMsg("group null");
             finish();
@@ -159,8 +165,7 @@ public class GroupSettingActivity extends BaseActivity implements EventListener<
 
         rv_groups = findViewById(R.id.rv_device);
 
-        setTitle("Group Setting");
-        enableBackNav(true);
+        initTitle();
         final List<NodeInfo> innerDevices = getDevicesInGroup();
         mAdapter = new OnlineDeviceListAdapter(this, innerDevices);
         mAdapter.setOnItemClickListener(position -> {
@@ -200,6 +205,43 @@ public class GroupSettingActivity extends BaseActivity implements EventListener<
         TelinkMeshApplication.getInstance().addEventListener(NodeStatusChangedEvent.EVENT_TYPE_NODE_STATUS_CHANGED, this);
         TelinkMeshApplication.getInstance().addEventListener(MeshEvent.EVENT_TYPE_DISCONNECTED, this);
         initLevelView();
+    }
+
+    private void initTitle() {
+        Toolbar toolbar = findViewById(R.id.title_bar);
+        toolbar.inflateMenu(R.menu.menu_single);
+        toolbar.getMenu().findItem(R.id.item_add).setIcon(R.drawable.ic_edit);
+        toolbar.setOnMenuItemClickListener(item -> {
+            showEditNameDialog();
+            return false;
+        });
+        setTitle("Group Setting");
+        setSubTitle(group.name);
+        enableBackNav(true);
+    }
+
+    TextInputEditText et_single_input;
+
+    private void showEditNameDialog() {
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        builder.setTitle("Update Group Name")
+                .setView(R.layout.dialog_single_input)
+                .setPositiveButton("Confirm", (dialog, which) -> updateGroupName(et_single_input.getText().toString()))
+                .setNegativeButton("Cancel", (dialog, which) -> dialog.cancel());
+        AlertDialog dialog = builder.show();
+        et_single_input = dialog.findViewById(R.id.et_single_input);
+        et_single_input.setText(group.name);
+        et_single_input.setHint("please input new group name");
+    }
+
+    private void updateGroupName(String groupName) {
+        if (TextUtils.isEmpty(groupName)) {
+            toastMsg("scene name can not be null");
+            return;
+        }
+        group.name = groupName;
+        MeshInfoService.getInstance().updateGroupInfo(group);
+        this.setSubTitle(groupName);
     }
 
     private void initLevelView() {

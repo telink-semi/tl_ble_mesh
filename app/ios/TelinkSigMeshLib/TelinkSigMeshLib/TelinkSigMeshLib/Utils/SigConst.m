@@ -25,7 +25,7 @@
 
 #pragma mark - Const string
 
-NSString * const kTelinkSigMeshLibVersion = @"v4.1.0.1";
+NSString * const kTelinkSigMeshLibVersion = @"v4.1.0.2";
 NSString * const kNotifyCommandIsBusyOrNot = @"CommandIsBusyOrNot";
 NSString * const kCommandIsBusyKey = @"IsBusy";
 NSString * const AccessError_invalidSource = @"Local Provisioner does not have Unicast Address specified.";
@@ -571,3 +571,20 @@ UInt32 const kDefaultIvIndex = 0x0;//0x0
 
 /*默认一个unsegmented Access PDU的最大长度，大于该长度则需要进行segment分包，默认值为kUnsegmentedMessageLowerTransportPDUMaxLength（15）*/
 UInt16 const kUnsegmentedMessageLowerTransportPDUMaxLength = 15;//15
+
+NSString *const securityKeyKey = @"Z";
+NSString *const orderingCodeKey = @"30P";
+NSString *const stepCodeRevisionKey = @"2P";
+NSString *const NFCPINCodeKey = @"31Z";
+NSString *const serialNumberKey = @"S";
+NSString *const Index = @"I";
+NSString *const Type = @"t";
+NSString *const Value = @"V";
+NSString *const IsActionMerge = @"AM";
+NSString *const RegisterAddressList = @"RA";
+NSString *const PublishAddress = @"PA";
+NSString *const ButtonConfigList = @"BC";
+NSString *const ButtonInfo = @"BI";
+NSString *const ActionLayoutType = @"AL";
+NSString *const kDefaultPinCode = @"0000E215";
+NSString *const kDefaultEnOceanPID = @"E215";

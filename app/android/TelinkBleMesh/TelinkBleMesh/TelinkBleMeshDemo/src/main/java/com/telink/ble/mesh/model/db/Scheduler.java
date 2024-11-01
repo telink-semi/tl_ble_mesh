@@ -82,6 +82,10 @@ public final class Scheduler implements Serializable, Parcelable {
      */
     public ToOne<SchedulerRegister> register;
 
+    // for device with multiple elements
+    // use 0 as default for primary element
+    public int elementOffset = 0;
+
     public Scheduler() {
     }
 

@@ -425,6 +425,15 @@ public enum Opcode {
     FD_FIRMWARE_DELETE_ALL(0x2683),
 
     /**
+     * en ocean (harvest) switch device
+     */
+    // eh pair
+    VD_EH_PAIR(0x0211C2),
+
+    // eh pair response status
+    VD_EH_PAIR_STS(0x0211C4),
+
+    /**
      * fast provision, telink private [vendor command]
      */
     VD_MESH_RESET_NETWORK(0x0211C5),

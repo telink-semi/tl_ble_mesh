@@ -63,6 +63,7 @@ public class FUDeviceSelectAdapter extends BaseSelectableListAdapter<FUDeviceSel
     }
 
     public boolean allSelected() {
+        if (mDevices == null || mDevices.size() == 0) return false;
         for (NodeInfo deviceInfo : mDevices) {
             if (!deviceInfo.selected) {
                 return false;

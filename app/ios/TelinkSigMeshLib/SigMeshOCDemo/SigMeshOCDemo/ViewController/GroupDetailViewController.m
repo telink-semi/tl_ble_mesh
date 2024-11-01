@@ -25,6 +25,7 @@
 #import "HomeItemCell.h"
 #import "HSLViewController.h"
 #import "UIViewController+Message.h"
+#import "NSString+extension.h"
 
 @interface GroupDetailViewController()
 @property (weak, nonatomic) IBOutlet UILabel *headerLabel;
@@ -222,6 +223,47 @@
     }
 }
 
+- (void)clickRenameButton {
+    __weak typeof(self) weakSelf = self;
+    UIAlertController *alertVc = [UIAlertController alertControllerWithTitle:@"Change Group Name" message:@"Please input new group name!" preferredStyle: UIAlertControllerStyleAlert];
+    [alertVc addTextFieldWithConfigurationHandler:^(UITextField * _Nonnull textField) {
+        textField.placeholder = @"new group name";
+        textField.text = weakSelf.model.name;
+    }];
+    UIAlertAction *action1 = [UIAlertAction actionWithTitle:kDefaultAlertOK style:UIAlertActionStyleDestructive handler:^(UIAlertAction * _Nonnull action) {
+        NSString *groupName = [[alertVc textFields] objectAtIndex:0].text;
+        groupName = groupName.removeHeadAndTailSpacePro;
+        TelinkLogDebug(@"new groupName is %@", groupName);
+        if (groupName == nil || groupName.length == 0) {
+            [weakSelf showTips:@"Group name can not be empty!"];
+            return;
+        }
+        if (groupName.length > 20) {
+            [weakSelf showTips:@"The maximum length of the group name is 20!"];
+            return;
+        }
+        if ([groupName isEqualToString:weakSelf.model.name]) {
+            [weakSelf showTips:@"The group name is not change!"];
+            return;
+        }
+        NSArray *array = [NSArray arrayWithArray:SigDataSource.share.getAllShowGroupList];
+        for (SigGroupModel *group in array) {
+            if ([group.name isEqualToString:groupName]) {
+                [weakSelf showTips:@"Change group name fail, the group name is exist!"];
+                return;
+            }
+        }
+        weakSelf.model.name = groupName;
+        [SigDataSource.share saveLocationData];
+        [weakSelf.navigationController.view makeToast:@"Change group name success!"];
+        [weakSelf setTitle:@"Group Setting" subTitle:groupName];
+    }];
+    UIAlertAction *action2 = [UIAlertAction actionWithTitle:kDefaultAlertCancel style:UIAlertActionStyleCancel handler:nil];
+    [alertVc addAction:action2];
+    [alertVc addAction:action1];
+    [self presentViewController:alertVc animated:YES completion:nil];
+}
+
 - (void)normalSetting{
     [super normalSetting];
     //add group level line UI
@@ -235,6 +277,9 @@
     self.levelBackgroundView.layer.masksToBounds = YES;
     //backgroundColor
     self.levelBackgroundView.backgroundColor = [UIColor clearColor];
+    //init rightBarButtonItem
+    UIBarButtonItem *item = [[UIBarButtonItem alloc] initWithImage:[UIImage imageNamed:@"ic_edit_bar"] style:UIBarButtonItemStylePlain target:self action:@selector(clickRenameButton)];
+    self.navigationItem.rightBarButtonItem = item;
 
     self.hslButton.backgroundColor = UIColor.telinkButtonBlue;
     self.hadChangeBrightness = NO;
@@ -252,7 +297,7 @@
 
     self.LumLabel.text = [NSString stringWithFormat:@"Lum(%d)(at group adr:0x%X):",self.model.groupBrightness,self.model.intAddress];
     self.TempLabel.text = [NSString stringWithFormat:@"Temp(%d)(at group adr:0x%X):",self.model.groupTemperature,self.model.intAddress];
-    self.title = @"Group Setting";
+    [self setTitle:@"Group Setting" subTitle:self.model.name];
     self.headerLabel.text = [NSString stringWithFormat:@"%@ Devices:",self.model.name];
     self.brightnessSlider.value = self.model.groupBrightness;
     self.temperatureSlider.value = self.model.groupTemperature;
