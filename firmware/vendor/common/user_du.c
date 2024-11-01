@@ -298,6 +298,9 @@ void start_ota_proc(u8*pbuf)
 	#if (ZBIT_FLASH_WRITE_TIME_LONG_WORKAROUND_EN)
 		check_and_set_1p95v_to_zbit_flash();
 	#endif
+	#if APP_FLASH_PROTECTION_ENABLE
+		app_flash_protection_ota_begin();
+	#endif
 	du_ota_set_flag(1);
 	#if LPN_CONTROL_EN
 		#if LPN_FAST_OTA_EN  // it will not sleep
@@ -310,7 +313,7 @@ void start_ota_proc(u8*pbuf)
 	bls_du_cmd_rsp(DU_START_OTA_RSP,(u8*)&ota_sts,sizeof(ota_sts));
 }
 
-typedef struct{
+typedef struct __attribute__((packed)) {
 	u32 fw_len;
 	u32 crc;
 	u32 crc_total;
@@ -600,7 +603,7 @@ void update_du_busy_s(u8 delay_s)
 	du_busy_s = delay_s;
 }
 
-void du_busy_proc()
+void du_busy_proc(void)
 {
 	if(
 		#if DU_LPN_EN
@@ -672,7 +675,7 @@ void du_bls_ll_setAdvEnable(int adv_enable)
 	#endif
 }
 
-typedef struct{
+typedef struct __attribute__((packed)) {
 	u8 sw;
 	u8 sw_last;
 	u8 press_down;
@@ -683,7 +686,7 @@ typedef struct{
 sw_proc_t sw_but;
 
 
-void du_key_board_long_press_detect()
+void du_key_board_long_press_detect(void)
 {
 	sw_but.sw = !gpio_read(SW1_GPIO);
 	if(!(sw_but.sw_last)&&sw_but.sw){// press on 
@@ -732,7 +735,7 @@ void du_key_board_long_press_detect()
 
 
 
-void du_key_board_proc()
+void du_key_board_proc(void)
 {
 	static u32 du_log_tick =0;
 	if(clock_time_exceed(du_log_tick,40*1000))//40ms print every time 
@@ -743,7 +746,7 @@ void du_key_board_proc()
 }
 #endif
 
-void du_normal_send_demo_event()
+void du_normal_send_demo_event(void)
 {
 	u8 retry_times =4;
 	u16 du_time_tid = 0;
@@ -766,7 +769,7 @@ void du_normal_send_demo_event()
 }
 
 
-void du_loop_proc()
+void du_loop_proc(void)
 {
 	du_busy_proc();
 	du_ota_monitor_process();
@@ -796,11 +799,11 @@ void du_loop_proc()
 	#endif
 }
 
-void du_lpn_suspend_enter()
+void du_lpn_suspend_enter(void)
 {
 	bls_pm_setWakeupSource(PM_WAKEUP_PAD);  // GPIO_WAKEUP_MODULE needs to be wakened
 }
-void du_ui_proc_init()
+void du_ui_proc_init(void)
 {
 	du_store_proc_init();// transfer the mode 
 #if DU_BIND_CHECK_EN
@@ -831,7 +834,7 @@ void du_ui_proc_init()
 
 }
 
-void du_ui_proc_init_deep()
+void du_ui_proc_init_deep(void)
 {
 	gpio_set_wakeup (SW1_GPIO, Level_Low, 1);
 	cpu_set_gpio_wakeup (SW1_GPIO, Level_Low,1);  //drive pin pad high wakeup deepsleep
@@ -928,7 +931,7 @@ it is used to check that the du provision is not complete.
 it can be used by setting the macro of DU_BIND_CHECK_EN.
 */
 
-void du_prov_bind_check()
+void du_prov_bind_check(void)
 {
 	//provision suc ,but provision fail.
 	if(is_provision_success() && (!du_get_bind_flag())){
@@ -948,7 +951,7 @@ int du_vd_event_send(u8*p_buf,u8 len,u16 dst)
 
 u8 du_time_tid =0;
 
-void du_time_req_start_proc()
+void du_time_req_start_proc(void)
 {
 	u8 retry_times =4;
 	du_time_req time_req;
@@ -1011,7 +1014,7 @@ int du_vd_temp_event_send(vd_du_event_t* event)
 }
 
 
-void du_vd_send_loop_proc()
+void du_vd_send_loop_proc(void)
 {
 	if(blc_ll_getCurrentState() != BLS_LINK_STATE_CONN && (!mi_mesh_get_state())&&is_unicast_adr(du_get_gateway_adr())){
 
@@ -1041,7 +1044,7 @@ void du_vd_send_loop_proc()
 #if DU_ULTRA_PROV_EN
 #define dev_key_pad		pro_random
 #define randomc_pad		pro_confirm
-void mesh_du_ultra_prov_loop()
+void mesh_du_ultra_prov_loop(void)
 {
 	if(genie_nw_cache.tick && clock_time_exceed(genie_nw_cache.tick, 2*1000*1000)){//genie APP rx timeout 
 		genie_nw_cache.tick = 0;

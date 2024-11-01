@@ -27,7 +27,7 @@
 
 extern int 	key_not_released;
 
-void proc_ui();
+void proc_ui(void);
 
 /**
  * @brief      keyboard task handler

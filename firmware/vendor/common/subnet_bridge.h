@@ -62,7 +62,7 @@ enum{
 	TWO_WAY_DIRECTION=2,
 };
 
-typedef struct{
+typedef struct __attribute__((packed)) {
 	u32 directions:8;
 	u32 netkey_index1:12;
 	u32 netkey_index2:12;
@@ -71,29 +71,29 @@ typedef struct{
 }mesh_bridge_entry_t;
 
 #if MD_SBR_CFG_SERVER_EN
-typedef struct{
+typedef struct __attribute__((packed)) {
 	u8 bridge_en;
 }model_bridge_cfg_common_t;
 
-typedef struct{
+typedef struct __attribute__((packed)) {
 	model_bridge_cfg_common_t srv;
 	mesh_bridge_entry_t bridge_entry[MAX_BRIDGE_ENTRIES];
 }model_bridge_cfg_t;
 #endif
 
-typedef struct{
+typedef struct __attribute__((packed)) {
 	u32 netkey_index1:12;
 	u32 netkey_index2:12;
 }subnet_list_entry_t;
 
-typedef struct{
+typedef struct __attribute__((packed)) {
 	u64 netkey_index1:12;
 	u64 netkey_index2:12;
 	u64 addr1:16;
 	u64 addr2:16;
 }bridging_tbl_remove_t;
 
-typedef struct{
+typedef struct __attribute__((packed)) {
 	u8 status;
 	u32 current_directions:8;	
 	u32 netkey_index1:12;
@@ -102,14 +102,14 @@ typedef struct{
 	u16 addr2;
 }bridging_tbl_sts_t;
 
-typedef struct{
+typedef struct __attribute__((packed)) {
 	u32 filter:2;	
 	u32 prohibited:2;
 	u32 netkey_index:12;
 	u32 start_index:8;
 }bridged_subnets_get_t;
 
-typedef struct{
+typedef struct __attribute__((packed)) {
 	u16 filter:2;	
 	u16 prohibited:2;
 	u16 netkey_index:12;
@@ -117,19 +117,19 @@ typedef struct{
 	u8 par[MAX_BRIDGE_ENTRIES*3];
 }bridged_subnets_list_t;
 
-typedef struct{
+typedef struct __attribute__((packed)) {
 	u64 netkey_index1:12;	
 	u64 netkey_index2:12;
 	u64 start_index:16;
 }bridging_tbl_get_t;
 
-typedef struct{
+typedef struct __attribute__((packed)) {
 	u16 addr1;
 	u16 addr2;
 	u8 directions;
 }bridged_addr_lst_entry_t; 
 
-typedef struct{
+typedef struct __attribute__((packed)) {
 	u32 status:8;
 	u32 netkey_index1:12;	
 	u32 netkey_index2:12;
@@ -137,12 +137,12 @@ typedef struct{
 	bridged_addr_lst_entry_t bridge_list[MAX_BRIDGE_ENTRIES];
 }bridging_tbl_list_t;
 
-typedef struct{
+typedef struct __attribute__((packed)) {
 	u8 max_bridge_subnets;
 	u8 max_bridge_tbls; // u8 in pts,but u16 in spec
 }bridge_capa_st_t;
 
-typedef struct{
+typedef struct __attribute__((packed)) {
 #if MD_DF_CFG_SERVER_EN
 	model_df_cfg_t df_cfg;
 #endif
@@ -157,12 +157,12 @@ typedef struct{
 extern model_g_df_sbr_t model_sig_g_df_sbr_cfg; 
 extern u32 mesh_md_df_sbr_addr;
 
-int is_subnet_bridge_en();
+int is_subnet_bridge_en(void);
 int get_subnet_bridge_index(u16 netkey_index, u16 src, u16 dst);
 int is_subnet_bridge_addr(u16 addr1, u16 addr2);
 #if MD_SBR_CFG_SERVER_EN
-void mesh_remove_node_dependent_by_subnet_bridge();
-void mesh_subnet_bridge_bind_state_update();
+void mesh_remove_node_dependent_by_subnet_bridge(void);
+void mesh_subnet_bridge_bind_state_update(void);
 int mesh_cmd_sig_cfg_subnet_bridge_get(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par);
 int mesh_cmd_sig_cfg_subnet_bridge_set(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par);
 int mesh_cmd_sig_cfg_bridging_tbl_add(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par);

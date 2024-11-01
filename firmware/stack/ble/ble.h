@@ -49,9 +49,7 @@
 
 
 
-#ifndef DEFAULT_DEV_NAME
-#define DEFAULT_DEV_NAME						"B91m_ble_multi_conn"
-#endif
-#define MAX_DEV_NAME_LEN						sizeof(DEFAULT_DEV_NAME)-1
+
+
 
 #endif /* BLE_H_ */

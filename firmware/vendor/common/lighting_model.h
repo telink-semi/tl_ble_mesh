@@ -91,54 +91,54 @@ enum{
 
 #define ONPOWER_UP_VAL(index)	model_sig_g_power_onoff.on_powerup[index]
 
-typedef struct{
+typedef struct __attribute__((packed)) {
 	u16 lightness;
 	u8 tid;
 	u8 transit_t;
 	u8 delay;		// unit 5ms
 }mesh_cmd_lightness_set_t;
 
-typedef struct{
+typedef struct __attribute__((packed)) {
 	u16 present;
 	u16 target;
 	u8 remain_t;
 }mesh_cmd_lightness_st_t;
 
-typedef struct{
+typedef struct __attribute__((packed)) {
 	u16 lightness;
 }mesh_cmd_lightness_last_st_t;
 
-typedef struct{
+typedef struct __attribute__((packed)) {
 	u16 lightness;
 }mesh_cmd_lightness_def_set_t;
 
-typedef struct{
+typedef struct __attribute__((packed)) {
 	u16 lightness;
 }mesh_cmd_lightness_def_st_t;
 
-typedef struct{
+typedef struct __attribute__((packed)) {
 	u16 min;
 	u16 max;
 }mesh_cmd_lightness_range_set_t;
 
-typedef struct{
+typedef struct __attribute__((packed)) {
     u8 status;
 	u16 min;
 	u16 max;
 }mesh_cmd_lightness_range_st_t;
 
-typedef struct{
+typedef struct __attribute__((packed)) {
 	u16 min;
 	u16 max;
 }mesh_cmd_light_ctl_temp_range_set_t;
 
-typedef struct{
+typedef struct __attribute__((packed)) {
     u8 status;
 	u16 min;
 	u16 max;
 }mesh_cmd_light_ctl_temp_range_st_t;
 
-typedef struct{
+typedef struct __attribute__((packed)) {
 	u16 lightness;		// lightness ctl is same with lightness
 	u16 temp;			// 0x0320 -- 0x4E20  :800--20000
 	s16 delta_uv;
@@ -147,7 +147,7 @@ typedef struct{
 	u8 delay;		// unit 5ms
 }mesh_cmd_light_ctl_set_t;
 
-typedef struct{
+typedef struct __attribute__((packed)) {
 	u16 present_lightness;
 	u16 present_temp;
 	u16 target_lightness;
@@ -155,19 +155,19 @@ typedef struct{
 	u8 remain_t;
 }mesh_cmd_light_ctl_st_t;
 
-typedef struct{
+typedef struct __attribute__((packed)) {
 	u16 lightness;
 	u16 temp;
 	s16 delta_uv;
 }mesh_cmd_light_ctl_def_set_t;
 
-typedef struct{
+typedef struct __attribute__((packed)) {
 	u16 lightness;
 	u16 temp;
 	s16 delta_uv;
 }mesh_cmd_light_ctl_def_st_t;
 
-typedef struct{
+typedef struct __attribute__((packed)) {
 	u16 temp;			// 0x0320 -- 0x4E20  :800--20000
 	s16 delta_uv;
 	u8 tid;
@@ -175,7 +175,7 @@ typedef struct{
 	u8 delay;		// unit 5ms
 }mesh_cmd_light_ctl_temp_set_t;
 
-typedef struct{
+typedef struct __attribute__((packed)) {
 	u16 present_temp;
 	s16 present_delta_uv;
 	u16 target_temp;
@@ -183,7 +183,7 @@ typedef struct{
 	u8 remain_t;
 }mesh_cmd_light_ctl_temp_st_t;
 
-#if WIN32
+#ifdef WIN32
 void VC_RefreshUI_level(mesh_cb_fun_par_t *cb_par);
 #else
 #define VC_RefreshUI_level(cb_par)		

@@ -21,15 +21,15 @@
  *          limitations under the License.
  *
  *******************************************************************************************************/
-/**	@page USBHW
+/** @page USBHW
  *
- *	Introduction
- *	===============
- *	USB hard ware .
+ *  Introduction
+ *  ===============
+ *  USB hard ware .
  *
- *	API Reference
- *	===============
- *	Header File: usbhw.h
+ *  API Reference
+ *  ===============
+ *  Header File: usbhw.h
  */
 
 #pragma once
@@ -37,29 +37,65 @@
 #include "reg_include/register.h"
 #include "analog.h"
 #include "gpio.h"
+#include <stdbool.h>
+
+/* For compatibility, usb_set_pin_en() is equivalent to usb_set_pin(1), configure the usb pin and enable the dp_through_swire function.*/
+#define usb_set_pin_en()    usb_set_pin(1)
 
 typedef enum
 {
-	USB_IRQ_RESET_MASK   =BIT(0),
-	USB_IRQ_250US_MASK   =BIT(1),
-	USB_IRQ_SUSPEND_MASK =BIT(2),
+    USB_IRQ_RESET_MASK   =BIT(0),
+    USB_IRQ_250US_MASK   =BIT(1),
+    USB_IRQ_SUSPEND_MASK =BIT(2),
 }usb_irq_mask_e;
 
 typedef enum
 {
-	USB_IRQ_RESET_STATUS   =BIT(5),
-	USB_IRQ_250US_STATUS   =BIT(6),
-	USB_IRQ_SUSPEND_STATUS =BIT(7),
+    USB_IRQ_RESET_STATUS   =BIT(5),
+    USB_IRQ_250US_STATUS   =BIT(6),
+    USB_IRQ_SUSPEND_STATUS =BIT(7),
 }usb_irq_status_e;
 
+typedef enum {
+    USB_EDP8_IN         = 8,
+    USB_EDP1_IN         = 1,
+    USB_EDP2_IN         = 2,
+    USB_EDP3_IN         = 3,
+    USB_EDP4_IN         = 4,
+    USB_EDP5_OUT        = 5,
+    USB_EDP6_OUT        = 6,
+    USB_EDP7_IN         = 7,
+    USB_EDP_PRINTER_IN = 8,     // default hw buf len = 64
+    USB_EDP_MOUSE = 2,          // default hw buf len = 8
+    USB_EDP_KEYBOARD_IN = 1,    // default hw buf len = 8
+    USB_EDP_IN = 3,             // default hw buf len = 16
+    USB_EDP_AUDIO_IN = 4,       // default hw buf len = 64
+    USB_EDP_PRINTER_OUT = 5,    // default hw buf len = 64
+    USB_EDP_SPEAKER = 6,        // default hw buf len = 16
+    USB_EDP_MIC = 7,            // default hw buf len = 16
+    USB_EDP_MS_IN = 4,      // mass storage
+    USB_EDP_MS_OUT = 5,
+    USB_EDP_SOMATIC_IN = USB_EDP_AUDIO_IN,      //  when USB_SOMATIC_ENABLE, USB_EDP_PRINTER_OUT disable
+    USB_EDP_SOMATIC_OUT = USB_EDP_PRINTER_OUT,
+    USB_EDP_CDC_IN = 4,
+    USB_EDP_CDC_OUT = 5,
+}usb_ep_index;
 
+// #defined in the standard spec
+enum {
+    USB_HID_AUDIO           = 2,
+    USB_HID_MOUSE           = 1,
+    USB_HID_KB_MEDIA        = 3,// media
+    USB_HID_KB_SYS          = 4,// system : power,sleep,wakeup
+    USB_HID_SOMATIC         = 5,// somatic sensor,  may have many report ids
+};
 
 /**
  * @brief     This function servers to set ed8 to fifo mode.
  * @return    none.
  */
 static inline void usbhw_set_ep8_fifo_mode(void) {
-	BM_SET(reg_usb_ep8_fifo_mode,FLD_USB_ENP8_FIFO_MODE);
+    BM_SET(reg_usb_ep8_fifo_mode,FLD_USB_ENP8_FIFO_MODE);
 }
 
 /**
@@ -67,7 +103,7 @@ static inline void usbhw_set_ep8_fifo_mode(void) {
  * @return    none.
  */
 static inline void usbhw_reset_ctrl_ep_ptr(void) {
-	reg_ctrl_ep_ptr = 0;
+    reg_ctrl_ep_ptr = 0;
 }
 
 /**
@@ -75,7 +111,7 @@ static inline void usbhw_reset_ctrl_ep_ptr(void) {
  * @return    none.
  */
 static inline unsigned int usbhw_get_ctrl_ep_irq(void) {
-	return reg_ctrl_ep_irq_sta;
+    return reg_ctrl_ep_irq_sta;
 }
 
 /**
@@ -85,9 +121,9 @@ static inline unsigned int usbhw_get_ctrl_ep_irq(void) {
  */
 static inline void usbhw_clr_ctrl_ep_irq(int ep) {
 #ifdef WIN32
-	BM_CLR(reg_ctrl_ep_irq_sta, ep);
+    BM_CLR(reg_ctrl_ep_irq_sta, ep);
 #else
-	reg_ctrl_ep_irq_sta = ep;
+    reg_ctrl_ep_irq_sta = ep;
 #endif
 }
 
@@ -97,7 +133,7 @@ static inline void usbhw_clr_ctrl_ep_irq(int ep) {
  * @return    none.
  */
 static inline void usbhw_write_ctrl_ep_ctrl(unsigned char data) {
-	reg_ctrl_ep_ctrl = data;
+    reg_ctrl_ep_ctrl = data;
 }
 
 /**
@@ -105,7 +141,7 @@ static inline void usbhw_write_ctrl_ep_ctrl(unsigned char data) {
  * @return    the value of control Endpoint data
  */
 static inline unsigned char usbhw_read_ctrl_ep_data(void) {
-	return reg_ctrl_ep_dat;
+    return reg_ctrl_ep_dat;
 }
 
 /**
@@ -114,7 +150,7 @@ static inline unsigned char usbhw_read_ctrl_ep_data(void) {
  * @return    none
  */
 static inline void usbhw_write_ctrl_ep_data(unsigned char data) {
-	reg_ctrl_ep_dat = data;
+    reg_ctrl_ep_dat = data;
 }
 
 /**
@@ -122,7 +158,7 @@ static inline void usbhw_write_ctrl_ep_data(unsigned char data) {
  * @return    1: busy; 0: not busy.
  */
 static inline int usbhw_is_ctrl_ep_busy(void) {
-	return reg_ctrl_ep_irq_sta & FLD_USB_EP_BUSY;
+    return reg_ctrl_ep_irq_sta & FLD_USB_EP_BUSY;
 }
 
 
@@ -132,7 +168,19 @@ static inline int usbhw_is_ctrl_ep_busy(void) {
  * @return    none.
  */
 static inline void usbhw_reset_ep_ptr(unsigned int ep) {
-	reg_usb_ep_ptr(ep) = 0;
+    reg_usb_ep_ptr(ep) = 0;
+}
+
+
+/**
+ * @brief     This function servers to set the buffer address of data endpoint.
+ * @param[in] ep - select the data endpoint.
+ * @param[in] addr - data endpoint buffer address.
+ * @return    none.
+ */
+static inline void usbhw_set_ep_addr(usb_ep_index ep, unsigned char addr)
+{
+    reg_usb_ep_buf_addr(ep) = addr & 0xff;
 }
 
 /**
@@ -141,7 +189,7 @@ static inline void usbhw_reset_ep_ptr(unsigned int ep) {
  */
 static inline void usbhw_set_eps_irq_mask(usb_ep_irq_e mask)
 {
-	reg_usb_ep_irq_mask|=mask;
+    reg_usb_ep_irq_mask|=mask;
 
 }
 
@@ -151,7 +199,7 @@ static inline void usbhw_set_eps_irq_mask(usb_ep_irq_e mask)
  */
 static inline void usbhw_clr_eps_irq_mask(usb_ep_irq_e mask)
 {
-	reg_usb_ep_irq_mask &=(~mask);
+    reg_usb_ep_irq_mask &=(~mask);
 
 }
 
@@ -160,7 +208,7 @@ static inline void usbhw_clr_eps_irq_mask(usb_ep_irq_e mask)
  * @return    none.
  */
 static inline unsigned int usbhw_get_eps_irq(void) {
-	return reg_usb_ep_irq_status;
+    return reg_usb_ep_irq_status;
 }
 
 /**
@@ -169,7 +217,7 @@ static inline unsigned int usbhw_get_eps_irq(void) {
  * @return    none.
  */
 static inline void usbhw_clr_eps_irq(int ep) {
-	reg_usb_ep_irq_status = ep;
+    reg_usb_ep_irq_status = ep;
 }
 
 /**
@@ -179,7 +227,7 @@ static inline void usbhw_clr_eps_irq(int ep) {
  */
 static inline void usbhw_set_irq_mask( usb_irq_mask_e mask)
 {
-	reg_usb_irq_mask|=mask;
+    reg_usb_irq_mask|=mask;
 }
 
 /**
@@ -189,18 +237,18 @@ static inline void usbhw_set_irq_mask( usb_irq_mask_e mask)
  */
 static inline void usbhw_clr_irq_mask( usb_irq_mask_e mask)
 {
-	reg_usb_irq_mask &= (~mask);
+    reg_usb_irq_mask &= (~mask);
 }
 
 /**
  * @brief     This function servers to get usb irq status.
  * @param[in]  status -the  irq status of usb.
- * @retval	  non-zero   -  the interrupt occurred.
- * @retval	  zero  -  the interrupt did not occur.
+ * @retval    non-zero   -  the interrupt occurred.
+ * @retval    zero  -  the interrupt did not occur.
  */
 static inline unsigned char  usbhw_get_irq_status(usb_irq_status_e status)
 {
-	return reg_usb_irq_mask&status;
+    return reg_usb_irq_mask&status;
 }
 
 /**
@@ -213,17 +261,17 @@ static inline void usbhw_clr_irq_status(usb_irq_status_e status)
     /** the reg_usb_irq_mask register mask and status are in the same register
      * enum
      * {
-     *      FLD_USB_IRQ_RESET_MASK   = 	BIT(0),
-     *      FLD_USB_IRQ_250US_MASK 	 = 	BIT(1),
-     *      FLD_USB_IRQ_SUSPEND_MASK = 	BIT(2),
-     *      FLD_USB_IRQ_RESET_LVL	 = 	BIT(3),
-     *      FLD_USB_IRQ_250US_LVL	 = 	BIT(4),
-     *      FLD_USB_IRQ_RESET_O 	 = 	BIT(5),
-     *      FLD_USB_IRQ_250US_O		 = 	BIT(6),
-     *      FLD_USB_IRQ_SUSPEND_O	 = 	BIT(7),
+     *      FLD_USB_IRQ_RESET_MASK   =  BIT(0),
+     *      FLD_USB_IRQ_250US_MASK   =  BIT(1),
+     *      FLD_USB_IRQ_SUSPEND_MASK =  BIT(2),
+     *      FLD_USB_IRQ_RESET_LVL    =  BIT(3),
+     *      FLD_USB_IRQ_250US_LVL    =  BIT(4),
+     *      FLD_USB_IRQ_RESET_O      =  BIT(5),
+     *      FLD_USB_IRQ_250US_O      =  BIT(6),
+     *      FLD_USB_IRQ_SUSPEND_O    =  BIT(7),
      * };
      * Flags can only be cleared with |=, not by direct assignment. */
-	reg_usb_irq_mask|=status; 
+    reg_usb_irq_mask|=status; 
 }
 
 
@@ -234,7 +282,7 @@ static inline void usbhw_clr_irq_status(usb_irq_status_e status)
  */
 static inline void  usbhw_set_eps_en(usb_ep_en_e ep)
 {
-	reg_usb_edp_en= ep;
+    reg_usb_edp_en= ep;
 }
 
 /**
@@ -244,7 +292,7 @@ static inline void  usbhw_set_eps_en(usb_ep_en_e ep)
  */
 static inline void  usbhw_set_eps_dis(usb_ep_en_e ep)
 {
-	reg_usb_edp_en &=(~ ep);
+    reg_usb_edp_en &=(~ ep);
 }
 
 /**
@@ -253,7 +301,7 @@ static inline void  usbhw_set_eps_dis(usb_ep_en_e ep)
  * @return    the value of Endpoint
  */
 static inline unsigned char usbhw_read_ep_data(unsigned int ep) {
-	return reg_usb_ep_dat(ep);
+    return reg_usb_ep_dat(ep);
 }
 
 /**
@@ -263,7 +311,7 @@ static inline unsigned char usbhw_read_ep_data(unsigned int ep) {
  * @return    none
  */
 static inline void usbhw_write_ep_data(unsigned int ep, unsigned char data) {
-	reg_usb_ep_dat(ep) = data;
+    reg_usb_ep_dat(ep) = data;
 }
 
 
@@ -275,14 +323,14 @@ static inline void usbhw_write_ep_data(unsigned int ep, unsigned char data) {
  * @return    none
  */
 static inline void usbhw_set_ep_en(unsigned int ep, unsigned char en) {
-	if(en)
-	{
-		reg_usb_edp_en |= ep;
-	}
-	else
-	{
-		reg_usb_edp_en &= ~(ep);
-	}
+    if(en)
+    {
+        reg_usb_edp_en |= ep;
+    }
+    else
+    {
+        reg_usb_edp_en &= ~(ep);
+    }
 }
 
 /**
@@ -291,7 +339,7 @@ static inline void usbhw_set_ep_en(unsigned int ep, unsigned char en) {
  * @return    1: busy; 0: not busy.
  */
 static inline unsigned int usbhw_is_ep_busy(unsigned int ep) {
-	return reg_usb_ep_ctrl(ep) & FLD_USB_EP_BUSY;
+    return reg_usb_ep_ctrl(ep) & FLD_USB_EP_BUSY;
 }
 
 /**
@@ -300,7 +348,7 @@ static inline unsigned int usbhw_is_ep_busy(unsigned int ep) {
  * @return    none.
  */
 static inline void usbhw_data_ep_ack(unsigned int ep) {
-	reg_usb_ep_ctrl(ep) = FLD_USB_EP_BUSY;
+    reg_usb_ep_ctrl(ep) = FLD_USB_EP_BUSY;
 }
 
 /**
@@ -309,7 +357,7 @@ static inline void usbhw_data_ep_ack(unsigned int ep) {
  * @return    none.
  */
 static inline void usbhw_data_ep_stall(unsigned int ep) {
-	reg_usb_ep_ctrl(ep) = FLD_USB_EP_STALL;
+    reg_usb_ep_ctrl(ep) = FLD_USB_EP_STALL;
 }
 
 
@@ -319,35 +367,18 @@ static inline void usbhw_data_ep_stall(unsigned int ep) {
  * @return    none.
  */
 static inline void usbhw_set_printer_threshold(unsigned char th) {
-	reg_usb_ep8_send_thres = th;
+    reg_usb_ep8_send_thres = th;
 }
 
-enum {
-	USB_EDP_PRINTER_IN = 8,     // default hw buf len = 64
-	USB_EDP_MOUSE = 2,			// default hw buf len = 8
-	USB_EDP_KEYBOARD_IN = 1,	// default hw buf len = 8
-	USB_EDP_IN = 3,				// default hw buf len = 16
-	USB_EDP_AUDIO_IN = 4,		// default hw buf len = 64
-	USB_EDP_PRINTER_OUT = 5,	// default hw buf len = 64
-	USB_EDP_SPEAKER = 6,		// default hw buf len = 16
-	USB_EDP_MIC = 7,			// default hw buf len = 16
-	USB_EDP_MS_IN = 4,		// mass storage
-	USB_EDP_MS_OUT = 5,
-	USB_EDP_SOMATIC_IN = USB_EDP_AUDIO_IN,		//  when USB_SOMATIC_ENABLE, USB_EDP_PRINTER_OUT disable
-	USB_EDP_SOMATIC_OUT = USB_EDP_PRINTER_OUT,
-    USB_EDP_CDC_IN = 4,
-    USB_EDP_CDC_OUT = 5,
-};
-
-// #defined in the standard spec
-enum {
-	USB_HID_AUDIO       	= 2,
-	USB_HID_MOUSE       	= 1,
-	USB_HID_KB_MEDIA    	= 3,// media
-	USB_HID_KB_SYS      	= 4,// system : power,sleep,wakeup
-	USB_HID_SOMATIC			= 5,// somatic sensor,  may have many report ids
-};
-
+/**
+ * @brief     This function servers to set in endpoint buffer max size(except 7 aiso mode).
+ * @param[in] max_size - in endpoint max size.
+ * @return    none.
+ */
+static inline void usbhw_set_eps_max_size(unsigned int max_size)
+{
+    reg_usb_ep_max_size = max_size >> 3;
+}
 
 /**
  * @brief      This function disables the manual interrupt
@@ -394,16 +425,16 @@ unsigned short usbhw_read_ctrl_ep_u16(void);
  */
 static inline void usb_dp_pullup_en (int en)
 {
-	unsigned char dat = analog_read_reg8(0x0b);
-	if (en) {
-		dat = dat | BIT(7);
-	}
-	else
-	{
-		dat = dat & 0x7f ;
-	}
+    unsigned char dat = analog_read_reg8(0x0b);
+    if (en) {
+        dat = dat | BIT(7);
+    }
+    else
+    {
+        dat = dat & 0x7f ;
+    }
 
-	analog_write_reg8 (0x0b, dat);
+    analog_write_reg8 (0x0b, dat);
 }
 
 /**
@@ -413,27 +444,29 @@ static inline void usb_dp_pullup_en (int en)
  */
 static inline void usb_power_on(unsigned char en)
 {
-	if(en)
-	{
-		analog_write_reg8(0x7d,analog_read_reg8(0x7d)&0xfd);
-	}
-	else
-	{
-		analog_write_reg8(0x7d,analog_read_reg8(0x7d)|0x02);
-	}
+    if(en)
+    {
+        analog_write_reg8(0x7d,analog_read_reg8(0x7d)&0xfd);
+    }
+    else
+    {
+        analog_write_reg8(0x7d,analog_read_reg8(0x7d)|0x02);
+    }
 }
 
 /**
- * @brief      This function serves to set GPIO MUX function as DP and DM pin of USB
+ * @brief      This function serves to set dp_through_swire function.
+ * @param[in]  dp_through_swire - 1: swire_usb_en 0: swire_usb_dis
  * @return     none.
  */
-static inline void usb_set_pin_en(void)
-{
-	reg_gpio_func_mux(GPIO_PA5)=reg_gpio_func_mux(GPIO_PA5)&(~BIT_RNG(2,3));
-	gpio_function_dis(GPIO_PA5);
-	reg_gpio_func_mux(GPIO_PA6)=reg_gpio_func_mux(GPIO_PA6)&(~BIT_RNG(4,5));
-	gpio_function_dis(GPIO_PA6);
-	gpio_input_en(GPIO_PA5|GPIO_PA6);//DP/DM must set input enable
-	usb_dp_pullup_en (1);
-	write_reg8(0x100c01, (read_reg8(0x100c01) | BIT(7)));   //swire_usb_en
-}
+void dp_through_swire_en(bool dp_through_swire);
+
+/**
+ * @brief      This function serves to set GPIO MUX function as DP and DM pin of USB.
+ * @param[in]  dp_through_swire - 1: swire_usb_en 0: swire_usb_dis
+ * @return     none.
+ * @note       1. Configure usb_set_pin(0) , there are some risks, please refer to the startup.S file about DP_THROUGH_SWIRE_DIS
+ *                for detailed description (by default dp_through_swire is disabled). Configure usb_set_pin(1) to enable dp_through_swire again.
+ *             2. When dp_through_swire is enabled, Swire and USB applications do not affect each other.
+ */
+void usb_set_pin(bool dp_through_swire);

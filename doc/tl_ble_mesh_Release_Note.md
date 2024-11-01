@@ -1,3 +1,192 @@
+## V4.2.0.1(PR)
+
+### Version
+
+* SDK Version: tl_ble_mesh_V4.2.0.1
+* Chip Version:
+  - TLSR921X(B91): A2
+  - TL321X: A1
+* Hardware EVK Version:
+  - TLSR921X: C1T213A20_V1.3
+  - TL321X: C1T331A20_V1.0/C1T335A20_V1.0  
+* Platform Version:
+  - tl_ble_sdk V4.0.4.2
+* Toolchain Version:
+  - TLSR921X: TL32 ELF MCULIB V5F GCC7.4 (IDE: TelinkIoTStudio_V2024.8)
+  - TL321X: TL32 ELF MCULIB V5 GCC12.2 (IDE: TelinkIoTStudio_V2024.8)
+
+### Features
+* **Supported TL321X A1 chip**
+  - (Firmware)add Flash protection, set APP_FLASH_PROTECTION_ENABLE to 1 to enable, it's enabled by default.
+    - Flash protection is enabled by default, and it must be enabled in production.
+    - During the development phase, user should click the "Unlock" button in Telink BDT tool to unlock before erase/write the Flash.
+  - (Firmware)each mesh nodes can be connected by up to three masters.
+  - (Firmware)add TL321X_mesh_LPN with suspend/deepsleep_retention mode.
+  - (Firmware)add TL321X_mesh_switch with suspend/deepsleep_retention mode.
+* **Android/iOS**
+  - add support to modify cloud URL.
+  - optimize fast provision function, add logs during fast provisioning.
+  - add support App to connect specified node. 
+
+### Bug Fixes
+* fix the following issue by moving proxy filter initial function from connection callback to disconnection callback: ‌
+  When both Phone A and Phone B connecting with node C, if Phone A disconnects and connects to node D, Phone A will fails to get the status of node C.
+
+### Known issues
+* TL321X_mesh_gw do not support USB mode currently, use uart mode by default.
+
+### Performance Improvements
+* N/A
+
+### BREAKING CHANGES
+* N/A
+
+### Notes
+* debugging tools: such as sig_mesh_tool.exe and Android apk, please make sure to use the tools of this release.
+* to avoid compilation errors or loss of functionality, please update all files when upgrading the SDK.
+* for the release note contents of the BLE SDK and Driver SDK mentioned in "Version", please refer to the release note files of related SDKs.
+* support SIG Mesh single connection app TelinkBleMesh.
+
+### Flash
+* TLSR921X
+  - P25Q80U
+  - P25Q16SU
+  - P25Q32SU
+* TL321X
+  - P25Q80U
+  - P25Q16SU
+  
+### CodeSize
+* TLSR921X
+  - B91_mesh(default target)
+    - Flash bin size: 156.0KB
+    - IRAM size: 58.9KB
+    - DRAM size: 4KB stack
+  - B91_mesh_gw(default target)
+    - Flash bin size: 155.2KB
+    - IRAM size: 63.2KB
+    - DRAM size: 4KB stack
+  - B91_mesh_lpn(default target)
+    - Flash bin size: 150.4KB
+    - IRAM size: 52.5KB
+    - DRAM size: 4KB stack
+  - B91_mesh_switch(default target)
+    - Flash bin size: 142.4KB
+    - IRAM size: 53.5KB
+    - DRAM size: 4KB stack
+	
+* TL321X
+  - TL321X_mesh(default target)
+    - Flash bin size: 161.5KB
+    - IRAM size: 60.4KB
+    - DRAM size: 4KB stack
+  - TL321X_mesh_gw(default target)
+    - Flash bin size: 161.0KB
+    - IRAM size: 65.2KB
+    - DRAM size: 4KB stack
+  - TL321X_mesh_lpn(default target)
+    - Flash bin size: 155.2KB
+    - IRAM size: 54.3KB
+    - DRAM size: 4KB stack
+  - TL321X_mesh_switch(default target)
+    - Flash bin size: 145.6KB
+    - IRAM size: 54.3KB
+    - DRAM size: 4KB stack
+  
+### Version
+
+* SDK Version: tl_ble_mesh_V4.2.0.1
+* Chip Version:
+  - TLSR921X(B91): A2
+  - TL321X: A1
+* Hardware EVK Version:
+  - TLSR921X: C1T213A20_V1.3
+  - TL321X: C1T331A20_V1.0/C1T335A20_V1.0  
+* Platform Version:
+  - tl_ble_sdk V4.0.4.2
+* Toolchain Version:
+  - TLSR921X: TL32 ELF MCULIB V5F GCC7.4 (IDE: TelinkIoTStudio_V2024.8)
+  - TL321X: TL32 ELF MCULIB V5 GCC12.2 (IDE: TelinkIoTStudio_V2024.8)
+
+### Features
+* **支持 TL321X A1 芯片**
+  - (Firmware)添加Flash保护，设置 APP_FLASH_PROTECTION_ENABLE 等于 1来使能该功能，默认打开。
+    - SDK 中默认开启 Flash 保护，在量产时必须启用。
+    - 在开发阶段，用户在擦写Flash前应使用Telink BDT工具中的“Unlock”命令解锁Flash。
+  - (Firmware)每个mesh节点支持最多3个master同时连接。
+  - (Firmware)添加TL321X_mesh_LPN，具备suspend/deepsleep_retention休眠模式。
+  - (Firmware)添加TL321X_mesh_switch，具备suspend/deepsleep_retention休眠模式。
+* **Android/iOS**
+  - 支持可编辑云端地址。
+  - 优化fast provision功能， UI上添加更多provision过程信息显示。
+  - 支持App连接指定的节点。
+
+### Bug Fixes
+* 将代理列表初始化从连接回调中移到断开连接回调修复以下问题：
+  当手机A和手机B同时连接到节点C时，如果手机A断开连接并连接到节点D，手机A将无法获取节点C的状态。
+
+### Known issues
+* TL321X_mesh_gw 暂不支持usb模式，默认使用串口模式。
+
+### Performance Improvements
+* N/A
+
+### BREAKING CHANGES
+* N/A
+
+### Notes
+* 调试工具：比如sig_mesh_tool.exe和APP 安装包文件，请务必使用本次release的版本。
+* 为避免编译错误以及功能丢失，升级SDK时，请确认更新全部SDK文件。
+* “Version”里面提到的BLE SDK和Driver SDK的release note内容，请查阅对应SDK的release note文件。
+* 支持SIG Mesh单连接app TelinkBleMesh。 
+
+### Flash
+* TLSR921X
+  - P25Q80U
+  - P25Q16SU
+  - P25Q32SU
+* TL321X
+  - P25Q80U
+  - P25Q16SU
+  
+### CodeSize
+* TLSR921X
+  - B91_mesh(default target)
+    - Flash bin size: 156.0KB
+    - IRAM size: 58.9KB
+    - DRAM size: 4KB stack
+  - B91_mesh_gw(default target)
+    - Flash bin size: 155.2KB
+    - IRAM size: 63.2KB
+    - DRAM size: 4KB stack
+  - B91_mesh_lpn(default target)
+    - Flash bin size: 150.4KB
+    - IRAM size: 52.5KB
+    - DRAM size: 4KB stack
+  - B91_mesh_switch(default target)
+    - Flash bin size: 142.4KB
+    - IRAM size: 53.5KB
+    - DRAM size: 4KB stack
+	
+* TL321X
+  - TL321X_mesh(default target)
+    - Flash bin size: 161.5KB
+    - IRAM size: 60.4KB
+    - DRAM size: 4KB stack
+  - TL321X_mesh_gw(default target)
+    - Flash bin size: 161.0KB
+    - IRAM size: 65.2KB
+    - DRAM size: 4KB stack
+  - TL321X_mesh_lpn(default target)
+    - Flash bin size: 155.2KB
+    - IRAM size: 54.3KB
+    - DRAM size: 4KB stack
+  - TL321X_mesh_switch(default target)
+    - Flash bin size: 145.6KB
+    - IRAM size: 54.3KB
+    - DRAM size: 4KB stack
+
+
 ## V4.2.0.0(PR)
 
 ### Version

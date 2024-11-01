@@ -31,7 +31,7 @@ u8 iv_idx_update_change2next_st = 0;
 #endif
 static u8 beacon_iv_update_pkt = 0;
 
-int is_enough_time_keep_state()
+int is_enough_time_keep_state(void)
 {
 	return (is_iv_update_keep_enough_time_ll()
 		 #if IV_UPDATE_SKIP_96HOUR_EN
@@ -40,7 +40,7 @@ int is_enough_time_keep_state()
 		 );
 }
 
-int is_iv_index_invalid()
+int is_iv_index_invalid(void)
 {
 	return (MESH_INVALID_IV_INDEX == iv_idx_st.iv_cur);
 }
@@ -67,14 +67,14 @@ void mesh_iv_idx_init(u32 iv_index, int rst_sno, int save_flag)
 
     if(save_flag){
     	mesh_misc_store();
-    	#if WIN32
+    	#ifdef WIN32
     	if(rst_sno){
     	}
     	#endif
     }
 }
 
-void mesh_iv_update_enter_search_mode()
+void mesh_iv_update_enter_search_mode(void)
 {
     mesh_iv_idx_init(iv_idx_st.iv_cur, 0, 0);
     iv_idx_st.searching_flag = 1;
@@ -82,12 +82,12 @@ void mesh_iv_update_enter_search_mode()
 }
 
 #if TESTCASE_FLAG_ENABLE
-void mesh_iv_update_enter_normal()	// just for test case // enter normal with step 0.
+void mesh_iv_update_enter_normal(void)	// just for test case // enter normal with step 0.
 {
 	mesh_iv_idx_init(iv_idx_st.iv_cur, 0, 0);
 }
 
-void mesh_iv_update_enter_update_progress()
+void mesh_iv_update_enter_update_progress(void)
 {
 	iv_idx_st.rx_update = 1;
 	iv_idx_st.searching_flag = 0;
@@ -95,7 +95,7 @@ void mesh_iv_update_enter_update_progress()
 }
 #endif
 
-void mesh_iv_update_enter_update2normal() // enter normal with step2, not normal with step 0.
+void mesh_iv_update_enter_update2normal(void) // enter normal with step2, not normal with step 0.
 {
 	mesh_iv_idx_init(iv_idx_st.iv_cur, 1, 0);
 	iv_idx_st.update_proc_flag = IV_UPDATE_STEP2;
@@ -105,7 +105,7 @@ void mesh_iv_update_enter_update2normal() // enter normal with step2, not normal
 	mesh_iv_update_report_between_gatt();
 }
 
-void set_iv_update_rx_flag()
+void set_iv_update_rx_flag(void)
 {
     iv_idx_st.rx_update = 1;
     beacon_iv_update_pkt = 1;
@@ -122,9 +122,9 @@ void mesh_check_and_set_iv_update_rx_flag(u32 iv_idx)
     // if push for every iv update messages, it would cause FN cache fifo be full with friend update messages.
 }
 
-void mesh_iv_update_report_between_gatt()
+void mesh_iv_update_report_between_gatt(void)
 {
-#if WIN32
+#ifdef WIN32
     // if(connect_flag) // no need
 #else
 	if(blc_ll_getCurrentState() == BLS_LINK_STATE_CONN)
@@ -138,7 +138,7 @@ void mesh_iv_update_report_between_gatt()
 #endif
 }
 
-int mesh_iv_update_step_change()
+int mesh_iv_update_step_change(void)
 {
 	int err = -1;
 	if(IV_UPDATE_STEP1 == iv_idx_st.update_proc_flag){
@@ -195,7 +195,6 @@ int iv_update_key_refresh_rx_handle_cb(mesh_ctl_fri_update_flag_t *p_ivi_flag, u
 {
 	#if (__PROJECT_MESH_SWITCH__ || GW_SMART_PROVISION_REMOTE_CONTROL_PM_EN)
 	LOG_MSG_INFO(TL_LOG_IV_UPDATE,0, 0,"switch receive security network beacon time_s:%d", clock_time_s());
-	extern int soft_timer_rcv_beacon_timeout();
 	soft_timer_rcv_beacon_timeout();
 	blt_soft_timer_delete(&soft_timer_rcv_beacon_timeout);
 		#if __PROJECT_MESH_SWITCH__
@@ -402,7 +401,7 @@ void mesh_iv_update_set_start_flag(int keep_search_flag)
 	mesh_iv_update_report_between_gatt();
 }
 
-void mesh_iv_update_start_check()
+void mesh_iv_update_start_check(void)
 {
 #if IV_UPDATE_DISABLE
 	if(is_sno_exhausted()){
@@ -427,7 +426,7 @@ void mesh_iv_update_start_check()
     }
 }
 
-void mesh_iv_update_start_poll()
+void mesh_iv_update_start_poll(void)
 {
 	if(is_iv_index_invalid()){ 
 		return;

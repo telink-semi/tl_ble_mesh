@@ -30,7 +30,7 @@
  * @return     none
  */
 void charger_set_mode(charger_mode_e charger_mode){
-		analog_write_reg8(reg_charger_mode,((analog_read_reg8(reg_charger_mode)&(~AUTO_MANUAL_SEL))&(~MANUAL_MODE))|charger_mode);
+        analog_write_reg8(reg_charger_mode,((analog_read_reg8(reg_charger_mode)&(~AUTO_MANUAL_SEL))&(~MANUAL_MODE))|charger_mode);
 }
 
 /**
@@ -39,7 +39,7 @@ void charger_set_mode(charger_mode_e charger_mode){
  * @return     none
  */
 void charger_set_cc_current(charger_cc_current_e cc_current){
-	analog_write_reg8(reg_charger_ichg,((analog_read_reg8(reg_charger_ichg)&(~ICHG_TRIM))|(cc_current&ICHG_TRIM)));
+    analog_write_reg8(reg_charger_ichg,((analog_read_reg8(reg_charger_ichg)&(~ICHG_TRIM))|(cc_current&ICHG_TRIM)));
 }
 
 /**
@@ -48,7 +48,7 @@ void charger_set_cc_current(charger_cc_current_e cc_current){
  * @return     none
  */
 void charger_set_tc_current(charger_tc_current_e tc_current){
-	analog_write_reg8(reg_charger_ichg,((analog_read_reg8(reg_charger_ichg)&(~ICHG_TRIM))|(tc_current&ICHG_TRIM)));
+    analog_write_reg8(reg_charger_ichg,((analog_read_reg8(reg_charger_ichg)&(~ICHG_TRIM))|(tc_current&ICHG_TRIM)));
 }
 
 
@@ -58,7 +58,7 @@ void charger_set_tc_current(charger_tc_current_e tc_current){
  * @return     none
  */
 void charger_set_cv_voltage(charger_cv_voltage_e cv_voltage){
-	analog_write_reg8(reg_charger_vchg,((analog_read_reg8(reg_charger_vchg)&(~VCHG_TRIM))|(cv_voltage&VCHG_TRIM)));
+    analog_write_reg8(reg_charger_vchg,((analog_read_reg8(reg_charger_vchg)&(~VCHG_TRIM))|(cv_voltage&VCHG_TRIM)));
 }
 
 
@@ -69,16 +69,16 @@ void charger_set_cv_voltage(charger_cv_voltage_e cv_voltage){
  * @return     1:vbus power on 0:vbus power down;
  */
 _Bool charger_get_vbus_status(){
-	return analog_read_reg8(reg_charger_status)&CHG_USB_ON_OFF;
+    return analog_read_reg8(reg_charger_status)&CHG_USB_ON_OFF;
 }
 
 /*******************************************************************************************************************
- *		          the functions for internal use in charger,in order to test                                       *
+ *                the functions for internal use in charger,in order to test                                       *
  ******************************************************************************************************************/
 /**
  * @brief      The function of this API is to get charge status.
  * @return     none
  */
 charger_status_e charger_get_status(){
-	return analog_read_reg8(reg_charger_status);
+    return analog_read_reg8(reg_charger_status);
 }

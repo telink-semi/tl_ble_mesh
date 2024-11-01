@@ -25,7 +25,7 @@
 #include "tl_common.h"  
 
 #if PRINT_DEBUG_INFO
-
+#include "mesh_common.h"
 #include "myprintf.h"
 
 #define		BIT_INTERVAL_SYS_TICK	(CLOCK_SYS_CLOCK_1S/BAUD_USE)
@@ -38,7 +38,7 @@ _attribute_no_retention_bss_ static int tx_pin_initialed = 0;
  * @param  None
  * @retval None
  */
-_attribute_no_inline_ void debug_info_tx_pin_init()
+_attribute_no_inline_ void debug_info_tx_pin_init(void)
 {
     gpio_setup_up_down_resistor(DEBUG_INFO_TX_PIN,PM_PIN_PULLUP_10K);
     gpio_set_func(DEBUG_INFO_TX_PIN, AS_GPIO);
@@ -53,13 +53,13 @@ _attribute_no_inline_ void debug_info_tx_pin_init()
 #if (__TLSR_RISCV_EN__)
 _attribute_ram_code_ 
 _attribute_no_inline_ 
-static void uart_do_put_char(u32 pcTxReg, u8 *bit)
+static void uart_do_put_char(u16 *bit)
 {
 #if ((BAUD_USE == SIMU_BAUD_1M) && !BLE_MULTIPLE_CONNECTION_ENABLE)
 	/*! Make sure the following loop instruction starts at 4-byte alignment: (which is destination address of "tjne") */
 	// _ASM_NOP_; 
 	#if (CLOCK_SYS_CLOCK_HZ == 16000000)
-	#define UART_IO_ONE_BIT(index)	do{write_reg8(pcTxReg, bit[index]);fence_iorw;}while(0)
+	#define UART_IO_ONE_BIT(index)	do{reg_gpio_out(DEBUG_INFO_TX_PIN) = bit[j];fence_iorw;}while(0)
 	UART_IO_ONE_BIT(0); // 1us exactly
 	UART_IO_ONE_BIT(1);
 	UART_IO_ONE_BIT(2);
@@ -84,7 +84,7 @@ static void uart_do_put_char(u32 pcTxReg, u8 *bit)
 	#else
 	#error "error CLOCK_SYS_CLOCK_HZ"
 	#endif
-		write_reg8(pcTxReg, bit[j]); 	   //send bit0
+        reg_gpio_out(DEBUG_INFO_TX_PIN) = bit[j];
 		fence_iorw;
 	}
 	#endif
@@ -98,7 +98,7 @@ static void uart_do_put_char(u32 pcTxReg, u8 *bit)
 		while(t1 - t2 < BIT_INTERVAL_SYS_TICK){
 			t1	= clock_time();//read_reg32(0x740);
 		}
-		write_reg8(pcTxReg,bit[j]); 	   //send bit0
+        reg_gpio_out(DEBUG_INFO_TX_PIN) = bit[j];
 	}
 #endif
 }
@@ -106,7 +106,7 @@ static void uart_do_put_char(u32 pcTxReg, u8 *bit)
 #else // for B85m
 _attribute_ram_code_ 
 _attribute_no_inline_ 
-static void uart_do_put_char(u32 pcTxReg, u8 *bit)
+static void uart_do_put_char(u16 *bit)
 {
 	int j;
 #if ((BAUD_USE == SIMU_BAUD_1M) && (CLOCK_SYS_CLOCK_HZ <= 48000000))
@@ -125,7 +125,7 @@ static void uart_do_put_char(u32 pcTxReg, u8 *bit)
 	#else
 	#error "error CLOCK_SYS_CLOCK_HZ"
 	#endif
-		write_reg8(pcTxReg, bit[j]); 	   //send bit0
+		reg_gpio_out(DEBUG_INFO_TX_PIN) = bit[j];
 	}
 #else
 	u32 t1 = 0, t2 = 0;
@@ -136,7 +136,7 @@ static void uart_do_put_char(u32 pcTxReg, u8 *bit)
 		while(t1 - t2 < BIT_INTERVAL_SYS_TICK){
 			t1	= clock_time();//read_reg32(0x740);
 		}
-		write_reg8(pcTxReg,bit[j]); 	   //send bit0
+		reg_gpio_out(DEBUG_INFO_TX_PIN) = bit[j];
 	}
 #endif
 }
@@ -152,16 +152,17 @@ _attribute_ram_code_ static void uart_put_char(u8 byte){
 	    debug_info_tx_pin_init();
 		tx_pin_initialed = 1;
 	}
-	#if __TLSR_RISCV_EN__
-	volatile u32 pcTxReg = (0x140303+((DEBUG_INFO_TX_PIN>>8)<<3));//register GPIO output: reg_gpio_out
-	#else
-	volatile u32 pcTxReg = (0x583+((DEBUG_INFO_TX_PIN>>8)<<3));//register GPIO output: reg_gpio_out
-	#endif
-	u8 tmp_bit0 = read_reg8(pcTxReg) & (~(DEBUG_INFO_TX_PIN & 0xff));
-	u8 tmp_bit1 = read_reg8(pcTxReg) | (DEBUG_INFO_TX_PIN & 0xff);
 
-
-	u8 bit[10] = {0};
+    #if (MCU_CORE_TYPE == MCU_CORE_TL721X || MCU_CORE_TYPE == MCU_CORE_TL321X)
+	uint16 tmp_bit0 = (DEBUG_INFO_TX_PIN & 0xff)<<8;;
+	uint16 tmp_bit1 = DEBUG_INFO_TX_PIN & 0xff;
+    #else
+    uint08 out_level = reg_gpio_out(DEBUG_INFO_TX_PIN);
+	uint08 tmp_bit0 = out_level & ~(DEBUG_INFO_TX_PIN);
+	uint08 tmp_bit1 = out_level | DEBUG_INFO_TX_PIN;    
+    #endif
+    
+	u16 bit[10] = {0};
 	bit[0] = tmp_bit0;
 	bit[1] = (byte & 0x01)? tmp_bit1 : tmp_bit0;
 	bit[2] = ((byte>>1) & 0x01)? tmp_bit1 : tmp_bit0;
@@ -179,7 +180,7 @@ _attribute_ram_code_ static void uart_put_char(u8 byte){
 	if(SIMU_UART_IRQ_EN){
 		r = irq_disable();
 	}
-	uart_do_put_char(pcTxReg, bit);
+	uart_do_put_char(bit);
 	if(SIMU_UART_IRQ_EN){
 		irq_restore(r);
 	}

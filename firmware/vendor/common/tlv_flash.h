@@ -80,7 +80,7 @@ typedef struct{
 
 #define TLV_SECTOR_START(a)     ((a/TLV_SEC_SIZE)*TLV_SEC_SIZE)
 
-void tlv_init();
+void tlv_init(void);
 u8 tlv_rec_write(u32 id,u8 *p_buf,u16 len );
 u8 tlv_rec_read(u32 id,u8 *p_buf,u16 len);
 #endif

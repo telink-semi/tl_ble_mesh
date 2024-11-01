@@ -88,6 +88,7 @@
 #if (HCI_ACCESS==HCI_USE_UART)
 #define UART_TX_PIN				UART0_TX_PB2
 #define UART_RX_PIN				UART0_RX_PB3
+#define UART_NUM_USE            0
 #define UART_DMA_BAUDRATE		115200
 #elif (HCI_ACCESS==HCI_USE_USB)
 ////////////USB DP DM///////////////////////////////////////

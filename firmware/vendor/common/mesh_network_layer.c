@@ -26,17 +26,37 @@
 #include "directed_forwarding.h"
 #include "subnet_bridge.h"
 
+#ifndef PROXY_TX_OTHER_NODES_EN
+#define PROXY_TX_OTHER_NODES_EN     0 // node send message with source address is not own address(for example, proxy to send packets for Enocean).
+#endif
+
 //--------------------network layer callback------------------------------//
 #if !WIN32
+/**
+ * @brief       This function is called by app_event_handler_adv_()->mesh_rc_data_layer_network_()
+ * @param[in]   p_bear		- rx bearer data
+ * @param[in]   p_nw_retrans- mesh network retransmit parameters
+ * @return      not use now
+ * @note        
+ */
 int mesh_rc_network_layer_cb(mesh_cmd_bear_t *p_bear, mesh_nw_retrans_t *p_nw_retrans)
 {
 	int conn_idx = 0;
+
+#if MESH_GLOBAL_RX_PAR_EN
+    g_mesh_global_rx_par.src_bearer_type = p_nw_retrans->src_bear;
+    g_mesh_global_rx_par.src_addr = p_bear->nw.src;
+    g_mesh_global_rx_par.dst_addr = p_bear->nw.dst;
+#endif
 	
    if((MESH_BEAR_GATT == p_nw_retrans->src_bear) && is_unicast_adr(p_bear->nw.src)){		
 		#if BLE_MULTIPLE_CONNECTION_ENABLE
 		bear_conn_handle_t *p_bear_handle = (bear_conn_handle_t *)&p_bear->tx_head;
 		if(BEAR_TX_PAR_TYPE_CONN_HANDLE == p_bear_handle->par_type){
-			conn_idx = get_slave_idx_by_conn_handle(p_bear_handle->conn_handle);
+			conn_idx = get_periphr_idx_by_conn_handle(p_bear_handle->conn_handle);
+			if(conn_idx == INVALID_CONN_IDX){
+				return -1;
+			}
 		}
 		#endif
 		
@@ -158,7 +178,7 @@ int mesh_rc_network_layer_cb(mesh_cmd_bear_t *p_bear, mesh_nw_retrans_t *p_nw_re
 		#if (FEATURE_PROXY_EN)
 		if(p_nw_retrans->print_proxy2adv_error){
 			// please check App setting of extend ADV mode
-			LOG_MSG_LIB(TL_LOG_NODE_BASIC,0, 0 ,"can not proxy to ADV due to len overflow"); // for remind checking exent ADV setting on App.
+			LOG_MSG_LIB(TL_LOG_NODE_BASIC,0, 0 ,"can not proxy to ADV due to len overflow"); // please checke Extend Bearer(extend ADV) setting on App, if enable, then nodes also need to enable Extend ADV.
 		}
 		#endif
 	}else{
@@ -237,15 +257,25 @@ u16 mesh_tx_network_layer_cb(mesh_cmd_bear_t *p_bear, mesh_match_type_t *p_match
 #endif
 
 #if MESH_TX_RX_SELF_EN
-	mesh_set_iv_idx_rx(p_bear->nw.ivi); 
+	mesh_set_iv_idx_rx((u8)iv_idx_st.iv_tx); 
 	is_exist_in_cache((u8 *)&p_bear->nw, 0, 1); // update RPL to prevent receiving it again.
+#elif PROXY_TX_OTHER_NODES_EN
+    if(!is_own_ele(p_bear->nw.src)){
+        if(is_exist_in_cache((u8 *)&p_bear->nw, 0, 0)){
+            p_match_type->local = 0; // receive from relay already, no need to process by local again.
+        }
+        else{
+            mesh_set_iv_idx_rx((u8)iv_idx_st.iv_tx);
+            is_exist_in_cache((u8 *)&p_bear->nw, 0, 1); // update RPL to prevent receiving it again.
+        }
+    }
 #endif
 
 #if FEATURE_LOWPOWER_EN
 	#if BLE_MULTIPLE_CONNECTION_ENABLE
 	if(p_bear->nw.ctl){
 		p_match_type->trans.invl_steps = 0; // quick send control message, such as friend poll.
-		LOG_USER_MSG_INFO(0, 0, "lpn_quick", 0);
+		LOG_MSG_LIB(TL_LOG_NODE_BASIC, 0, 0, "lpn_quick", 0);
 	}
 	#endif
 	
@@ -294,7 +324,7 @@ STATIC_ASSERT(CACHE_BUF_MAX > 0);
  * @return      none
  * @note        
  */
-void mesh_network_cache_buf_init()
+void mesh_network_cache_buf_init(void)
 {
     memset(cache_buf, 0, sizeof(cache_buf));
 }
@@ -484,7 +514,7 @@ int is_exist_in_cache(u8 *p, u8 friend_key_flag, int save)
  * @return      the number of items in RPL.
  * @note        
  */
-u16 get_mesh_current_cache_num() // Note, there may be several elements in a node, but there is often only one element that is in cache.
+u16 get_mesh_current_cache_num(void) // Note, there may be several elements in a node, but there is often only one element that is in cache.
 {
     u16 num = 0;
     foreach(i, g_cache_buf_max){
@@ -492,5 +522,5 @@ u16 get_mesh_current_cache_num() // Note, there may be several elements in a nod
             num++;
         }
    }
-    return num;
+   return num;
 }

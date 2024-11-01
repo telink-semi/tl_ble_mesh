@@ -66,11 +66,13 @@ int app_event_handler (u32 h, u8 *p, int n)
 				
 				return 0;
 			}
+            
 			#if TEST_FORWARD_ADDR_FILTER_EN
 			if(!find_mac_in_filter_list(pa->mac)){
 				return 0;
 			}
 			#endif
+            
 			#if 0 // TESTCASE_FLAG_ENABLE
 			u8 mac_pts[] = {0xDA,0xE2,0x08,0xDC,0x1B,0x00};	// 0x001BDC08E2DA
 			u8 mac_pts2[] = {0xDB,0xE2,0x08,0xDC,0x1B,0x00};	// 0x001BDC08E2DA
@@ -78,9 +80,7 @@ int app_event_handler (u32 h, u8 *p, int n)
 				return 0;
 			}
 			#endif
-			if((pa->mac[0] == 0x03) && (pa->mac[1] == 0x01)){
-				tlkapi_send_string_data(APP_LOG_EN, "raw:", p, 16);
-			}
+
 			#if DEBUG_MESH_DONGLE_IN_VC_EN
 			send_to_hci = (0 == mesh_dongle_adv_report2vc(pa->data, MESH_ADV_PAYLOAD));
 			#else
@@ -133,13 +133,15 @@ int app_event_handler (u32 h, u8 *p, int n)
 				#if DEBUG_MESH_DONGLE_IN_VC_EN
 				debug_mesh_report_BLE_st2usb(1);
 				#endif
-				proxy_cfg_list_init_upon_connection(pConnEvt->connHandle);
+
 				#if 0 // FEATURE_FRIEND_EN
 				fn_update_RecWin(get_RecWin_connected());
 				#endif
+                
 				#if !DU_ENABLE
 				mesh_service_change_report(pConnEvt->connHandle);
 				#endif
+                
 				#if LPN_CONTROL_EN
 				bls_l2cap_requestConnParamUpdate (pConnEvt->connHandle, 48, 56, 10, 500);
 				#endif
@@ -574,7 +576,7 @@ _attribute_no_inline_ void user_init_normal(void)
 	blc_ll_setAdvParam(ADV_INTERVAL_10MS, ADV_INTERVAL_10MS, ADV_TYPE_CONNECTABLE_UNDIRECTED, OWN_ADDRESS_PUBLIC, 0, NULL, BLT_ENABLE_ADV_ALL, ADV_FP_NONE);
 	blc_ll_setAdvEnable(BLC_ADV_ENABLE);  //ADV enable
 
-	blc_ll_setScanParameter(SCAN_TYPE_PASSIVE, ADV_INTERVAL_10MS, ADV_INTERVAL_10MS, OWN_ADDRESS_PUBLIC, SCAN_FP_ALLOW_ADV_ANY);
+	blc_ll_setScanParameter(SCAN_TYPE_PASSIVE, SCAN_INTERVAL_10MS, SCAN_WINDOW_10MS, OWN_ADDRESS_PUBLIC, SCAN_FP_ALLOW_ADV_ANY);
 	if(!lpn_provision_ok){
 		blc_ll_setScanEnable (BLC_SCAN_ENABLE, DUP_FILTER_DISABLE);
 	}
@@ -588,15 +590,16 @@ _attribute_no_inline_ void user_init_normal(void)
 			blc_pm_setDeepsleepRetentionEnable(PM_DeepRetn_Enable);
 			blc_pm_setDeepsleepRetentionThreshold(95);
 
-			#if(MCU_CORE_TYPE == MCU_CORE_B91)
-				blc_pm_setDeepsleepRetentionEarlyWakeupTiming(300);
-			#elif(MCU_CORE_TYPE == MCU_CORE_B92)
-				blc_pm_setDeepsleepRetentionEarlyWakeupTiming(450);//todo ronglu
-			#elif(MCU_CORE_TYPE == MCU_CORE_825x)
-				blc_pm_setDeepsleepRetentionEarlyWakeupTiming(260);
-			#elif(MCU_CORE_TYPE == MCU_CORE_827x)
-				blc_pm_setDeepsleepRetentionEarlyWakeupTiming(350);
-			#endif
+            /*!< early wakeup time with a threshold of approxiamtely 30us. */
+            #if(MCU_CORE_TYPE == MCU_CORE_B91)
+                                                blc_pm_setDeepsleepRetentionEarlyWakeupTiming(530);
+            #elif(MCU_CORE_TYPE == MCU_CORE_B92)
+                                                blc_pm_setDeepsleepRetentionEarlyWakeupTiming(1100);
+            #elif(MCU_CORE_TYPE == MCU_CORE_TL321X)
+                                                blc_pm_setDeepsleepRetentionEarlyWakeupTiming(460);
+            #elif(MCU_CORE_TYPE == MCU_CORE_TL721X)
+                                                blc_pm_setDeepsleepRetentionEarlyWakeupTiming(560);
+            #endif
 		#else
 			blc_pm_setDeepsleepRetentionEnable(PM_DeepRetn_Disable);
 		#endif

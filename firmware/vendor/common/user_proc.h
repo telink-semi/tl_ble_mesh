@@ -30,15 +30,15 @@
 #include "nl_api/nl_common.h"
 
 u8 ais_pri_data_set(u8 *p);
-void user_sha256_data_proc();
-void user_node_oob_set();
-void user_power_on_proc();
-void user_mesh_cps_init();
-void user_set_def_sub_adr();
-void user_system_time_proc();
+void user_sha256_data_proc(void);
+void user_node_oob_set(void);
+void user_power_on_proc(void);
+void user_mesh_cps_init(void);
+void user_set_def_sub_adr(void);
+void user_system_time_proc(void);
 void mesh_provision_para_init(u8 *p_random);
-void user_prov_multi_oob();
-void user_prov_multi_device_uuid();
-int user_node_rc_link_open_callback();
+void user_prov_multi_oob(void);
+void user_prov_multi_device_uuid(void);
+int user_node_rc_link_open_callback(void);
 
 #endif

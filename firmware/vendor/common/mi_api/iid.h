@@ -77,6 +77,6 @@ typedef struct {
 }switch_demo_t;
 
 extern switch_demo_t two_key_switch;
-void property_para_init();
+void property_para_init(void);
 
 #endif /* HANDLER_IID_H_ */

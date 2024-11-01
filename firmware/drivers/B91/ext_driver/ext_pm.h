@@ -28,18 +28,19 @@
 #include "types.h"
 
 typedef int (*cpu_pm_handler_t)(pm_sleep_mode_e sleep_mode,  pm_sleep_wakeup_src_e wakeup_src, unsigned int  wakeup_tick);
-extern 	cpu_pm_handler_t  		 	cpu_sleep_wakeup;
+extern  cpu_pm_handler_t            cpu_sleep_wakeup;
 
+#define DEFAULT_DEEPSLEEP_MODE_RET_SRAM_SIZE  DEEPSLEEP_MODE_RET_SRAM_LOW64K
 /**
  * @brief   deepsleep wakeup by external xtal
  */
 typedef struct{
-	unsigned char ext_cap_en;    //24xtal  cap
-	unsigned char pad32k_en;
-	unsigned char pm_enter_en;
-	unsigned char adc_efuse_calib_flag;	//ADC Vref calibration value on EFUSE, only used in B91
+    unsigned char pad32k_en;
+    unsigned char pm_enter_en;
+    unsigned char adc_efuse_calib_flag; //ADC Vref calibration value on EFUSE, only used in B91
+    unsigned char rfu;    //Not applicable
 }misc_para_t;
-extern  _attribute_aligned_(4) misc_para_t 				blt_miscParam;
+extern  _attribute_aligned_(4) misc_para_t              blt_miscParam;
 
 
 /**
@@ -77,9 +78,9 @@ void start_reboot(void);
 
 /**
  * @brief      This function serves to determine whether wake up source is internal 32k RC.
- * 			   attention: this function must called before "sys_init()" for two situation
- * 			   			(1). Using 32K RC for power management
- * 			   			(2). No power management. special reason for B91, need deepSleep cycle for reboot back and watchDog back.
+ *             attention: this function must called before "sys_init()" for two situation
+ *                      (1). Using 32K RC for power management
+ *                      (2). No power management. special reason for B91, need deepSleep cycle for reboot back and watchDog back.
  * @param[in]  none.
  * @return     none.
  */
@@ -87,7 +88,7 @@ void blc_pm_select_internal_32k_crystal(void);
 
 /**
  * @brief      This function serves to determine whether wake up source is external 32k RC.
- * 			   attention: this function must called before "sys_init()" if using 32K Pad for power management
+ *             attention: this function must called before "sys_init()" if using 32K Pad for power management
  * @param[in]  none.
  * @return     none.
  */
@@ -107,9 +108,9 @@ int cpu_long_sleep_wakeup_32k_rc(pm_sleep_mode_e sleep_mode,  pm_sleep_wakeup_sr
  * @param[in]  none.
  * @return     1- yes , 0- no.
  */
-static inline int pm_is_MCU_deepRetentionWakeup(void)
+__INLINE int pm_is_MCU_deepRetentionWakeup(void)
 {
-	return (g_pm_status_info.mcu_status & MCU_STATUS_DEEPRET_BACK);
+    return (g_pm_status_info.mcu_status & MCU_STATUS_DEEPRET_BACK);
 }
 
 /**
@@ -117,11 +118,11 @@ static inline int pm_is_MCU_deepRetentionWakeup(void)
  * @param[in]  none.
  * @return     1- yes , 0- no.
  */
-static inline int pm_is_deepPadWakeup(void)
+__INLINE int pm_is_deepPadWakeup(void)
 {
-	return g_pm_status_info.is_pad_wakeup;
+    return g_pm_status_info.is_pad_wakeup;
 }
 
-#define cpu_set_gpio_wakeup				pm_set_gpio_wakeup
+#define cpu_set_gpio_wakeup             pm_set_gpio_wakeup
 
 #endif /* DRIVERS_B91_DRIVER_EXT_EXT_PM_H_ */

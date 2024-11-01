@@ -26,7 +26,7 @@
 
 #include "tl_common.h"
 
-#if (MCU_CORE_TYPE == MCU_CORE_9518)
+#if __TLSR_RISCV_EN__
 typedef unsigned char           word8;
 typedef unsigned short          word16;
 typedef unsigned long           word32;

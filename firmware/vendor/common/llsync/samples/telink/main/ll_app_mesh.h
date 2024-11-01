@@ -43,14 +43,14 @@ extern llsync_mesh_distribution_net_t sg_mesh_net;
 
 
 int llsync_tlk_mesh_recv_data_handle(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par);
-void llsync_tlk_init_three_para_and_mac();
-void llsync_set_dev_auth();
-void llsync_tlk_init_scan_rsp();
+void llsync_tlk_init_three_para_and_mac(void);
+void llsync_set_dev_auth(void);
+void llsync_tlk_init_scan_rsp(void);
 ble_qiot_ret_status_t llsync_mesh_dev_info_get_from_flash(ble_device_info_t *dev_info);
 void llsync_mesh_timer_period_proc(u32 ms_now, u32 interval_cnt);
 void llsync_mesh_timer_cb(void *param);
 void llsync_mesh_adv_start(uint8_t adv_type);
-void llsync_stop_silence_adv_timeout_check();
+void llsync_stop_silence_adv_timeout_check(void);
 
 
 

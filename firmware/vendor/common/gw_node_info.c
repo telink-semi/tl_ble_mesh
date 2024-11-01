@@ -45,13 +45,13 @@ u32 gw_node_info_addr_save = FLASH_ADR_VC_NODE_INFO;
 VC_node_info_t VC_node_info[MESH_NODE_MAX_NUM];        // 1000*(20+384) = 404000
 #endif
  
-#if WIN32 
+#ifdef WIN32 
 STATIC_ASSERT(sizeof(VC_node_info) <= 4096*128);
 #else
 STATIC_ASSERT(ARRAY_SIZE(gw_node_info) <= (FLASH_ADR_VC_NODE_INFO_END - FLASH_ADR_VC_NODE_INFO)/sizeof(VC_node_info_t)); // make sure enough flash area to save
 #endif
 
-#if WIN32
+#ifdef WIN32
 void save_vc_node_info_all()
 {
     // erase all the store vc node info part 
@@ -69,7 +69,7 @@ void save_vc_node_info_single(VC_node_info_t *p_info)
 #endif
 
 #if DONGLE_PROVISION_EN
-int find_gw_node_empty_idx()
+int find_gw_node_empty_idx(void)
 {
 	foreach_arr(i, gw_node_info){
 		if(0 == gw_node_info[i].node_adr){
@@ -103,9 +103,9 @@ int get_gw_node_info_idx(u16 addr, int is_must_primary)
 	return idx;
 }
 
-int restore_node_info_table()
+int restore_node_info_table(void)
 {
-	int idx = 0;
+	u32 idx = 0;
 	u32 last_record = 0;
 	VC_node_info_t node_info;
 	memset((u8 *)(gw_node_info), 0x00, sizeof(gw_node_info));
@@ -137,7 +137,7 @@ int restore_node_info_table()
 	return 0;
 }
 
-void rebuild_node_info_sector()
+void rebuild_node_info_sector(void)
 {	
 	u32 write_addr = FLASH_ADR_VC_NODE_INFO, read_addr = FLASH_ADR_VC_NODE_INFO;
 	int backup_wptr=0;
@@ -148,7 +148,7 @@ void rebuild_node_info_sector()
 		flash_read_page(read_addr, sizeof(VC_node_info_t), (u8 *)&node_info);		
 		
 		if((read_addr+sizeof(VC_node_info_t))/FLASH_SECTOR_SIZE != read_addr/FLASH_SECTOR_SIZE){ // finish read 1 sector
-			int len = 0;
+			u32 len = 0;
 			flash_erase_sector(read_addr/FLASH_SECTOR_SIZE*FLASH_SECTOR_SIZE);
 			for(int backup_rptr=0; backup_rptr<backup_wptr; backup_rptr += PAGE_SIZE){ // restore node info from backup sector
 				u8 buf[PAGE_SIZE];
@@ -246,7 +246,7 @@ int save_gw_node_info(VC_node_info_t *p_node_info)
 
 void VC_cmd_clear_all_node_info(u16 adr)
 {
-#if WIN32
+#ifdef WIN32
 	if(adr == 0xffff){
 		provision_mag.unicast_adr_last =1;// reset the adr part 
 		provision_mag_cfg_s_store();// avoid restore part 
@@ -273,7 +273,7 @@ void VC_cmd_clear_all_node_info(u16 adr)
 
 VC_node_info_t * get_VC_node_info(u16 obj_adr, int is_must_primary)
 {	
-#if WIN32
+#ifdef WIN32
 	if(obj_adr && is_unicast_adr(obj_adr)){
         foreach(i,MESH_NODE_MAX_NUM){
             VC_node_info_t *p_info = &VC_node_info[i];
@@ -302,7 +302,7 @@ VC_node_info_t * get_VC_node_info(u16 obj_adr, int is_must_primary)
 
 void del_vc_node_info_by_unicast(u16 unicast)
 {
-#if WIN32
+#ifdef WIN32
 	VC_node_info_t * p_node_info = get_VC_node_info(unicast,1);        
     if(p_node_info!=0){
         // clear the vc node info part 
@@ -315,7 +315,7 @@ void del_vc_node_info_by_unicast(u16 unicast)
 }
 
 #if IS_VC_PROJECT_MASTER
-void erase_vc_node_info()
+void erase_vc_node_info(void)
 {
     flash_erase_sector_VC(0, sizeof(VC_node_info));
 }
@@ -333,14 +333,14 @@ u8 get_ele_offset_by_model_VC_node_info(u16 obj_adr, u32 model_id, bool4 sig_mod
     return MODEL_NOT_FOUND;
 }
 #endif
-#if WIN32
+#ifdef WIN32
 static u32 mesh_vc_node_addr = FLASH_ADR_VC_NODE_INFO;
 #endif
 
-void VC_node_info_retrieve()
+void VC_node_info_retrieve(void)
 {
 #if WIN32
-    int err = mesh_par_retrieve((u8 *)VC_node_info, &mesh_vc_node_addr, FLASH_ADR_VC_NODE_INFO, sizeof(VC_node_info));
+    int err = mesh_par_retrieve((u8 *)VC_node_info, &mesh_vc_node_addr, FLASH_ADR_VC_NODE_INFO, sizeof(VC_node_info), NULL);
 #else    
 	restore_node_info_table();
 #endif
@@ -348,7 +348,7 @@ void VC_node_info_retrieve()
  
 int VC_node_dev_key_save(u16 adr, u8 *dev_key,u8 ele_cnt)
 {
-#if WIN32
+#ifdef WIN32
 	if(!is_unicast_adr(adr) || (!adr)){
         return -1;
     }
@@ -515,7 +515,7 @@ u8 VC_node_cps_save(mesh_page0_t * p_page0,u16 unicast, u32 len_cps)
         p_cps->len_cps = len_cps;
         memcpy(&p_cps->page0_head, p_page0, len_cps);
         
-        #if WIN32
+        #ifdef WIN32
         save_vc_node_info_single(p_info);
         #endif
         

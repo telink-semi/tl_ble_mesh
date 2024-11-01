@@ -93,5 +93,5 @@ extern unsigned int kb_key_pressed(unsigned char * gpio);
 extern unsigned int kb_scan_key_value (int numlock_status, int read_key,unsigned char * gpio);
 
 extern unsigned int	scan_pin_need;
-void global_var_no_ret_init_kb(); // BLE_SRC_TELINK_MESH_EN
+void global_var_no_ret_init_kb(void); // BLE_SRC_TELINK_MESH_EN
 u32 kb_scan_key(int numlock_status, int read_key);

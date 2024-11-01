@@ -71,7 +71,7 @@ void endianness_swap_ut_ctl(u8 *nw, u8 *par, u32 len_ac/*len_ut*/, int filter_cf
             endianness_swap_u16((u8 *)&p_fri_clear->LPNAdr);
             endianness_swap_u16((u8 *)&p_fri_clear->LPNCounter);
         }else if(CMD_CTL_SUBS_LIST_ADD == op || CMD_CTL_SUBS_LIST_REMOVE == op){
-            u32 subsc_cnt = (len_ac-1)/2; // for unsegment, it is equal to mesh_subsc_adr_cnt_get(p_br). and it must be unsegment for subs_list_add or remove.
+            int subsc_cnt = (len_ac-1)/2; // for unsegment, it is equal to mesh_subsc_adr_cnt_get(p_br). and it must be unsegment for subs_list_add or remove.
             foreach(i,subsc_cnt){
                 endianness_swap_u16(par + (1 + i*2));
             }
@@ -144,7 +144,7 @@ void endianness_swap_ut_ctl(u8 *nw, u8 *par, u32 len_ac/*len_ut*/, int filter_cf
 			endianness_swap_u16((u8 *)&p_dependent_update->dependent_addr);
 		}else if(CMD_CTL_PATH_REQUEST_SOLICITATION == op){
 			mesh_ctl_path_request_solication_t *p_dependent_update = (mesh_ctl_path_request_solication_t *)par;
-			foreach(i, len_ac/2){
+			foreach_uint(i, len_ac/2){
 				endianness_swap_u16((u8 *)&p_dependent_update->addr_list[i]);
 			}
 		}
@@ -208,12 +208,12 @@ int mesh_sec_prov_session_key_fun(unsigned char sk[16], unsigned char *sn, unsig
 	return 0;
 }
 
-u8 mesh_get_network_transmit()
+u8 mesh_get_network_transmit(void)
 {
 	return model_sig_cfg_s.nw_transmit.val;
 }
 
-u8 mesh_get_relay_retransmit()
+u8 mesh_get_relay_retransmit(void)
 {
 #if AUDIO_MESH_MULTY_NODES_TX_EN
 	return audio_mesh_get_tx_retransmit_cnt();
@@ -222,27 +222,27 @@ u8 mesh_get_relay_retransmit()
 #endif
 }
 
-u8 mesh_get_ttl()
+u8 mesh_get_ttl(void)
 {
 	return model_sig_cfg_s.ttl_def;
 }
 
-u8 mesh_get_hb_pub_ttl()
+u8 mesh_get_hb_pub_ttl(void)
 {
 	return model_sig_cfg_s.hb_pub.ttl;
 }
 
-u8 mesh_get_gatt_proxy()
+u8 mesh_get_gatt_proxy(void)
 {
 	return model_sig_cfg_s.gatt_proxy;
 }
 
-u8 mesh_get_friend()
+u8 mesh_get_friend(void)
 {
 	return model_sig_cfg_s.frid;
 }
 
-u8 mesh_get_relay()
+u8 mesh_get_relay(void)
 {
 	return model_sig_cfg_s.relay;
 }
@@ -277,16 +277,20 @@ int is_adr_in_sub_list(model_common_t *p_model, u16 adr)
 
 /**
  * @brief       This function check if current node subscribed the address.
- * @param[in/out] p_model: if it is NULL, it is used to output the first model resource which subscribe the address.
- *                         if not, it is input parameter to check if this model subscribed the address.
+ * @param[in]   p_model: 0: search all model resource in the node.
+ *                       other: search the model p_model pointed to.
  * @param[in]   adr		- subscription address or group address
- * @return      1: ture. 0: false.
+ * @return      0: adr is not subscribed the address.
+ *              other: pointer of the model reource which subscribed the address.
  * @note        
  */
-int is_subscription_adr(model_common_t *p_model, u16 adr)
+model_common_t *is_subscription_adr(model_common_t *p_model, u16 adr)
 {
+    model_common_t *p_subs_model = 0;
 	if(p_model){
-	    return is_adr_in_sub_list(p_model, adr);
+	    if(is_adr_in_sub_list(p_model, adr)){
+            p_subs_model = p_model;
+        }
 	}else{
 		int pos = 0;
 		int offset_ele = OFFSETOF(mesh_page0_t, ele);
@@ -297,18 +301,18 @@ int is_subscription_adr(model_common_t *p_model, u16 adr)
 		while (pos < total_len_ele){
 	        foreach(i, p_ele->nums){
 				if(!is_use_device_key(p_ele->md_sig[i], 1)){
-					p_model = (model_common_t *)mesh_find_ele_resource_in_model(ele_adr, p_ele->md_sig[i], 1,&model_idx, 0);
-					if(is_adr_in_sub_list(p_model, adr)){
-						return 1;
+					p_subs_model = (model_common_t *)mesh_find_ele_resource_in_model(ele_adr, p_ele->md_sig[i], 1,&model_idx, 0);
+					if(is_adr_in_sub_list(p_subs_model, adr)){
+						return p_subs_model;
 					}
 				}
 	        }
 
 	        foreach(i, p_ele->numv){
 	        	u32 vd_model_id = get_cps_vd_model_id(p_ele, i);
-	        	p_model = (model_common_t *)mesh_find_ele_resource_in_model(ele_adr, vd_model_id, 0,&model_idx, 0);
-				if(is_adr_in_sub_list(p_model, adr)){
-					return 1;
+	        	p_subs_model = (model_common_t *)mesh_find_ele_resource_in_model(ele_adr, vd_model_id, 0,&model_idx, 0);
+				if(is_adr_in_sub_list(p_subs_model, adr)){
+					return p_subs_model;
 				}
 	        }
 	        
@@ -318,7 +322,8 @@ int is_subscription_adr(model_common_t *p_model, u16 adr)
 			ele_adr += 1;
 		}
 	}
-    return 0;
+    
+    return p_subs_model;
 }
 
 int mesh_cmd_sig_cfg_sec_nw_bc_get(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par)
@@ -363,6 +368,7 @@ int mesh_cmd_sig_cfg_friend_set(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par)
 {
     u8 frid = par[0];
     if( frid < FRIEND_NOT_SUPPORT){
+#if FEATURE_FRIEND_EN
 		if(model_sig_cfg_s.frid < FRIEND_NOT_SUPPORT){
 			if(model_sig_cfg_s.frid != frid){
 				model_sig_cfg_s.frid = frid;
@@ -391,6 +397,8 @@ int mesh_cmd_sig_cfg_friend_set(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par)
 		}else{
 			par[0] = model_sig_cfg_s.frid;
 		}
+#endif
+
 		return mesh_cmd_sig_cfg_friend_get(par, par_len, cb_par);
     }
     return -1;
@@ -408,10 +416,12 @@ int mesh_cmd_sig_cfg_gatt_proxy_set(u8 *par, int par_len, mesh_cb_fun_par_t *cb_
 		if(model_sig_cfg_s.gatt_proxy < GATT_PROXY_NOT_SUPPORT){
 			if(model_sig_cfg_s.gatt_proxy != gatt_proxy){
 				model_sig_cfg_s.gatt_proxy = gatt_proxy;
+				#if MESH_HEARTBEAT_EN
 				if(model_sig_cfg_s.hb_pub.feature & BIT(MESH_HB_PROXY_BIT)){
 					hb_sts_change = 1;
 					hb_pub_100ms = clock_time_100ms();
-				}	
+				}
+				#endif
 			}
 			mesh_model_store_cfg_s();
 			// and the if the proxy state is being set to 0 ,the connection will be terminate 
@@ -441,7 +451,7 @@ int mesh_cmd_sig_cfg_gatt_proxy_set(u8 *par, int par_len, mesh_cb_fun_par_t *cb_
 		}else{
 			par[0] = model_sig_cfg_s.gatt_proxy;
 		}
-		#if MD_PRIVACY_BEA&&!WIN32&&MD_SERVER_EN
+		#if (MD_PRIVACY_BEA && !defined(WIN32) && MD_SERVER_EN)
 		u8 *p_private_sts = &(g_mesh_model_misc_save.privacy_bc.proxy_sts);
 		mesh_private_proxy_change_by_gatt_proxy(*p_private_sts,p_private_sts);
 		mesh_privacy_beacon_save();
@@ -466,6 +476,7 @@ int mesh_cmd_sig_cfg_relay_set(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par)
 {
     mesh_cfg_model_relay_set_t *p_set = (mesh_cfg_model_relay_set_t *)par;
     if(p_set->relay < RELAY_NOT_SUPPORT){
+#if FEATURE_RELAY_EN
 		if(model_sig_cfg_s.relay < RELAY_NOT_SUPPORT){
 			if(model_sig_cfg_s.relay != p_set->relay){
 				model_sig_cfg_s.relay = p_set->relay;
@@ -481,6 +492,7 @@ int mesh_cmd_sig_cfg_relay_set(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par)
 		else{
 			memcpy(par, &model_sig_cfg_s.relay_retransmit, sizeof(model_sig_cfg_s.relay_retransmit));
 		}
+#endif
 		return mesh_cmd_sig_cfg_relay_get(par, par_len, cb_par);
     }
     return -1;
@@ -778,7 +790,7 @@ u8 mesh_cmd_sig_cfg_model_sub_set2(u16 op, u16 sub_adr, u8 *uuid, model_common_t
         
         st = add_ok ? ST_SUCCESS : ST_INSUFFICIENT_RES;
         
-		#if (MD_DF_CFG_SERVER_EN && !FEATURE_LOWPOWER_EN && !WIN32)
+		#if (MD_DF_CFG_SERVER_EN && !FEATURE_LOWPOWER_EN && !defined(WIN32))
 		if(add_ok && save_flash){
 			directed_forwarding_solication_start(mesh_key.netkey_sel_dec, (mesh_ctl_path_request_solication_t *)&sub_adr, 1);
 		}
@@ -1383,7 +1395,7 @@ int mesh_cmd_sig_cfg_bind(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par)
             }else{
                 bind_rsp.st = mesh_appkey_bind_and_share(cb_par->op, p_bind->ele_adr, model_id, sig_model,p_bind->index);
                 if(key_bind_all_ele_en && (g_ele_cnt > 1) && (p_bind->ele_adr == ele_adr_primary)){
-                    foreach(i,(u32)(g_ele_cnt - 1)){
+                    foreach(i,(int)(g_ele_cnt - 1)){
                         mesh_appkey_bind_and_share(cb_par->op, ele_adr_primary + 1 + i, model_id, sig_model,p_bind->index);
                     }
                 }
@@ -1464,7 +1476,9 @@ int mesh_save_pub_and_refresh_tick(model_common_t *p_model, mesh_cfg_model_pub_s
         }
     }
     
+#if MESH_TIMER_MS_100MS_EN
     p_model->cb_tick_ms = clock_time_ms();
+#endif
 
     return change_flag;
 }
@@ -1552,7 +1566,7 @@ static u8  pub_random_delay_flag = PUBLISH_2ND_DELAY_DEFAULT;
  * @return      0:not allow; 1:allow
  * @note        
  */
-int is_publish_allow()
+int is_publish_allow(void)
 {
 	return (my_fifo_data_cnt_get(&mesh_adv_fifo_relay) <= 1); // <=1 means should not publish now when there is more than 1 other node is publishing.
 }
@@ -1560,7 +1574,7 @@ int is_publish_allow()
 
 void mesh_tx_pub_period(u16 ele_adr, u32 model_id, bool4 sig_model)
 {
-#if (MD_SERVER_EN || (GATEWAY_ENABLE == 0)) // no need period publish for gateway client.
+#if (MESH_TIMER_MS_100MS_EN && (MD_SERVER_EN || (GATEWAY_ENABLE == 0))) // no need period publish for gateway client.
 	model_common_t *p_model;
 	u8 model_idx = 0;
 	p_model = (model_common_t *)mesh_find_ele_resource_in_model(ele_adr,model_id,sig_model,&model_idx, 0);
@@ -1632,7 +1646,7 @@ int mesh_is_existed_share_model(mesh_model_id_t *md_out, u32 model_id, bool4 sig
 		}else if(SIG_MD_G_LEVEL_C == model_id){
 			model_id_share = SIG_MD_G_ONOFF_C;
 		}
-		if(-1 != model_id_share){
+		if((u32)-1 != model_id_share){
 			md_out->sig_model = 1;
 			md_out->id = model_id_share;
 			return 1;
@@ -1733,7 +1747,9 @@ int mesh_pub_set(u8 *par, mesh_cb_fun_par_t *cb_par, u32 model_id, bool4 sig_mod
             if(st == ST_SUCCESS){
                 //refresh cb_ticks
                 if(SIG_MD_HEALTH_SERVER == model_id){
+                    #if MESH_TIMER_MS_100MS_EN
                     model_sig_health.srv.com.cb_tick_ms = clock_time_ms();
+                    #endif
                 }
                 #if 0 // SUBSCRIPTION_PUBLISH_SHARE_EN
                 mesh_model_id_t md_bind;    
@@ -1971,7 +1987,7 @@ int mesh_cmd_sig_vendor_model_sub_list(u8 *par, int par_len, mesh_cb_fun_par_t *
  * @return      1: enable. 0: disable
  * @note        
  */
-int mesh_get_on_demand_private_proxy() // can not be inline, because it is used in library.
+int mesh_get_on_demand_private_proxy(void) // can not be inline, because it is used in library.
 {
 #if MD_ON_DEMAND_PROXY_EN
 	return (g_mesh_model_misc_save.on_demand_proxy ? 1 : 0);
@@ -1980,7 +1996,7 @@ int mesh_get_on_demand_private_proxy() // can not be inline, because it is used 
 #endif
 }
 
-u8 mesh_get_private_proxy()
+u8 mesh_get_private_proxy(void)
 {
 #if MD_PRIVACY_BEA
 	if(g_mesh_model_misc_save.privacy_bc.proxy_sts == PRIVATE_PROXY_ENABLE){
@@ -1993,7 +2009,7 @@ u8 mesh_get_private_proxy()
 #endif
 }
 
-u8 mesh_get_private_node_identity()
+u8 mesh_get_private_node_identity(void)
 {
 #if (PRIVATE_PROXY_FUN_EN && MD_PRIVACY_BEA)
 	mesh_net_key_t *p_in = &mesh_key.net_key[0][0];

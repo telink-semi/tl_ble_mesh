@@ -3,7 +3,7 @@
  *
  * @brief	for TLSR chips
  *
- * @author	public@telink-semi.com;
+ * @author	telink
  * @date	Sep. 18, 2018
  *
  * @par     Copyright (c) 2017, Telink Semiconductor (Shanghai) Co., Ltd. ("TELINK")
@@ -99,7 +99,10 @@ int battery_get_detect_enable (void)
 
 
 
-_attribute_ram_code_ void adc_vbat_detect_init(void)
+#if (PM_DEEPSLEEP_RETENTION_ENABLE)
+_attribute_ram_code_
+#endif
+void adc_vbat_detect_init(void)
 {
 	/******power off sar adc********/
 	adc_power_on_sar_adc(0);
@@ -172,7 +175,10 @@ _attribute_ram_code_ void adc_vbat_detect_init(void)
 }
 
 
-_attribute_ram_code_ int app_battery_power_check(u16 alram_vol_mv, int loop_flag)
+#if (PM_DEEPSLEEP_RETENTION_ENABLE) // save 536byte (include adc_vbat_detect_init_()) when no retention sleep.
+_attribute_ram_code_
+#endif
+int app_battery_power_check(u16 alram_vol_mv, int loop_flag)
 {
     int ret_slept_flag = 0;
 	u16 temp;
@@ -313,7 +319,7 @@ _attribute_ram_code_ int app_battery_power_check(u16 alram_vol_mv, int loop_flag
 		ret_slept_flag = 1;
 		#endif
 	}else{
-	    // DEEP_ANA_REG0 can not be cleared here, because it will be used in light pwm init.
+	    // MESH_DEEP_ANA_REG can not be cleared here, because it will be used in light pwm init.
 	}
 
 
@@ -406,7 +412,7 @@ _attribute_no_inline_ void battery_power_low_handle(int loop_flag)
     sleep_us(50*1000);
     REG_ADDR8(0x6f) = 0x20;  //reboot
     #else
-    analog_write(DEEP_ANA_REG0,  analog_read(DEEP_ANA_REG0) | (FLD_LOW_BATT_FLG| (loop_flag ? FLD_LOW_BATT_LOOP_FLG : 0)));  //mark
+    analog_write(MESH_DEEP_ANA_REG,  analog_read(MESH_DEEP_ANA_REG) | (FLD_LOW_BATT_FLG| (loop_flag ? FLD_LOW_BATT_LOOP_FLG : 0)));  //mark
     #if __PROJECT_MESH_SWITCH__
 	extern void mesh_switch_init();
 	mesh_switch_init();
@@ -456,23 +462,23 @@ _attribute_no_inline_ void app_battery_power_check_and_sleep_handle(int loop_fla
     	    #if __PROJECT_BOOTLOADER__
     	    // clear by product image
     	    #else
-    	    if((0 == lowBattDet_tick) && (analog_read(DEEP_ANA_REG0) & FLD_LOW_BATT_FLG)){
-                analog_write(DEEP_ANA_REG0,  analog_read(DEEP_ANA_REG0)  & (~ (FLD_LOW_BATT_FLG|FLD_LOW_BATT_LOOP_FLG)));  //clear
+    	    if((0 == lowBattDet_tick) && (analog_read(MESH_DEEP_ANA_REG) & FLD_LOW_BATT_FLG)){
+                analog_write(MESH_DEEP_ANA_REG,  analog_read(MESH_DEEP_ANA_REG)  & (~ (FLD_LOW_BATT_FLG|FLD_LOW_BATT_LOOP_FLG)));  //clear
     	    }
     	    #endif
     		lowBattDet_tick = clock_time();
             app_battery_power_check(alarm_thres, loop_flag);  //2.0 V
             if(batt_vol_mv < 2500){
-                LOG_BATTERY_CHECK_DEBUG(0,0,"battery loop normal, current:%d, ana reg0:0x%x", batt_vol_mv, analog_read(DEEP_ANA_REG0));
+                LOG_BATTERY_CHECK_DEBUG(0,0,"battery loop normal, current:%d, ana reg0:0x%x", batt_vol_mv, analog_read(MESH_DEEP_ANA_REG));
             }
         }
     }else{ // user init
-        if(analog_read(DEEP_ANA_REG0) & FLD_LOW_BATT_FLG){
+        if(analog_read(MESH_DEEP_ANA_REG) & FLD_LOW_BATT_FLG){
             app_battery_power_check(alarm_thres + 200, loop_flag);  //2.2 V
         }else{
             app_battery_power_check(alarm_thres, loop_flag);  //2.0 V
         }
-		LOG_BATTERY_CHECK_DEBUG(0,0,"battery user init normal, current:%d, ana reg0:0x%x", batt_vol_mv, analog_read(DEEP_ANA_REG0));
+		LOG_BATTERY_CHECK_DEBUG(0,0,"battery user init normal, current:%d, ana reg0:0x%x", batt_vol_mv, analog_read(MESH_DEEP_ANA_REG));
     }
 #else // suspend, need to config sleep type in app_battery_power_check_
     u16 alram_vol_mv = VBAT_ALRAM_THRES_MV; //2.0 V
@@ -491,7 +497,7 @@ _attribute_no_inline_ void app_battery_power_check_and_sleep_handle(int loop_fla
 #endif
 }
 
-void app_battery_check_and_re_init_user_adc()
+void app_battery_check_and_re_init_user_adc(void)
 {
 	if(adc_hw_initialized){
 		adc_drv_init(); // must init again, because have been changed to battery check setting.

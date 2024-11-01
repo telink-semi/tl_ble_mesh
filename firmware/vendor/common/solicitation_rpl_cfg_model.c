@@ -60,7 +60,7 @@ u32 mesh_on_demand_proxy_time = 0; // max 256s, clock_time() is enough
  * @return      1: yes. 0: no.
  * @note        
  */
-_attribute_ram_code_ int mesh_on_demand_is_valid_st_to_rx_solicitation() // ramcode for irq function.
+_attribute_ram_code_ int mesh_on_demand_is_valid_st_to_rx_solicitation(void) // ramcode for irq function.
 {
 	return ((GATT_PROXY_SUPPORT_DISABLE == model_sig_cfg_s.gatt_proxy)
 		#if MD_PRIVACY_BEA
@@ -74,7 +74,7 @@ _attribute_ram_code_ int mesh_on_demand_is_valid_st_to_rx_solicitation() // ramc
  * @return      none
  * @note        
  */
-void mesh_on_demand_private_gatt_proxy_start()
+void mesh_on_demand_private_gatt_proxy_start(void)
 {
 	if(mesh_on_demand_is_valid_st_to_rx_solicitation()){
 		mesh_on_demand_proxy_time = clock_time() | 1;
@@ -86,7 +86,7 @@ void mesh_on_demand_private_gatt_proxy_start()
  * @return      none
  * @note        
  */
-void mesh_on_demand_private_gatt_proxy_stop()
+void mesh_on_demand_private_gatt_proxy_stop(void)
 {
 	mesh_on_demand_proxy_time = 0;
 }

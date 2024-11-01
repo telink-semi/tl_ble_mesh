@@ -26,6 +26,7 @@
 
 #include "nlc_sensor.h"
 
+#if (LIGHT_TYPE_SEL == LIGHT_TYPE_NLC_SENSOR)
 #if (NLC_SENSOR_SEL == SENSOR_ZSIR1000)
 #define I2C_IC_ID_SLAVE						(0x54)			// has been left shift one bit
 #define	NLC_I2C_CLK_SPEED					(200 * 1000) 	// unit: Hz
@@ -48,6 +49,6 @@
 	#endif
 
 void sensor_init_zsir1000(void);
-u32 sensor_get_zsir1000();
+u32 sensor_get_zsir1000(void);
 #endif
-
+#endif

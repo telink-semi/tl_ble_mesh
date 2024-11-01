@@ -28,13 +28,13 @@
 
 #define ELE_LIGHT_MODEL_SIZE  (380-12)	
 
-typedef struct{
+typedef struct __attribute__((packed)) {
 	u8 nums;
 	u8 numv;
 	u8 id[ELE_LIGHT_MODEL_SIZE];
 }mesh_element_model_id;
 
-typedef struct{
+typedef struct __attribute__((packed)) {
     u16 len_cps;
     #if 1   // must same with page0_local_t from start to numv
     mesh_page0_head_t page0_head;
@@ -43,8 +43,8 @@ typedef struct{
     #endif
 }VC_node_cps_t;
 
-#if DONGLE_PROVISION_EN&&!WIN32
-typedef struct{
+#if (DONGLE_PROVISION_EN && !defined(WIN32))
+typedef struct __attribute__((packed)) {
     u16 node_adr;    // primary address
     u8 element_cnt;
     u8 rsv;
@@ -54,7 +54,7 @@ typedef struct{
 	#endif
 }VC_node_info_t;
 
-typedef struct{
+typedef struct __attribute__((packed)) {
 	u16 node_adr;
 	u8 ele_cnt;
 	u16 index;
@@ -63,13 +63,13 @@ typedef struct{
 #define SINGLE_NODE_INFO_SIZE	sizeof(VC_node_info_t)
 extern _align_4_ gw_node_info_t gw_node_info[];
 #else
-typedef struct{
+typedef struct __attribute__((packed)) {
     u16 node_adr;    // primary address
     u8 element_cnt;
     u8 rsv;
     u8 dev_key[16];
     VC_node_cps_t cps;
-	#if WIN32
+	#ifdef WIN32
 	u8 dev_key_candi[16];
 	#endif
 }VC_node_info_t;    // size is 404(0x194)
@@ -87,7 +87,7 @@ void clear_gw_node_info(u16 addr, int is_must_primary);
 // mesh CDTP (both for gateway firmware and VC tool)-------------------------
 #define CDTP_READ_LEN_ONCE_MAX				(64 - 8) // for 56 byte and 20ms interval; about 1.8kbyte/s. // sizeof(cdtp_gw_ots_send_data_t) <= COC_MTU_SIZE
 
-typedef struct{
+typedef struct __attribute__((packed)) {
 	u8 hci_type; // hci_type_t
 	u8 hci_cmd;
 	u8 oacp_opcode;
@@ -95,7 +95,7 @@ typedef struct{
 	u8 data[1];
 }cdtp_gw_ots_rx_rsp_t;
 
-typedef struct{
+typedef struct __attribute__((packed)) {
 	u16 ini_type;
 	u8 hci_cmd;
 	u8 oacp_opcode;
@@ -103,7 +103,7 @@ typedef struct{
 	u8 data[CDTP_READ_LEN_ONCE_MAX];
 }cdtp_gw_ots_send_data_t;
 
-typedef struct{
+typedef struct __attribute__((packed)) {
 	u16 ini_type;
 	u8 hci_cmd;
 	u8 oacp_opcode;
@@ -111,18 +111,18 @@ typedef struct{
 	u32 checksum;
 }cdtp_gw_ots_send_checksum_t;
 
-typedef struct{
+typedef struct __attribute__((packed)) {
 	u32 offset;
 	u32 len;
 	u32 checksum; // user define
 }cdtp_ots_get_checksum_t;
 
-typedef struct{
+typedef struct __attribute__((packed)) {
 	u32	current_size;
 	u32	max_size;		// Allocated Size
 }OtsObjectSizeValue_t;
 
-typedef struct{
+typedef struct __attribute__((packed)) {
 	u16 ini_type;
 	u8 hci_cmd;
 	u8 oacp_opcode;
@@ -130,7 +130,7 @@ typedef struct{
 	OtsObjectSizeValue_t size;
 }cdtp_gw_ots_send_object_size_t; // object is compressed.
 
-typedef struct{
+typedef struct __attribute__((packed)) {
 	u16 ini_type;
 	u8 hci_cmd;
 	u8 oacp_opcode;
@@ -138,7 +138,7 @@ typedef struct{
 	u8 onoff;
 }cdtp_gw_ots_gatt_adv_onoff_t; // object is compressed.
 
-typedef struct{
+typedef struct __attribute__((packed)) {
 	u32	offset;
 	u32	len;
 }OtsRWOpcodePar_t;

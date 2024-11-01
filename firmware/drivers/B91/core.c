@@ -30,8 +30,8 @@
  * @param[in]   core_cclk_tick - Number of ticks in cclk
  * @return      none
  */
-__attribute__((noinline)) __attribute__((section(".ram_code"))) void core_cclk_delay_tick(unsigned long long core_cclk_tick)
+_attribute_ram_code_sec_optimize_o2_noinline_ void core_cclk_delay_tick(unsigned long long core_cclk_tick)
 {
-	unsigned long long start = rdmcycle();
-	while (rdmcycle() - start < core_cclk_tick) {}
+    unsigned long long start = rdmcycle();
+    while (rdmcycle() - start < core_cclk_tick) {}
 }

@@ -136,50 +136,50 @@ enum{
 #define REMOTE_PROV_PDU_REPORT      0x5F80
 #endif
 
-typedef struct{
+typedef struct __attribute__((packed)) {
     u8 maxScannedItems;
     u8 activeScan;
 }remote_prov_scan_cap_sts;
 
-typedef struct{
+typedef struct __attribute__((packed)) {
     u8 scannedItemsLimit;
     u8 timeout;
     u8 uuid[16];
 }remote_prov_scan_start;
 
-typedef struct{
+typedef struct __attribute__((packed)) {
     u8 status;
     u8 prScanningState;
     u8 scannedItemsLimit;
     u8 timeout;
 }remote_prov_scan_sts;
 
-typedef struct{
+typedef struct __attribute__((packed)) {
     s8 rssi;
     u8 uuid[16];
     u16 oob;
 }remote_prov_scan_report;
 
-typedef struct{
+typedef struct __attribute__((packed)) {
     u16 unicast;
     remote_prov_scan_report scan_report;
 }remote_prov_scan_report_win32;
 
-typedef struct{
+typedef struct __attribute__((packed)) {
     u8 ADTypeFilterCount;
     u8 ADTypeFilter[8];
     u8 uuid[16];
     u8 timeout;
 }remote_prov_extend_scan_start;
 
-typedef struct{
+typedef struct __attribute__((packed)) {
     u8 status;
     u8 uuid[16];
     u16 OOBinformation;
     u8 AdvStructures[1];
 }remote_prov_extend_scan_report;
 
-typedef struct{
+typedef struct __attribute__((packed)) {
 	union{
 		struct{
 			u8 uuid[16];
@@ -189,31 +189,31 @@ typedef struct{
 	};
 }remote_prov_link_open;
 
-typedef struct{
+typedef struct __attribute__((packed)) {
     u8 reason;
 }remote_prov_link_close;
 
-typedef struct{
+typedef struct __attribute__((packed)) {
     u8 status;
     u8 RPstate;
 }remote_prov_link_status;
 
-typedef struct{
+typedef struct __attribute__((packed)) {
     u8 status;
     u8 RPstatus;
     u8 reasons;
 }remote_prov_link_report;
 
-typedef struct{
+typedef struct __attribute__((packed)) {
     u8 OutboundPDUNumber;
     u8 ProvisioningPDU[0x48];
 }remote_prov_pdu_send;
 
-typedef struct{
+typedef struct __attribute__((packed)) {
     u8 OutboundPDUNumber;
 }remote_prov_pdu_outbound_report;
 
-typedef struct{
+typedef struct __attribute__((packed)) {
 #if DRAFT_FEAT_VD_MD_EN
     u8 opcode;
     u16 vendor_id;
@@ -226,17 +226,17 @@ typedef struct{
 
 
 
-typedef struct{
+typedef struct __attribute__((packed)) {
 	model_common_t com;
 	u8 rfu;
 }model_rp_server_common_t;
 
-typedef struct{
+typedef struct __attribute__((packed)) {
 	model_common_t com;
 	u8 rfu;
 }model_rp_client_common_t;
 
-typedef struct{
+typedef struct __attribute__((packed)) {
     #if MD_SERVER_EN
     model_rp_server_common_t srv[1];
     #endif
@@ -248,7 +248,7 @@ extern u8 node_devkey_candi[16];
 
 #define MAX_SCAN_ITEMS_UUID_CNT 4
 
-typedef struct{
+typedef struct __attribute__((packed)) {
     u8 status ;
     u8 PRScanningState;
     u8 scannedItemsLimit;
@@ -258,15 +258,16 @@ typedef struct{
     u16 src;
 }remote_prov_scan_sts_str;
 
-typedef struct{
+typedef struct __attribute__((packed)) {
     u8 valid;
 	u8 send_flag;
     u8 rssi;
     u8 uuid[16];
     u8 oob[2];
 }rp_scan_report_str;
+
 #define MAX_EXTEND_ADV_LEN 0x30
-typedef struct{
+typedef struct __attribute__((packed)) {
     u8 status;
     u8 uuid[16];
     u8 oob_info[2];
@@ -281,7 +282,7 @@ typedef struct{
 #define EXTEND_END_WITH_ONLY_URI_AD  	(BIT(3))
 #define EXTEND_END_WITH_MULTI_URI_AD  	(BIT(4))
 
-typedef struct{
+typedef struct __attribute__((packed)) {
 	// different extend scan security para
 	u8 mac_adr[6];
 	u8 uri_hash[4];
@@ -300,7 +301,7 @@ typedef struct{
     rp_extend_scan_report_str report;
 }remote_prov_extend_scan_str;
 
-typedef struct{
+typedef struct __attribute__((packed)) {
     u8 status;
     u8 RPState;
     u8 reason;
@@ -311,13 +312,13 @@ typedef struct{
 
 #define REMOTE_PROV_SERVER_RETRY_INTER  3000*1000
 
-typedef struct{
+typedef struct __attribute__((packed)) {
     u8 retry_flag;
     u32 tick;
     pro_PB_ADV adv;    
 }remote_prov_retry_str;
 
-typedef struct{
+typedef struct __attribute__((packed)) {
     u8 outbound;
     u8 inbound;
     u16 src;
@@ -326,7 +327,7 @@ typedef struct{
 }remote_proc_pdu_sts_str;
 
 #define MAX_EXTEND_SCAN_CNT		4
-typedef struct{
+typedef struct __attribute__((packed)) {
     //capa sts part 
     u8 active_scan;
     //scan sts part 
@@ -381,7 +382,7 @@ typedef enum{
 
 
 
-void mesh_rp_para_init();
+void mesh_rp_para_init(void);
 int mesh_cmd_sig_rp_scan_capa(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par);
 int mesh_tx_cmd_rp_scan_sts(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par);
 int mesh_cmd_sig_rp_scan_get(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par);
@@ -396,10 +397,10 @@ int mesh_cmd_sig_rp_link_report(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par)
 int mesh_cmd_sig_rp_pdu_send(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par);
 int remote_prov_report_cb(u8 rssi,u8 *p_uuid,u8 * p_oob);
 int remote_prov_report_raw_pkt_cb(u8 *p_beacon);
-void mesh_cmd_sig_rp_loop_proc();
-u8 mesh_pr_sts_work_or_not();
+void mesh_cmd_sig_rp_loop_proc(void);
+u8 mesh_pr_sts_work_or_not(void);
 int mesh_cmd_sig_send_rp_pdu_send(u8 *par,int par_len);
-void mesh_prov_pdu_send_retry_clear();
+void mesh_prov_pdu_send_retry_clear(void);
 void mesh_rp_netkey_del_cb(u8 idx,u16 op);
 void mesh_prov_pdu_send_retry_set(pro_PB_ADV *p_adv,u8 flag);
 int mesh_prov_server_to_client_cmd(u8 *prov_dat,u8 len);
@@ -422,7 +423,7 @@ int mesh_cmd_sig_rp_pdu_report(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par);
 #endif
 
 // remote prov client part 
-typedef struct{
+typedef struct __attribute__((packed)) {
     //capa sts part 
     u8 outbound;
     u8 rp_flag;
@@ -467,7 +468,7 @@ void mesh_rp_proc_en(u8 en);
 void mesh_rp_proc_set_node_adr(u16 unicast);
 int mesh_cmd_sig_rp_cli_send_link_open(u16 node_adr,u8 *p_uuid,u8 dkri);
 int mesh_cmd_sig_rp_cli_send_link_close(u16 node_adr,u8 reason);
-u8 get_mesh_rp_proc_en();
+u8 get_mesh_rp_proc_en(void);
 u8 mesh_rsp_opcode_is_rp(u16 opcode);
 int mesh_rp_client_rx_cb(mesh_rc_rsp_t *rsp);
 int mesh_remote_prov_st_publish(u8 idx);
@@ -475,26 +476,26 @@ void mesh_rp_client_set_prov_sts(u8 sts);
 void mesh_rp_server_set_sts(u8 sts);
 void mesh_prov_server_send_cmd(u8 *par,u8 len);
 void mesh_prov_server_rcv_cmd(pro_PB_ADV *p_adv);
-int mesh_cmd_sig_rp_pdu_outbound_send();
+int mesh_cmd_sig_rp_pdu_outbound_send(void);
 void remote_prov_scan_report_cb(u8 *par,u8 len);
 extern u32 mesh_md_rp_addr ;
 extern rp_mag_str rp_mag;
 void mesh_rp_start_settings(u16 adr,u8 *p_uuid,u8 dkri);
 u8 mesh_rp_link_dkri_is_valid(u8 dkri);
 void remote_prov_capa_sts_cb(u8 max_item,u8 active_scan);
-void mesh_rp_pdu_retry_clear();
-void mesh_rp_server_pdu_reset();
-void mesh_rp_server_prov_end_cb();
-void mesh_rp_srv_tick_reset();
-u8 get_remote_prov_scan_sts();
+void mesh_rp_pdu_retry_clear(void);
+void mesh_rp_server_pdu_reset(void);
+void mesh_rp_server_prov_end_cb(void);
+void mesh_rp_srv_tick_reset(void);
+u8 get_remote_prov_scan_sts(void);
 void remote_prov_scan_en(u8 en);
 int mesh_cmd_send_link_report(u8 status,u8 RPState,u8 reason,u8 len);
-void mesh_cmd_sig_rsp_scan_init();
-void mesh_rp_pdu_retry_send();
-void mesh_rp_client_para_reset();
-void mesh_rp_dkri_end_cb();
+void mesh_cmd_sig_rsp_scan_init(void);
+void mesh_rp_pdu_retry_send(void);
+void mesh_rp_client_para_reset(void);
+void mesh_rp_dkri_end_cb(void);
 int mesh_cmd_extend_loop_cb(event_adv_report_t *report);
-u8 mesh_extend_scan_proc_is_valid();
+u8 mesh_extend_scan_proc_is_valid(void);
 int send_rp_scan_start(u16 adr,u8 limit,u8 timeout);
 int send_rp_extend_scan_start(u16 adr,u8* p_adtype,u8 cnt);
 void mesh_rp_server_set_link_sts(u8 sts);
@@ -502,22 +503,22 @@ int mesh_cmd_conn_prov_adv_cb(event_adv_report_t *report);
 void mesh_layer_link_close_rsp(u8 reason);
 int mesh_tx_send_extend_scan_limit_report(u8 sts,u8 *p_uuid,u16 dst);
 
-#if WIN32
+#ifdef WIN32
 void mesh_prov_set_cli_dkri(u8 dkri);
 void mesh_prov_set_adr_dev_candi(u16 adr,u8 *p_dev);
-u8 mesh_prov_dkri_is_valid();
+u8 mesh_prov_dkri_is_valid(void);
 void mesh_prov_dev_candi_store_proc(u16 cmd_src);
 #endif
-u8  is_rp_working();
+u8  is_rp_working(void);
 
 void gw_get_rp_mode(u8 en);
 extern u16 seg_filter_adr;
-void gw_rp_send_invite();
+void gw_rp_send_invite(void);
 extern u8 rp_dev_mac[6];
 extern u8 rp_dev_uuid[16];
-void gw_rp_timeout_proc();
+void gw_rp_timeout_proc(void);
 
-void gw_rp_scan_start();
+void gw_rp_scan_start(void);
 #endif
 
 #endif

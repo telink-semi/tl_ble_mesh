@@ -38,12 +38,12 @@ enum{
     FN_CACHE_REPLACE_AND_OVERWRITE  = 2,
 };
 
-void mesh_feature_set_fn();
+void mesh_feature_set_fn(void);
 void fn_update_RecWin(u8 RecWin);
-u32 get_RecWin_connected();
+u32 get_RecWin_connected(void);
 void friend_ship_establish_ok_cb_fn(u8 lpn_idx);
 void friend_ship_disconnect_cb_fn(u8 lpn_idx, int type);
-u8 mesh_get_fn_cache_size_log_cnt();
+u8 mesh_get_fn_cache_size_log_cnt(void);
 void friend_cmd_send_offer(u8 lpn_idx);
 void friend_cmd_send_update(u8 lpn_idx, u8 md);
 void friend_cmd_send_clear(u16 adr_dst, u8 *par, u32 len);
@@ -53,7 +53,7 @@ int mesh_tx_cmd_layer_upper_ctl_FN(u8 op, u8 *par, u32 len_par, u16 adr_dst);
 void mesh_iv_update_start_poll_fn(u8 iv_update_by_sno, u8 beacon_iv_update_pkt_flag);
 u16 mesh_group_match_friend(u16 adr);
 int fn_cache_get_extend_adv_short_unseg(u32 ctl, u8 len_ut_max_single_seg_rx);
-int is_in_mesh_friend_st_fn_all();
+int is_in_mesh_friend_st_fn_all(void);
 
 
 extern u8 g_max_lpn_num;

@@ -97,9 +97,9 @@ u8 ais_pri_data_set(u8 *p)
 u8 magic_aes_nums[16]={	0x11,0xff,0x22,0xee,0x33,0xdd,0x44,0xcc,
 						0x55,0xbb,0x66,0xaa,0x77,0x99,0x88,0x88};
 
-void calculate_aes_to_create_static_oob()
+void calculate_aes_to_create_static_oob(void)
 {
-	#if !WIN32 
+	#ifndef WIN32 
 	u8 aes_in[16];
 	u8 aes_out[16];
 	memset(aes_in,0,sizeof(aes_in));
@@ -109,7 +109,7 @@ void calculate_aes_to_create_static_oob()
 	#endif
 }
 #endif
-void user_sha256_data_proc()
+void user_sha256_data_proc(void)
 {
     #if (AIS_ENABLE)
     set_sha256_init_para_mode(1);
@@ -119,7 +119,7 @@ void user_sha256_data_proc()
 }
 
 
-void user_node_oob_set()
+void user_node_oob_set(void)
 {
 	#if CERTIFY_BASE_ENABLE
 	if(cert_base_func_init()){
@@ -161,12 +161,11 @@ void user_node_oob_set()
 
 
 #if MD_SERVER_EN
-void user_power_on_proc()
+void user_power_on_proc(void)
 {
     #if ((MESH_USER_DEFINE_MODE != MESH_SPIRIT_ENABLE)&&(MESH_USER_DEFINE_MODE != MESH_TAIBAI_ENABLE)&&!MI_API_ENABLE)
     foreach(i,LIGHT_CNT){
         __UNUSED u16 adr_src = ele_adr_primary + (ELE_CNT_EVERY_LIGHT * i);
-        adr_src = adr_src; // will be optimized, just for compile warning.
 		mesh_key.netkey_sel_dec = 0; // make sure key is valid when call mesh_tx_cmd_rsp()
 		mesh_key.appkey_sel_dec = 0; // make sure key is valid when call mesh_tx_cmd_rsp()
         #if MD_LIGHTNESS_EN
@@ -183,7 +182,7 @@ void user_power_on_proc()
 }
 #endif
 
-void user_mesh_cps_init()
+void user_mesh_cps_init(void)
 {
 	if(AIS_ENABLE){
 		//gp_page0->head.cid = g_vendor_id;     // have been set default value
@@ -197,7 +196,7 @@ void user_mesh_cps_init()
 	}
 }
 
-void user_set_def_sub_adr()
+void user_set_def_sub_adr(void)
 {
     #if (AIS_ENABLE || LLSYNC_PROVISION_AUTH_OOB)
     	#if LLSYNC_ENABLE
@@ -213,7 +212,7 @@ void user_set_def_sub_adr()
     #endif
 }
 
-void user_system_time_proc()
+void user_system_time_proc(void)
 {
 #if(AIS_ENABLE && !SPIRIT_PRIVATE_LPN_EN)
 	#if !DU_ENABLE
@@ -228,7 +227,7 @@ void user_system_time_proc()
 }
 
 //if return 0, will not send transaction ack for link open cmd
-int user_node_rc_link_open_callback()
+int user_node_rc_link_open_callback(void)
 {
 	#if (MESH_USER_DEFINE_MODE == MESH_SPIRIT_ENABLE ||MESH_USER_DEFINE_MODE == MESH_TAIBAI_ENABLE)
 		#if DU_ENABLE
@@ -257,7 +256,7 @@ for provisioner:
 	1. use EPA mode only when unprovision device support epa and length of static oob in database is 32 byte.
 **********************************************************/
 #ifdef FLASH_ADR_STATIC_OOB
-u8 mesh_static_oob_data_by_flash()
+u8 mesh_static_oob_data_by_flash(void)
 {
 	u8 oob_data[32];
 	flash_read_page(FLASH_ADR_STATIC_OOB, 32, oob_data);
@@ -289,7 +288,7 @@ void mesh_provision_para_init(u8 *p_random)
 	prov_para.ele_cnt =1;
 	memcpy(prov_para.random,p_random,sizeof(prov_para.random));
 	prov_para.rand_gen_s = clock_time_s();
-	#if !WIN32
+	#ifndef WIN32
 	user_prov_multi_device_uuid();// use the mac address part to create the device uuid part
 	#if (!AIS_ENABLE && !LLSYNC_PROVISION_AUTH_OOB && !TESTCASE_FLAG_ENABLE)
 	if(mesh_static_oob_data_by_flash()){//oob was burned in flash
@@ -303,9 +302,9 @@ void mesh_provision_para_init(u8 *p_random)
 	user_node_oob_set();
 }
 
-void user_prov_multi_oob()
+void user_prov_multi_oob(void)
 {
-#if !WIN32
+#ifndef WIN32
     #if (AIS_ENABLE)
 		calculate_sha256_to_create_static_oob();
     #elif LLSYNC_PROVISION_AUTH_OOB
@@ -318,7 +317,7 @@ void user_prov_multi_oob()
 #endif
 }
 
-#if (FAST_PROVISION_ENABLE && !WIN32)
+#if (FAST_PROVISION_ENABLE && !defined(WIN32))
 STATIC_ASSERT(MD_REMOTE_PROV == 0); // can not enable both, because app can not get the same device uuid calculated from mac.
 #endif
 
@@ -352,7 +351,7 @@ void uuid_create_by_mac(u8 *mac,u8 *uuid)
     #if PAIR_PROVISION_ENABLE
     char head_flag[] = PAIR_PROV_UUID_FLAG;
     memcpy(uuid,head_flag, sizeof(head_flag));
-    #elif (!WIN32 && MD_REMOTE_PROV)
+    #elif (!defined(WIN32) && MD_REMOTE_PROV)
 	uuid_mesh_t * p_uuid = (uuid_mesh_t * )uuid;
     memcpy(p_uuid->node,mac,6);	// just for showing mac on UI of VC remote scanning.
     #endif
@@ -360,9 +359,9 @@ void uuid_create_by_mac(u8 *mac,u8 *uuid)
 
 #define NORMAL_MODE_DEV_UUID_CUSTOMIZE_EN       (0)
 
-void user_prov_multi_device_uuid()
+void user_prov_multi_device_uuid(void)
 {
-#if !WIN32
+#ifndef WIN32
     #if (AIS_ENABLE)
         set_dev_uuid_for_sha256();
     #elif (MESH_USER_DEFINE_MODE == MESH_AES_ENABLE)

@@ -28,23 +28,32 @@
 /**
  *  @brief  Definition for Device info
  */
-#if !WIN32
+#ifndef WIN32
 //#include "proj/mcu/config.h"
 //#include "proj/mcu/analog.h"
 //#include "../rf_drv.h"
 #endif
+
+
 #include "vendor/common/user_config.h"
 #include "drivers.h"
 //#include "../pm.h"
 
-#define PA_ENABLE	0
 
 #ifndef MY_RF_POWER_INDEX
-	#if(PA_ENABLE)
-#define		MY_RF_POWER_INDEX		RF_POWER_INDEX_P0p01dBm
-	#else
-#define		MY_RF_POWER_INDEX		RF_POWER_INDEX_P3p25dBm
-	#endif
+    #if(PA_ENABLE)
+        #if(MCU_CORE_TYPE == MCU_CORE_B91)
+#define     MY_RF_POWER_INDEX       RF_POWER_INDEX_P0p01dBm
+        #elif(MCU_CORE_TYPE == MCU_CORE_TL321X)
+#define     MY_RF_POWER_INDEX       RF_POWER_INDEX_N0p07dBm
+        #endif
+    #else
+        #if(MCU_CORE_TYPE == MCU_CORE_B91)
+#define     MY_RF_POWER_INDEX       RF_POWER_INDEX_P3p25dBm
+        #elif(MCU_CORE_TYPE == MCU_CORE_TL321X)
+#define     MY_RF_POWER_INDEX       RF_POWER_INDEX_P3p49dBm
+        #endif
+    #endif
 #endif
 
 
@@ -421,73 +430,22 @@ enum{
     GATT_OTA_START                      = 3,
 };
 
+#if __TLSR_RISCV_EN__
+#define MESH_DEEP_ANA_REG               PM_ANA_REG_POWER_ON_CLR_BUF1
+#else
+#define MESH_DEEP_ANA_REG               DEEP_ANA_REG1
+#endif
+
 enum{
     FLD_OTA_REBOOT_FLAG                 = BIT(0),
     FLD_LOW_BATT_FLG                   	= BIT(1),
     FLD_LOW_BATT_LOOP_FLG             	= BIT(2),	// 0 means check by user_init, 1 means by main loop
     FLD_MESH_OTA_100_FLAG               = BIT(3),
-};/*DEEP_ANA_REG0*/
+};/*MESH_DEEP_ANA_REG*/
 
-
-extern u32 flash_sector_mac_address;
-extern u32 flash_sector_calibration;
-
-#if AUTO_ADAPT_MAC_ADDR_TO_FLASH_TYPE_EN
-void blc_readFlashSize_autoConfigCustomFlashSector(void);
-#else
-#define blc_readFlashSize_autoConfigCustomFlashSector()     // null
-#endif
 
 #ifndef WIN32
-#if(__TL_LIB_8258__ || (MCU_CORE_TYPE == MCU_CORE_8258))
-#include "stack/ble/blt_config.h"
-#elif(MCU_CORE_TYPE == MCU_CORE_8278)
-#include "stack/ble_8278/blt_config.h"
-#elif(MCU_CORE_TYPE == MCU_CORE_B91)
 #include "vendor/common/ble_flash.h"
-#else
-
-#define RAMCODE_OPTIMIZE_CONN_POWER_NEGLECT_ENABLE			0
-
-typedef struct{
-	u8 conn_mark;
-	u8 ext_crystal_en;
-}misc_para_t;
-
-misc_para_t blt_miscParam;
-static inline void blc_app_setExternalCrystalCapEnable(u8  en)
-{
-	blt_miscParam.ext_crystal_en = en;
-}
-
-static inline void blc_app_loadCustomizedParameters(void)
-{
-	 if(!blt_miscParam.ext_crystal_en)
-	 {
-		 //customize freq_offset adjust cap value, if not customized, default ana_81 is 0xd0
-		 if( (*(unsigned char*) (CUST_CAP_INFO_ADDR)) != 0xff ){
-			 //ana_81<4:0> is cap value(0x00 - 0x1f)
-			 analog_write(0x81, (analog_read(0x81)&0xe0) | ((*(unsigned char*) (CUST_CAP_INFO_ADDR))&0x1f) );
-		 }else if( (*(unsigned char*) (0x76010)) != 0xff ){ // no 1M flash for 8269
-			 analog_write(0x81, (analog_read(0x81)&0xe0) | ((*(unsigned char*) (0x76010))&0x1f) );
-		 }
-	 }
-
-
-	 // customize TP0/TP1
-	 if( ((*(unsigned char*) (CUST_TP_INFO_ADDR)) != 0xff) && ((*(unsigned char*) (CUST_TP_INFO_ADDR+1)) != 0xff) ){
-		 rf_update_tp_value(*(unsigned char*) (CUST_TP_INFO_ADDR), *(unsigned char*) (CUST_TP_INFO_ADDR+1));
-	 }else if( ((*(unsigned char*) (0x76011)) != 0xff) && ((*(unsigned char*) (0x76011+1)) != 0xff) ){
-		 rf_update_tp_value(*(unsigned char*) (0x76011), *(unsigned char*) (0x76011+1)); // no 1M flash for 8269
-	 }
-
-	  //customize 32k RC cap, if not customized, default ana_32 is 0x80
-	 if( (*(unsigned char*) (CUST_RC32K_CAP_INFO_ADDR)) != 0xff ){
-		 //ana_81<4:0> is cap value(0x00 - 0x1f)
-		 analog_write(0x32, *(unsigned char*) (CUST_RC32K_CAP_INFO_ADDR) );
-	 }
-}
-#endif
 #endif
 
 
@@ -501,116 +459,8 @@ static inline void blc_app_loadCustomizedParameters(void)
 
 /////////////////// Code Zise & Feature ////////////////////////////
 
-#if ( __TL_LIB_8261__ || (MCU_CORE_TYPE == MCU_CORE_8261) )
-	#define BLE_STACK_SIMPLIFY_4_SMALL_FLASH_ENABLE		1
-	#define BLE_CORE42_DATA_LENGTH_EXTENSION_ENABLE		0
-#endif
-
-
-#ifndef BLE_STACK_SIMPLIFY_4_SMALL_FLASH_ENABLE
-#define BLE_STACK_SIMPLIFY_4_SMALL_FLASH_ENABLE			0
-#endif
-
-
-
-
-//for 8261 128k flash
-#if (BLE_STACK_SIMPLIFY_4_SMALL_FLASH_ENABLE)
-	#define		BLS_ADV_INTERVAL_CHECK_ENABLE					0
-#endif
-
-
-
-
-#ifndef BLE_P256_PUBLIC_KEY_ENABLE
-#define BLE_P256_PUBLIC_KEY_ENABLE								0
-#endif
-
-
-
-
-
-
-
-#ifndef BLE_CORE42_DATA_LENGTH_EXTENSION_ENABLE
-#define BLE_CORE42_DATA_LENGTH_EXTENSION_ENABLE			1
-#endif
-
-
-
-
-
-//default ll_master_multi connection
-#ifndef  LL_MASTER_SINGLE_CONNECTION
-#define  LL_MASTER_SINGLE_CONNECTION					0
-#endif
-
-#ifndef  LL_MASTER_MULTI_CONNECTION
-#define  LL_MASTER_MULTI_CONNECTION						0
-#endif
-
-//#if (LL_MASTER_SINGLE_CONNECTION )
-//	#define  LL_MASTER_MULTI_CONNECTION					0
-//#else
-//	#define  LL_MASTER_MULTI_CONNECTION					1
-//#endif
-
-
-
-
-
-
-
-
-
-
-
-#if (BLE_MODULE_LIB_ENABLE || BLE_MODULE_APPLICATION_ENABLE)  //for ble module
-	#define		BLS_DMA_DATA_LOSS_DETECT_AND_SOLVE_ENABLE		1
-	#define		BLS_SEND_TLK_MODULE_EVENT_ENABLE				1
-	#define		BLS_ADV_INTERVAL_CHECK_ENABLE					0
-#endif
-
-
-
-//when rf dma & uart dma work together
-#ifndef		BLS_DMA_DATA_LOSS_DETECT_AND_SOLVE_ENABLE
-#define		BLS_DMA_DATA_LOSS_DETECT_AND_SOLVE_ENABLE		0
-#endif
-
-#ifndef		BLS_SEND_TLK_MODULE_EVENT_ENABLE
-#define 	BLS_SEND_TLK_MODULE_EVENT_ENABLE				0
-#endif
-
-
-
 #ifndef		BLS_ADV_INTERVAL_CHECK_ENABLE
 #define		BLS_ADV_INTERVAL_CHECK_ENABLE					0	// modify by qifa
-#endif
-
-#if 0 // code has been removed, please refer to another one "BLE_SRC_TELINK_MESH_EN".
-#if LIB_TELINK_MESH_SCAN_MODE_ENABLE
-#define		BLS_TELINK_MESH_SCAN_MODE_ENABLE				1
-#endif
-
-/////////////////  scan mode config  //////////////////////////
-#ifndef		BLS_TELINK_MESH_SCAN_MODE_ENABLE
-#define		BLS_TELINK_MESH_SCAN_MODE_ENABLE				0
-#endif
-
-#if(BLS_TELINK_MESH_SCAN_MODE_ENABLE)
-	#define		BLS_BT_STD_SCAN_MODE_ENABLE					0
-#else
-	#ifndef		BLS_BT_STD_SCAN_MODE_ENABLE
-	#define		BLS_BT_STD_SCAN_MODE_ENABLE					1
-	#endif
-#endif
-#endif
-
-
-
-#ifndef BLE_LL_ADV_IN_MAINLOOP_ENABLE
-#define BLE_LL_ADV_IN_MAINLOOP_ENABLE					1
 #endif
 
 #if FW_START_BY_BOOTLOADER_EN
@@ -640,9 +490,6 @@ static inline void blc_app_loadCustomizedParameters(void)
 
 #ifndef DUAL_MODE_ADAPT_EN
 #define DUAL_MODE_ADAPT_EN					            0
-#endif
-#ifndef DUAL_MODE_WITH_TLK_MESH_EN
-#define DUAL_MODE_WITH_TLK_MESH_EN					    0
 #endif
 
 #ifndef SWITCH_ALWAYS_MODE_GATT_EN

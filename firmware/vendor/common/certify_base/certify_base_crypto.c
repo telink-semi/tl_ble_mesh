@@ -37,13 +37,12 @@ int mbedtls_crt_parse_dev_cert(const unsigned char* crt, u32 crt_sz, dev_cert_tb
 
 char uri_base[]=" //ptswebapiprod.azurewebsites.net/api/meshcert/v/b";
 
-#define MAX_CERT_ITEM_CNT	2
 cert_item_t cert_item[MAX_CERT_ITEM_CNT];
 
 #define CERTIFY_OOB_BY_DEFAULT_CERT			1 // use default certificate //check by the rootcert ,and it will not have the oob part
 #define CERTIFY_OOB_BY_READING_FLASH		2 // reading certificate from flash.
 
-#if WIN32 // sig_mesh_tool.exe
+#ifdef WIN32 // sig_mesh_tool.exe
 #define CERTIFY_TYPE  CERTIFY_OOB_BY_DEFAULT_CERT // must 1. because it is for sig_mesh_tool.exe
 #else
 #define CERTIFY_TYPE  CERTIFY_OOB_BY_READING_FLASH // CERTIFY_OOB_BY_DEFAULT_CERT
@@ -125,15 +124,8 @@ const u8 * device_cert;
 u32 device_cert_len;
 const u8 * inter_midate_cert;
 u32 inter_cert_len;
-u32 cert_pub_key_adr;//64
-u32 cert_pri_key_adr;//32
-u32 cert_uuid_adr;//16
-u32 cert_oob_adr;//32
-u16 cert_crc;
-u32 cert_valid_flag = CERT_VALID_FLAG;
-u16 cert_calc;
 
-u8 cert_valid()
+u8 cert_valid(void)
 {
 	u32 flag_flash ;
 	flash_read_page(FLASH_ADR_CERTIFY_ADR+CERT_VALID_OFFSET, 4, (u8*)(&flag_flash));
@@ -143,13 +135,18 @@ u8 cert_valid()
 	}else if (flag_flash == 0xffffffff){
 		//cert need to verify 
 		const u8 *p_cert = (const u8 *)(FLASH_R_BASE_ADDR + FLASH_ADR_CERTIFY_ADR);
+        u16 cert_crc = 0;
 		flash_read_page(FLASH_ADR_CERTIFY_ADR+CERT_CRC_OFFSET, 2, (u8*)(&cert_crc));
-		cert_calc = crc16(p_cert, CERT_CRC_OFFSET);
+		u16 cert_calc = crc16(p_cert, CERT_CRC_OFFSET);
+        
 		if(cert_crc != cert_calc){
 			// cert is invalid 
 			return CERT_IS_INVALID_UNPROV;
 		}
+
+        u32 cert_valid_flag = CERT_VALID_FLAG;
 		flash_write_page(FLASH_ADR_CERTIFY_ADR+CERT_VALID_OFFSET, 4, (u8*)(&cert_valid_flag));
+        
 		return CERT_IS_VALID;
 	}else{
 		// cert valid flag is invalid 
@@ -162,20 +159,21 @@ u8 cert_valid()
 }
 
 
-void cert_init()
+/**
+ * @brief       This function servers to init certificate address in flash
+ * @param[in]   void- 
+ * @return      none
+ * @note        
+ */
+void cert_init(void)
 {
 	if( cert_valid() == CERT_IS_VALID){
 		flash_read_page(FLASH_ADR_CERTIFY_ADR+CERT_DEVICE_CERT_OFFSET, 4, (u8*)(&device_cert_len));
-		device_cert = (const u8 *)(FLASH_ADR_CERTIFY_ADR+CERT_DEVICE_CERT_OFFSET+4);
 		flash_read_page(FLASH_ADR_CERTIFY_ADR+CERT_INTER_CERT_OFFSET, 4, (u8*)(&inter_cert_len));
-		inter_midate_cert = (const u8 *)(FLASH_ADR_CERTIFY_ADR+CERT_INTER_CERT_OFFSET+4);
-		cert_pub_key_adr = (FLASH_ADR_CERTIFY_ADR+CERT_PUBKEY_OFFSET);
-		cert_pri_key_adr = (FLASH_ADR_CERTIFY_ADR+CERT_PRIVATE_OFFSET);
-		cert_uuid_adr = (FLASH_ADR_CERTIFY_ADR+CERT_UUID_OFFSET);
-		cert_oob_adr = (FLASH_ADR_CERTIFY_ADR+CERT_STATIC_OOB_OFFSET);
-	}else {// if the cert is invalid ,still can read the uuid and oob
-		cert_uuid_adr = (FLASH_ADR_CERTIFY_ADR+CERT_UUID_OFFSET);
-		cert_oob_adr = (FLASH_ADR_CERTIFY_ADR+CERT_STATIC_OOB_OFFSET);
+
+        //device_cert and inter_midate_cert must plus FLASH_R_BASE_ADDR, because use memcpy() in cert_item_rsp().
+        device_cert = (const u8 *)(FLASH_R_BASE_ADDR + FLASH_ADR_CERTIFY_ADR + CERT_DEVICE_CERT_OFFSET + 4);
+		inter_midate_cert = (const u8 *)(FLASH_R_BASE_ADDR + FLASH_ADR_CERTIFY_ADR + CERT_INTER_CERT_OFFSET + 4);
 	}	
 }
 #endif
@@ -185,8 +183,7 @@ void cert_set_uuid(u8 *p_uuid)
 #if(CERTIFY_TYPE == CERTIFY_OOB_BY_DEFAULT_CERT)
 	memcpy(p_uuid,cert_uuid,sizeof(cert_uuid));
 #elif(CERTIFY_TYPE == CERTIFY_OOB_BY_READING_FLASH)
-	cert_uuid_adr = (FLASH_ADR_CERTIFY_ADR+CERT_UUID_OFFSET);
-	flash_read_page(cert_uuid_adr, 16, p_uuid);
+	flash_read_page(FLASH_ADR_CERTIFY_ADR + CERT_UUID_OFFSET, 16, p_uuid);
 #endif
 }
 
@@ -239,24 +236,30 @@ int cert_item_rsp(u16 id,u16 offset,u16 max_size,u8 *p_buf,u16 *p_len)
 {
 	cert_item_t *p_cert;
 	int i=0;
+    
 	for(i=0;i<MAX_CERT_ITEM_CNT;i++){
 		p_cert = cert_item+i;
 		if(p_cert->id == id){
 			break;
 		}
 	}
+    
 	if(i == MAX_CERT_ITEM_CNT){
 		return -1;
 	}
+    
 	if(offset > p_cert->len){
 		return -2;
 	}
+    
 	if(p_cert->len >= (offset+max_size)){
 		*p_len = max_size;
 	}else{
 		*p_len = p_cert->len - offset;
 	}
-	memcpy(p_buf,(u8 *)(FLASH_R_BASE_ADDR + p_cert->p_item + offset),*p_len);
+    
+	memcpy(p_buf, (u8 *)(p_cert->p_item + offset), *p_len);
+    
 	return 0;
 }
 
@@ -342,19 +345,19 @@ u8 cert_info_check_pubkey_info(u8 *pubkey,u8* key_info)
 
 static private_cert_str_t private_cert_dat;
 
-int cert_info_parse_init()
+int cert_info_parse_init(void)
 {
 #if (CERTIFY_TYPE == CERTIFY_OOB_BY_DEFAULT_CERT )
 	private_cert_dat.pri.len = sizeof(cert_private_key);
-	memcpy(private_cert_dat.pri.key,cert_private_key,sizeof(cert_private_key));
+	memcpy(private_cert_dat.pri.key, cert_private_key, sizeof(cert_private_key));
 	private_cert_dat.pub.len = sizeof(cert_pub_key);
-	memcpy(private_cert_dat.pub.key+1,cert_pub_key,sizeof(cert_pub_key));
-	private_cert_dat.val=2;
+	memcpy(private_cert_dat.pub.key + 1, cert_pub_key, sizeof(cert_pub_key));
+	private_cert_dat.val = 2;
 #elif (CERTIFY_TYPE == CERTIFY_OOB_BY_READING_FLASH )
 	private_cert_dat.pri.len = 32;
-	flash_read_page(cert_pri_key_adr, private_cert_dat.pri.len, private_cert_dat.pri.key);
+	flash_read_page(FLASH_ADR_CERTIFY_ADR + CERT_PRIVATE_OFFSET, private_cert_dat.pri.len, private_cert_dat.pri.key);
 	private_cert_dat.pub.len = 64;
-	flash_read_page(cert_pub_key_adr, private_cert_dat.pub.len, private_cert_dat.pub.key+1);
+	flash_read_page(FLASH_ADR_CERTIFY_ADR + CERT_PUBKEY_OFFSET, private_cert_dat.pub.len, private_cert_dat.pub.key + 1);
 	private_cert_dat.val=2;
 #endif
 	return 0;
@@ -377,7 +380,7 @@ int  cert_base_func_init()
 	return 0;
 }
 
-void cert_base_oob_set()
+void cert_base_oob_set(void)
 {
 	#if (CERTIFY_TYPE == CERTIFY_OOB_BY_DEFAULT_CERT)
 	// and set the static oob part
@@ -391,7 +394,7 @@ void cert_base_oob_set()
 	}
 	#elif (CERTIFY_TYPE == CERTIFY_OOB_BY_READING_FLASH)
 	u8 oob[32];
-	flash_read_page(cert_oob_adr, sizeof(oob), oob);
+	flash_read_page(FLASH_ADR_CERTIFY_ADR + CERT_STATIC_OOB_OFFSET, sizeof(oob), oob);
 	if(is_buf_all_one(oob,sizeof(oob))){
 		// oob is empty 
 		set_node_prov_para_pubkey_no_oob();
@@ -413,7 +416,7 @@ void cert_base_set_key(u8 *pk,u8 *sk)
 	memcpy(sk,cert_sk,32);
 }
 
-#if WIN32
+#ifdef WIN32
 typedef struct{
 	u16 valid;
 	u16 rec_id;

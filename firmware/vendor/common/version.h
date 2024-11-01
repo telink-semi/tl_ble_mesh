@@ -32,28 +32,28 @@
 #include "../../config.h"
 #include "mesh_config.h"
 
-#if __TLSR_RISCV_EN__
+#if __TLSR_RISCV_EN__ // for B91m chips
 	#if MESH_IRONMAN_AP2T31F80_EN
 #define SW_VERSION_SPEC			(4)		// "3" means SIG MESH 1.0.x, "4" means SIG MESH 1.1.x; 0 mean beta version.
 #define SW_VERSION_MAJOR		(1)		// "1" means single connection"2", means multi connection.
 #define SW_VERSION_MINOR		(0)		// 
-#define SW_VERSION_2ND_MINOR	(0)		// second minor
+#define SW_VERSION_2ND_MINOR	(0)		// second minor or fix version
 	#elif BLE_MULTIPLE_CONNECTION_ENABLE
 #define SW_VERSION_SPEC			(4)		// "3" means SIG MESH 1.0.x, "4" means SIG MESH 1.1.x; 0 mean beta version.
 #define SW_VERSION_MAJOR		(2)		// "2" means multi connection, "1" means single connection.
 #define SW_VERSION_MINOR		(0)		// 
-#define SW_VERSION_2ND_MINOR	(0)		// second minor
+#define SW_VERSION_2ND_MINOR	(1)		// second minor or fix version
 	#else
 #define SW_VERSION_SPEC			(4)		// "3" means SIG MESH 1.0.x, "4" means SIG MESH 1.1.x; 0 mean beta version.
 #define SW_VERSION_MAJOR		(1)		// "1" means single connection"2", means multi connection.
 #define SW_VERSION_MINOR		(0)		// 
-#define SW_VERSION_2ND_MINOR	(0)		// second minor
+#define SW_VERSION_2ND_MINOR	(0)		// second minor or fix version
 	#endif
-#else
+#else // for B85m chips
 #define SW_VERSION_SPEC			(4)		// "3" means SIG MESH 1.0.x, "4" means SIG MESH 1.1.x; 0 mean beta version.
 #define SW_VERSION_MAJOR		(1)		// "1" means single connection"2", means multi connection. 
 #define SW_VERSION_MINOR		(0)		// 
-#define SW_VERSION_2ND_MINOR	(0)		// second minor
+#define SW_VERSION_2ND_MINOR	(1)		// second minor or fix version
 #endif
 
 // big endian
@@ -74,6 +74,8 @@
 #define PID_CHIP_TYPE			2
 #elif(CHIP_TYPE == CHIP_TYPE_9518)
 #define PID_CHIP_TYPE			3
+#elif(CHIP_TYPE == CHIP_TYPE_TL321X)
+#define PID_CHIP_TYPE			4
 #else
 #error error mcu core type
 #endif
@@ -114,7 +116,7 @@ format: please refer to spec "4.2.1.1 Composition Data Page 0"
 user can be allowed to redefined PID and VID if needed.
 */
 
-#if (WIN32)
+#ifdef WIN32
 #define MESH_PID_SEL		(PID_LIGHT)
 #define MESH_VID		    FW_VERSION_TELINK_RELEASE       // user can redefine
 #elif (__PROJECT_MESH_PRO__ || __PROJECT_MESH_GW_NODE__)  // must define in TC32_CC_Assembler ->General , too. because cstartup.s can't read predefine value in TC32_compiler-->symbols

@@ -82,7 +82,7 @@ extern "C" {
 	#if(__PROJECT_MESH_PRO__ || __PROJECT_MESH_GW_NODE__)
 #define DISTRIBUTOR_UPDATE_CLIENT_EN    1
 #define DISTRIBUTOR_UPDATE_SERVER_EN    DISTRIBUTOR_UPDATE_CLIENT_EN
-		#if (WIN32 && DISTRIBUTOR_UPDATE_CLIENT_EN)
+		#if (defined(WIN32) && DISTRIBUTOR_UPDATE_CLIENT_EN)
 #define INITIATOR_CLIENT_EN             1   // only app or VC enable
 		#endif
 	#else

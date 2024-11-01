@@ -52,16 +52,18 @@
 #endif
 
 #ifndef MESH_LONG_SLEEP_WAKEUP_EN
-#define MESH_LONG_SLEEP_WAKEUP_EN	0
+#define MESH_LONG_SLEEP_WAKEUP_EN	0   // for switch project, no need to enable and just use API of cpu_long_sleep_wakeup_() is ok.
 #endif
 
-#if WIN32 // just for compile
+#ifdef WIN32 // just for compile
 u32 flash_sector_mac_address = 0x76000;
 u32 flash_sector_calibration = 0x77000;
 #endif
 
+#if MESH_TIMER_MS_100MS_EN
 u32 system_time_ms = 0;
 u32 system_time_100ms = 0;
+#endif
 u32 system_time_s = 0;
 u32 system_time_tick;
 
@@ -84,7 +86,7 @@ u32 system_time_tick;
 #define LOG_RTC_DEBUG(pbuf, len, format, ...)		//LOG_MSG_LIB(TL_LOG_NODE_BASIC, pbuf, len, format, ##__VA_ARGS__)
 
 #if (__PROJECT_MESH_SWITCH__ || RTC_USE_32K_RC_ENABLE)
-STATIC_ASSERT(MESH_LONG_SLEEP_WAKEUP_EN == 0); // because switch has enable long sleep mode
+STATIC_ASSERT(MESH_LONG_SLEEP_WAKEUP_EN == 0); // no need to enable MESH_LONG_SLEEP_WAKEUP_EN and just use API of cpu_long_sleep_wakeup_() is ok. // because switch has enable long sleep mode
 #endif
 
 #if RTC_USE_32K_RC_ENABLE
@@ -127,25 +129,25 @@ void rtc_cal_init(u8 tick_start)
 }
 #endif
 
-void system_timer_handle_ms()
+void system_timer_handle_ms(void)
 {
 }
 
-void system_timer_handle_100ms()
+void system_timer_handle_100ms(void)
 {
 	mesh_heartbeat_poll_100ms();
 #if ALI_MD_TIME_EN
 	user_ali_time_proc();
 #endif
-#if (!WIN32 && SENSOR_LIGHTING_CTRL_USER_MODE_EN && MD_SENSOR_CLIENT_EN)
+#if (!defined(WIN32) && SENSOR_LIGHTING_CTRL_USER_MODE_EN && MD_SENSOR_CLIENT_EN)
     sensor_lighting_ctrl_proc();
 #endif
-#if (MD_DF_CFG_SERVER_EN && !WIN32 && !FEATURE_LOWPOWER_EN)
+#if (MD_DF_CFG_SERVER_EN && !defined(WIN32) && !FEATURE_LOWPOWER_EN)
 	mesh_directed_forwarding_proc(0, 0, 0, MESH_BEAR_ADV);
 #endif
 }
 
-static inline u32 get_tick_for_system_time()
+static inline u32 get_tick_for_system_time(void)
 {
 #if (__PROJECT_MESH_SWITCH__ || MESH_LONG_SLEEP_WAKEUP_EN)
 	return get_32k_tick();
@@ -154,7 +156,7 @@ static inline u32 get_tick_for_system_time()
 #endif
 }
 
-void system_time_init(){
+void system_time_init(void){
 	system_time_tick = get_tick_for_system_time();
 #if RTC_USE_32K_RC_ENABLE
 	LOG_RTC_DEBUG(0, 0, "system_time_init");
@@ -165,7 +167,7 @@ void system_time_init(){
 #if (FEATURE_LOWPOWER_EN || GATT_LPN_EN)
 _attribute_ram_code_
 #endif
-void system_time_run(){
+void system_time_run(void){
     mesh_iv_update_start_poll();
     
     u32 clock_tmp = get_tick_for_system_time();
@@ -199,7 +201,7 @@ void system_time_run(){
         u32 interval_cnt = t_delta/CHECK_INTERVAL;
 		#endif
         if(interval_cnt){
-			#if __PROJECT_MESH_SWITCH__
+			#if __PROJECT_MESH_SWITCH__ // (0 == MESH_TIMER_MS_100MS_EN)
 			system_time_s += interval_cnt;
 			mesh_iv_update_st_poll_s(interval_cnt);
 			LOG_RTC_DEBUG(0, 0, "%02d:%02d:%02d", system_time_s/60/60, (system_time_s/60)%60, system_time_s%60);					
@@ -217,14 +219,14 @@ void system_time_run(){
                 // and it will take too much time to run system_timer_handle_ms_() for low power device which is wakeup after a long time sleep.
                 #else
 					#if MD_SERVER_EN
-			    foreach(i,interval_cnt){
+			    foreach_uint(i,interval_cnt){
 					if(0 == light_transition_proc()){
 						break; // quick break to save time.
 					}
 				}
 					#endif
 					
-			    foreach(i,interval_cnt){
+			    foreach_uint(i,interval_cnt){
 			        system_timer_handle_ms();
 			    }
 			    #endif
@@ -237,7 +239,7 @@ void system_time_run(){
                 if(RTC_USE_32K_RC_ENABLE || is_lpn_support_and_en || SPIRIT_PRIVATE_LPN_EN ||DU_LPN_EN || MESH_LONG_SLEEP_WAKEUP_EN){ // it will cost several ms from wake up
                     system_timer_handle_100ms();	// only run once to save time
 				}else{
-					foreach(i,inc_100ms){
+					foreach_uint(i,inc_100ms){
 				        system_timer_handle_100ms();
 				    }
 				}
@@ -248,7 +250,8 @@ void system_time_run(){
 					now_s = now_s;	// will be optimized.
 					LOG_RTC_DEBUG(0, 0, "%02d:%02d:%02d.%03d", (now_s)/60/60, (now_s/60)%60, now_s%60+RTC_LEFT_MS/1000, RTC_LEFT_MS%1000);
 					#endif
-					foreach(i,inc_s){
+                    
+					foreach_uint(i,inc_s){
 						system_time_s++;
 						#if VC_APP_ENABLE
 						void sys_timer_refresh_time_ui();
@@ -320,6 +323,7 @@ void system_time_run(){
 #endif
 }
 
+#if MESH_TIMER_MS_100MS_EN
 u32 clock_time_exceed_ms(u32 ref, u32 span_ms){
 	return ((u32)(clock_time_ms() - ref) > span_ms);
 }
@@ -327,6 +331,7 @@ u32 clock_time_exceed_ms(u32 ref, u32 span_ms){
 u32 clock_time_exceed_100ms(u32 ref, u32 span_100ms){
 	return ((u32)(clock_time_100ms() - ref) > span_100ms);
 }
+#endif
 
 u32 clock_time_exceed_s(u32 ref, u32 span_s){
 	return ((u32)(clock_time_s() - ref) > span_s);

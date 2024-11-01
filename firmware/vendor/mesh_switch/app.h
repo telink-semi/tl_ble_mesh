@@ -37,8 +37,8 @@ enum{
 extern u32 switch_mode_tick;
 void switch_mode_set(int mode);
 void mesh_proc_keyboard(u8 e, u8 *p, int n);
-void global_reset_new_key_wakeup();
-int mesh_switch_send_mesh_adv();
+void global_reset_new_key_wakeup(void);
+int mesh_switch_send_mesh_adv(void);
 
 /**
  * @brief		user initialization when MCU power on or wake_up from deepSleep mode

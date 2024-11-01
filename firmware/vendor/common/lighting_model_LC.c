@@ -106,7 +106,7 @@ static inline void set_lc_val(const lc_prop_info_t *p_prop, int light_idx, const
     memcpy(get_lc_val(p_prop, light_idx), val, p_prop->len - 2);
 }
 
-void light_LC_global_init()
+void light_LC_global_init(void)
 {
     foreach(i,LIGHT_CNT){
         foreach_arr(k,lc_prop_info){
@@ -902,7 +902,7 @@ void LC_state_check_and_clear_by_user_command(int light_idx)
     }
 }
 
-void LC_property_proc()
+void LC_property_proc(void)
 {
 	#if 0 // PTS_TEST_MMDL_SR_LLC_BV_08_C
 	static u8 test_initial_onoff; // need to bind Generic onoff state with LC onoff state.
@@ -1008,7 +1008,7 @@ void LC_property_proc()
 }
 
 #if LOG_LIGHT_LC_EN
-void light_lc_debug_print_all_par()
+void light_lc_debug_print_all_par(void)
 {
 	model_light_lc_t *p_lc = &model_sig_light_lc;
 	LOG_LIGHT_LC_DEBUG(0, 0, "light control mode en: 0x%x, Occupancy Mode en: 0x%x", p_lc->mode[0], p_lc->om[0]);

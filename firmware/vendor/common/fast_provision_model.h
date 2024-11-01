@@ -28,28 +28,29 @@
 #include "proj_lib/sig_mesh/app_mesh.h"
 
 
-typedef struct{
+typedef struct __attribute__((packed)) {
 	u8 mac[6];
 	u16 ele_addr;
 }mac_addr_set_t;
 
-typedef struct{
+typedef struct __attribute__((packed)) {
 	u16 pid;
 	u16 ele_addr;
 }mac_addr_get_t;
 extern _align_4_ my_fifo_t fast_prov_mac_fifo;
 
 void start_fast_provision_state_machine(u16 pid);
-void mesh_device_key_set_default();
+void mesh_device_key_set_default(void);
 void mesh_fast_prov_start(u16 pid, u16 start_addr);
 void mesh_fast_prov_rsp_handle(mesh_rc_rsp_t *rsp);
 int mesh_fast_prov_sts_set(u8 sts_set);
-void mesh_fast_prov_val_init();
+void mesh_fast_prov_val_init(void);
 int mesh_reset_network(u8 provision_enable);
-void mesh_fast_prov_proc();
-void mesh_fast_prov_reliable_finish_handle();
-int is_fast_prov_mode();
-int mesh_fast_prov_sts_get();
+void mesh_revert_network(void);
+void mesh_fast_prov_proc(void);
+void mesh_fast_prov_reliable_finish_handle(void);
+int is_fast_prov_mode(void);
+int mesh_fast_prov_sts_get(void);
 int mesh_fast_prov_add_mac_to_buf(mesh_rc_rsp_t *rsp);
 
 int cb_vd_mesh_reset_network(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par);

@@ -61,7 +61,7 @@ mible_status_t telink_ble_mi_adv_start(mible_gap_adv_param_t *p_param);
 mible_status_t telink_ble_mi_gap_adv_data_set(uint8_t const * p_data,
         uint8_t dlen, uint8_t const *p_sr_data, uint8_t srdlen);
 
-mible_status_t telink_ble_mi_adv_stop();
+mible_status_t telink_ble_mi_adv_stop(void);
 mible_status_t telink_ble_mi_update_conn_params(uint16_t conn_handle,mible_gap_conn_param_t conn_params);
 mible_status_t telink_ble_mi_gatts_service_init(mible_gatts_db_t *p_server_db);
 
@@ -84,7 +84,7 @@ mible_status_t telink_record_read(uint16_t record_id, uint8_t* p_data,uint8_t le
 mible_status_t telink_record_delete(uint16_t record_id);
 
 mible_status_t telink_mi_task_post(mible_handler_t handler, void *arg);
-mible_status_t telink_mi_task_exec();
+mible_status_t telink_mi_task_exec(void);
 mible_status_t telink_mi_timer_create(void** p_timer_id,
     mible_timer_handler timeout_handler,
     mible_timer_mode mode);
@@ -94,30 +94,30 @@ mible_status_t telink_mi_timer_start(void* timer_id, uint32_t timeout_value,
 mible_status_t telink_mi_timer_stop(void* timer_id);
 
 void telink_record_eve_cb(uint16_t record_id,mible_status_t sts,mible_arch_event_t eve);
-void mi_certify_part_init();
+void mi_certify_part_init(void);
 void set_adv_mi_prehandler(rf_packet_adv_t *p);
-void telink_record_part_init();
+void telink_record_part_init(void);
 uint8_t buf_is_empty_or_not(uint8_t* p_data,uint8_t len);
-void telink_gatt_event_loop();
-void mi_testboard_init();
+void telink_gatt_event_loop(void);
+void mi_testboard_init(void);
 void telink_mible_nvm_write(void * p_data, uint32_t length, uint32_t address);
 void telink_mible_upgrade_firmware(void);
-void telink_mible_ota_start();
-void telink_mible_ota_end();
-u8 mi_mesh_sleep_time_exceed_adv_iner();
-void telink_mi_vendor_init();
-void mi_reboot_proc();
-unsigned char  mi_ota_is_busy();
-u8 telink_record_clean_cpy();
+void telink_mible_ota_start(void);
+void telink_mible_ota_end(void);
+u8 mi_mesh_sleep_time_exceed_adv_iner(void);
+void telink_mi_vendor_init(void);
+void mi_reboot_proc(void);
+unsigned char  mi_ota_is_busy(void);
+u8 telink_record_clean_cpy(void);
 void mi_mesh_state_set(u8 state);
-u8 mi_mesh_get_state();
-void mi_mesh_sleep_init();
-void mi_mesh_lowpower_loop();
+u8 mi_mesh_get_state(void);
+void mi_mesh_sleep_init(void);
+void mi_mesh_lowpower_loop(void);
 
 
 
 
-u8 mi_api_loop_run();
+u8 mi_api_loop_run(void);
 
 #define RECORD_RESERVE_SPACE 	16
 #define EV_TIMER_MAX_CNT 	12

@@ -60,9 +60,6 @@
 #include "vendor/common/emi_test.h"
 #include "gpio_default.h"
 
-
-#include "application/app/usbkb.h"
-#include "application/app/usbmouse.h"
 #include "application/keyboard/keyboard.h"
 #include "application/usbstd/usbkeycode.h"
 

@@ -721,7 +721,7 @@ void myudb_usb_init(u16 id, void * p_print)
 
 	myudb.id = id;
 
-#if (MCU_CORE_TYPE == MCU_CORE_B930)
+#if (MCU_CORE_TYPE == MCU_CORE_TL751X)
     //enable USB manual interrupt(in auto interrupt mode,USB device would be USB printer device)
 	usbhw_init();
     /* set control endpoint size */

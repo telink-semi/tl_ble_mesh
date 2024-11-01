@@ -30,10 +30,10 @@ We don't know the meaning of the register, so let's them together
 
 void npe_set_reg(void)
 {
-	reg_npe_0x84=0xffff;
-	reg_npe_0x74=0x03000000;
-	reg_npe_0x80=0x100;
-	reg_npe_0x40=0x100;
+    reg_npe_0x84=0xffff;
+    reg_npe_0x74=0x03000000;
+    reg_npe_0x80=0x100;
+    reg_npe_0x40=0x100;
 
 }
 /**
@@ -41,7 +41,7 @@ npe set config
  */
 void npe_set_config(unsigned int desc_pointer )
 {
-	reg_npe_0x6c=desc_pointer;
+    reg_npe_0x6c=desc_pointer;
 
-	npe_set_reg();
+    npe_set_reg();
 }

@@ -27,19 +27,19 @@
 
 #define mdec_rst_addr                   0x53
 typedef enum{
-	FLD_SELE_PA0		= BIT(0),
-	FLD_SELE_PB7		= BIT(1),
-	FLD_SELE_PC4		= BIT(2),
-	FLD_SELE_PD0		= BIT(3),
-	FLD_SELE_PE0		= BIT(4),
+    FLD_SELE_PA0        = BIT(0),
+    FLD_SELE_PB7        = BIT(1),
+    FLD_SELE_PC4        = BIT(2),
+    FLD_SELE_PD0        = BIT(3),
+    FLD_SELE_PE0        = BIT(4),
 }mdec_pin_e;
 typedef enum{
-	FLD_CLS_MDEC	    = BIT_RNG(0,4),
-	FLD_RSVD			= BIT_RNG(5,6),
-	FLD_MDEC_RST		= BIT(7),
+    FLD_CLS_MDEC        = BIT_RNG(0,4),
+    FLD_RSVD            = BIT_RNG(5,6),
+    FLD_MDEC_RST        = BIT(7),
 }mdec_set_e;
 
-#define	mdec_ctrl						0x54
+#define mdec_ctrl                       0x54
 
 
 

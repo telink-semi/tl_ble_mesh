@@ -11,7 +11,7 @@
 #include "vendor/common/generic_model.h"
 #if MI_API_ENABLE
 
-void property_para_init()
+void property_para_init(void)
 {
 	two_key_switch.left_on =1;
 	two_key_switch.left_mode =100;

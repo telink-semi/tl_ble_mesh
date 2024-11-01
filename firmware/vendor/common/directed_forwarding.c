@@ -96,7 +96,7 @@ int is_proxy_use_directed(int conn_idx, u16 netkey_offset)
 	return ((PROXY_CLIENT == proxy_mag[conn_idx].proxy_client_type) || (DIRECTED_PROXY_CLIENT == proxy_mag[conn_idx].proxy_client_type)) && proxy_mag[conn_idx].directed_server[netkey_offset].use_directed;
 }
 
-void mesh_directed_forwarding_bind_state_update()
+void mesh_directed_forwarding_bind_state_update(void)
 {
 	for(int key_offset=0; key_offset<NET_KEY_MAX; key_offset++){
 		directed_control_t *p_control = &model_sig_g_df_sbr_cfg.df_cfg.directed_forward.subnet_state[key_offset].directed_control;
@@ -125,7 +125,7 @@ void mesh_directed_forwarding_bind_state_update()
 			p_control->directed_friend = DIRECTED_FRIEND_DISABLE;
 		}
 
-		#if (!FEATURE_LOWPOWER_EN && !WIN32)
+		#if (!FEATURE_LOWPOWER_EN && !defined(WIN32))
 		if(DIRECTED_FRIEND_DISABLE == p_control->directed_friend){
 			foreach(i, MAX_LPN_NUM){
 				if(fn_other_par[i].LPNAdr){
@@ -135,17 +135,17 @@ void mesh_directed_forwarding_bind_state_update()
 		}
 
 		if(DIRECTED_PROXY_DISABLE == p_control->directed_proxy){
-			u8 conn_idx = 0;
-			#if BLE_MULTIPLE_CONNECTION_ENABLE
-			for(u16 conn_handle=BLS_HANDLE_MIN; conn_handle<BLS_HANDLE_MAX; conn_handle++){
-				if(blc_ll_isAclConnEstablished(conn_handle)){
-					conn_idx = get_slave_idx_by_conn_handle(conn_handle);
-			#endif
-					directed_proxy_dependent_node_delete(conn_idx);
-			#if BLE_MULTIPLE_CONNECTION_ENABLE
+			foreach(i, ACL_PERIPHR_MAX_NUM){
+				#if BLE_MULTIPLE_CONNECTION_ENABLE
+				u16 conn_handle = get_periphr_conn_handle_by_idx(i);
+				if(INVALID_CONN_IDX == conn_handle){
+					continue;
 				}
-			}
-			#endif			
+				#endif
+
+				directed_proxy_dependent_node_delete(i);
+
+			}		
 		}
 		#endif
 	}
@@ -296,10 +296,10 @@ int mesh_df_path_monitoring(path_entry_com_t *p_entry){
 #endif
 
 //--------------directed forwarding command interface end---------------------------//
-#if (MD_DF_CFG_SERVER_EN&&!WIN32)
+#if (MD_DF_CFG_SERVER_EN && !defined(WIN32))
 #define LOG_DF_DEBUG(pbuf, len, format, ...)		LOG_MSG_LIB(TL_LOG_DIRECTED_FORWARDING, pbuf, len, format, ##__VA_ARGS__)
 
-void mesh_directed_forwarding_default_val_init()
+void mesh_directed_forwarding_default_val_init(void)
 {
 	mesh_directed_forward_t *p_df = &model_sig_g_df_sbr_cfg.df_cfg.directed_forward;
 	foreach(i, NET_KEY_MAX){
@@ -378,7 +378,10 @@ int mesh_directed_proxy_capa_report(u16 conn_handle, int netkey_offset)
 
 	int conn_idx = 0;
 	#if BLE_MULTIPLE_CONNECTION_ENABLE
-	conn_idx = get_slave_idx_by_conn_handle(conn_handle);
+	conn_idx = get_periphr_idx_by_conn_handle(conn_handle);
+	if(conn_idx == INVALID_CONN_IDX){
+		return ret;
+	}
 	#endif
 	
 	proxy_capa.directed_proxy = model_sig_g_df_sbr_cfg.df_cfg.directed_forward.subnet_state[netkey_offset].directed_control.directed_proxy;
@@ -393,7 +396,10 @@ int mesh_directed_proxy_capa_report_upon_connection(u16 conn_handle)
 	int conn_idx = 0;
 	
 	#if BLE_MULTIPLE_CONNECTION_ENABLE
-	conn_idx = get_slave_idx_by_conn_handle(conn_handle);
+	conn_idx = get_periphr_idx_by_conn_handle(conn_handle);
+	if(conn_idx == INVALID_CONN_IDX){
+		return ret;
+	}
 	#endif
 	
 	proxy_mag[conn_idx].proxy_client_type = UNSET_CLIENT;
@@ -652,7 +658,7 @@ int direced_forwarding_concurrent_count_check(u16 netkey_offset)
 void start_path_lifetime_timer(non_fixed_entry_t *p_fwd_entry, discovery_entry_t *p_dsc_entry)
 {
 	u32 path_lifetime_ms = GET_PATH_LIFETIME_MS(p_dsc_entry->path_lifetime);		
-	int path_use_timer_ms = max2(GET_PATH_DSC_INTERVAL_MS(p_dsc_entry->path_discovery_interval), path_lifetime_ms-GET_PATH_DSC_INTERVAL_MS(p_dsc_entry->path_discovery_interval)-model_sig_g_df_sbr_cfg.df_cfg.directed_forward.discovery_timing.path_monitoring_interval*1000);
+	u32 path_use_timer_ms = max2(GET_PATH_DSC_INTERVAL_MS(p_dsc_entry->path_discovery_interval), path_lifetime_ms-GET_PATH_DSC_INTERVAL_MS(p_dsc_entry->path_discovery_interval)-model_sig_g_df_sbr_cfg.df_cfg.directed_forward.discovery_timing.path_monitoring_interval*1000);
 	#if PTS_TEST_EN
 	if(path_monitoring_test_mode){
 		path_use_timer_ms = GET_PATH_DSC_INTERVAL_MS(p_dsc_entry->path_discovery_interval);
@@ -1206,11 +1212,20 @@ int mesh_cmd_sig_cfg_directed_control_set(u8 *par, int par_len, mesh_cb_fun_par_
 
 		foreach(i, ACL_PERIPHR_MAX_NUM){
 			if((UNSET_CLIENT == proxy_mag[i].proxy_client_type) || (DIRECTED_PROXY_CLIENT == proxy_mag[i].proxy_client_type)){
+				#if BLE_MULTIPLE_CONNECTION_ENABLE
+				u16 conn_handle = get_periphr_conn_handle_by_idx(i);
+				if(INVALID_CONN_IDX == conn_handle){
+					continue;
+				}
+				#else
+				u16 conn_handle = BLS_CONN_HANDLE;
+				#endif
+				
 				if((DIRECTED_PROXY_ENABLE==p_control->directed_proxy) && (DIRECTED_PROXY_DISABLE == p_set->directed_control.directed_proxy)){// directed proxy enable to disable
-					need_capa_report[i] = BLS_HANDLE_MIN + i;
+					need_capa_report[i] = conn_handle;
 				}	
 				else if(((DIRECTED_PROXY_DISABLE==p_control->directed_proxy) && (DIRECTED_PROXY_ENABLE == p_set->directed_control.directed_proxy))){ //directed proxy disable to enable
-					need_capa_report[i] = BLS_HANDLE_MIN + i;
+					need_capa_report[i] = conn_handle;
 				}
 			}
 		}
@@ -1679,7 +1694,7 @@ int mesh_cmd_sig_cfg_forwarding_tbl_dependents_get(u8 *par, int par_len, mesh_cb
 	}
 	
 	u32 cur_par_len = OFFSETOF(forwarding_tbl_dependents_get_sts_t, range_list);
-	u8 identifier_exist = (par_len >= sizeof(forwarding_tbl_dependents_get_t));	
+	u8 identifier_exist = ((u32)par_len >= sizeof(forwarding_tbl_dependents_get_t));
 	u8 via_par_len = 0;
 	memset(&dependengts_get_sts, 0x00, sizeof(dependengts_get_sts));
 	dependengts_get_sts.status = ST_SUCCESS;
@@ -1898,7 +1913,7 @@ int mesh_cmd_sig_cfg_forwarding_tbl_entries_get(u8 *par, int par_len, mesh_cb_fu
 	memcpy(entries_sts.par, p_entries_get->par, par_offset);
 	int key_offset = get_mesh_net_key_offset(netkey_index);	
 
-	update_id_existed = (par_len>OFFSETOF(forwarding_tbl_entries_get_t, par) + par_offset);	
+	update_id_existed = ((u32)par_len>OFFSETOF(forwarding_tbl_entries_get_t, par) + par_offset);
 	u16 fwd_tbl_id = model_sig_g_df_sbr_cfg.df_cfg.fixed_fwd_tbl[key_offset].update_id;
 	memcpy(entries_sts.par+par_offset, &fwd_tbl_id, 2);
 	par_offset += 2;
@@ -2845,7 +2860,7 @@ void mesh_directed_forwarding_proc(u8 *bear, u8 *par, int par_len, int src_type)
 					addr_range_t *p_dpt_range = (addr_range_t *) (p_path_req->addr_par +(p_org_range->length_present_b ? 3:2));
 					u16 dpt_addr = p_path_req->on_behalf_of_dependent_origin ? (p_dpt_range->length_present_b ? p_dpt_range->range_start_b : p_dpt_range->multicast_addr) : 0;
 					LOG_DF_DEBUG(0, 0, "CMD_CTL_PATH_REQUEST ok, path_metric:%d origin:0x%x target:0x%x dpt_adr:0x%x", p_path_req->origin_path_metric, origin_addr, p_path_req->destination, dpt_addr);
-					if((p_path_req->prohibited) || (0 == p_path_req->destination) || is_fixed_group(p_path_req->destination) || (p_path_req->on_behalf_of_dependent_origin && (par_len < (OFFSETOF(mesh_ctl_path_req_t, addr_par)+4))) ||
+					if((p_path_req->prohibited) || (0 == p_path_req->destination) || is_fixed_group(p_path_req->destination) || (p_path_req->on_behalf_of_dependent_origin && ((u32)par_len < (OFFSETOF(mesh_ctl_path_req_t, addr_par)+4))) ||
 						!is_unicast_adr(origin_addr+(p_org_range->length_present_b?p_org_range->range_length:0)) || (p_org_range->length_present_b && (p_org_range->range_length<2)) || 
 						(p_path_req->on_behalf_of_dependent_origin && (!is_unicast_adr(dpt_addr+(p_dpt_range->length_present_b?p_dpt_range->range_length:0)) || (p_dpt_range->length_present_b && (p_dpt_range->range_length<2)))) ||
 						(ADR_ALL_DIRECTED_FORWARD != p_nw->dst)  || p_nw->ttl || (DIRECTED != mesh_key.sec_type_sel)){
@@ -3176,7 +3191,7 @@ int cfg_cmd_send_directed_control_set(u16 adr_dst, directed_control_set_t *direc
  	return SendOpParaDebug(adr_dst, 1, DIRECTED_CONTROL_SET, (u8 *)directed_control, sizeof(directed_control_set_t));
 }
 
-int mesh_directed_proxy_control_set(u8 use_directed, u16 range_start, u8 range_len)
+int mesh_directed_proxy_control_set(u16 conn_handle, u8 use_directed, u16 range_start, u8 range_len)
 {
 	directed_proxy_ctl_t proxy_ctl;
 	memset(&proxy_ctl, 0x00, sizeof(proxy_ctl));
@@ -3189,10 +3204,10 @@ int mesh_directed_proxy_control_set(u8 use_directed, u16 range_start, u8 range_l
 	endianness_swap_u16((u8 *)&proxy_ctl.addr_range.multicast_addr);
 	
 	u8 par_len = OFFSETOF(directed_proxy_ctl_t, addr_range) + (proxy_ctl.addr_range.length_present_b?3:2);
-	#if WIN32
+	#ifdef WIN32
 	LOG_MSG_INFO(TL_LOG_NODE_BASIC,(u8 *)&proxy_ctl,par_len ,"mesh_directed_proxy_control_set");
 	#endif
-	return mesh_tx_cmd_layer_proxy_cfg_primary(BLS_HANDLE_MIN, DIRECTED_PROXY_CONTROL,(u8 *)&proxy_ctl, par_len,PROXY_CONFIG_FILTER_DST_ADR);
+	return mesh_tx_cmd_layer_proxy_cfg_primary(conn_handle, DIRECTED_PROXY_CONTROL,(u8 *)&proxy_ctl, par_len,PROXY_CONFIG_FILTER_DST_ADR);
 }
 
 int cfg_cmd_path_metric_get(u16 node_adr, u16 nk_idx)
@@ -3265,7 +3280,7 @@ int cfg_cmd_forwarding_tbl_add(u16 node_adr, u16 nk_idx, u16 adr_origin, u8 rang
 int cfg_cmd_forwarding_tbl_dependents_add(u16 node_adr, u16 nk_idx, u16 path_origin, u16 path_target, int dpt_origin_num, int dpt_target_num, u8 dpt_tbl[], int tbl_size)
 {
 	forwarding_tbl_dependengts_add_t dpt_add;
-	if(tbl_size > sizeof(dpt_add.par)){
+	if((u32)tbl_size > sizeof(dpt_add.par)){
 		return -1;
 	}
 	dpt_add.netkey_index = nk_idx;

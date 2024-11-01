@@ -97,16 +97,16 @@ enum{
 
 #define NO_NEAREST  (0xff)
 
-typedef struct{
+typedef struct __attribute__((packed)) {
 	u32 TAI_local;
 	u16 entry_bit[LIGHT_CNT];
 }schd_nearest_t;
 
-int schd_random_rebuild_hour();
-int schd_random_rebuild_min();
-int schd_random_rebuild_sec();
+int schd_random_rebuild_hour(void);
+int schd_random_rebuild_min(void);
+int schd_random_rebuild_sec(void);
 void rebuild_schd_nearest_and_check_event(int rebuild, u32 TAI_local);
-void mesh_scheduler_proc();
+void mesh_scheduler_proc(void);
 
 void test_schd_action_set_off(u16 adr);
 void test_schd_action_set_on(u16 adr);

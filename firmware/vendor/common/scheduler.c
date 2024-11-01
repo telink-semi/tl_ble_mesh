@@ -58,12 +58,12 @@ int is_valid_schd_par(scheduler_t *p_set)
 	return 1;
 }
 
-static inline u8 get_random_min_or_sec()
+static inline u8 get_random_min_or_sec(void)
 {
     return rand() % 60;
 }
 
-static inline u8 get_random_hour()
+static inline u8 get_random_hour(void)
 {
     return rand() % 24;
 }
@@ -182,7 +182,7 @@ static inline int is_schd_alive(scheduler_t *p_schd)
     return 1;
 }
 
-int schd_random_rebuild_hour()
+int schd_random_rebuild_hour(void)
 {
     int update = 0;
 	scheduler_t *p_schd;
@@ -207,7 +207,7 @@ int schd_random_rebuild_hour()
     return update;
 }
 
-int schd_random_rebuild_min()
+int schd_random_rebuild_min(void)
 {
     int update = 0;
 	scheduler_t *p_schd;
@@ -228,7 +228,7 @@ int schd_random_rebuild_min()
     return update;
 }
 
-int schd_random_rebuild_sec()
+int schd_random_rebuild_sec(void)
 {
     int update = 0;
 	scheduler_t *p_schd;
@@ -480,7 +480,7 @@ int update_schd_nearest_TAI_today(u32 TAI_local)
         }
     }
 
-    if(nearest_TAI != -1){
+    if(nearest_TAI != (u32)-1){
         u32 temp = (TAI_local / SECOND_ONE_DAY)*SECOND_ONE_DAY;
         nearest_TAI += temp;
         if(TAI_local <= nearest_TAI){
@@ -532,7 +532,7 @@ void rebuild_schd_nearest_and_check_event(int rebuild, u32 TAI_local)
     schd_event_check(TAI_local); // must after:  get schd nearest TAI_today()
 }
 
-void mesh_scheduler_proc()
+void mesh_scheduler_proc(void)
 {
     u32 TAI_local = get_local_TAI();
     int rebuild_nearest = 0;

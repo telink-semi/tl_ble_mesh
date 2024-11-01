@@ -54,20 +54,20 @@ enum{
 	SCENE_ID_INVALID 	= 0,
 };
 
-typedef struct{
+typedef struct __attribute__((packed)) {
 	u8 st;
 	u16 current_id;
 	u16 id[SCENE_CNT_MAX];
 }scene_reg_status_t;
 
-typedef struct{
+typedef struct __attribute__((packed)) {
 	u16 id;
 	u8 tid;
 	u8 transit_t;
 	u8 delay;		// unit 5ms
 }scene_recall_t;
 
-typedef struct{
+typedef struct __attribute__((packed)) {
 	u8 st;
 	u16 current_id;
 	u16 target_id;
@@ -75,7 +75,7 @@ typedef struct{
 }scene_status_t;
 
 
-typedef struct{
+typedef struct __attribute__((packed)) {
 	u16 current_scene;
 	u16 target_scene;
 }scene_proc_t;

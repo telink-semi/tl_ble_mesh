@@ -157,11 +157,11 @@ typedef struct gattc_write_cfg {
 
 
 typedef struct gattc_sub_ccc_msg {
-	/* queue's node */
-	struct gattc_sub_ccc_msg *pNext;
-	gattc_sub_ccc_msg_func_t ntfOrIndFunc;
-	u16 startHdl;
-	u16 endHdl;
+    /* queue's node */
+    struct gattc_sub_ccc_msg *pNext;
+    gattc_sub_ccc_msg_func_t ntfOrIndFunc;
+    u16 startHdl;
+    u16 endHdl;
 } gattc_sub_ccc_msg_t;
 
 typedef struct gattc_sub_ccc_cfg {
@@ -170,13 +170,13 @@ typedef struct gattc_sub_ccc_cfg {
     uuid_t *uuid; //UUID size only set 2 on 16
 
     /** Subscribe value callback */
-	gattc_sub_ccc_func_t func;
+    gattc_sub_ccc_func_t func;
 
-	/** Subscribe value handle (as start handle: for automatic discovery) */
-	u16 valueHdl;
+    /** Subscribe value handle (as start handle: for automatic discovery) */
+    u16 valueHdl;
 
-	/** Subscribe value, BIT(0):subscribe notify, BIT(1):subscribe indicate */
-	u16 value;
+    /** Subscribe value, BIT(0):subscribe notify, BIT(1):subscribe indicate */
+    u16 value;
 } gattc_sub_ccc_cfg_t;
 
 
@@ -185,7 +185,7 @@ typedef struct gattc_sub_ccc_cfg {
 
 
 /**
- * @brief		GATTC Discover: Primary / Include Service / Characteristic / Descriptors
+ * @brief       GATTC Discover: Primary / Include Service / Characteristic / Descriptors
  * @param[in]   connHandle   - connection handle.
  * @param[in]   gattc_sdp_cfg_t  -
  * @return      ble_sts_t.
@@ -193,7 +193,7 @@ typedef struct gattc_sub_ccc_cfg {
 ble_sts_t   blc_gattc_discovery(u16 connHandle, gattc_sdp_cfg_t *pSdpCfg);
 
 /**
- * @brief		Read Attribute Value by handle
+ * @brief       Read Attribute Value by handle
  * @param[in]   connHandle   - connection handle.
  * @param[in]   gattc_read_cfg_t  -
  * @return      ble_sts_t.
@@ -201,7 +201,7 @@ ble_sts_t   blc_gattc_discovery(u16 connHandle, gattc_sdp_cfg_t *pSdpCfg);
 ble_sts_t   blc_gattc_readAttributeValue(u16 connHandle, gattc_read_cfg_t *pRdCfg);
 
 /**
- * @brief 		GATTC Write Attribute Value by handle
+ * @brief       GATTC Write Attribute Value by handle
  * @param[in]   connHandle   - connection handle.
  * @param[in]   pWrCfg  -
  * @return      ble_sts_t.
@@ -216,19 +216,19 @@ ble_sts_t blc_gattc_writeSubscribeCCCRequest(u16 connHandle, gattc_sub_ccc_cfg_t
 
 
 /**
- * @brief 		GATTC xxx
+ * @brief       GATTC xxx
  * @param[in]   connHandle   - connection handle.
  * @param[in]   gattc_sub_ccc_msg_t  -
  * @return      ble_sts_t.
  */
-void		blc_gattc_removeSubscribeCCCNode(u16 connHandle, gattc_sub_ccc_msg_t *pSubNode);
+void        blc_gattc_removeSubscribeCCCNode(u16 connHandle, gattc_sub_ccc_msg_t *pSubNode);
 
 /**
- * @brief 		GATTC xxx
+ * @brief       GATTC xxx
  * @param[in]   connHandle   - connection handle.
  * @return      ble_sts_t.
  */
-void		blc_gattc_cleanAllSubscribeCCCNode(u16 connHandle);
+void        blc_gattc_cleanAllSubscribeCCCNode(u16 connHandle);
 
 
 

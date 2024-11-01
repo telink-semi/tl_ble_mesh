@@ -21,25 +21,25 @@
  *          limitations under the License.
  *
  *******************************************************************************************************/
-/**	@page UART
+/** @page UART
  *
- *	Introduction
- *	===============
- *	supports two uart: uart0~ uart1.
- * 	-# support nodma/dma
- *	-# support cts/rts
- *	-# support s7816
+ *  Introduction
+ *  ===============
+ *  supports two uart: uart0~ uart1.
+ *  -# support nodma/dma
+ *  -# support cts/rts
+ *  -# support s7816
  *
- *	API Reference
- *	===============
- *	Header File: uart.h
+ *  API Reference
+ *  ===============
+ *  Header File: uart.h
  *
- *	How to use this driver
- *	==============
+ *  How to use this driver
+ *  ==============
  - The uart two working modes nodma/dma,can be used as follows:
     -# UART Initialization and Configuration
          -# dma/nodma:
-             - To prevent the uart module from storing history information, before use call uart_reset API;
+             - To prevent the uart module from storing history information, before use call uart_hw_fsm_reset API;
              - Initializes the tx/rx pin by uart_set_pin API;
              - Configure the baud rate/stop bit/ parity by uart_cal_div_and_bwpc/uart_init API;
          -# dma
@@ -52,24 +52,24 @@
                configured by uart_rx_irq_trig_level/uart_set_irq_mask(UART_RX_IRQ_MASK) API;
              - detect the UART receives data incorrectly(such as a parity error or a stop bit error),configured by uart_set_irq_mask(UART_ERR_IRQ_MASK) API;
                  - If err occurs during the receiving process, perform the following operations: 
-                    -# uart_reset();
+                    -# uart_hw_fsm_reset();
                     -# uart_clr_rx_index();
                     -# clear the data received in ram buff;
              - uart module interrupt enable and total interrupt enable by plic_interrupt_enable/core_interrupt_enable API;
        -# dma:use tx_done and rx_done(or dma tc_mask) to check whether the sending and receiving are complete,and err receive detection when rx_done.
              - tx_done:use the tx_done of the uart module,use uart_set_irq_mask(UART_TXDONE_MASK);
              - rx_done:use rx_done of uart module rx_done,use uart_set_irq_mask(UART_RXDONE_MASK) (When the length of the send is not known):
-                  - After rxdone is generated and before configuring the next dma, the rxfifo hardware pointer must be set to 0 (uart_reset())
+                  - After rxdone is generated and before configuring the next dma, the rxfifo hardware pointer must be set to 0 (uart_hw_fsm_reset())
                     in order to prevent the next dma from working properly due to the rxfifo pointer not being in the default state(When the sending length is greater than the receiving length).
                   - When the send length is less than the receive length, although the rxdone interrupt is generated, the dma has not reached the configured length, and the dma is still working.
                     When configuring the next dma, dma_chn_dis() needs to be configured before the next dma(this action has been processed in uart_receive_dma).
              - tc_mask:use tc_mask of dma module,use dma_set_irq_mask() : TC_MASK (If the transmission length is fixed):
                   - A dma interrupt can only occur if the receive length is equal to the length configured by the dma.
                   - If the dma stops working and reconfigures it, perform the following operations:
-                      -# uart_reset();
+                      -# uart_hw_fsm_reset();
                       -# uart_receive_dma();(dma_chn_dis has been implemented in uart_receive_dma())
              - If err is displayed during dma receiving, the recommended action is as follows:
-                      -# uart_reset();
+                      -# uart_hw_fsm_reset();
                       -# uart_receive_dma();(dma_chn_dis has been implemented in uart_receive_dma())
              - uart module interrupt or dma module interrupt enable and total interrupt by plic_interrupt_enable/core_interrupt_enable API;
     -# UART enter suspend sleep before and after handling
@@ -114,8 +114,8 @@
                 - The two packets of data are very close to each other, but the rx_done signal of the previous data has also been generated. Before the rx_done interrupt flag and rx_fifo software are cleared,
                   the next data has been transferred, which leads to the error of clearing.
             - When using DMA to receive data, if rx_done occurs and there's data in rx fifo, rx fifo needs to be cleared for the next dma transmission. 
-              in B91, clearing rxbuff interrupt status won't work, therefore requiring uart_reset() function to do this operation,
-              But using uart_reset() function might break dma tx transmission, potentially causing data loss.
+              in B91, clearing rxbuff interrupt status won't work, therefore requiring uart_hw_fsm_reset() function to do this operation,
+              But using uart_hw_fsm_reset() function might break dma tx transmission, potentially causing data loss.
  - The UART flow control CTS/RTS
       -# CTS(when the cts pin receives an active level, it stops sending data)
          - Configure the cts pin and polarity,by uart_cts_config API;
@@ -150,7 +150,8 @@ extern unsigned char uart_tx_byte_index[2];
 
 #define uart_rtx_pin_tx_trig(uart_num)  uart_clr_tx_done(uart_num)
 
-
+//for compatibility
+#define uart_reset   uart_hw_fsm_reset
 /**********************************************************************************************************************
  *                                         global constants                                                           *
  *********************************************************************************************************************/
@@ -166,36 +167,36 @@ extern unsigned char uart_tx_byte_index[2];
  *  @brief  Define parity type
  */
 typedef enum {
-	UART_PARITY_NONE = 0,
-	UART_PARITY_EVEN,
-	UART_PARITY_ODD,
+    UART_PARITY_NONE = 0,
+    UART_PARITY_EVEN,
+    UART_PARITY_ODD,
 } uart_parity_e;
 
 /**
  *  @brief  Define UART chn
  */
 typedef enum {
-	UART0 = 0,
-	UART1,
+    UART0 = 0,
+    UART1,
 }uart_num_e;
 
 /**
  *  @brief  Define mul bits
  */
 typedef enum{
-	UART_BW_MUL1  = 0,
-	UART_BW_MUL2  = 1,
-	UART_BW_MUL3  = 2,
-	UART_BW_MUL4  = 3,
+    UART_BW_MUL1  = 0,
+    UART_BW_MUL2  = 1,
+    UART_BW_MUL3  = 2,
+    UART_BW_MUL4  = 3,
 } uart_timeout_mul_e;
 
 /**
  *  @brief  Define the length of stop bit
  */
 typedef enum {
-	UART_STOP_BIT_ONE          = 0,
-	UART_STOP_BIT_ONE_DOT_FIVE = BIT(4),
-	UART_STOP_BIT_TWO          = BIT(5),
+    UART_STOP_BIT_ONE          = 0,
+    UART_STOP_BIT_ONE_DOT_FIVE = BIT(4),
+    UART_STOP_BIT_TWO          = BIT(5),
 } uart_stop_bit_e;
 
 /**
@@ -210,41 +211,41 @@ typedef enum {
  *  @brief  Define UART CTS pin : UART0(PA1 PB6 PD0), UART1(PC4 PD4 PE1)
  */
 typedef enum{
-	UART0_CTS_PA1 = GPIO_PA1,
-	UART0_CTS_PB6 = GPIO_PB6,
-	UART0_CTS_PD0 = GPIO_PD0,
+    UART0_CTS_PA1 = GPIO_PA1,
+    UART0_CTS_PB6 = GPIO_PB6,
+    UART0_CTS_PD0 = GPIO_PD0,
 
-	UART1_CTS_PC4 = GPIO_PC4,
-	UART1_CTS_PD4 = GPIO_PD4,
-	UART1_CTS_PE1 = GPIO_PE1,
+    UART1_CTS_PC4 = GPIO_PC4,
+    UART1_CTS_PD4 = GPIO_PD4,
+    UART1_CTS_PE1 = GPIO_PE1,
 }uart_cts_pin_e;
 
 /**
  *  @brief  Define UART RTS pin : UART0(PA2 PB4 PD1), UART1(PC5 PD5 PE3)
  */
 typedef enum{
-	UART0_RTS_PA2 = GPIO_PA2,
-	UART0_RTS_PB4 = GPIO_PB4,
-	UART0_RTS_PD1 = GPIO_PD1,
+    UART0_RTS_PA2 = GPIO_PA2,
+    UART0_RTS_PB4 = GPIO_PB4,
+    UART0_RTS_PD1 = GPIO_PD1,
 
-	UART1_RTS_PC5 = GPIO_PC5,
-	UART1_RTS_PD5 = GPIO_PD5,
-	UART1_RTS_PE3 = GPIO_PE3,
+    UART1_RTS_PC5 = GPIO_PC5,
+    UART1_RTS_PD5 = GPIO_PD5,
+    UART1_RTS_PE3 = GPIO_PE3,
 }uart_rts_pin_e;
 
 /**
  *  @brief  Define UART TX pin : UART0(PA3 PB2 PD2), UART1(PC6 PD6 PE0)
  */
 typedef enum{
-	UART0_TX_PA3 = GPIO_PA3,
-	UART0_TX_PB2 = GPIO_PB2,
-	UART0_TX_PD2 = GPIO_PD2,
+    UART0_TX_PA3 = GPIO_PA3,
+    UART0_TX_PB2 = GPIO_PB2,
+    UART0_TX_PD2 = GPIO_PD2,
 
-	UART1_TX_PC6 = GPIO_PC6,
-	UART1_TX_PD6 = GPIO_PD6,
-	UART1_TX_PE0 = GPIO_PE0,
+    UART1_TX_PC6 = GPIO_PC6,
+    UART1_TX_PD6 = GPIO_PD6,
+    UART1_TX_PE0 = GPIO_PE0,
 
-	UART_TX_NONE_PIN =GPIO_NONE_PIN,
+    UART_TX_NONE_PIN =GPIO_NONE_PIN,
 }uart_tx_pin_e;
 
 
@@ -252,26 +253,26 @@ typedef enum{
  *  @brief  Define UART RX pin : UART0(PA4 PB3 PD3), UART1(PC7 PD7 PE2)
  */
 typedef enum{
-	UART0_RX_PA4 = GPIO_PA4,
-	UART0_RX_PB3 = GPIO_PB3,
-	UART0_RX_PD3 = GPIO_PD3,
+    UART0_RX_PA4 = GPIO_PA4,
+    UART0_RX_PB3 = GPIO_PB3,
+    UART0_RX_PD3 = GPIO_PD3,
 
-	UART1_RX_PC7 = GPIO_PC7,
-	UART1_RX_PD7 = GPIO_PD7,
-	UART1_RX_PE2 = GPIO_PE2,
+    UART1_RX_PC7 = GPIO_PC7,
+    UART1_RX_PD7 = GPIO_PD7,
+    UART1_RX_PE2 = GPIO_PE2,
 
-	UART_RX_NONE_PIN =GPIO_NONE_PIN,
+    UART_RX_NONE_PIN =GPIO_NONE_PIN,
 }uart_rx_pin_e;
 
 /**
  *  @brief  Define UART IRQ MASK.The enumeration variable is just a index, and actually needs to be operated registers behind.
  */
 typedef enum{
-	UART_RX_IRQ_MASK  = BIT(0),//reg_uart_ctrl0(uart_num)       BIT(6)
-	UART_TX_IRQ_MASK  = BIT(1),//reg_uart_ctrl0(uart_num)       BIT(7)
-	UART_RXDONE_MASK  = BIT(2),//reg_uart_rx_timeout1(uart_num) BIT(2)
-	UART_TXDONE_MASK  = BIT(3),//reg_uart_rx_timeout1(uart_num) BIT(6)
-	UART_ERR_IRQ_MASK = BIT(4),//reg_uart_rx_timeout1(uart_num) BIT(7)
+    UART_RX_IRQ_MASK  = BIT(0),//reg_uart_ctrl0(uart_num)       BIT(6)
+    UART_TX_IRQ_MASK  = BIT(1),//reg_uart_ctrl0(uart_num)       BIT(7)
+    UART_RXDONE_MASK  = BIT(2),//reg_uart_rx_timeout1(uart_num) BIT(2)
+    UART_TXDONE_MASK  = BIT(3),//reg_uart_rx_timeout1(uart_num) BIT(6)
+    UART_ERR_IRQ_MASK = BIT(4),//reg_uart_rx_timeout1(uart_num) BIT(7)
 }uart_irq_mask_e;
 
 /**
@@ -283,19 +284,19 @@ typedef enum{
  *  -# UART_RX_ERR:when the UART receives data incorrectly(such as a parity error or a stop bit error), the interrupt is generated,the interrupt flag bit needs to be manually cleared;
  */
 typedef enum{
-	UART_RX_ERR				= BIT(7),
-	UART_TXDONE				= BIT(0),
-	UART_TXBUF_IRQ_STATUS 	= BIT(1),
-	UART_RXDONE				= BIT(2),
-	UART_RXBUF_IRQ_STATUS 	= BIT(3),
+    UART_RX_ERR             = BIT(7),
+    UART_TXDONE             = BIT(0),
+    UART_TXBUF_IRQ_STATUS   = BIT(1),
+    UART_RXDONE             = BIT(2),
+    UART_RXBUF_IRQ_STATUS   = BIT(3),
 }uart_irq_status_get_e;
 
 /**
  *  @brief  Define UART IRQ BIT STATUS FOR CLR
  */
 typedef enum{
-	UART_CLR_RX				= BIT(6),
-	UART_CLR_TX				= BIT(7),
+    UART_CLR_RX             = BIT(6),
+    UART_CLR_TX             = BIT(7),
 }uart_irq_status_clr_e;
 
 /**********************************************************************************************************************
@@ -312,7 +313,7 @@ typedef enum{
  */
 static inline unsigned char uart_get_rxfifo_num(uart_num_e uart_num)
 {
-	return reg_uart_buf_cnt(uart_num)&FLD_UART_RX_BUF_CNT ;
+    return reg_uart_buf_cnt(uart_num)&FLD_UART_RX_BUF_CNT ;
 }
 
 /**
@@ -322,35 +323,37 @@ static inline unsigned char uart_get_rxfifo_num(uart_num_e uart_num)
  */
 static inline unsigned char uart_get_txfifo_num(uart_num_e uart_num)
 {
-	return (reg_uart_buf_cnt(uart_num)&FLD_UART_TX_BUF_CNT )>>4;
+    return (reg_uart_buf_cnt(uart_num)&FLD_UART_TX_BUF_CNT )>>4;
 }
 
 /**
- * @brief     Resets uart module,before using uart, need to call uart_reset() to avoid affecting the use of uart.
+ * @brief     uart finite state machine reset(the configuration register is still there and does not need to be reconfigured),
+ *            For compatibility define uart_reset uart_hw_fms_reset, uart_hw_fms_reset is used when the driver is invoked (no matter at the driver layer or demo layer),
+ *            before using UART, it is needed to call uart_hw_fsm_reset() to avoid affecting the use of UART.
  * @param[in] uart_num - UART0 or UART1.
  * @return    none
  * @note -
  *            this function will clear rx and tx status and fifo.
  */
-static inline void uart_reset(uart_num_e uart_num)
+static inline void uart_hw_fsm_reset(uart_num_e uart_num)
 {
-	/**
-	  In B91, tx_done is 1 by default, after uart reset(write 0, then write 1) write 0,UART_TXDONE will be restored to its default value,
-	  if UART_TX_IRQ_MASK is turned on in advance, it will enter interrupt,in the interrupt, there is the action of clearing UART_TXDONE, but after the clear, immediately becomes 1,
-	  out of the interrupt, and immediately in the interrupt, and so on loop, resulting in the feeling that the program did not go down.
-	 */
-	unsigned char tx_mask_flag=0;
-	if(reg_uart_rx_timeout1(uart_num)&FLD_UART_MASK_TXDONE)
-	{
-		tx_mask_flag=1;
-		reg_uart_rx_timeout1(uart_num)&=~FLD_UART_MASK_TXDONE;
-	}
-	reg_rst0 &= (~((uart_num)?FLD_RST0_UART1:FLD_RST0_UART0));
-	reg_rst0 |= ((uart_num)?FLD_RST0_UART1:FLD_RST0_UART0);
-	reg_uart_state(uart_num) |=FLD_UART_CLR_TXDONE;
-	if(tx_mask_flag==1){
-		reg_uart_rx_timeout1(uart_num)|=FLD_UART_MASK_TXDONE;
-	}
+    /**
+      In B91, tx_done is 1 by default, after uart reset(write 0, then write 1) write 0,UART_TXDONE will be restored to its default value,
+      if UART_TX_IRQ_MASK is turned on in advance, it will enter interrupt,in the interrupt, there is the action of clearing UART_TXDONE, but after the clear, immediately becomes 1,
+      out of the interrupt, and immediately in the interrupt, and so on loop, resulting in the feeling that the program did not go down.
+     */
+    unsigned char tx_mask_flag=0;
+    if(reg_uart_rx_timeout1(uart_num)&FLD_UART_MASK_TXDONE)
+    {
+        tx_mask_flag=1;
+        reg_uart_rx_timeout1(uart_num)&=~FLD_UART_MASK_TXDONE;
+    }
+    reg_rst0 &= (~((uart_num)?FLD_RST0_UART1:FLD_RST0_UART0));
+    reg_rst0 |= ((uart_num)?FLD_RST0_UART1:FLD_RST0_UART0);
+    reg_uart_state(uart_num) |=FLD_UART_CLR_TXDONE;
+    if(tx_mask_flag==1){
+        reg_uart_rx_timeout1(uart_num)|=FLD_UART_MASK_TXDONE;
+    }
 }
 
 /**
@@ -360,7 +363,7 @@ static inline void uart_reset(uart_num_e uart_num)
  */
 static inline void uart_clk_en(uart_num_e uart_num)
 {
-	reg_clk_en0 |= ((uart_num)?FLD_CLK0_UART1_EN:FLD_CLK0_UART0_EN);
+    reg_clk_en0 |= ((uart_num)?FLD_CLK0_UART1_EN:FLD_CLK0_UART0_EN);
 }
 
 /**
@@ -429,7 +432,7 @@ void uart_init(uart_num_e uart_num,unsigned short div, unsigned char bwpc, uart_
 void uart_cal_div_and_bwpc(unsigned int baudrate, unsigned int pclk, unsigned short* div, unsigned char *bwpc);
 
 /**
- * @brief  	 Set rx_timeout.
+ * @brief    Set rx_timeout.
    @verbatim
        The effect:
          - When no data is received within the rx_timeout period, that is rx timeout, the UART_RXDONE interrupt is generated.
@@ -444,8 +447,8 @@ void uart_cal_div_and_bwpc(unsigned int baudrate, unsigned int pclk, unsigned sh
  * @param[in] bit_cnt  - bit number,conditions that need to be met:
  *                         - for example, if transferring one bytes (1start bit+8bits data+1 priority bit+2stop bits) total 12 bits,then set it to at least 12;
  *                         - ((bwpc+1) * bit_cnt)<=0xff;
- * @param[in] mul	   - mul.
- * @return 	  none
+ * @param[in] mul      - mul.
+ * @return    none
  */
 void uart_set_rx_timeout(uart_num_e uart_num,unsigned char bwpc, unsigned char bit_cnt, uart_timeout_mul_e mul);
 
@@ -460,7 +463,7 @@ void uart_set_rx_timeout(uart_num_e uart_num,unsigned char bwpc, unsigned char b
  */
 static inline void uart_rx_irq_trig_level(uart_num_e uart_num,unsigned char rx_level)
 {
-	reg_uart_ctrl3(uart_num) = (reg_uart_ctrl3(uart_num) & (~FLD_UART_RX_IRQ_TRIQ_LEV)) | (rx_level & 0x0f);
+    reg_uart_ctrl3(uart_num) = (reg_uart_ctrl3(uart_num) & (~FLD_UART_RX_IRQ_TRIQ_LEV)) | (rx_level & 0x0f);
 }
 
 /**
@@ -472,7 +475,7 @@ static inline void uart_rx_irq_trig_level(uart_num_e uart_num,unsigned char rx_l
  */
 static inline void uart_tx_irq_trig_level(uart_num_e uart_num,unsigned char tx_level)
 {
-	reg_uart_ctrl3(uart_num) = (reg_uart_ctrl3(uart_num) & (~FLD_UART_TX_IRQ_TRIQ_LEV)) | (tx_level << 4);
+    reg_uart_ctrl3(uart_num) = (reg_uart_ctrl3(uart_num) & (~FLD_UART_TX_IRQ_TRIQ_LEV)) | (tx_level << 4);
 }
 
 /**
@@ -521,16 +524,16 @@ void uart_send_word(uart_num_e uart_num, unsigned int data);
 void uart_set_rts_level(uart_num_e uart_num, unsigned char polarity);
 
 /**
- *	@brief		Set pin for UART cts function,the pin connection mode:CTS<->RTS.
- *	@param[in]  cts_pin -To set cts pin.
- *	@return		none
+ *  @brief      Set pin for UART cts function,the pin connection mode:CTS<->RTS.
+ *  @param[in]  cts_pin -To set cts pin.
+ *  @return     none
  */
 void uart_set_cts_pin(uart_cts_pin_e cts_pin);
 
 /**
- *	@brief		Set pin for UART rts function,the pin connection mode:RTS<->CTS.
- *	@param[in]  rts_pin - To set rts pin.
- *	@return		none
+ *  @brief      Set pin for UART rts function,the pin connection mode:RTS<->CTS.
+ *  @param[in]  rts_pin - To set rts pin.
+ *  @return     none
  */
 void uart_set_rts_pin(uart_rts_pin_e rts_pin);
 
@@ -552,10 +555,10 @@ void uart_set_rtx_pin(uart_rx_pin_e rtx_pin);
 
 
 /**
- * @brief     	Send an amount of data in DMA mode
- * @param[in]  	uart_num - uart channel
- * @param[in] 	addr     - Pointer to data buffer. It must be 4-bytes aligned address
- * @param[in] 	len      - Amount of data to be sent in bytes, range from 1 to 0xFFFFFC
+ * @brief       Send an amount of data in DMA mode
+ * @param[in]   uart_num - uart channel
+ * @param[in]   addr     - Pointer to data buffer. It must be 4-bytes aligned address
+ * @param[in]   len      - Amount of data to be sent in bytes, range from 1 to 0xFFFFFC
  * @return      1  DMA start send.
  *              0  the length is error.       
  */
@@ -576,7 +579,7 @@ unsigned char uart_send(uart_num_e uart_num, unsigned char * addr, unsigned char
  * @param[in]  addr     - This parameter is the first address of the received data buffer, which must be 4 bytes aligned, otherwise the program will enter an exception.
  *                        and the actual buffer size defined by the user needs to be not smaller than the rev_size, otherwise there may be an out-of-bounds problem.
  * @param[in]  rev_size - This parameter is used to set the size of the received dma and must be set to a multiple of 4. The maximum value that can be set is 0xFFFFFC.
- * @return 	   none
+ * @return     none
  */
 void uart_receive_dma(uart_num_e uart_num, unsigned char * addr,unsigned int rev_size);
 
@@ -595,7 +598,7 @@ unsigned int uart_get_dma_rev_data_len(uart_num_e uart_num,dma_chn_e chn);
   * @return    none
   * @note      In the case that the DMA transfer is not completed(bit 0 of reg_dma_ctr0(chn): 1-the transmission has not been completed,0-the transmission is completed), re-calling the DMA-related functions may cause problems.
   *            If you must do this, you must perform the following sequence:
-  *            1. dma_chn_dis(uart_dma_tx_chn[uart_num]) 2.uart_reset() 3.uart_send_dma()
+  *            1. dma_chn_dis(uart_dma_tx_chn[uart_num]) 2.uart_hw_fsm_reset() 3.uart_send_dma()
   */
 void uart_set_tx_dma_config(uart_num_e uart_num, dma_chn_e chn);
 
@@ -606,7 +609,7 @@ void uart_set_tx_dma_config(uart_num_e uart_num, dma_chn_e chn);
  * @return    none
  * @note      In the case that the DMA transfer is not completed(bit 0 of reg_dma_ctr0(chn): 1-the transmission has not been completed,0-the transmission is completed), re-calling the DMA-related functions may cause problems.
  *            If you must do this, you must perform the following sequence:
- *            1. dma_chn_dis(uart_dma_rx_chn[uart_num]) 2.uart_reset() 3.uart_receive_dma()
+ *            1. dma_chn_dis(uart_dma_rx_chn[uart_num]) 2.uart_hw_fsm_reset() 3.uart_receive_dma()
  */
 void uart_set_rx_dma_config(uart_num_e uart_num, dma_chn_e chn);
 
@@ -618,15 +621,15 @@ void uart_set_rx_dma_config(uart_num_e uart_num, dma_chn_e chn);
  */
 static inline void uart_set_irq_mask(uart_num_e uart_num,uart_irq_mask_e mask)
 {
-	if((mask & UART_RX_IRQ_MASK) || (mask & UART_TX_IRQ_MASK))
-	{
-		reg_uart_ctrl0(uart_num) |= (((mask & UART_RX_IRQ_MASK)? 1:0) << 6) | (((mask & UART_TX_IRQ_MASK)? 1:0 )<< 7);
-	}
+    if((mask & UART_RX_IRQ_MASK) || (mask & UART_TX_IRQ_MASK))
+    {
+        reg_uart_ctrl0(uart_num) |= (((mask & UART_RX_IRQ_MASK)? 1:0) << 6) | (((mask & UART_TX_IRQ_MASK)? 1:0 )<< 7);
+    }
 
-	if((mask & UART_RXDONE_MASK) || (mask & UART_TXDONE_MASK) || (mask & UART_ERR_IRQ_MASK))
-	{
-		reg_uart_rx_timeout1(uart_num) |= (((mask & UART_RXDONE_MASK)? 1:0) << 2) | (((mask & UART_TXDONE_MASK) ? 1:0 )<< 6) | (((mask & UART_ERR_IRQ_MASK) ? 1:0 )<< 7);
-	}
+    if((mask & UART_RXDONE_MASK) || (mask & UART_TXDONE_MASK) || (mask & UART_ERR_IRQ_MASK))
+    {
+        reg_uart_rx_timeout1(uart_num) |= (((mask & UART_RXDONE_MASK)? 1:0) << 2) | (((mask & UART_TXDONE_MASK) ? 1:0 )<< 6) | (((mask & UART_ERR_IRQ_MASK) ? 1:0 )<< 7);
+    }
 }
 
 /**
@@ -637,13 +640,13 @@ static inline void uart_set_irq_mask(uart_num_e uart_num,uart_irq_mask_e mask)
  */
 static inline void uart_clr_irq_mask(uart_num_e uart_num,uart_irq_mask_e mask)
 {
-	if((mask & UART_RX_IRQ_MASK) || (mask & UART_TX_IRQ_MASK))
-	{
-		reg_uart_ctrl0(uart_num) &= ~((((mask & UART_RX_IRQ_MASK)? 1:0)<< 6) | (((mask & UART_TX_IRQ_MASK)? 1:0) << 7));
-	}
-	if((mask & UART_RXDONE_MASK) || (mask & UART_TXDONE_MASK) || (mask & UART_ERR_IRQ_MASK)){
-		reg_uart_rx_timeout1(uart_num) &= ~((((mask & UART_RXDONE_MASK)? 1:0) << 2) | (((mask & UART_TXDONE_MASK)? 1:0)<< 6) | (((mask & UART_ERR_IRQ_MASK)? 1:0) << 7));
-	}
+    if((mask & UART_RX_IRQ_MASK) || (mask & UART_TX_IRQ_MASK))
+    {
+        reg_uart_ctrl0(uart_num) &= ~((((mask & UART_RX_IRQ_MASK)? 1:0)<< 6) | (((mask & UART_TX_IRQ_MASK)? 1:0) << 7));
+    }
+    if((mask & UART_RXDONE_MASK) || (mask & UART_TXDONE_MASK) || (mask & UART_ERR_IRQ_MASK)){
+        reg_uart_rx_timeout1(uart_num) &= ~((((mask & UART_RXDONE_MASK)? 1:0) << 2) | (((mask & UART_TXDONE_MASK)? 1:0)<< 6) | (((mask & UART_ERR_IRQ_MASK)? 1:0) << 7));
+    }
 }
 
 
@@ -651,18 +654,18 @@ static inline void uart_clr_irq_mask(uart_num_e uart_num,uart_irq_mask_e mask)
  * @brief     Get the irq status of uart.
  * @param[in] uart_num - UART0 or UART1.
  * @param[in] status   - uart irq status.
- * @retval	  non-zero   -  the interrupt occurred.
- * @retval	  zero  -  the interrupt did not occur.
+ * @retval    non-zero   -  the interrupt occurred.
+ * @retval    zero  -  the interrupt did not occur.
  */
 static inline unsigned int  uart_get_irq_status(uart_num_e uart_num,uart_irq_status_get_e status)
 {
-	if(status == UART_RX_ERR){
-		return (reg_uart_status1(uart_num) & (status));
-	}
-	else
-	{
-		return (reg_uart_status2(uart_num) & (status));
-	}
+    if(status == UART_RX_ERR){
+        return (reg_uart_status1(uart_num) & (status));
+    }
+    else
+    {
+        return (reg_uart_status2(uart_num) & (status));
+    }
 }
 
 
@@ -674,16 +677,16 @@ static inline unsigned int  uart_get_irq_status(uart_num_e uart_num,uart_irq_sta
  */
 static inline void uart_clr_irq_status(uart_num_e uart_num,uart_irq_status_clr_e status)
 {
-	/**
-	  	[2:0]: rbcnt   --read only
-	    [3]  : irq_o   --read only
- 	 	[6:4]: wbcnt   -- R: wbcnt,   W:[6] write 1 to clear rx
-		[7]  : rx_err  -- R: rx_err,  W:[7] write 1 to clear tx
-	    The status flag bit is write 1 clear 0 and all other bits in this register except the status flag bit are read-only,
-	    so the correct way to write "=" instead of "|=" can be used here.
-	    (using "|=" will have the problem of clearing the flag bit by mistake) (added by xianren.yang, confirmed by xuqiang.zhang 20231017)
-	 */
-	reg_uart_status1(uart_num) = (status);
+    /**
+        [2:0]: rbcnt   --read only
+        [3]  : irq_o   --read only
+        [6:4]: wbcnt   -- R: wbcnt,   W:[6] write 1 to clear rx
+        [7]  : rx_err  -- R: rx_err,  W:[7] write 1 to clear tx
+        The status flag bit is write 1 clear 0 and all other bits in this register except the status flag bit are read-only,
+        so the correct way to write "=" instead of "|=" can be used here.
+        (using "|=" will have the problem of clearing the flag bit by mistake) (added by xianren.yang, confirmed by xuqiang.zhang 20231017)
+     */
+    reg_uart_status1(uart_num) = (status);
 }
 
 /**
@@ -693,7 +696,7 @@ static inline void uart_clr_irq_status(uart_num_e uart_num,uart_irq_status_clr_e
  */
 static inline void uart_set_rts_en(uart_num_e uart_num)
 {
-	reg_uart_ctrl2(uart_num) |= FLD_UART_RTS_EN; //enable RTS function
+    reg_uart_ctrl2(uart_num) |= FLD_UART_RTS_EN; //enable RTS function
 }
 
 /**
@@ -713,7 +716,7 @@ static inline void uart_set_rts_en(uart_num_e uart_num)
  */
 static inline void uart_set_rts_dis(uart_num_e uart_num)
 {
-	reg_uart_ctrl2(uart_num) &= (~FLD_UART_RTS_EN); //disable RTS function
+    reg_uart_ctrl2(uart_num) &= (~FLD_UART_RTS_EN); //disable RTS function
 }
 
 /**
@@ -723,7 +726,7 @@ static inline void uart_set_rts_dis(uart_num_e uart_num)
  */
 static inline void uart_set_cts_en(uart_num_e uart_num)
 {
-	reg_uart_ctrl1(uart_num) |= FLD_UART_TX_CTS_ENABLE; //enable CTS function
+    reg_uart_ctrl1(uart_num) |= FLD_UART_TX_CTS_ENABLE; //enable CTS function
 }
 
 /**
@@ -733,7 +736,7 @@ static inline void uart_set_cts_en(uart_num_e uart_num)
  */
 static inline void uart_set_cts_dis(uart_num_e uart_num)
 {
-	reg_uart_ctrl1(uart_num) &= (~FLD_UART_TX_CTS_ENABLE); //disable CTS function
+    reg_uart_ctrl1(uart_num) &= (~FLD_UART_TX_CTS_ENABLE); //disable CTS function
 }
 
 /**
@@ -778,7 +781,7 @@ static inline void uart_rts_trig_level_auto_mode(uart_num_e uart_num,unsigned ch
  */
 static inline void uart_rts_auto_mode(uart_num_e uart_num)
 {
-	reg_uart_ctrl2(uart_num) &= (~FLD_UART_RTS_MANUAL_M);
+    reg_uart_ctrl2(uart_num) &= (~FLD_UART_RTS_MANUAL_M);
 }
 
 /**
@@ -788,7 +791,7 @@ static inline void uart_rts_auto_mode(uart_num_e uart_num)
  */
 static inline void uart_rts_manual_mode(uart_num_e uart_num)
 {
-	reg_uart_ctrl2(uart_num) |= (FLD_UART_RTS_MANUAL_M);
+    reg_uart_ctrl2(uart_num) |= (FLD_UART_RTS_MANUAL_M);
 }
 
 
@@ -801,12 +804,12 @@ static inline void uart_rts_manual_mode(uart_num_e uart_num)
  *               after the uart reset interface is invoked, the hardware read and write Pointers are cleared to zero.
  *               Therefore, the software read and write Pointers are cleared to ensure logical correctness.
  *            -# After suspend wakes up, you must call uart_clr_tx_index and uart_clr_rx_index to clear read and write pointers,
- *               because after suspend wakes up, the chip is equivalent to performing a uart_reset,
+ *               because after suspend wakes up, the chip is equivalent to performing a uart_hw_fsm_reset,
  *               so the software read and write pointer also needs to be cleared to zero.
  */
 static inline void uart_clr_rx_index(uart_num_e uart_num)
 {
-	uart_rx_byte_index[uart_num]=0;
+    uart_rx_byte_index[uart_num]=0;
 }
 
 /**
@@ -818,12 +821,12 @@ static inline void uart_clr_rx_index(uart_num_e uart_num)
  *               after the uart reset interface is invoked, the hardware read and write Pointers are cleared to zero.
  *               Therefore, the software read and write Pointers are cleared to ensure logical correctness.
  *            -# After suspend wakes up, you must call uart_clr_tx_index and uart_clr_rx_index to clear read and write pointers,
- *               because after suspend wakes up, the chip is equivalent to performing a uart_reset,
+ *               because after suspend wakes up, the chip is equivalent to performing a uart_hw_fsm_reset,
  *               so the software read and write pointer also needs to be cleared to zero.
  */
 static inline void uart_clr_tx_index(uart_num_e uart_num)
 {
-	uart_tx_byte_index[uart_num]=0;
+    uart_tx_byte_index[uart_num]=0;
 }
 
 /**
@@ -833,17 +836,17 @@ static inline void uart_clr_tx_index(uart_num_e uart_num)
  */
 static inline void uart_clr_tx_done(uart_num_e uart_num)
 {
-	reg_uart_state(uart_num) |=FLD_UART_CLR_TXDONE;
+    reg_uart_state(uart_num) |=FLD_UART_CLR_TXDONE;
 }
 
 /**
- * @brief      	Enable the rtx .
- * @param[in]  	chn - UART0 or UART1.
- * @return     	none.
+ * @brief       Enable the rtx .
+ * @param[in]   chn - UART0 or UART1.
+ * @return      none.
  */
 static inline void uart_rtx_en(uart_num_e chn)
 {
-	reg_uart_rx_timeout1(chn)|=FLD_UART_P7816_EN;
+    reg_uart_rx_timeout1(chn)|=FLD_UART_P7816_EN;
 }
 
-#endif	/* UART_H_ */
+#endif  /* UART_H_ */

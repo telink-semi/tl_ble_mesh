@@ -33,36 +33,36 @@
 int lp_uart_init = 0;  //attention: can not be retention data !!!
 void uart_debug_init(void)
 {
-	uart_reset(DEBUG_UART_CHANNEL);  //will reset uart digital registers from 0x90 ~ 0x9f, so uart setting must set after this reset
-	uart_set_pin(TLKAPI_DEBUG_UART_TX_PIN, TLKAPI_DEBUG_UART_RX_PIN);
-	unsigned short div;
-	unsigned char bwpc;
-	uart_cal_div_and_bwpc(TLKAPI_DEBUG_UART_BAUDRATE, sys_clk.pclk*1000*1000, &div, &bwpc);
-	uart_init(DEBUG_UART_CHANNEL, div, bwpc, UART_PARITY_NONE, UART_STOP_BIT_ONE);
+    uart_reset(DEBUG_UART_CHANNEL);  //will reset uart digital registers from 0x90 ~ 0x9f, so uart setting must set after this reset
+    uart_set_pin(TLKAPI_DEBUG_UART_TX_PIN, TLKAPI_DEBUG_UART_RX_PIN);
+    unsigned short div;
+    unsigned char bwpc;
+    uart_cal_div_and_bwpc(TLKAPI_DEBUG_UART_BAUDRATE, sys_clk.pclk*1000*1000, &div, &bwpc);
+    uart_init(DEBUG_UART_CHANNEL, div, bwpc, UART_PARITY_NONE, UART_STOP_BIT_ONE);
 
 
-	uart_set_tx_dma_config(DEBUG_UART_CHANNEL, TLKAPI_DEBUG_UART_TX_DMA);
-	uart_clr_tx_done(DEBUG_UART_CHANNEL);
-	dma_clr_irq_mask(TLKAPI_DEBUG_UART_TX_DMA, TC_MASK|ABT_MASK|ERR_MASK);
+    uart_set_tx_dma_config(DEBUG_UART_CHANNEL, TLKAPI_DEBUG_UART_TX_DMA);
+    uart_clr_tx_done(DEBUG_UART_CHANNEL);
+    dma_clr_irq_mask(TLKAPI_DEBUG_UART_TX_DMA, TC_MASK|ABT_MASK|ERR_MASK);
 
-	//uart_set_rx_timeout(DEBUG_UART_CHANNEL, bwpc, 12, UART_BW_MUL1);
+    //uart_set_rx_timeout(DEBUG_UART_CHANNEL, bwpc, 12, UART_BW_MUL1);
 
-	uart_set_irq_mask(DEBUG_UART_CHANNEL, UART_TXDONE_MASK);
-	if(DEBUG_UART_CHANNEL == UART0){
-		plic_interrupt_enable(IRQ_UART0);
-		plic_set_priority(IRQ_UART0, 2);
-	}
-	else if(DEBUG_UART_CHANNEL == UART1){
-		plic_interrupt_enable(IRQ_UART1);
-		plic_set_priority(IRQ_UART1, 2);
-	}
+    uart_set_irq_mask(DEBUG_UART_CHANNEL, UART_TXDONE_MASK);
+    if(DEBUG_UART_CHANNEL == UART0){
+        plic_interrupt_enable(IRQ_UART0);
+        plic_set_priority(IRQ_UART0, 2);
+    }
+    else if(DEBUG_UART_CHANNEL == UART1){
+        plic_interrupt_enable(IRQ_UART1);
+        plic_set_priority(IRQ_UART1, 2);
+    }
 
-	lp_uart_init = 1;
+    lp_uart_init = 1;
 }
 
 
 _attribute_ram_code_
 void uart_debug_prepare_dma_data(unsigned char * addr, unsigned int len)
 {
-	uart_send_dma(DEBUG_UART_CHANNEL, addr, len);
+    uart_send_dma(DEBUG_UART_CHANNEL, addr, len);
 }

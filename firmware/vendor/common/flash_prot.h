@@ -25,18 +25,25 @@
 #define VENDOR_COMMON_FLASH_PROT_H_
 
 #define LOG_FLASH_PROT_EN					((0 /*|| DEBUG_LOG_SETTING_DEVELOP_MODE_EN*/) && (APP_FLASH_PROTECTION_ENABLE))
-	#if LOG_FLASH_PROT_EN
+#if LOG_FLASH_PROT_EN
 #define LOG_FLASH_PROT_DEBUG(pbuf,len,format,...)		LOG_MSG_LIB(TL_LOG_NODE_BASIC,pbuf,len,format,##__VA_ARGS__)
-	#else
+#else
 #define LOG_FLASH_PROT_DEBUG(pbuf,len,format,...)		//
-	#endif
+#endif
+
+/*
+ * FLASH_PROTECTION_CEILING_EN
+ * 1 means allow to protect the larger protection area of flash when not found.
+ * 0 means always to protect the smaller protection area of flash when not found.
+ */
+#define FLASH_PROTECTION_CEILING_EN			0 // due to write flash status register cycle limited, should not enable.
 
 /**
  * @brief	Application Flash protection enable control. Default disable, use can enable it in app_conifg.h.
  * 			User must enable Flash protection on mass production application !!!
  */
 #ifndef APP_FLASH_PROTECTION_ENABLE
-#define APP_FLASH_PROTECTION_ENABLE					0   //enable or disable
+#define APP_FLASH_PROTECTION_ENABLE			0   //enable or disable
 #endif
 
 
@@ -44,7 +51,7 @@
  * @brief	Application Flash protection log enable or not. Default disable, use can enable it in app_conifg.h.
  */
 #ifndef APP_FLASH_PROT_LOG_EN
-#define APP_FLASH_PROT_LOG_EN						0
+#define APP_FLASH_PROT_LOG_EN				0
 #endif
 
 
@@ -99,6 +106,33 @@ typedef struct{
 
 }flash_prot_t;
 extern flash_prot_t	blc_flashProt;
+
+#if __TLSR_RISCV_EN__
+/**
+ * @brief		this function serves to  locks a specific region or address range in the flash memory.
+ * @param[in]	none
+ * @return      none
+ */
+typedef unsigned char  (*flash_lock_t)(unsigned int);
+/**
+ * @brief		this function serves to unlocks a specific region or address range in the flash memory.
+ * @param[in]	none
+ * @return      none
+ */
+typedef unsigned char  (*flash_unlock_t)(void);
+/**
+ * @brief		this function that retrieves the lock status of a specific region or address range in the flash memory.
+ * @param[in]	none
+ * @return      none
+ */
+typedef unsigned short  (*flash_get_lock_status_t)(void);
+/**
+ * @brief		this function as a callback function for flash protection operations.
+ * @param[in]	none
+ * @return      none
+ */
+typedef void  (*flash_prot_op_callback_t)(unsigned char, unsigned int, unsigned int);
+#else
 /**
  * @brief		this function serves to  locks a specific region or address range in the flash memory.
  * @param[in]	none
@@ -123,6 +157,7 @@ typedef unsigned short  (*flash_get_lock_status_t)(void);
  * @return      none
  */
 typedef void  (*flash_prot_op_callback_t)(u8, u32, u32);
+#endif
 extern	flash_prot_op_callback_t 		flash_prot_op_cb;
 
 
@@ -266,7 +301,7 @@ u16 flash_change_app_lock_block_to_flash_lock_block(flash_app_lock_e app_lock_bl
 void app_flash_protection_operation(u8 flash_op_evt, u32 op_addr_begin, u32 op_addr_end);
 
 u16 flash_change_address_to_flash_lock_reg(u32 lock_addr_end_in, int ceiling_flag, u32 *lock_addr_end_out);
-void app_flash_protection_ota_begin();
+void app_flash_protection_ota_begin(void);
 void app_flash_protection_ota_end(u32 ota_err_code);
 u32 app_flash_protection_mesh_par_modify_much_sectors_begin(u32 op_addr_begin, u32 op_addr_end);
 void app_flash_protection_mesh_par_modify_much_sectors_end(u32 backup_lock_end_addr);

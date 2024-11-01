@@ -55,7 +55,7 @@
 #define DU_OVERWRITE_IMG_CMD			0x92
 #define DU_OVERWRITE_IMG_RSP			0x93
 
-typedef struct{
+typedef struct __attribute__((packed)) {
 	u8 len1;//connect
 	u8 ad_type1;
 	u8 ad_dat1;
@@ -73,7 +73,7 @@ typedef struct{
 	u8 ios_mac[6];
 }du_ota_adv_str;
 
-typedef struct{
+typedef struct __attribute__((packed)) {
 	u8 len;
 	u8 ad_type;
 	u16 cid;
@@ -82,67 +82,67 @@ typedef struct{
 	u8 ios_mac[6];
 }du_ota_end_adv_str;
 
-typedef struct{
+typedef struct __attribute__((packed)) {
 	u8 opcode;
 	u8 buf[1];
 }du_cmd_str;
 
-typedef struct{
+typedef struct __attribute__((packed)) {
 	u32 rand;
 }du_break_point_cmd_str;
 
-typedef struct{
+typedef struct __attribute__((packed)) {
 	u32 break_point;
 	u32 new_rand;
 }du_break_point_rsp_str;
 
-typedef struct{
+typedef struct __attribute__((packed)) {
 	u32 seg_size;
 	u32 buf_size;
 }du_exchange_str;
 
-typedef struct{
+typedef struct __attribute__((packed)) {
 	u32 image_size;
 	u32 offset;
 }du_start_ota_str;
 
-typedef struct{
+typedef struct __attribute__((packed)) {
 	u8 sts;
 }du_start_ota_sts_str;
 
-typedef struct{
+typedef struct __attribute__((packed)) {
 	u32 crc32;
 }du_buf_chk_str;
 
-typedef struct{
+typedef struct __attribute__((packed)) {
 	u8 sts;
 	u32 adjust_offset;
 }du_buf_chk_sts_str;
 
-typedef struct{
+typedef struct __attribute__((packed)) {
 	u8 sts;
 	u32 crc;
 }du_whole_img_chk_str;
 
-typedef struct{
+typedef struct __attribute__((packed)) {
 	u8 sts;
 	u32 crc;
 }du_whole_img_chk_sts_str;
 
-typedef struct{
+typedef struct __attribute__((packed)) {
 	u32 magic;
 }du_magic_code_str;
 
-typedef struct{
+typedef struct __attribute__((packed)) {
 	u8 sts;
 }du_magic_code_rsp_str;
 
-typedef struct{
+typedef struct __attribute__((packed)) {
 	u8  dev_type;
 	u16 ver;
 }du_dev_version_rsp_str;
 
-typedef struct{
+typedef struct __attribute__((packed)) {
 	u32 break_point;
 	u32 rand_code;
 	u32 seg_size;// suppose the segbuf is 244
@@ -154,7 +154,7 @@ typedef struct{
 	u32 ota_suc;	
 }du_ota_str;
 extern du_ota_str *p_ota;
-void test_du_sha256_cal();
+void test_du_sha256_cal(void);
 #if BLE_MULTIPLE_CONNECTION_ENABLE
 int	du_ctl_Write (u16 conn_handle, void *p);
 int du_fw_proc(u16 conn_handle, void *p);
@@ -165,15 +165,15 @@ int du_fw_proc(void *p);
 u8 du_adv_proc(rf_packet_adv_t * p);
 int du_vd_event_set(u8*p_buf,u8 len,u16 dst);
 //int du_vd_temp_event_send(u16 op,u16 val,u16 dst);
-void du_loop_proc();
-void du_vd_send_loop_proc();
-void du_ui_proc_init();
-void du_ui_proc_init_deep();
+void du_loop_proc(void);
+void du_vd_send_loop_proc(void);
+void du_ui_proc_init(void);
+void du_ui_proc_init_deep(void);
 void du_bind_end_proc(u16 gw_adr,u32 time_s);
 void du_bls_ll_setAdvEnable(int adv_enable);
 void du_adv_enable_proc(void);
-void du_prov_bind_check();
-void du_time_req_start_proc();
+void du_prov_bind_check(void);
+void du_time_req_start_proc(void);
 
 void update_du_busy_s(u8 delay_s);
 
@@ -190,32 +190,32 @@ u8   du_get_bind_flag(void);
 #define VD_DU_THP_CMD	0x0A01
 #define VD_DU_TIME		0XF01F
 
-typedef struct{
+typedef struct __attribute__((packed)) {
 	u8 tid;
 	u16 op;
 }du_time_req;
 
 
 #define VD_DU_GROUP_DST	0xF000
-typedef struct{
+typedef struct __attribute__((packed)) {
 	u8  tid;
 	u16 op;
 	u8  val[5];
 }vd_du_event_str;
 
-typedef struct{
+typedef struct __attribute__((packed)) {
 	vd_du_event_str op_str;
 	u8              op_str_len;
 	u16             gateway_adr;
 }vd_du_event_t;
 
-typedef struct{
+typedef struct __attribute__((packed)) {
 	u16 temp;
 	u16 humi;
 	u8  power;
 }htp_para;
 
-typedef struct{
+typedef struct __attribute__((packed)) {
 	u16 adr;
 	u8 rfu[2];
 	u16 flag;
@@ -253,7 +253,7 @@ enum{
 	GENIE_CONTROL_RSP,
 };
 
-typedef struct{
+typedef struct __attribute__((packed)) {
 	u8 msg_id;
 	union{
 		u8 pkt_num;
@@ -267,7 +267,7 @@ typedef struct{
 	u32 tick;	
 }genie_nw_cache_t;
 
-typedef struct{
+typedef struct __attribute__((packed)) {
 	u8 nid;
 	u8 msg_id;
 	union{
@@ -285,7 +285,7 @@ typedef struct{
 	#endif
 }genie_nw_t;
 
-typedef struct{
+typedef struct __attribute__((packed)) {
     u8 trans_par_val;	
     u8 len_flag;
 	u8 flag_type;
@@ -300,7 +300,7 @@ typedef struct{
 	genie_nw_t genie_nw;
 }mesh_bear_rsp2_app_t;
 
-typedef struct{ 
+typedef struct __attribute__((packed)) { 
 	u8 len_flag;
 	u8 flag_type;
 	u8 flags;
@@ -317,7 +317,7 @@ typedef struct{
 	};
 }genie_manu_factor_data_t;
 
-typedef struct{
+typedef struct __attribute__((packed)) {
 	u8 len;
 	u8 ad_type;
 	u16 cid;
@@ -329,7 +329,7 @@ typedef struct{
 	};
 }du_manu_data_t;
 
-typedef struct{
+typedef struct __attribute__((packed)) {
 	u16 cid;
 	#if AIS_ENABLE
 	u8 vid;
@@ -352,7 +352,7 @@ typedef struct{
 	#endif
 } ios_prov_t;
 
-typedef struct{
+typedef struct __attribute__((packed)) {
 	u16 cid;
 	#if AIS_ENABLE
 	u8 vid;
@@ -375,7 +375,7 @@ typedef struct{
 	#endif
 } ios_nw_t;
 
-typedef struct{ 
+typedef struct __attribute__((packed)) { 
 	u8 len_flag;
 	u8 flag_type;
 	u8 flags;
@@ -405,17 +405,17 @@ typedef struct{
 	};
 }ios_app_data_t;
 
-typedef struct{
+typedef struct __attribute__((packed)) {
 	u8 random_a[8];
 	u8 random_b[8];
 }du_random_t;
 
-typedef struct{
+typedef struct __attribute__((packed)) {
 	u8 net_app_idx[3];		// can not set 24bit var IN vc
 	u8 appkey[16];
 }du_appkey_t;
 
-typedef struct{
+typedef struct __attribute__((packed)) {
 	u8 len;
 	u8 ad_type;
 	u16 cid;
@@ -425,7 +425,7 @@ typedef struct{
 	u32 randomC;
 }du_rancomc_t;
 
-typedef struct{
+typedef struct __attribute__((packed)) {
 	u8 mac[2];
 	u8 net_key[16];
 	u16 unicast_addr;
@@ -448,6 +448,6 @@ u8   du_ota_get_flag(void);
 
 int genie_manu_nw_package(genie_nw_cache_t *p);
 int app_event_handler_ultra_prov(u8 *p_payload);
-void mesh_du_ultra_prov_loop();
+void mesh_du_ultra_prov_loop(void);
 
 #endif

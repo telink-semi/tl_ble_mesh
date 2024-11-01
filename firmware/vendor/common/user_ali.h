@@ -34,7 +34,7 @@
 #include "proj_lib/ble/blt_config.h"
 #include "vendor/common/user_config.h"
 
-#if !WIN32
+#ifndef WIN32
 extern const char num2char[17];
 #endif
 extern u32 con_product_id;// little endianness 
@@ -50,7 +50,7 @@ extern _attribute_data_retention_ int ota_adr_index;
 #endif
 extern _attribute_data_retention_	ota_startCb_t		otaStartCb;
 
-typedef struct{
+typedef struct __attribute__((packed)) {
 	//u8 rev;
 	u16 cid;
 	union{
@@ -75,12 +75,12 @@ typedef struct{
 }sha256_dev_uuid_str;
 
 // ali IOT service ota
-typedef struct{
+typedef struct __attribute__((packed)) {
 	u8 auth_ok;
 	u8 ble_key[16];
 }ais_gatt_auth_t;
 
-typedef struct{
+typedef struct __attribute__((packed)) {
 	u8 device_type;
 	u32 fw_version;
 	u32 fw_size;
@@ -88,19 +88,19 @@ typedef struct{
 	u8 ota_flag;
 }ais_ota_req_t;
 
-typedef struct{
+typedef struct __attribute__((packed)) {
 	u8 allow_ota;
 	u32 trans_size_last;
 	u8 one_round_pkts;
 }ais_ota_rsp_t;
 
-typedef struct{
+typedef struct __attribute__((packed)) {
 	u8 seg_index;
 	u32 trans_size_last;
 }ais_ota_receive_t;
 
 #define AIS_MAX_DATA_SIZE	32// please makesure have enough for aes128 padding
-typedef struct{
+typedef struct __attribute__((packed)) {
 	union{
 		u8 header;
 		struct{
@@ -128,7 +128,7 @@ typedef struct{
 	};
 }ais_msg_t;
 
-typedef struct{
+typedef struct __attribute__((packed)) {
 	u8 device_type;
 	u32 fw_version;
 }ais_fw_info_t;
@@ -161,16 +161,16 @@ int ais_write_pipe(void *p);
 #endif
 
 void set_sha256_init_para_mode(u8 mode);
-void set_dev_uuid_for_sha256();
+void set_dev_uuid_for_sha256(void);
 void create_sha256_input_string(char *p_input,u8 *pid,u8 *p_mac,u8 *p_secret);
 void create_sha256_input_string_node(char *p_input,u8 *pid,u8 *p_mac,u8 *p_secret);
-void calculate_sha256_to_create_static_oob();
+void calculate_sha256_to_create_static_oob(void);
 void calculate_sha256_to_create_pro_oob(u8 *pro_auth,u8 *random);
 void calculate_sha256_node_auth_value(u8 *auth_value);
-void ais_gatt_auth_init();
+void ais_gatt_auth_init(void);
 void calculate_sha256_node_oob(u8 *p_oob ,u8 *p_random);
-void mesh_ais_global_var_set();
-void calculate_auth_value();
+void mesh_ais_global_var_set(void);
+void calculate_auth_value(void);
 
 #endif
 

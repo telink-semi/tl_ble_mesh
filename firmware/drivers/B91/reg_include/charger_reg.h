@@ -36,8 +36,8 @@ enum{
  */
 #define  reg_charger_mode     0x1c
 enum{
-  	AUTO_MANUAL_SEL = BIT(7),
-	MANUAL_MODE = BIT_RNG(4,6),
+    AUTO_MANUAL_SEL = BIT(7),
+    MANUAL_MODE = BIT_RNG(4,6),
 };
 /*
  * analog:0x1a

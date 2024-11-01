@@ -32,7 +32,7 @@ STATIC_ASSERT(MD_CLIENT_EN);
 #if (MD_DF_CFG_SERVER_EN || MD_SBR_CFG_SERVER_EN || MD_SOLI_PDU_RPL_EN)
 model_g_df_sbr_t model_sig_g_df_sbr_cfg;
 u32 mesh_md_df_sbr_addr = FLASH_ADR_MD_DF_SBR;
-#if !WIN32
+#ifndef WIN32
 STATIC_ASSERT(MD_PROPERTY_EN == 0); // use the same flash sector to save par in mesh_md_adr_map, so can not enable at the same time.
 #if GATEWAY_ENABLE
 STATIC_ASSERT(FLASH_ADR_MD_DF_SBR != FLASH_ADR_VC_NODE_INFO);
@@ -41,7 +41,7 @@ STATIC_ASSERT(FLASH_ADR_MD_DF_SBR != FLASH_ADR_VC_NODE_INFO);
 #endif
 
 #if (MD_SBR_CFG_SERVER_EN)
-int is_subnet_bridge_en()
+int is_subnet_bridge_en(void)
 {
 	return model_sig_g_df_sbr_cfg.bridge_cfg.srv.bridge_en;
 }
@@ -81,7 +81,7 @@ int get_subnet_bridge_index(u16 netkey_index, u16 src, u16 dst)
 	return -1;
 }
 
-void mesh_sort_bridge_tbl()
+void mesh_sort_bridge_tbl(void)
 {
 	u8 i,j;
 	for(i=0; i<MAX_BRIDGE_ENTRIES; i++){
@@ -101,7 +101,7 @@ void mesh_sort_bridge_tbl()
 	}
 }
 
-void mesh_remove_node_dependent_by_subnet_bridge()
+void mesh_remove_node_dependent_by_subnet_bridge(void)
 {
 	#if (MD_DF_CFG_SERVER_EN && !FEATURE_LOWPOWER_EN)
 	foreach(i, MAX_BRIDGE_ENTRIES){
@@ -116,7 +116,7 @@ void mesh_remove_node_dependent_by_subnet_bridge()
 	#endif
 }
 
-void mesh_subnet_bridge_bind_state_update()
+void mesh_subnet_bridge_bind_state_update(void)
 {
 	foreach(i, MAX_BRIDGE_ENTRIES){
 		mesh_bridge_entry_t *p_entry = (mesh_bridge_entry_t *)&model_sig_g_df_sbr_cfg.bridge_cfg.bridge_entry[i];

@@ -364,7 +364,7 @@ int mi_cb_vd_key_report(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par)
 // = sizeof(mesh_cmd_lt_unseg_t.data) - sizeof(MIC) - sizeof(op) = 15-4-3 = 8
 STATIC_ASSERT(sizeof(vd_mi_rc_key_report_t) <= 8);
 
-#if !WIN32
+#ifndef WIN32
 const 
 #endif
 mesh_cmd_sig_func_t mi_mesh_cmd_vd_func[] = {

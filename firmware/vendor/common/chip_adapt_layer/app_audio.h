@@ -96,7 +96,7 @@ typedef struct{
 
 extern u32 audio_mesh_tx_tick;
 #if AUDIO_MESH_EN
-typedef struct{
+typedef struct __attribute__((packed)) {
 	u8 index;
 	u8 rsv[2];
 	u8 data[MIC_NUM_MESH_TX*MIC_ENC_SIZE];
@@ -116,8 +116,8 @@ typedef struct{
 
 
 
-void app_audio_init ();
-void app_audio_task();
+void app_audio_init (void);
+void app_audio_task(void);
 void app_audio_mic_onoff(u8 on);
 int audio_mesh_enc_init (unsigned char *buff, int buffsize, int sample_rate, int channels, int bitrate, int mode);
 int audio_mesh_dec_init (unsigned char *buff, int buffsize, int sample_rate, int channels, int bitrate, int mode);
@@ -128,6 +128,6 @@ int cb_vd_async_audio_data(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par);
 int cb_vd_group_g_mic_tx_req(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par);
 int vd_cmd_audio_data(u16 adr_dst, u8 rsp_max, u8 *par, int len);
 int vd_cmd_mic_tx_req(u16 adr_dst);
-void proc_ui_audio();
+void proc_ui_audio(void);
 
 

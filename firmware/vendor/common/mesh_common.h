@@ -36,9 +36,8 @@
 #include "scheduler.h"
 #include "mesh_property.h"
 #include "vendor/common/battery_check.h"
-#if (!WIN32 && EXTENDED_ADV_ENABLE)
+#if (!defined(WIN32) && EXTENDED_ADV_ENABLE)
 #if __TLSR_RISCV_EN__
-#include "stack/ble/controller/ll/ll_ext_adv.h"
 #include "chip_adapt_layer/app_audio.h"
 #else
 #include "stack/ble/ll/ll_ext_adv.h"
@@ -47,7 +46,7 @@
 
 
 
-#if (__PROJECT_MESH__ || WIN32)
+#if (__PROJECT_MESH__ || defined(WIN32))
 #include "vendor/mesh/app.h"
 #elif (__PROJECT_MESH_LPN__)
 #include "vendor/mesh_lpn/app.h"
@@ -84,7 +83,7 @@
   * @{
   */
 #if (__TLSR_RISCV_EN__)
-#define RETENTION_RAM_SIZE_USE			DEEPSLEEP_MODE_RET_SRAM_LOW64K
+#define RETENTION_RAM_SIZE_USE			DEFAULT_DEEPSLEEP_MODE_RET_SRAM_SIZE    
 #else
 #define RETENTION_RAM_SIZE_USE			DEEPSLEEP_MODE_RET_SRAM_LOW32K
 #endif
@@ -145,7 +144,7 @@ void i2c_sim_burst_write(u8 id, u8 addr,u8 *p,int n);
 #define MESH_POWERUP_BASE_TIME				500 // when power up, after (this base time + random), the node will publish lightness model or other model, details refer to publish_when_powerup_();
 
 #if (0 == USER_REDEFINE_SCAN_RSP_EN)        // user can define in user_app.h
-typedef struct{
+typedef struct __attribute__((packed)){
 	u8 len;
 	u8 type;            // 0xFF: manufacture data
 	u16 vendor_id;      // vendor id follow spec
@@ -163,7 +162,7 @@ typedef struct{
 }mesh_scan_rsp_t;
 #endif
 
-typedef struct ais_pri_data{
+typedef struct __attribute__((packed)) ais_pri_data{
 	u8 length;
 	u8 type;
 	u16 cid;
@@ -198,33 +197,31 @@ static inline int is_valid_val_100(u8 val_100)
 	return (val_100 <= 100);
 }
 
-static inline int mesh_get_proxy_hci_type()
+static inline int mesh_get_proxy_hci_type(void)
 {
     return PROXY_HCI_SEL;
 }
 //---------
 void mesh_ble_connect_cb(u8 e, u8 *p, int n);
 void mesh_ble_disconnect_cb(u8 *p);
-void mesh_conn_param_update_req();
-void vendor_id_check_and_update();
-void mesh_global_var_init();
+void vendor_id_check_and_update(void);
+void mesh_global_var_init(void);
 void mesh_tid_save(int ele_idx);
-void mesh_vd_init();
-void lpn_node_io_init();
+void mesh_vd_init(void);
+void lpn_node_io_init(void);
 void lpn_proc_keyboard (u8 e, u8 *p, int n);
 void entry_ota_mode(void);
-void set_mesh_ota_type();
-void set_firmware_type_init();
-void set_firmware_type_SIG_mesh();
-void set_firmware_type_zb_with_factory_reset();
+void set_firmware_type_init(void);
+void set_firmware_type_SIG_mesh(void);
+void set_firmware_type_zb_with_factory_reset(void);
 void set_ota_firmwaresize(int adr);
-int ota_set_flag();
+int ota_set_flag(void);
 void mesh_ota_reboot_set(u8 type);
-void mesh_ota_reboot_check_refresh();
-void mesh_ota_reboot_proc();
+void mesh_ota_reboot_check_refresh(void);
+void mesh_ota_reboot_proc(void);
 u8 proc_telink_mesh_to_sig_mesh(void);
 u8 send_vc_fifo(u8 cmd,u8 *pfifo,u8 cmd_len);
-void app_enable_scan_all_device ();
+void app_enable_scan_all_device (void);
 /**
  * @brief       This function server to set adv enable and scan enable
  * @param[in]   adv_en	- 0: adv disable 1:adv enable
@@ -236,7 +233,7 @@ int mesh_set_adv_scan_enable(int adv_en, int scan_en);
 int	app_device_mac_match (u8 *mac, u8 *mask);
 int app_l2cap_packet_receive (u16 handle, u8 * raw_pkt);
 int chn_conn_update_dispatch(u8 *p);
-void sim_tx_cmd_node2node();
+void sim_tx_cmd_node2node(void);
 /**************************mesh_send_adv2scan_mode**************************
 function : send adv immediately
 para:
@@ -246,17 +243,17 @@ ret: 1  means OK
 ****************************************************************************/
 int mesh_send_adv2scan_mode(int tx_adv);
 #if (BLE_MULTIPLE_CONNECTION_ENABLE)
-int blt_send_adv_cb();
+int blt_send_adv_cb(void);
 #endif
 int app_advertise_prepare_handler (rf_packet_adv_t * p);
 void my_att_init(u8 mode);
-void ble_mac_init();
-void usb_id_init();
-void uart_drv_init();
-void adc_drv_init();
+void ble_mac_init(void);
+void usb_id_init(void);
+void uart_drv_init(void);
+void adc_drv_init(void);
 int blc_rx_from_uart (void);
-int blc_hci_tx_to_uart ();
-void mesh_scan_rsp_init();
+int blc_hci_tx_to_uart (void);
+void mesh_scan_rsp_init(void);
 int SendOpParaDebug(u16 adr_dst, u8 rsp_max, u16 op, u8 *par, int len);
 int SendOpParaDebug_vendor(u16 adr_dst, u8 rsp_max, u16 op, u8 *par, int len, u8 rsp_op, u8 tid);
 void share_model_sub_by_rx_cmd(u16 op, u16 ele_adr, u16 sub_adr, u16 dst_adr,u8 *uuid, u32 model_id, bool4 sig_model);
@@ -271,10 +268,10 @@ void APP_reset_vendor_id(u16 vd_id);
 int mesh_rc_data_layer_access_cb(u8 *params, int par_len, mesh_cb_fun_par_t *cb_par);
 int mesh_tx_cmd2self_primary(u32 light_idx, u8 *ac, int len_ac);
 u32 get_mesh_pub_interval_ms(u32 model_id, bool4 sig_model, mesh_pub_period_t *period);
-void publish_when_powerup();
+void publish_when_powerup(void);
 int is_need_response_to_self(u16 adr_dst, u16 op);
-int app_func_before_suspend();
-void beacon_str_disable();
+int app_func_before_suspend(u32 wakeup_tick);
+void beacon_str_disable(void);
 
 #if GATEWAY_ENABLE
 typedef u8 (*access_layer_dst_addr)(mesh_cmd_nw_t *p_nw);
@@ -304,7 +301,7 @@ void bls_set_adv_delay(u8 delay);	// unit : 625us
 void bls_set_adv_retry_cnt(u8 cnt); // default :0
 #endif
 void set_random_adv_delay_normal_adv(u32 random_ms);
-void rp_active_scan_req_proc();
+void rp_active_scan_req_proc(void);
 
 void set_sec_req_send_flag(u8 flag);// set the sec req send or not 
 #if BLE_MULTIPLE_CONNECTION_ENABLE
@@ -327,7 +324,7 @@ int mesh_send_cl_proxy_bv07(u16 node_adr);
 u8 get_flash_data_is_valid(u8 *p_data,u16 len);
 void erase_ecdh_sector_restore_info(u32 adr,u8 *p_data,u16 len);
 
-#if WIN32
+#ifdef WIN32
 int SendOpParaDebug_VC(u16 adr_dst, u8 rsp_max, u16 op, u8 *par, int len);  // only for SIG command now
 #endif
 extern u8  mesh_user_define_mode ;
@@ -350,7 +347,8 @@ enum{
 	BLE_5_0,
 	BLE_5_0_HIGH,
 };
-typedef struct{
+    
+typedef struct __attribute__((packed)) {
 	mesh_page0_head_t cps_head;
 	u8 	mac[6];
 }simple_flow_dev_uuid_t;
@@ -358,38 +356,39 @@ typedef struct{
 
 
 // set dev key struct for gateway 
-typedef struct{
+typedef struct __attribute__((packed)) {
     u16 unicast;
     u8 dev_key[16];
 }mesh_gw_set_devkey_str;
 
-typedef struct{
+typedef struct __attribute__((packed)) {
     u8 fastbind;
     u8 key_idx[2];
     u8 key[16];
 }mesh_gw_appkey_bind_str;
 
-typedef struct{
+typedef struct __attribute__((packed)) {
     u8 eve;
     u16 adr;
     u8 mac[6];
     u8 uuid[16];
 }gateway_prov_event_t;
-typedef struct{
+
+typedef struct __attribute__((packed)) {
     u16 op;
     u16 src;
     u8 ac_par[32];
 }gateway_upload_mesh_src_t;
 
 // gateway cmd event log part 
-typedef struct{
+typedef struct __attribute__((packed)) {
 			u16 src;
 			u16 dst;
 			u16 opcode;
 			u8 para[20];
 }gateway_upload_mesh_cmd_str;
 
-typedef struct{
+typedef struct __attribute__((packed)) {
 	u8 dsk[32];
 	u8 dpk[64];
 	u32 valid;
@@ -405,37 +404,36 @@ typedef struct {
 	u32	tk_pincode;
 } gap_smp_TkDisplayEvt_single_connect_t;
 
-void provision_ecc_calc();
 void set_dev_uuid_for_simple_flow( u8 *p_uuid);
 u8 prov_uuid_fastbind_mode(u8 *p_uuid);
 u8 is_homekit_pair_handle(u8 handle); 
 
-u8 ota_condition_enable();
+u8 ota_condition_enable(void);
 void create_sha256_input_string(char *p_input,u8 *pid,u8 *p_mac,u8 *p_secret);
 extern u8 model_need_key_bind_whitelist(u16 *key_bind_list_buf,u8 *p_list_cnt,u8 max_cnt);
 extern int LogMsgModuleDlg_and_buf(u8 *pbuf,int len,char *log_str,char *format, va_list list);
 void mesh_node_prov_event_callback(u8 evt_code);
-void wd_clear_lib();
+void wd_clear_lib(void);
 void bls_ota_set_fwSize_and_fwBootAddr(int firmware_size_k, int boot_addr);
 void mesh_cfg_cmd_force_seg_set(material_tx_cmd_t *p,mesh_match_type_t *p_match_type);
-void mesh_secure_beacon_loop_proc();
+void mesh_secure_beacon_loop_proc(void);
 int mesh_cmd_sig_cfg_model_sub_cb(u8 st,mesh_cfg_model_sub_set_t * p_sub_set,bool4 sig_model,u16 adr_src);
 void start_reboot(void);
 void blc_l2cap_register_pre_handler(void *p);
-#if!WIN32
+#ifndef WIN32
 uint32_t soft_crc32_telink(const void *buf, size_t size, uint32_t crc);
 #endif
-void vendor_md_cb_pub_st_set2ali();
+void vendor_md_cb_pub_st_set2ali(void);
 int pre_set_beacon_to_adv(rf_packet_adv_t *p);
 u16 swap_u16_data(u16 swap);
 void mesh_seg_must_en(u8 en);
 int mesh_dev_key_candi_decrypt_cb( u16 src_adr,int dirty_flag ,const u8* ac_backup ,unsigned char *r_an, 
 											       unsigned char* ac, int len_ut, int mic_length);
-void mi_vendor_cfg_rsp_proc();
+void mi_vendor_cfg_rsp_proc(void);
 void set_random_adv_delay(int en);
-void bls_l2cap_requestConnParamUpdate_Normal();
+void bls_l2cap_requestConnParamUpdate_Normal(void);
 int telink_rand_num_generator(u8* p_buf, u8 len);
-int is_need_send_sec_nw_beacon();
+int is_need_send_sec_nw_beacon(void);
 void tn_p256_dhkey_fast(u8 *r, u8 *s, u8 *x, u8 *y);
 void mesh_gatt_adv_beacon_enable(u8 enable);
 void mbedtls_sha256_flash( unsigned long addr, size_t ilen, unsigned char output[32], int is224 );
@@ -465,10 +463,10 @@ void print_log_mesh_tx_cmd_layer_upper_ctl_ll(material_tx_cmd_t *p_mat, int err,
 #endif
 #endif
 
-void clock_switch_to_highest();
-void clock_switch_to_normal();
+void clock_switch_to_highest(void);
+void clock_switch_to_normal(void);
 
-static inline int is_tlk_gatt_ota_busy(){
+static inline int is_tlk_gatt_ota_busy(void){
 #if __TLSR_RISCV_EN__
 	return blt_ota_isOtaBusy();
 #else
@@ -538,19 +536,19 @@ static inline void set_sdk_mainLoop_run_flag(u8 flag)
 #endif
 
 #if (FW_START_BY_BOOTLOADER_EN)
-void bootloader_ota_setNewFirmwwareStorageAddress();
+void bootloader_ota_setNewFirmwwareStorageAddress(void);
 #endif
 
 // adv_filter_proc()
-void enable_mesh_provision_buf();
-void disable_mesh_provision_buf();
-void enable_mesh_kr_cfg_filter();
-void disable_mesh_kr_cfg_filter();
+void enable_mesh_provision_buf(void);
+void disable_mesh_provision_buf(void);
+void enable_mesh_kr_cfg_filter(void);
+void disable_mesh_kr_cfg_filter(void);
 
 #if UI_KEYBOARD_ENABLE
 extern u8 key_released;
 void mesh_set_sleep_wakeup(u8 e, u8 *p, int n);
-void ui_keyboard_wakeup_io_init();
+void ui_keyboard_wakeup_io_init(void);
 #endif
 /**
   * @}

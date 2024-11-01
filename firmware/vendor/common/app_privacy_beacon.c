@@ -29,7 +29,7 @@
 #include "app_privacy_beacon.h"
 
 #if MD_PRIVACY_BEA
-#if !WIN32
+#ifndef WIN32
 void generate_non_resolvable_mac(u8*p_mac)
 {
 	generateRandomNum(6,p_mac);	
@@ -37,9 +37,9 @@ void generate_non_resolvable_mac(u8*p_mac)
 }
 #endif
 
-void mesh_prov_para_random_generate()
+void mesh_prov_para_random_generate(void)
 {
-#if !WIN32
+#ifndef WIN32
 	generateRandomNum(sizeof(prov_para.priv_random),prov_para.priv_random);
 	generate_non_resolvable_mac(prov_para.priv_non_resolvable);
 	prov_para.priv_rand_gen_s = clock_time_s();
@@ -67,7 +67,7 @@ int mesh_private_cmd_st_rsp(u16 op_code,u8 *p_rsp,u8 len ,mesh_cb_fun_par_t *cb_
     return mesh_tx_cmd_rsp(op_code,p_rsp,len,p_model->com.ele_adr,cb_par->adr_src,0,0);
 }
 
-void mesh_update_node_identity_val()
+void mesh_update_node_identity_val(void)
 {
 	foreach(i,NET_KEY_MAX){
 		mesh_net_key_t *p_netkey_base = &mesh_key.net_key[i][0];
@@ -82,9 +82,9 @@ void mesh_update_node_identity_val()
 		calculate_proxy_adv_hash(p_netkey_base);
 	}
 }
-void mesh_node_identity_refresh_private()
+void mesh_node_identity_refresh_private(void)
 {
-#if !WIN32
+#ifndef WIN32
 	prov_para.rand_gen_s = clock_time_s();
 	generateRandomNum(sizeof(prov_para.random),prov_para.random);
 	// need to use the new random to calculate the node_identity part 
@@ -95,7 +95,7 @@ void mesh_node_identity_refresh_private()
 int mesh_tx_sec_privacy_beacon(mesh_net_key_t *p_nk_base, u8 blt_sts)
 {
 	int err = 0;
-#if !WIN32
+#ifndef WIN32
 	u8 key_phase = p_nk_base->key_phase;
     mesh_net_key_t *p_netkey = p_nk_base;
 	if(KEY_REFRESH_PHASE2 == key_phase){
@@ -114,15 +114,14 @@ int mesh_tx_sec_privacy_beacon(mesh_net_key_t *p_nk_base, u8 blt_sts)
 	#endif
 	mesh_sec_pri_beacon(pri_key_flag,pri_ivi,prov_para.priv_random,p_netkey->prik,bc_bear.beacon.data);
 	if(blt_sts){
-		__UNUSED u8 conn_handle = BLS_HANDLE_MIN;
 		#if BLE_MULTIPLE_CONNECTION_ENABLE
-		for(u16 conn_handle=BLS_HANDLE_MIN; conn_handle<BLS_HANDLE_MAX; conn_handle++){
-			if(blc_ll_isAclConnEstablished(conn_handle)){
-		#endif
-				err = notify_pkts(conn_handle, (u8 *)(&bc_bear.beacon.type),sizeof(mesh_beacon_privacy_t)+1,GATT_PROXY_HANDLE,MSG_MESH_BEACON);
-		#if BLE_MULTIPLE_CONNECTION_ENABLE
+		for(int i = ACL_CENTRAL_MAX_NUM; i < ACL_CENTRAL_MAX_NUM + ACL_PERIPHR_MAX_NUM; i++){
+			if(conn_dev_list[i].conn_state){
+				err = notify_pkts(conn_dev_list[i].conn_handle, (u8 *)(&bc_bear.beacon.type),sizeof(mesh_beacon_privacy_t)+1,GATT_PROXY_HANDLE,MSG_MESH_BEACON);
 			}
-		}
+        }
+		#else
+		err = notify_pkts(BLS_CONN_HANDLE, (u8 *)(&bc_bear.beacon.type),sizeof(mesh_beacon_privacy_t)+1,GATT_PROXY_HANDLE,MSG_MESH_BEACON);
 		#endif
 	}else{
     	err = mesh_bear_tx_beacon_adv_channel_only((u8 *)&bc_bear, TRANSMIT_PAR_SECURITY_BEACON);
@@ -190,7 +189,7 @@ int mesh_rc_data_beacon_privacy(u8 *p_payload, u32 t)
 }
 
 #if MD_SERVER_EN
-void mesh_private_proxy_sts_init()
+void mesh_private_proxy_sts_init(void)
 {
 	mesh_privacy_beacon_save_t *p_beacon_srv = &g_mesh_model_misc_save.privacy_bc;
 	mesh_private_proxy_change_by_gatt_proxy(p_beacon_srv->proxy_sts, &(p_beacon_srv->proxy_sts)); // check Binding with GATT Proxy.
@@ -236,7 +235,7 @@ int mesh_cmd_sig_beacon_set(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par)
 	// the random_inv_step iss optional 
 	private_beacon_str_t *p_pri_beacon = (private_beacon_str_t *)par;
 	mesh_privacy_beacon_save_t *p_pri_server = &g_mesh_model_misc_save.privacy_bc;
-	if(p_pri_beacon->beacon_sts <= PRIVATE_BEACON_ENABLE && par_len <= sizeof(private_beacon_str_t)){
+	if(p_pri_beacon->beacon_sts <= PRIVATE_BEACON_ENABLE && (u32)par_len <= sizeof(private_beacon_str_t)){
 		if(par_len == sizeof(private_beacon_str_t)){
 			//special_PRB_BV01 = 0;
 			p_pri_server->random_inv_step = p_pri_beacon->random_inv_step;
@@ -349,9 +348,9 @@ int mesh_cmd_sig_private_node_identity_set(u8 *par, int par_len, mesh_cb_fun_par
 
 
 
-void mesh_prov_para_random_proc()
+void mesh_prov_para_random_proc(void)
 {
-#if !WIN32
+#ifndef WIN32
 	mesh_privacy_beacon_save_t *p_beacon_srv = &g_mesh_model_misc_save.privacy_bc;
 	if(	is_provision_success()){
 		if(clock_time_exceed_s(prov_para.priv_rand_gen_s,p_beacon_srv->random_inv_step*10)){
@@ -438,6 +437,6 @@ int mesh_tx_privacy_nw_beacon_all_net(u8 blt_sts)
 }
 	#endif
 #else
-void mesh_prov_para_random_generate() {return;}
+void mesh_prov_para_random_generate(void) {return;}
 #endif
 

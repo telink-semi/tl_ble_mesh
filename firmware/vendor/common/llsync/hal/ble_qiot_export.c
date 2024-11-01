@@ -32,7 +32,7 @@ const char *llsync_mesh_hex(const void *buf, size_t len)
     static uint8_t    curbuf;
     const uint8_t    *b = buf;
     char             *str;
-    int               i;
+    u32               i;
 
     str = hexbufs[curbuf++];
     curbuf %= LLSYNC_ARRAY_SIZE(hexbufs);

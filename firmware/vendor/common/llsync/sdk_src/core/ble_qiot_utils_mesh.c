@@ -24,6 +24,7 @@ extern "C" {
 #include "ble_qiot_hmac256.h"
 #include "ble_qiot_utils_base64.h"
 
+#if LLSYNC_ENABLE
 ble_device_info_t sg_dev_info;
 
 static ble_core_data sg_core_data;
@@ -454,6 +455,7 @@ void llsync_mesh_init(void)
 
     return;
 }
+#endif
 
 #ifdef __cplusplus
 }

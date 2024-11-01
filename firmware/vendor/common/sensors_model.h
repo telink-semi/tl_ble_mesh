@@ -149,7 +149,7 @@ enum{
 #define SENSOR_SETTING_SET_NOACK	0x5A
 #define SENSOR_SETTING_STATUS		0x5B
 
-typedef struct{
+typedef struct __attribute__((packed)) {
 	u16 delta_down;
 	u16 delta_up;
 	u8 min_interval;
@@ -157,7 +157,7 @@ typedef struct{
 	u32 cadence_high:(SENSOR_DATA_RAW_MAX_LEN*8);
 }cadence_unitless_t; // for tx message 
 
-typedef struct{
+typedef struct __attribute__((packed)) {
 	u32 delta_down;
 	u32 delta_up;
 	u8 min_interval; // unit: (2^min_interval) ms
@@ -165,7 +165,7 @@ typedef struct{
 	u32 cadence_high;
 }cadence_unit_t; // for save setting.
 
-typedef struct{
+typedef struct __attribute__((packed)) {
 	u8 fast_period_div:7;
 	u8 trig_type:1;
 	union{ 
@@ -176,25 +176,25 @@ typedef struct{
 }sensor_cadence_t;
 
 
-typedef struct{
+typedef struct __attribute__((packed)) {
 	u16 setting_id[SENSOR_SETTINGS_NUMS];
 	u8  setting_access[SENSOR_SETTINGS_NUMS];
 	u8  setting_raw[SENSOR_SETTING_RAW_TOTAL_LEN];
 }sensor_setting_par_t;
 
-typedef struct{
+typedef struct __attribute__((packed)) {
 	u8 raw_val_X[12];
 	u8 raw_val_W[12];
 	u8 raw_val_Y[12];
 }sensor_series_col_t;
 
-typedef struct{
+typedef struct __attribute__((packed)) {
 	u16 prop_id;
 	sensor_cadence_t cadence;
 	sensor_setting_par_t setting;
 }sensor_states_t;
 
-typedef struct{
+typedef struct __attribute__((packed)) {
 #if MD_SERVER_EN
     #if MD_SENSOR_SERVER_EN
 	model_g_light_s_t sensor_srv[LIGHT_CNT];			// serve
@@ -223,7 +223,7 @@ typedef struct{
 #endif
 }model_sensor_t;
 
-typedef struct{
+typedef struct __attribute__((packed)) {
 	u16 prop_id;
 	u32 positive_tolerance:12;
 	u32 negative_tolerance:12;
@@ -232,14 +232,14 @@ typedef struct{
 	u8	update_interval;
 }mesh_cmd_sensor_descript_st_t;
 
-typedef struct{
+typedef struct __attribute__((packed)) {
 	u16 setting_id;
 	u8  setting_access;
 	u8  len_raw;
 	u8  *p_raw;
 }sensor_setting_tbl_t;
 
-typedef struct{
+typedef struct __attribute__((packed)) {
 	u16 prop_id;
 	u8  len_raw; // length of *p_raw
 	u8  *p_raw;
@@ -253,71 +253,71 @@ enum{
 
 #define FORMAT_B_VALUE_LEN_ZERO_FLAG		(0x7F)
 
-typedef struct{
+typedef struct __attribute__((packed)) {
 	u16 format:1;  // 0
 	u16 length:4;
 	u16 prop_id:11;
 	u8  raw_value[SENSOR_DATA_RAW_MAX_LEN];
 }sensor_mpid_A_t;
 
-typedef struct{
+typedef struct __attribute__((packed)) {
  	u8 format:1;   // 1
 	u8 length:7;
 	u16 prop_id;
 	u8 raw_value[SENSOR_DATA_RAW_MAX_LEN];
  }sensor_mpid_B_t;
 
-typedef struct{
+typedef struct __attribute__((packed)) {
 	u8 raw_len;
  	sensor_mpid_B_t sensor_mpid;
  }sensor_mpid_b_st_t;
 
-typedef struct{
+typedef struct __attribute__((packed)) {
  	u8 format:1;   // 1
 	u8 length:7;
 	u8 raw_value[SENSOR_DATA_RAW_MAX_LEN];
  }sensor_npid_b_t;
 
-typedef struct{
+typedef struct __attribute__((packed)) {
 	u16 prop_id;
 	u16 setting_prop_id[SENSOR_SETTINGS_NUMS];
 } sensor_settings_st_t;
 
-typedef struct{
+typedef struct __attribute__((packed)) {
 	u16 prop_id;
 	sensor_cadence_t cadence;
 }sensor_cadence_st_t;
 
-typedef struct{
+typedef struct __attribute__((packed)) {
 	u16 prop_id;
 	u16 setting_id;
 }sensor_setting_get_t;
 
-typedef struct{
+typedef struct __attribute__((packed)) {
 	u16 prop_id;
 	u16 setting_id;
 	u8  setting_access;
 	u8  setting_raw[SENSOR_SETTING_RAW_TOTAL_LEN];
 }sensor_setting_st_t;
 
-typedef struct{
+typedef struct __attribute__((packed)) {
 	u16 prop_id;
 	u16 setting_id;
 	u8  setting_raw[SENSOR_SETTING_RAW_TOTAL_LEN];
 }sensor_setting_set_t;
 
-typedef struct{
+typedef struct __attribute__((packed)) {
 	u16 prop_id;
 	u8 raw_val_x1;
 	u8 raw_val_x2;
 }sensor_series_get_t;
 
-typedef struct{
+typedef struct __attribute__((packed)) {
 	u16 prop_id;
 	sensor_series_col_t series_raw;
 }sensor_series_st_t;
 
-typedef struct{
+typedef struct __attribute__((packed)) {
 	u16 prop_id;
 	u16 raw_val_X;
 }sensor_col_get_t;
@@ -335,7 +335,7 @@ enum{
 extern _align_4_ model_sensor_t			model_sig_sensor;
 extern sensor_data_t sensor_data[SENSOR_NUMS];
 
-void mesh_global_var_init_sensor_descrip();
+void mesh_global_var_init_sensor_descrip(void);
 int mesh_sensor_st_publish(u8 idx);
 int mesh_sensor_setup_st_publish(u8 idx);
 sensor_data_t *get_sensor_data(u16 prop_id);
@@ -380,8 +380,8 @@ int mesh_cmd_sig_sensor_series_status(u8 *par, int par_len, mesh_cb_fun_par_t *c
 #define mesh_cmd_sig_sensor_series_status               (0)
 #endif
 
-u32 sensor_measure_proc();
-void sensor_lighting_ctrl_proc();
+u32 sensor_measure_proc(void);
+void sensor_lighting_ctrl_proc(void);
 int access_cmd_sensor_occupancy_motion_sensed(u16 adr_dst, u8 percent);
 
 extern _align_4_ model_sensor_t			model_sig_sensor;

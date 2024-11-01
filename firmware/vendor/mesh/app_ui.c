@@ -45,7 +45,7 @@ u8   key_released =1;
  * @return      0: keep same soft timer. -1: delete soft timer.
  * @note        
  */
-int soft_timer_key_scan()
+int soft_timer_key_scan(void)
 {
 	return key_released ? -1 : 0;
 }
@@ -261,7 +261,7 @@ void mesh_proc_keyboard(u8 e, u8 *p, int n)
 }
 #endif
 
-void proc_ui()
+void proc_ui(void)
 {
 #if (UI_KEYBOARD_ENABLE)
 	mesh_proc_keyboard(0, 0, 0);

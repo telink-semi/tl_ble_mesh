@@ -130,7 +130,7 @@ void audio_codec_config (audio_channel_wl_mode_e channel_wl,int sample_rate, u32
 }
 
 
-void app_audio_init ()
+void app_audio_init (void)
 {
 	audio_set_codec_in_path_a_d_gain(CODEC_IN_D_GAIN_0_DB, CODEC_IN_A_GAIN_20_DB); //mic sco
 	audio_set_codec_out_path_a_d_gain(CODEC_OUT_D_GAIN_0_DB, CODEC_OUT_A_GAIN_12_DB); //mic sco
@@ -202,7 +202,7 @@ void app_check_playback_buffer (int ref, int tollerance)
 	}
 }
 
-int tcodec_get_mic_data_number()
+int tcodec_get_mic_data_number(void)
 {
 	int wptr = tcodec_get_mic_wptr ();
 	return (wptr - tcodec.mic_rptr) & MIC_FIFO_MAX;
@@ -264,7 +264,7 @@ void app_audio_mic_onoff(u8 on)
 #endif
 }
 
-void app_audio_rx_st_clear()
+void app_audio_rx_st_clear(void)
 {
 	memset(buff_playback, 0x00, sizeof(buff_playback));
 	memset(&audio_mesh_rx_par, 0x00, sizeof(audio_mesh_rx_par));
@@ -280,7 +280,7 @@ void app_audio_rx_st_fresh(u16 adr_src)
 	audio_mesh_rx_par.adr_src = adr_src;
 }
 
-void proc_ui_audio()
+void proc_ui_audio(void)
 {
 	#if RELAY_ROUTE_FILTE_TEST_EN // TODO: to enable SW1
 	static u8 st_sw1_last;	
@@ -320,7 +320,7 @@ void proc_ui_audio()
 STATIC_ASSERT((ACCESS_NO_MIC_LEN_MAX_UNSEG+CONST_DELTA_EXTEND_AND_NORMAL) >= (sizeof(vd_audio_t)+OP_TYPE_VENDOR));
 _attribute_bss_dlm_ u8 audio_mic_index = 0;
 _attribute_bss_dlm_ vd_audio_t vd_audio_data;
-void app_audio_task()
+void app_audio_task(void)
 {
 	tadc_int pcm[MIC_SAMPLES_PER_PACKET];
 	static u8 enc_offset = 0;	

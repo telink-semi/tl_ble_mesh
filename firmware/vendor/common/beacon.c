@@ -32,7 +32,7 @@
 #if(BEACON_ENABLE)
 #if 0
 //apple ibeacon
-typedef struct{
+typedef struct __attribute__((packed)) {
     u8 flag_len; //constant, 0x02
     u8 flag_type;//constant, 0x01, flags type
     u8 flag; //constant, 0x06, flags indicating LE General discoverable and not supporting BR/EDR

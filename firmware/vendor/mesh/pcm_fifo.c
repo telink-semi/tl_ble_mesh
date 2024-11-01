@@ -41,14 +41,14 @@ void Fifo_Free(FIFI_WITH_SEM *fifo)
 	free(fifo->fifo_buf);
 }
 
-int Fifo_Data_Len(FIFI_WITH_SEM *fifo)
+unsigned int Fifo_Data_Len(FIFI_WITH_SEM *fifo)
 {
 	return (fifo->write_ptr - fifo->read_ptr);
 }
 
 int Fifo_Write(FIFI_WITH_SEM *fifo, char* data, int len)
 {
-	int len1, len2;
+	unsigned int len1, len2;
 	if(Fifo_Data_Len(fifo) + len > fifo->fifo_max_len)
 	{
 		//printf("len=%d data_len=%d to write bigger than fifo_max_len=%d, pointer=%p.\n", len, Fifo_Data_Len(fifo), fifo->fifo_max_len, fifo);
@@ -84,10 +84,10 @@ int Fifo_Write(FIFI_WITH_SEM *fifo, char* data, int len)
 
 int Fifo_Read(FIFI_WITH_SEM *fifo, char* data, int len, int shift_len)
 {
-	int len1, len2;
+	unsigned int len1, len2;
 	fifo->need_len = len;
 	//printf("%d\n",Fifo_Data_Len(fifo));
-	if (len > Fifo_Data_Len(fifo) )
+	if ((unsigned int)len > Fifo_Data_Len(fifo) )
 	{
 		return 0;
 	}

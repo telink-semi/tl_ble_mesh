@@ -66,7 +66,7 @@
 #define FW_UPDATE_CANCEL		        0xE2
 #define FW_UPDATE_APPLY		        	0xE3
 #define FW_UPDATE_STATUS		        0xE4
-#if WIN32
+#ifdef WIN32
 #define FW_DISTRIBUT_SUSPEND		    0xF7
 #define FW_DISTRIBUT_GET		        0xF8    // only be use in VC.
 #define FW_DISTRIBUT_START		        0xF9

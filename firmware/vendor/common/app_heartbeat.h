@@ -28,13 +28,13 @@
 #include "proj_lib/sig_mesh/app_mesh.h"
 #include "vendor/common/mesh_node.h"
 
-typedef struct{
+typedef struct __attribute__((packed)) {
 	u8 iniTTL:7;
 	u8 rfu:1;
 	u16 fea;
 }mesh_hb_msg_t;
 
-typedef struct{
+typedef struct __attribute__((packed)) {
 	u16 src;
 	u16 dst;
 	mesh_hb_msg_t hb_msg;
@@ -47,22 +47,22 @@ typedef enum{
 	MESH_HB_LOWPOWER_BIT,
 }mesh_heartbeat_feature_t;
 
-typedef struct{
+typedef struct __attribute__((packed)) {
 	u16 dst;
 	u8 count_log;
-	u8 period_log;
+	u8 period_log; // unit: 2^(n-1) second
 	u8 ttl;
 	u16 features;
 	u16 netkeyindex;
 }mesh_cfg_model_heartbeat_pub_set_t;
 
-typedef struct{
+typedef struct __attribute__((packed)) {
 	u16 src ;
 	u16 dst ;
 	u8 period_log;
 }mesh_cfg_model_heartbeat_sub_set_t;
 
-typedef struct{
+typedef struct __attribute__((packed)) {
 	u8 status;
 	u16 src;
 	u16 dst;
@@ -72,7 +72,7 @@ typedef struct{
 	u8 max_hop;
 }mesh_cfg_model_heartbeat_sub_status_t;
 
-typedef struct{
+typedef struct __attribute__((packed)) {
 	u8 status ;
 	u16 dst;
 	u8 countlog;
@@ -90,19 +90,28 @@ extern u32 hb_pub_100ms ;
 extern u32 hb_sub_100ms ;
 extern u8 hb_sts_change ;
 
-void init_heartbeat_str();
+void init_heartbeat_str(void);
 u8 cal_heartbeat_count_log(u16 val);
-void mesh_heartbeat_poll_100ms();
+void mesh_heartbeat_poll_100ms(void);
 
-void mesh_cmd_sig_lowpower_heartbeat();
-void heartbeat_cmd_send_conf();
+void mesh_cmd_sig_lowpower_heartbeat(void);
+void heartbeat_cmd_send_conf(void);
 // heart beat part dispatch 
+#if MESH_HEARTBEAT_EN
 int mesh_cmd_sig_heart_pub_status(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par);
 int mesh_cmd_sig_heartbeat_pub_get(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par);
 int mesh_cmd_sig_heartbeat_pub_set(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par);
 int mesh_cmd_sig_heartbeat_sub_get(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par);
 int mesh_cmd_sig_heartbeat_sub_set(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par);
 int mesh_cmd_sig_heartbeat_sub_status(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par);
+#else
+#define mesh_cmd_sig_heart_pub_status               (0)
+#define mesh_cmd_sig_heartbeat_pub_get              (0)
+#define mesh_cmd_sig_heartbeat_pub_set              (0)
+#define mesh_cmd_sig_heartbeat_sub_get              (0)
+#define mesh_cmd_sig_heartbeat_sub_set              (0)
+#define mesh_cmd_sig_heartbeat_sub_status           (0)
+#endif
 void mesh_process_hb_sub(mesh_cmd_bear_t *p_bear);
 void mesh_heartbeat_cb_data(mesh_cmd_bear_t *p_bear);
 

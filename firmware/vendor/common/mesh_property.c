@@ -38,7 +38,7 @@ u32 mesh_md_property_addr = FLASH_ADR_MD_PROPERTY;
 #define PROP_ID_TEST_PTS    (0x004E)        // confirm later
 #define PROP_HEAD_LEN       (OFFSETOF(mesh_property_t,val) - 1)
 
-void mesh_property_global_init()
+void mesh_property_global_init(void)
 {
     foreach(i,MESH_PROPERTY_CNT_MAX){
         mesh_property_t *p_prop = &model_sig_property.user_prop[i];

@@ -145,20 +145,20 @@ enum{
     LC_OM_MAX,
 };
 
-typedef struct{
+typedef struct __attribute__((packed)) {
 	u8 onoff;
 	u8 tid;
 	u8 transit_t;
 	u8 delay;		// unit 5ms
 }mesh_cmd_lc_onoff_set_t;
 
-typedef struct{
+typedef struct __attribute__((packed)) {
 	u8 present_onoff;
 	u8 target_onoff;
 	u8 remain_t;
 }mesh_cmd_lc_onoff_st_t;
 
-typedef struct{
+typedef struct __attribute__((packed)) {
 	u16 id;
 	u8 val[4];      // max 4: LEN_LC_PROP_MAX
 }lc_prop_set_t;
@@ -184,8 +184,8 @@ void scene_load_lc_par(scene_data_t *p_scene, int light_idx);
 void LC_property_tick_set(int idx);
 void LC_property_st_and_tick_set(int light_idx, u8 st);
 void LC_occupancy_value_and_tick_set(int light_idx, u8 occupancy_on, u32 time_since_sense);
-void LC_property_proc();
-void light_LC_global_init();
+void LC_property_proc(void);
+void light_LC_global_init(void);
 int mesh_lc_prop_st_publish(u8 idx);
 int mesh_lc_mode_st_publish(u8 idx);
 int mesh_lc_onoff_st_publish(u8 light_idx);
@@ -196,7 +196,7 @@ void LC_property_proc_st_set(int light_idx, u8 st);
 void LC_state_enter(int light_idx, transition_par_t *trs_par, u8 lc_st);
 void LC_proc_init(int light_idx);
 void lc_mode_set_par(int light_idx, u8 lc_mode);
-void light_lc_debug_print_all_par();
+void light_lc_debug_print_all_par(void);
 u16 LC_get_lc_model_element_addr(int light_idx);
 
 int access_cmd_lc_onoff(u16 adr_dst, u8 rsp_max, u8 onoff, int ack, transition_par_t *trs_par);

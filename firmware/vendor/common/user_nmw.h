@@ -129,30 +129,30 @@ enum{
 	OTA_OTA_SIGNATURE_ERR,
 };
 
-typedef struct{
+typedef struct __attribute__((packed)) {
 	u16 mcu_version;
 	u16 fw_version;
 	u8 hw_version;
 }nmw_version_t;
 
 #define NMW_RSP_BUF_LEN			64
-typedef struct{
+typedef struct __attribute__((packed)) {
 	u16 op;
 	u8 payload[NMW_RSP_BUF_LEN];
 }nmw_rsp_t;
 
-typedef struct{
+typedef struct __attribute__((packed)) {
 	u16 op;
 	u8 payload[1];
 }nmw_ctl_t;
 
-typedef struct{
+typedef struct __attribute__((packed)) {
 	u8 type;
 	u8 len;
 	u8 value[1];
 }nmw_tlv_t;
 
-typedef struct{
+typedef struct __attribute__((packed)) {
 	u16 seg_index;
 	union{
 		u8 seg_payload[1];
@@ -167,12 +167,12 @@ typedef struct{
 	};
 }nmw_ota_write_t;
 
-typedef struct{
+typedef struct __attribute__((packed)) {
 	u16 start_index;
 	u64 seg_map;
 }rec_seg_map_t;
 
-typedef struct{
+typedef struct __attribute__((packed)) {
 	u8 file_type;
 	u8 result;
 	struct{
@@ -194,6 +194,6 @@ extern nmw_ota_st_t nmw_ota_state;
 
 int	nmw_ctl_write (void *p);
 int	nmw_ota_write (void *p);
-int nmw_ota_seg_report();
+int nmw_ota_seg_report(void);
 int nmw_ota_st_report(u16 op, u8 errno);
 #endif

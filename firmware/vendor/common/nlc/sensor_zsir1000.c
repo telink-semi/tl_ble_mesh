@@ -24,6 +24,7 @@
  *******************************************************************************************************/
 #include "sensor_zsir1000.h"
 
+#if (LIGHT_TYPE_SEL == LIGHT_TYPE_NLC_SENSOR)
 #if (NLC_SENSOR_SEL == SENSOR_ZSIR1000)
 /**
  * @brief       This function ZSIR sensor init
@@ -67,7 +68,7 @@ void sensor_init_zsir1000(void)
 	#endif
 }
 
-u32 sensor_get_zsir1000()
+u32 sensor_get_zsir1000(void)
 {
 	#if ZSIR1000_MOTION_SENSED_EN
 	return (0 != gpio_read(OCCUPANCY_SENSOR_OUTPUT_PIN));
@@ -79,7 +80,7 @@ u32 sensor_get_zsir1000()
 	#endif
 }
 #endif
-
+#endif
 
 
 

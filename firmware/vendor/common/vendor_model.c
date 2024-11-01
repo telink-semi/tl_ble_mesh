@@ -320,7 +320,7 @@ int mesh_tx_cmd_indica_retry(u16 op, u8 *par, u32 par_len, u16 adr_src, u16 adr_
 	mesh_match_type_t match_type;
 	u8 nk_array_idx = get_nk_arr_idx_first_valid();
 	u8 ak_array_idx = get_ak_arr_idx_first_valid(nk_array_idx);
-	set_material_tx_cmd(&mat, op, par, par_len, adr_src, adr_dst, g_reliable_retry_cnt_def, rsp_max, 0, nk_array_idx, ak_array_idx, 0, BLS_HANDLE_MIN, 1, 0);
+	set_material_tx_cmd(&mat, op, par, par_len, adr_src, adr_dst, g_reliable_retry_cnt_def, rsp_max, 0, nk_array_idx, ak_array_idx, 0, MESH_CONN_HANDLE_AUTO, 1, 0);
     mesh_match_group_mac(&match_type, mat.adr_dst, mat.op, 1, mat.adr_src);
 	
 	memcpy(&mesh_indication_retry.mat, &mat, sizeof(material_tx_cmd_t));
@@ -370,12 +370,12 @@ int access_cmd_attr_indication(u16 op, u16 adr_dst, u16 attr_type, u8 *attr_par,
 
 }
 
-void mesh_tx_indication_tick_refresh()
+void mesh_tx_indication_tick_refresh(void)
 {
 	mesh_indication_retry.tick = clock_time();
 }
 
-void mesh_tx_indication_proc()
+void mesh_tx_indication_proc(void)
 {
  	if(mesh_indication_retry.busy){
 	    if(clock_time_exceed(mesh_indication_retry.tick, mesh_indication_retry.interval_tick/sys_tick_per_us)){
@@ -696,13 +696,14 @@ int cb_vd_key_report(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par)
 // ------ end --------
 
 #if (LPN_VENDOR_SENSOR_EN && MD_SERVER_EN)
-typedef struct{
+typedef struct __attribute__((packed)) {
     u16 hunmidity;
     u16 temp; 
 }hx300t_sensor_t;
+
 #define HX300T_MSG_RSP_MODE 0
 #define HX300T_MSG_PUB_MODE 1
-typedef struct{
+typedef struct __attribute__((packed)) {
     u8 hx300t_tick ;
     u8 msg_mode;
     u16 hx300t_src ;
@@ -721,14 +722,14 @@ hx300t_sensor_t hx300t_sensor;
 	#elif(MCU_CORE_TYPE == MCU_CORE_8278)
 #include "drivers/8278/i2c.h"
 	#endif
-void i2c_io_init()
+void i2c_io_init(void)
 {
     i2c_master_init(HX300_SENSOR_ID,8);//set clk to 500k
     i2c_gpio_set(I2C_GPIO_GROUP_C0C1);
 }
 #elif (MCU_CORE_TYPE == MCU_CORE_8269)
 #include "proj/drivers/i2c.h"
-void i2c_io_init()
+void i2c_io_init(void)
 {
       // i2c init
     gpio_set_func(PIN_I2C_SDA,AS_GPIO);
@@ -769,7 +770,7 @@ void sensor_read_fun(u16 *p_humi,u16 *p_temp)
     *p_temp = tempreture;
 }
 
-void sensor_proc_loop()
+void sensor_proc_loop(void)
 {
     if(hx300t_mag.hx300t_tick && clock_time_exceed(hx300t_mag.hx300t_tick,HX300_INTER_TIME)){
         hx300t_mag.hx300t_tick =0;
@@ -829,7 +830,7 @@ int cb_vd_lpn_sensor_st_publish(u8 idx)
 	#endif
 	return 0;
 }
-void mesh_vd_lpn_pub_set()
+void mesh_vd_lpn_pub_set(void)
 {
     mesh_cfg_model_pub_set_t pub_set = {0};
     pub_set.ele_adr = ele_adr_primary;
@@ -961,7 +962,7 @@ int cb_vd_du_time_cmd_rsp(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par)
 
 #endif
 
-#if !WIN32
+#ifndef WIN32
 const 
 #endif
 mesh_cmd_sig_func_t mesh_cmd_vd_func[] = {
@@ -1055,7 +1056,7 @@ mesh_cmd_sig_func_t mesh_cmd_vd_func[] = {
 };
 
 #if VENDOR_ID_2ND_ENABLE
-#if !WIN32
+#ifndef WIN32
 const 
 #endif
 mesh_cmd_sig_func_t mesh_cmd_vd_func2[] = {
@@ -1066,7 +1067,7 @@ mesh_cmd_sig_func_t mesh_cmd_vd_func2[] = {
 };
 #endif
 
-#if !WIN32
+#ifndef WIN32
 const 
 #endif
 mesh_vd_func_t mesh_vd_id_func[] = {
@@ -1076,7 +1077,7 @@ mesh_vd_func_t mesh_vd_id_func[] = {
 	#endif
 };
 
-#if WIN32
+#ifdef WIN32
 void APP_set_vd_id_mesh_cmd_vd_func(u16 vd_id)
 {
     foreach_arr(i,mesh_cmd_vd_func){

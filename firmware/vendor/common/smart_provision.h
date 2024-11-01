@@ -55,23 +55,23 @@ enum{
 	ST_PROVISION_TIMEOUT,
 };
 
-typedef struct{
+typedef struct __attribute__((packed)) {
 	u8 mac[6];
 	beacon_data_pk beacon;
 }unprov_pkt_t;
 
-typedef struct{
+typedef struct __attribute__((packed)) {
 	u16 type;
 	u8 cmd;
 	u8 par[1];
 }hci_cmd_t;
 
-int smart_gateway_provision_data_set();
-int smart_provision_gateway_devkey_set();
-int smart_provision_appkey_add();
-void mesh_smart_provision_start();
-int is_smart_provision_running();
-int mesh_smart_provision_st_get();
-void mesh_smart_provision_proc();
+int smart_gateway_provision_data_set(void);
+int smart_provision_gateway_devkey_set(void);
+int smart_provision_appkey_add(void);
+void mesh_smart_provision_start(void);
+int is_smart_provision_running(void);
+int mesh_smart_provision_st_get(void);
+void mesh_smart_provision_proc(void);
 int mesh_smart_provision_rsp_handle(u8 code, u8 *p, int len);
 int is_existed_in_smart_scan_list(u8 *p_uuid, int is_whitelist);

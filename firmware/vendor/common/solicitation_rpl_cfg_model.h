@@ -40,12 +40,12 @@
 #define VENDOR_IOS_SOLI_PDU_EN		0  // must 0
 #endif
 
-typedef struct{
+typedef struct __attribute__((packed)) {
 	u8 id_type;
 	u8 id_para[17]; // OFFSETOF(mesh_cmd_nw_t, 8) +MIC(8)
 }soli_srv_dat_t;
 
-typedef struct {
+typedef struct __attribute__((packed)) {
 	u8 flag_len;
 	u8 flag_type;
 	u8 flag_content;
@@ -63,7 +63,7 @@ typedef struct {
 #if VENDOR_IOS_SOLI_PDU_EN
 #define APPLE_CID		0x004C
 
-typedef struct {
+typedef struct __attribute__((packed)) {
 	u8 flag_len;
 	u8 flag_type;
 	u8 flag_content;
@@ -89,19 +89,19 @@ static inline int is_ios_soli_pdu(u8 *payload)
 #endif
 
 
-typedef struct{
+typedef struct __attribute__((packed)) {
 	u8 len;
 	u8 type;
 	u16 uuid;
 	u8 data[1];
 }service_uuid_t;
 
-typedef struct{
+typedef struct __attribute__((packed)) {
 	u16 ssrc;
 	u32 ssno     :24;
 }soli_rpl_t;
 
-typedef struct{
+typedef struct __attribute__((packed)) {
 	#if MD_SERVER_EN
 	model_g_light_s_t srv;			// server	// use app key, so need to be bind and subscription.
     #endif

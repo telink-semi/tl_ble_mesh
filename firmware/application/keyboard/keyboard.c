@@ -522,7 +522,7 @@ u32 kb_scan_key(int numlock_status, int read_key)
 }
 
 #if (PM_DEEPSLEEP_RETENTION_ENABLE)
-void global_var_no_ret_init_kb() // BLE_SRC_TELINK_MESH_EN
+void global_var_no_ret_init_kb(void) // BLE_SRC_TELINK_MESH_EN
 {
     memset4(&matrix_buff,0, sizeof(matrix_buff));
     matrix_wptr = matrix_rptr = 0;

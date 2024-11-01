@@ -30,17 +30,17 @@
 int gateway_cmd_from_host_ctl(u8 *p, u16 len );
 u8 gateway_upload_mac_address(u8 *p_mac,u8 *p_adv);
 void set_gateway_provision_sts(unsigned char en);
-unsigned char get_gateway_provisison_sts();
+unsigned char get_gateway_provisison_sts(void);
 u8 gateway_upload_provision_suc_event(u8 evt,u16 adr,u8 *p_mac,u8 *p_uuid);
-void set_gateway_provision_para_init();
+void set_gateway_provision_para_init(void);
 u8 gateway_upload_keybind_event(u8 evt);
 u8 gateway_upload_provision_self_sts(u8 sts);
 u8 gateway_upload_node_ele_cnt(u8 ele_cnt);
 u8 gateway_upload_node_info(u16 unicast);
 #if BLE_REMOTE_PM_ENABLE
-void gateway_iv_update_time_refresh();
-void gateway_check_and_enter_sleep();
-void gateway_proc_rc_ui_suspend();
+void gateway_iv_update_time_refresh(void);
+void gateway_check_and_enter_sleep(void);
+void gateway_proc_rc_ui_suspend(void);
 void gateway_trigger_iv_search_mode(int force);
 #endif
 
@@ -53,7 +53,7 @@ void gateway_trigger_iv_search_mode(int force);
 int gateway_upload_gatt_ota_sts(u8 result);
 
 u8 gateway_upload_mesh_ota_sts(u8 *p_dat,int len);
-u8 gateway_upload_mesh_sno_val();
+u8 gateway_upload_mesh_sno_val(void);
 u8 gateway_upload_cmd_rsp(u8 *p_rsp,u8 len);
 u8 gateway_cmd_from_host_ota(u8 *p, u16 len );
 u8 gateway_cmd_from_host_mesh_ota(u8 *p, u16 len );
@@ -68,7 +68,7 @@ u8 gateway_upload_log_info(u8 *p_buf,u8 len ,char *format,...); //gateway upload
 int fast_provision_upload_node_info(u16 unicast, u16 pid);
 
 int mesh_tx_comm_cmd(u16 adr);
-void mesh_ota_comm_test();
+void mesh_ota_comm_test(void);
 extern u32 comm_send_flag ;
 extern u32 comm_send_tick ;
 

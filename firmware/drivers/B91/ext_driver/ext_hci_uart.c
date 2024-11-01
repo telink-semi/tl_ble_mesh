@@ -23,281 +23,187 @@
  *******************************************************************************************************/
 #include "ext_hci_uart.h"
 #include "clock.h"
-#include "drivers.h"
-_attribute_ble_data_retention_ gpio_pin_e SoftwareRtsPin = 0;
-_attribute_ble_data_retention_ UartId_t   SoftwareUartId = 0;
-void uart_rx_timeout_disable(uart_num_e uart_num)
+#include "tl_common.h"
+
+#ifndef HCI_UART_EXT_DRIVER_EN
+#define HCI_UART_EXT_DRIVER_EN  0
+#endif
+
+#ifndef HCI_TR_EN
+#define HCI_TR_EN               0
+#endif
+
+#if (HCI_UART_EXT_DRIVER_EN||HCI_TR_EN)
+/**
+ * @brief  UART Select interface
+ */
+#ifndef  EXT_HCI_UART_CHANNEL
+#define  EXT_HCI_UART_CHANNEL               UART1
+#endif
+
+#ifndef  EXT_HCI_UART_IRQ
+#define  EXT_HCI_UART_IRQ                   IRQ_UART1
+#endif
+
+#ifndef  EXT_HCI_UART_DMA_CHN_RX
+#define  EXT_HCI_UART_DMA_CHN_RX            DMA2   //uart dma
+#endif
+
+#ifndef  EXT_HCI_UART_DMA_CHN_TX
+#define  EXT_HCI_UART_DMA_CHN_TX            DMA3
+#endif
+
+/*** RTS ***/
+#define RTS_INVERT    1 /*!< 0: RTS PIN will change from low to high. !! use for RTS auto mode(default auto mode)*/
+#define RTS_THRESH    5 /*!< RTS trigger threshold. range: 1-16. */
+/*** CTS ***/
+#define STOP_VOLT     1         //0 :Low level stops TX.  1 :High level stops TX.
+
+
+
+_attribute_data_retention_sec_ static volatile unsigned char  uart_dma_send_flag = 1;
+_attribute_data_retention_sec_ static volatile CpltCallback   RxCpltCallback;
+_attribute_data_retention_sec_ static volatile CpltCallback   TxCpltCallback;
+_attribute_data_retention_sec_ static volatile unsigned char  *ReceAddr;
+
+/**
+ * @brief   hci uart initialization
+ * @param   none
+ * @return  none
+ */
+ext_hci_StatusTypeDef_e ext_hci_uartInit(ext_hci_InitTypeDef * uart)
 {
-	u8 temp = (REG_ADDR8(0x140088+uart_num*0x40)&0xf0)|0x80;
-	write_reg8(0x140088+uart_num*0x40,temp);
+
+    unsigned short div;
+    unsigned char bwpc;
+      /* Check the UART handle allocation */
+   if (uart == NULL)
+   {
+        return EXT_UART_ERROR;
+   }
+
+    uart_reset(EXT_HCI_UART_CHANNEL);
+
+    uart_set_pin(uart->tx_Pin,uart->rx_Pin);
+
+    uart_cal_div_and_bwpc(uart->baudrate, sys_clk.pclk*1000*1000, &div, &bwpc);
+
+    uart_set_rx_timeout(EXT_HCI_UART_CHANNEL, bwpc, 12, UART_BW_MUL2);
+
+    uart_init(EXT_HCI_UART_CHANNEL, div, bwpc, UART_PARITY_NONE, UART_STOP_BIT_ONE);
+
+    uart_set_tx_dma_config(EXT_HCI_UART_CHANNEL, EXT_HCI_UART_DMA_CHN_TX);
+
+    uart_set_rx_dma_config(EXT_HCI_UART_CHANNEL, EXT_HCI_UART_DMA_CHN_RX);
+
+
+    uart_set_irq_mask(EXT_HCI_UART_CHANNEL, UART_TXDONE_MASK);
+
+    uart_set_irq_mask(EXT_HCI_UART_CHANNEL, UART_RXDONE_MASK);
+
+    plic_interrupt_enable(EXT_HCI_UART_IRQ);
+
+     //cts function
+     if((uart->HwFlowCtl != 0) && (uart->cts_Pin != 0))
+     {
+        uart_cts_config(EXT_HCI_UART_CHANNEL,uart->cts_Pin,STOP_VOLT);
+        uart_set_cts_en(EXT_HCI_UART_CHANNEL);
+
+     }
+     //rts function
+     if((uart->HwFlowCtl != 0) && (uart->rts_Pin != 0))
+     {
+            uart_set_rts_en(EXT_HCI_UART_CHANNEL);
+            uart_rts_config(EXT_HCI_UART_CHANNEL,uart->rts_Pin,RTS_INVERT,UART_RTS_MODE_AUTO);
+            uart_rts_trig_level_auto_mode(EXT_HCI_UART_CHANNEL, RTS_THRESH);
+     }
+     uart_dma_send_flag = 1;
+     TxCpltCallback = uart->TxCpltCallback;
+     RxCpltCallback = uart->RxCpltCallback;
+     return EXT_UART_OK;
 }
 
 /**
- * @brief     This function serves to set only uart rx_dma channel enable or disable.
- * @param[in] uart_num - UART0 or UART1.
- * @param[in] en      - enable or disable.
- * @return    none
+ * @brief  uart interrupt function
  */
-_attribute_ram_code_sec_noinline_ void uart_set_rx_dma_enable(uart_num_e uart_num, unsigned char en) //ble team add code
+
+_attribute_ram_code_sec_ void ext_hci_irq_handler(void){
+    //transmit
+     if(uart_get_irq_status(EXT_HCI_UART_CHANNEL,UART_TXDONE))
+     {
+         uart_clr_tx_done(EXT_HCI_UART_CHANNEL);
+         uart_dma_send_flag = 1; //clean flag
+
+         if(TxCpltCallback != NULL)
+         {
+             TxCpltCallback(NULL);
+         }
+     }
+
+     //receive
+     if(uart_get_irq_status(EXT_HCI_UART_CHANNEL,UART_RXDONE))
+     {
+         if((uart_get_irq_status(EXT_HCI_UART_CHANNEL,UART_RX_ERR)))
+         {
+            uart_clr_irq_status(EXT_HCI_UART_CHANNEL,UART_RXBUF_IRQ_STATUS);
+         }
+            /************************get the length of receive data****************************/
+         unsigned int rev_data_len = uart_get_dma_rev_data_len(EXT_HCI_UART_CHANNEL,EXT_HCI_UART_DMA_CHN_RX);
+            /************************clr rx_irq****************************/
+         uart_clr_irq_status(EXT_HCI_UART_CHANNEL,UART_CLR_RX);
+         unsigned char  * addr = ( unsigned char  *)&ReceAddr[0]-4;
+         addr[3] = (rev_data_len >> 24);
+         addr[2] = rev_data_len >> 16;
+         addr[1] = rev_data_len >> 8;
+         addr[0] = rev_data_len ;
+         if(RxCpltCallback != NULL)
+         {
+            RxCpltCallback(NULL);
+         }
+      }
+}
+PLIC_ISR_REGISTER(ext_hci_irq_handler, EXT_HCI_UART_IRQ )
+
+
+
+
+/**
+ * @brief  Check whether the transmission is complete
+ * @param  none
+ * @retval 0: busy  1:idle
+ */
+unsigned char ext_hci_getTxCompleteDone(void)
 {
-	if(!en){
-		dma_chn_dis(UART_DMA_CHN_RX);
-	}
-	else{
-		dma_chn_en(UART_DMA_CHN_RX);
-	}
+    return uart_dma_send_flag;
 }
 
-
-void HCI_UartInit(UartId_t uartId, u32 baudrate, u8 *rxBuf, u32 len)
-{
-	u16 div = 0;
-	u8 bwpc = 0;
-
-	uart_reset(uartId);
-
-	//uart_set_pin(HCI_TR_TX_PIN, HCI_TR_RX_PIN);//UART0_TX_PB2,UART0_RX_PB3
-	//uart_set_pin(UART0_TX_PA3,UART0_RX_PA4);
-
-	uart_cal_div_and_bwpc(baudrate, sys_clk.pclk*1000*1000, &div, &bwpc);
-	uart_init(uartId, div, bwpc, UART_PARITY_NONE, UART_STOP_BIT_ONE);
-
-	if(1)//DMA Mode
-	{
-		uart_set_rx_timeout(uartId, bwpc, 12, UART_BW_MUL3);//[!!important] //UART_BW_MUL2
-
-		uart_set_rx_dma_config(uartId, UART_DMA_CHN_RX);
-		uart_set_tx_dma_config(uartId, UART_DMA_CHN_TX);
-
-		uart_clr_tx_done(uartId);
-
-		dma_clr_irq_mask(UART_DMA_CHN_TX, TC_MASK|ABT_MASK|ERR_MASK);//disable UART DMA TX IRQ
-		dma_clr_irq_mask(UART_DMA_CHN_RX, TC_MASK|ABT_MASK|ERR_MASK);//disable UART DMA RX IRQ
-	}
-
-	uart_set_irq_mask(uartId, UART_RXDONE_MASK);//enable UART RX IRQ
-	uart_set_irq_mask(uartId, UART_TXDONE_MASK);//enable UART TX IRQ
-	//uart_clr_irq_mask(uartId, UART_TXDONE_MASK);
-	plic_interrupt_enable(uartId == UART0 ? IRQ_UART0:IRQ_UART1); //enable UART global IRQ
-
-	uart_receive_dma(uartId, rxBuf, len);   //set UART DMA RX buffer.
-}
-
-
-
-
-void HCI_UartSetSoftwareRxDone(UartId_t uartId,gpio_pin_e RtsPin)
-{
-	uart_rx_timeout_disable(uartId);
-	SoftwareUartId = uartId;
-	SoftwareRtsPin = RtsPin;
-    gpio_set_gpio_en(RtsPin);
-    gpio_output_en(RtsPin);        //enable output
-    gpio_input_dis(RtsPin);        //disable input
-}
-
-
-#if 1//
-
-extern  unsigned char is_uart_rx_done_soon(unsigned char uart_num);
+/**
+ * @brief       This function serves to send data by DMA, this function tell the DMA to get data from the RAM and start.
+ * @param[in]   addr     - pointer to the buffer containing data need to send.
+ * @param[in]   len      - DMA transmission length.The maximum transmission length of DMA is 0xFFFFFC bytes, so dont'n over this length.
+ * @return      1  dma start send.
+ *              0  the length is error.
+ * @note        addr: must be aligned by word (4 bytes), otherwise the program will enter an exception.
+ */
 _attribute_ram_code_sec_
-u8 uart_dmabuf_uartbuf_process(u32 *dma_size, u8*uartBuf, u8 *buf_cnt, u32 dmaGateLen)
+unsigned char ext_hci_uartSendData(unsigned char *addr, unsigned int len)
 {
-	u32 cpu_state = 0;
+    unsigned char ret_val;
+    core_interrupt_disable();
+    uart_dma_send_flag = 0;
+    ret_val = uart_send_dma(EXT_HCI_UART_CHANNEL, addr, len);
+    core_interrupt_enable();
+    return ret_val;
 
-	if(!is_uart_rx_done_soon(SoftwareUartId)) return 0;
-	ENTER_CRITICAL_SECTION();
-	if(!is_uart_rx_done_soon(SoftwareUartId)){
-		EXIT_CRITICAL_SECTION();
-		return 0;
-	}
-	uart_set_rx_dma_enable(SoftwareUartId,0);
-	*dma_size = reg_dma_size(UART_DMA_CHN_RX);
-    *buf_cnt = reg_uart_buf_cnt(SoftwareUartId)&3;
-	uart_set_rx_dma_enable(SoftwareUartId,1);
-	EXIT_CRITICAL_SECTION();
-
-	u32 read_dma_size= *dma_size;
-	u8 read_buf_cnt = *buf_cnt;
-
-	if((dmaGateLen/4 != read_dma_size) || read_buf_cnt){
-		if(read_buf_cnt){
-			uart_set_rx_dma_enable(SoftwareUartId,0);
-			for(u8 i=0;i<read_buf_cnt;i++){
-				uartBuf[i] = reg_uart_data_buf(SoftwareUartId,i);
-			}
-			uart_clr_irq_status(SoftwareUartId,UART_CLR_RX);
-			uart_set_rx_dma_enable(SoftwareUartId,1);
-		}
-		return 1;
-	}
-	else {
-		return 0;
-	}
 }
 
-//by qipeng
-/*
- * 3M baudrate : read wait 2us ,1bit 330ns,5*330ns
- * 2M baudrate : read wait 3us ,1bit 500ns,5*500ns
- * The time used here is related to the system clock. You need to confirm the change after the clock is changed
- */
-#define READ_STATE_WAIT_TICK           sleep_us(2) // 2M
-#define RTS_TO_READ_UART               10   //The actual test is 5.5us, plus 5us allowance
-#define CCLK_32M_WORK_CHECK_TIME       15  //Front running time  Check the previous running time.
-/**
- * @brief     This function serves to get uart state is busy or idle.
- * @param[in] uart_num - UART0 or UART1.
- * @return    0 : serial port is receiving data
- *            1 : No data is being received
- */
-volatile unsigned int status_read_rts_tick;
-_attribute_ram_code_sec_ u8 is_uart_rx_done(void)
+_attribute_ram_code_sec_  //BLE SDK use:
+void ext_hci_uartReceData(unsigned char *addr, unsigned int len)
 {
-	volatile unsigned char status = 0;
-	volatile unsigned int status_read_start_tick = reg_system_tick;
-	//gpio_write(GPIO_PE0,1);
-	status = (reg_uart_state(SoftwareUartId)&0xf0);
-	if (status == 0) {
-		READ_STATE_WAIT_TICK;
-		status = (reg_uart_state(SoftwareUartId)&0xf0);
-		if (status == 0) {
-			READ_STATE_WAIT_TICK;
-			status = (reg_uart_state(SoftwareUartId)&0xf0);
-			if (status == 0) {
-				UART_RTS_ENABLE();
-				status_read_rts_tick = reg_system_tick;
-				//gpio_write(GPIO_PE0,0);
-				//gpio_write(GPIO_PE1,1);
-				if(clock_time_exceed(status_read_start_tick,CCLK_32M_WORK_CHECK_TIME)){
-					return 0;
-				}
-				status = (reg_uart_state(SoftwareUartId)&0xf0);
-				if (status == 0){
-					return 1;
-				}
-				else {
-					UART_RTS_DISABLE();
-					return 0;
-				}
-				return 1;
-			}
-			return 0;
-		 }
-	}
-	return 0;
+    core_interrupt_disable();
+    uart_receive_dma(EXT_HCI_UART_CHANNEL, addr, len);
+    ReceAddr = addr;
+    core_interrupt_enable();
 }
-
-/**
- * @brief     This function serves to get uart state is busy or idle soon.
- * @param[in] uart_num - UART0 or UART1.
- * @return    0 or 1
- */
-_attribute_ram_code_sec_ unsigned char is_uart_rx_done_soon(unsigned char uart_num)
-{
-	//gpio_toggle(GPIO_PE1);
-	if(clock_time_exceed(status_read_rts_tick,RTS_TO_READ_UART)){
-		return 0;
-	}
-	volatile uint8_t status = 0;
-	status = (reg_uart_state(uart_num)&0xf0);
-
-	if (status == 0) {
-		return 1;
-	}
-	return 0;
-}
-#endif
-
-#if 0
-static u8 rxBuf[128];
-
-void HCI_InitUart(void)
-{
-	HCI_Tr_InitUart(1, rxBuf, sizeof(rxBuf));
-	HCI_Tr_TimeInit(100);
-}
-
-void HCI_Tr_InitUart(u8 *rxBuf, u32 byteNum)
-{
-	u16 div = 0;
-	u8 bwpc = 0;
-
-	uart_reset(uartId);
-
-	//uart_set_pin(HCI_TR_TX_PIN, HCI_TR_RX_PIN);//UART0_TX_PB2,UART0_RX_PB3
-	//uart_set_pin(UART0_TX_PA3,UART0_RX_PA4);
-
-	uart_cal_div_and_bwpc(HCI_TR_BAUDRATE, sys_clk.pclk*1000*1000, &div, &bwpc);
-	uart_init(HCI_TR_UART_ID, div, bwpc, UART_PARITY_NONE, UART_STOP_BIT_ONE);
-
-	if(isDmaMode)
-	{
-		uart_set_rx_timeout(HCI_TR_UART_ID, bwpc, 12, UART_BW_MUL3);//[!!important] //UART_BW_MUL2
-
-		uart_set_rx_dma_config(HCI_TR_UART_ID, UART_DMA_CHN_RX);
-		uart_set_tx_dma_config(HCI_TR_UART_ID, UART_DMA_CHN_TX);
-
-		uart_clr_tx_done(HCI_TR_UART_ID);
-
-		dma_clr_irq_mask(UART_DMA_CHN_TX, TC_MASK|ABT_MASK|ERR_MASK);//disable UART DMA TX IRQ
-		dma_clr_irq_mask(UART_DMA_CHN_RX, TC_MASK|ABT_MASK|ERR_MASK);//disable UART DMA RX IRQ
-	}
-
-	uart_set_irq_mask(HCI_TR_UART_ID, UART_RXDONE_MASK);//enable UART RX IRQ
-	uart_set_irq_mask(HCI_TR_UART_ID, UART_TXDONE_MASK);//enable UART TX IRQ
-//	uart_clr_irq_mask(HCI_TR_UART_ID, UART_TXDONE_MASK);
-	plic_interrupt_enable(HCI_TR_UART_IRQn);        //enable UART global IRQ
-
-	uart_receive_dma(HCI_TR_UART_ID, rxBuf, byteNum);   //set UART DMA RX buffer.
-}
-
-_attribute_ram_code_
-void HCI_UART_IRQHandler(void)
-{
-#if 1
-	HCI_Tr_UartIRQHandler();
-
-#else//for test
-    if(uart_get_irq_status(HCI_TR_UART_ID, UART_RXDONE)) //A0-SOC can't use RX-DONE status,so this interrupt can only used in A1-SOC.
-    {
-		if((uart_get_irq_status(HCI_TR_UART_ID, UART_RX_ERR)))
-    	{
-    		uart_clr_irq_status(HCI_TR_UART_ID, UART_CLR_RX);//it will clear rx_fifo and rx_err_status,rx_done_irq.
-    	}
-
-		/* Get the length of Rx data */
-		u32 rxLen = 0;
-    	if(((reg_uart_status1(HCI_TR_UART_ID) & FLD_UART_RBCNT) % 4)==0){
-    		rxLen = 4 * (0xffffff - reg_dma_size(UART_DMA_CHN_RX));
-    	}
-    	else{
-    		rxLen = 4 * (0xffffff - reg_dma_size(UART_DMA_CHN_RX)-1) + (reg_uart_status1(HCI_TR_UART_ID) & FLD_UART_RBCNT) % 4;
-    	}
-
-    	if(rxLen && !uart_tx_is_busy(HCI_TR_UART_ID)){
-    		uart_send_dma(HCI_TR_UART_ID, rxBuf, rxLen);
-    	}
-
-    	/* Clear RxDone state */
-    	uart_clr_irq_status(HCI_TR_UART_ID, UART_CLR_RX);
-    	uart_receive_dma(HCI_TR_UART_ID, rxBuf, sizeof(rxBuf));//[!!important - must]
-    }
-
-    if(uart_get_irq_status(HCI_TR_UART_ID, UART_TXDONE))
-	{
-	    uart_clr_tx_done(HCI_TR_UART_ID);
-	}
-#endif
-}
-
-
-_attribute_ram_code_
-void HCI_TIMER_IRQHandler(void)
-{
-	HCI_Tr_TimerIRQHandler();
-}
-
-
 #endif
 

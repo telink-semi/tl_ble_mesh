@@ -35,7 +35,7 @@ model_sensor_t			model_sig_sensor;
 
 #if(MD_SENSOR_EN)
 #if MD_SENSOR_SERVER_EN
-#if !WIN32
+#ifndef WIN32
 STATIC_ASSERT(MD_LOCATION_EN == 0);// because use same flash sector to save in mesh_save_map, and should be care of OTA new firmware which add MD_BATTERY_EN
 #endif
 STATIC_ASSERT(SENSOR_NUMS == 1);
@@ -114,7 +114,7 @@ sensor_data_t *get_sensor_data(u16 prop_id)
 	return 0;
 }
 
-void mesh_global_var_init_sensor_descrip()
+void mesh_global_var_init_sensor_descrip(void)
 {	
 	foreach_arr(i,sensor_descrip){	
 		model_sig_sensor.sensor_states[i].prop_id = sensor_descrip[i].prop_id;
@@ -133,12 +133,12 @@ void mesh_global_var_init_sensor_descrip()
 	}
 }
 
-u32 mesh_sensor_possible_positive_error()
+u32 mesh_sensor_possible_positive_error(void)
 {
 	return 100*sensor_descrip[0].positive_tolerance/4095;
 }
 
-u32 mesh_sensor_possible_negative_error()
+u32 mesh_sensor_possible_negative_error(void)
 {
 	return 100*sensor_descrip[0].negative_tolerance/4095;
 }
@@ -567,7 +567,7 @@ int mesh_sensor_setup_st_publish(u8 idx)
 	return mesh_tx_cadence_st_rsp(idx, ele_adr, pub_adr, uuid, p_com_md, SENSOR_CANDECE_STATUS, PROP_ID_PRESENT_AMBIENT_LIGHT_LEVEL);
 }
 
-u32 sensor_measure_proc()
+u32 sensor_measure_proc(void)
 {
 	//foreach(i, SENSOR_NUMS){ // TODO
 		sensor_cadence_t *p_cadence = &model_sig_sensor.sensor_states[0].cadence;
@@ -578,7 +578,7 @@ u32 sensor_measure_proc()
 			sensor_measure_ms = clock_time_ms();
 			u8 pub_flag = 0;
 			//update sensor_measure_quantity here
-		#if !WIN32
+		#ifndef WIN32
 			#if SENSOR_LIGHTING_CTRL_USER_MODE_EN	// for sensor server to send sensor status.
 	        gpio_set_input_en(SENSOR_GPIO_PIN, 1);
 	        gpio_set_output_en(SENSOR_GPIO_PIN, 0);
@@ -633,7 +633,7 @@ void sensor_lighting_ctrl_set_light_on()
     sensor_set_light_on = true;
 }
 
-void sensor_lighting_ctrl_proc()
+void sensor_lighting_ctrl_proc(void)
 {
     static mesh_cmd_g_level_st_t level_st;
     light_g_level_get((u8 *)&level_st, 0, ST_TRANS_LIGHTNESS);

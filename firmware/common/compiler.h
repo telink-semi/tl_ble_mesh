@@ -31,6 +31,8 @@
 
 #define _attribute_text_sec_   					__attribute__((section(".text")))
 
+#define _attribute_flash_code_sec_noinline_     __attribute__((section(".flash_code"))) __attribute__((noinline))
+
 #define _attribute_aes_data_sec_      			__attribute__((section(".aes_data")))
 
 #define _attribute_aligned_(s)					__attribute__((aligned(s)))
@@ -41,10 +43,13 @@
  * No_execit must be added here for the following reasons: When compiling at the optimization level of -Os, link may use exec.it for functions compiled at -O2. To disable this behavior,
  * add -mno-exit to the linking phase (see Andes Programming Guide), or add _attribute_((no_execit)) to functions that don't want to use exec.it.
  */
+#ifndef STD_GCC //standard open source risc-V GCC
 #define _attribute_ram_code_sec_optimize_o2_    __attribute__((section(".ram_code"))) __attribute__((optimize("O2"))) __attribute__((no_execit))
-
 #define _attribute_ram_code_sec_optimize_o2_noinline_    __attribute__((noinline)) __attribute__((section(".ram_code"))) __attribute__((optimize("O2"))) __attribute__((no_execit))
-
+#else
+#define _attribute_ram_code_sec_optimize_o2_    __attribute__((section(".ram_code"))) __attribute__((optimize("O2")))
+#define _attribute_ram_code_sec_optimize_o2_noinline_    __attribute__((noinline)) __attribute__((section(".ram_code"))) __attribute__((optimize("O2")))
+#endif
 
 /// Pack a structure field
 #define __PACKED __attribute__ ((__packed__))
@@ -64,6 +69,8 @@
 
 #define _attribute_iram_noinit_data_    __attribute__((section(".iram_noinit_data")))
 #define _attribute_iram_bss_            __attribute__((section(".iram_bss")))
+
+#define _attribute_flash_code_sec_noinline_     __attribute__((section(".flash_code"))) __attribute__((noinline))
 
 #define __WEAK                  		__attribute__((weak))   // user can define their own function
 #define _align_4_						__attribute__((aligned(4))) // BLE_SRC_TELINK_MESH_EN

@@ -85,7 +85,7 @@ const char * get_op_string(u16 op, const char *str_in)
 		}
 	}
 
-	#if 0 // WIN32	// aligned
+	#if 0 // defined(WIN32) // aligned
 	if(p_str_ret){
 		p_str_ret = get_op_string_aligned(p_str_ret);
 	}

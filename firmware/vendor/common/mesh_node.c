@@ -86,7 +86,7 @@ _attribute_no_retention_bss_ rf_packet_adv_t	pkt_adv = {0};
   */
 
 void app_key_del2(mesh_app_key_t *p_appkey);
-void check_prov_timeout();
+void check_prov_timeout(void);
 
 
 u16 ele_adr_primary = 0;    // save in configure server model.
@@ -116,7 +116,7 @@ directed_key_t directed_key[NET_KEY_MAX][2];
 mesh_tid_t mesh_tid;
 
 //#if(__TL_LIB_8258__ || (MCU_CORE_TYPE == MCU_CORE_8258) || (MCU_CORE_TYPE == MCU_CORE_8278))
-#if WIN32
+#ifdef WIN32
 u8 my_rf_power_index ;   // win32 use 
 #else
 u8 my_rf_power_index = MY_RF_POWER_INDEX;   // use in library
@@ -142,7 +142,7 @@ u8 gateway_enable_lib = 0;
 #endif
 
 MYFIFO_INIT(mesh_adv_cmd_fifo, sizeof(mesh_cmd_bear_t)+DELTA_EXTEND_AND_NORMAL_ALIGN4_BUF, MESH_ADV_CMD_BUF_CNT);
-#if (FEATURE_RELAY_EN || WIN32)
+#if (FEATURE_RELAY_EN || defined(WIN32))
 MYFIFO_INIT_NO_RET(mesh_adv_fifo_relay, sizeof(mesh_relay_buf_t)+DELTA_EXTEND_AND_NORMAL_ALIGN4_BUF, MESH_ADV_BUF_RELAY_CNT);
 #endif
 
@@ -171,7 +171,7 @@ STATIC_ASSERT(MD_SERVER_EN || MD_CLIENT_EN);
 STATIC_ASSERT((BUILD_VERSION & 0x00FF0000) != 0x00A50000);  // because ram[840004] is a special flag which is 0xA5, in cstartup_S.
 STATIC_ASSERT((SW_VERSION_SPEC < 16)&&(SW_VERSION_MAJOR < 16)&&(SW_VERSION_MINOR < 16)&&(SW_VERSION_2ND_MINOR < 16));
 
-#if (!WIN32)
+#ifndef WIN32
 #if MESH_DLE_MODE
 STATIC_ASSERT(((DLE_LEN_MAX_RX >= MAX_OCTETS_DATA_LEN_EXTENSION)||((DLE_LEN_MAX_RX + 8) % 16 == 0)) && (DLE_LEN_MAX_RX > 40)); // because DLE is 27 if "<=40".
 STATIC_ASSERT(((DLE_LEN_MAX_TX >= MAX_OCTETS_DATA_LEN_EXTENSION)||(DLE_LEN_MAX_TX % 4 == 0)) && (DLE_LEN_MAX_TX > 28)); // because DLE is 27 if "<=28".
@@ -734,7 +734,7 @@ const u32 md_id_vendor_second[] =   {MD_ID_ARRAY_VENDOR_SERVER};
     #endif
 #endif
 
-typedef struct{
+typedef struct __attribute__((packed)) {
 	u16 loc;
 	u8 nums;
 	u8 numv;
@@ -743,7 +743,7 @@ typedef struct{
 }mesh_element_primary_t;
 
 #if ((LEVEL_STATE_CNT_EVERY_LIGHT >= 2) || (LIGHT_CNT > 1))
-typedef struct{
+typedef struct __attribute__((packed)) {
 	u16 loc;
 	u8 nums;
 	u8 numv;
@@ -757,7 +757,7 @@ typedef struct{
 #endif
 
 #if LIGHT_CONTROL_SERVER_LOCATE_EXCLUSIVE_ELEMENT_EN
-typedef struct{
+typedef struct __attribute__((packed)) {
 	u16 loc;
 	u8 nums;
 	u8 numv; // always 0
@@ -765,7 +765,7 @@ typedef struct{
 }mesh_lc_srv_models_t;
 #endif
 
-typedef struct{
+typedef struct __attribute__((packed)) {
 	mesh_page0_head_t head;
 	mesh_element_primary_t ele_primary;
 #if (ELE_CNT > 1)
@@ -785,7 +785,7 @@ typedef struct{
 }page0_local_t;
 
 #if NLC_PROFILE_EN
-typedef struct{
+typedef struct __attribute__((packed)) {
 	u8 	page;
 	u16 profile_id;
 	u8  version_major;
@@ -798,7 +798,7 @@ typedef struct{
 }page2_local_t;
 #endif
 
-typedef struct{
+typedef struct __attribute__((packed)) {
 	page0_local_t page0;     // different page with different struct, so can not use array.
 }mesh_composition_data_local_t;
 
@@ -841,7 +841,7 @@ mesh_composition_data_local_t model_sig_cfg_s_cps = {   // can't extern, must st
             {
                 FEATURE_RELAY_EN,       // u16 relay       :1;
                 FEATURE_PROXY_EN,        // u16 proxy       :1;
-                #if WIN32
+                #ifdef WIN32
                 0,
                 #else
                 FEATURE_FRIEND_EN,      // u16 frid        :1;
@@ -1052,7 +1052,7 @@ const mesh_composition_data_local_t model_sig_cfg_s_cps_page128 = {   // can't e
             {
                 FEATURE_RELAY_EN,       // u16 relay       :1;
                 FEATURE_PROXY_EN,        // u16 proxy       :1;
-                #if WIN32
+                #ifdef WIN32
                 0,
                 #else
                 FEATURE_FRIEND_EN,      // u16 frid        :1;
@@ -1160,7 +1160,7 @@ const mesh_composition_data_local_t model_sig_cfg_s_cps_page128 = {   // can't e
  * @return      0: no same; 1:same
  * @note        
  */
-u8 mesh_cps_data_page0_page128_is_same()
+u8 mesh_cps_data_page0_page128_is_same(void)
 {
 	if(!memcmp(&model_sig_cfg_s_cps,&model_sig_cfg_s_cps_page128,sizeof(model_sig_cfg_s_cps))){
 		return 1;
@@ -1169,7 +1169,7 @@ u8 mesh_cps_data_page0_page128_is_same()
 	}
 }
 
-u8 mesh_cps_data_update_page0_from_page128()
+u8 mesh_cps_data_update_page0_from_page128(void)
 {
 	if(!mesh_cps_data_page0_page128_is_same()){
 		memcpy(&model_sig_cfg_s_cps,&model_sig_cfg_s_cps_page128,sizeof(model_sig_cfg_s_cps));
@@ -1263,7 +1263,7 @@ u32 g_publish_check_us = PUBLISH_CHECK_INIT_DELAY;
 const u32 g_publish_check_us = PUBLISH_CHECK_INIT_DELAY;
 #endif
 
-void mesh_pub_period_proc()
+void mesh_pub_period_proc(void)
 {
 	static u32 tick_pub_period_check;
 
@@ -1542,10 +1542,10 @@ int is_support_op_dst_VC_APP(u16 op, u16 adr_dst)
 #endif
 #endif
 
-int is_mesh_adv_cmd_fifo_empty()
+int is_mesh_adv_cmd_fifo_empty(void)
 {
 #if BLE_MULTIPLE_CONNECTION_ENABLE
-	return ((0 == my_fifo_data_cnt_get(&mesh_adv_cmd_fifo)) && !pkt_adv_pending);
+	return ((0 == my_fifo_data_cnt_get(&mesh_adv_cmd_fifo)) && !is_mesh_adv_tx_pending());
 #else
     return (0 == my_fifo_data_cnt_get(&mesh_adv_cmd_fifo));
 #endif
@@ -1633,10 +1633,10 @@ u32 get_random_delay_pub_tick_ms(u32 interval_ms)
         rand_max_ms = PUB_RANDOM_DELAY_MAX_MS;
     }
     u16 rand_val =0;
-    #if !WIN32
+    #ifndef WIN32
     rand_val = rand();
     #endif
-    #if WIN32
+    #ifdef WIN32
     rand_val = (u16)((clock_time() & 0xffff) ^ rand_val);
     #endif
     rand_val = (rand_val % (rand_max_ms*2));  // because interval is add (1 / PUB_RANDOM_RATE)
@@ -1721,7 +1721,7 @@ void set_mesh_bear_tx_delay(u8 *p, int delay_ms)
  * @return      network transmit interval, the unit is us.
  * @note        
  */
-int get_mesh_adv_interval()
+int get_mesh_adv_interval(void)
 {
 	int interval_step = 0;
 	u8 *p_buf = my_fifo_get(&mesh_adv_cmd_fifo);
@@ -2027,9 +2027,9 @@ void mesh_iv_idx_init_cb(int rst_sno)
 	}
 }
 
-u32 mesh_net_key_empty_search()
+u32 mesh_net_key_empty_search(void)
 {
-	u32 key_max = NET_KEY_MAX;
+	int key_max = NET_KEY_MAX;
 	#if TESTCASE_FLAG_ENABLE
 	if(netkey_list_test_mode_en){
 		key_max = 1;
@@ -2141,7 +2141,7 @@ mesh_app_key_t *mesh_tx_access_key_get(u8 *mat, u8 akf)
 	return p_key_str;
 }
 
-static inline void APP_set_self_dev_key2node_info()
+static inline void APP_set_self_dev_key2node_info(void)
 {
 #if (IS_VC_PROJECT_MASTER)
 	// TODO
@@ -2216,15 +2216,16 @@ void net_key_del2(mesh_net_key_t *p_key)
 			app_key_del2(&p_key->app_key[i]);
 		}
 	}
-#if (!FEATURE_LOWPOWER_EN && !WIN32)
+#if (!FEATURE_LOWPOWER_EN && !defined(WIN32))
 #if MD_DF_CFG_SERVER_EN
 	int key_offset = get_mesh_net_key_offset(p_key->index);
 	if(key_offset < NET_KEY_MAX){
 		foreach(idx, ACL_PERIPHR_MAX_NUM){
 			memset(&proxy_mag[idx].directed_server[key_offset], 0x00, sizeof(proxy_mag[idx].directed_server[key_offset]));
-			u16 conn_handle =  BLS_HANDLE_MIN;
-			#if BLE_MULTIPLE_CONNECTION_ENABLE
-			conn_handle = get_slave_conn_handle_by_idx(idx);
+			#if !BLE_MULTIPLE_CONNECTION_ENABLE
+			u16 conn_handle =  BLS_CONN_HANDLE;
+			#else
+			u16 conn_handle = get_periphr_conn_handle_by_idx(idx);
 			#endif
 			
 			mesh_directed_proxy_capa_report(conn_handle, key_offset);
@@ -2242,7 +2243,7 @@ void net_key_del2(mesh_net_key_t *p_key)
 	mesh_key_save();
 }
 
-u32 get_all_appkey_cnt()
+u32 get_all_appkey_cnt(void)
 {
     u8 cnt =0;
 	foreach(i,NET_KEY_MAX){
@@ -2257,7 +2258,7 @@ u32 get_all_appkey_cnt()
 	return cnt;
 }
 
-u32 get_net_key_cnt()
+u32 get_net_key_cnt(void)
 {
 	int cnt = 0;
 	foreach(i,NET_KEY_MAX){
@@ -2273,7 +2274,7 @@ inline int is_netkey_index_prohibited(u16 key_idx)
 	return (key_idx>>12);
 }
 
-int is_exist_valid_network_key()
+int is_exist_valid_network_key(void)
 {
 	return (is_provision_success() && get_net_key_cnt());
 }
@@ -2298,7 +2299,7 @@ int get_mesh_net_key_offset(u16 key_idx)
 {
 	int offset = -1;
 	foreach(i,NET_KEY_MAX){
-		u32 cnt = is_key_refresh_use_old_and_new_key(i) ? 2 : 1;
+		int cnt = is_key_refresh_use_old_and_new_key(i) ? 2 : 1;
     	foreach(k,cnt){
 			mesh_net_key_t *p_netkey = &mesh_key.net_key[i][0];
 			if((p_netkey->valid)&&(key_idx == p_netkey->index)){
@@ -2309,7 +2310,7 @@ int get_mesh_net_key_offset(u16 key_idx)
     return offset;
 }
 
-int is_net_key_save()
+int is_net_key_save(void)
 {
 	u32 val = 0;
 	flash_read_page(FLASH_ADR_MESH_KEY, 4, (u8 *)&val);
@@ -2338,7 +2339,7 @@ void net_key_set2(mesh_net_key_t *key, const u8 *nk, u16 key_idx, int save)
 	mesh_sec_get_identity_key (key->idk, key->key);
 	mesh_sec_get_beacon_key (key->bk, key->key);
 	mesh_sec_get_privacy_bacon_key(key->prik,key->key);
-#if (!WIN32 && MD_PRIVACY_BEA)
+#if (!defined(WIN32) && MD_PRIVACY_BEA)
 	mesh_private_identity_change_by_proxy_service(key);
 #endif
 	// update friend key later
@@ -2346,15 +2347,20 @@ void net_key_set2(mesh_net_key_t *key, const u8 *nk, u16 key_idx, int save)
 	key->index = key_idx;
 	key->valid = KEY_VALID;
 	calculate_proxy_adv_hash(key);
-#if (MD_DF_CFG_SERVER_EN && !WIN32)
+#if (MD_DF_CFG_SERVER_EN && !defined(WIN32))
 	if(get_net_key_cnt()>1){
 		int key_offset = get_mesh_net_key_offset(key_idx);
-		u16 conn_handle =  BLS_HANDLE_MIN;
 	
 		foreach(conn_idx, ACL_PERIPHR_MAX_NUM){
-			#if BLE_MULTIPLE_CONNECTION_ENABLE
-			conn_handle = get_slave_conn_handle_by_idx(conn_idx);
+			#if !BLE_MULTIPLE_CONNECTION_ENABLE
+			u16 conn_handle =  BLS_CONN_HANDLE;
+			#else
+			u16 conn_handle = get_periphr_conn_handle_by_idx(conn_idx);
+			if(INVALID_CONN_IDX == conn_handle){
+				continue;
+			}
 			#endif
+			
 			if((UNSET_CLIENT == proxy_mag[conn_idx].proxy_client_type) || (DIRECTED_PROXY_CLIENT == proxy_mag[conn_idx].proxy_client_type)){
 				mesh_directed_proxy_capa_report(conn_handle, key_offset);		
 			}
@@ -2533,7 +2539,7 @@ int is_rx_seg_reject_before(u16 src_addr, u32 seqAuth)
     return 0;
 }
 
-void mesh_rx_seg_reject_cache_timeout_check()
+void mesh_rx_seg_reject_cache_timeout_check(void)
 {
 	u32 cnt = 0;
 	if(rx_seg_reject_cache_not_empty_flag){
@@ -2560,12 +2566,12 @@ void add2rx_seg_reject_cache(u16 src_addr, u32 seqAuth){}
 
 
 
-void mesh_seg_rx_init()
+void mesh_seg_rx_init(void)
 {
 	memset(&mesh_rx_seg_par, 0, sizeof(mesh_rx_seg_par));
 }
 
-void mesh_seg_rx_set_timeout()
+void mesh_seg_rx_set_timeout(void)
 {
 	mesh_rx_seg_par.tick_last = mesh_rx_seg_par.tick_seg_idle = 0;
 	if(is_seg_block_ack(mesh_rx_seg_par.dst)){
@@ -2575,7 +2581,7 @@ void mesh_seg_rx_set_timeout()
 	}
 }
 
-void mesh_seg_ack_retrans_count_fresh()
+void mesh_seg_ack_retrans_count_fresh(void)
 {
 	if(mesh_rx_seg_par.seg_N > SAR_SEG_THRESHOLD){
 		if(mesh_rx_seg_par.seg_ack_cnt){
@@ -2587,7 +2593,7 @@ void mesh_seg_ack_retrans_count_fresh()
 	}	
 }
 
-void mesh_seg_ack_poll_rx()
+void mesh_seg_ack_poll_rx(void)
 {
 	if(is_lpn_support_and_en){
 		return ;
@@ -2624,12 +2630,39 @@ void mesh_seg_tx_set_one_pkt_completed(mesh_tx_seg_dst_type dst_type)
 #endif
 }
 
-int is_retrans_segment_done()
+int is_retrans_segment_done(void)
 {
 	return ((0 == mesh_tx_seg_par.retrans_cnt) || (0 == mesh_tx_seg_par.unicast_retrans_cnt_no_ack));
 }
 
-void mesh_seg_ack_poll_tx()
+/**
+ * @brief       This function server to get gatt segment ack delay time before send next round. 
+ * @param[in]   dst_addr- destination of the segment message.
+ * @return      delay time. unit: ms.
+ * @note        if not delay, it may trigger retry before slave receive Ack if GATT RX not good.
+ */
+int gatt_seg_ack_delay_ms(u16 dst_addr)
+{
+	int delay_ms = 0;
+	
+	if(is_pkt_notify_only(dst_addr, 0)){
+		#if BLE_MULTIPLE_CONNECTION_ENABLE
+		foreach(idx, ACL_PERIPHR_MAX_NUM){
+			if(dst_addr == app_adr[idx]){
+				delay_ms = blc_ll_getAclConnectionInterval(get_periphr_conn_handle_by_idx(idx)) * 1250 / 1000;
+			}
+		}
+		#elif WIN32
+		// no delay
+		#else
+		delay_ms = bls_ll_getConnectionInterval() * 1250 / 1000;
+		#endif
+	}
+
+	return (delay_ms << 2);
+}
+
+void mesh_seg_ack_poll_tx(void)
 {
     if(!mesh_tx_seg_par.busy){
     	return ;
@@ -2651,7 +2684,7 @@ void mesh_seg_ack_poll_tx()
 	}
 	#endif	
 	
-    if(mesh_tx_seg_par.tick_wait_ack && clock_time_exceed(mesh_tx_seg_par.tick_wait_ack, (CMD_INTERVAL_MS+SEG_TX_ACK_WAIT_MS)*1000)){ 
+    if(mesh_tx_seg_par.tick_wait_ack && clock_time_exceed(mesh_tx_seg_par.tick_wait_ack, (CMD_INTERVAL_MS + SEG_TX_ACK_WAIT_MS + gatt_seg_ack_delay_ms(mesh_tx_seg_par.match_type.mat.adr_dst))*1000)){ 
         mesh_tx_seg_par.tick_wait_ack = 0;  // wait for next round
 		if(is_retrans_segment_done()){
 			mesh_cmd_bear_t bear_ack = {{0}};
@@ -2727,6 +2760,12 @@ void mesh_tx_reliable_tick_refresh_proc(int rx_seg_flag, u16 adr_src)
 	}
 }
 
+/**
+ * @brief       This function tx command which need status response from destination node.
+ * @param[in]   p	- tx parameters
+ * @return      0: success. others fail, please refer to "tx_errno_e"
+ * @note        
+ */
 int mesh_tx_cmd_reliable(material_tx_cmd_t *p)
 {
 	int err = -1;
@@ -2781,7 +2820,7 @@ int mesh_tx_cmd_reliable(material_tx_cmd_t *p)
 
 int is_busy_reliable_cmd(u16 adr_dst){return (mesh_tx_reliable.busy && !is_own_ele(adr_dst));}
 
-void mesh_tx_reliable_tick_refresh()
+void mesh_tx_reliable_tick_refresh(void)
 {
 	mesh_tx_reliable.tick = clock_time();
 }
@@ -2795,7 +2834,7 @@ void mesh_tx_reliable_start(u8 retry_cnt)
     rf_link_slave_read_status_start();
 }
 
-void mesh_tx_reliable_finish()
+void mesh_tx_reliable_finish(void)
 {
 #if VC_APP_ENABLE
 		if(mesh_node_retry.num){
@@ -2864,7 +2903,7 @@ void mesh_tx_reliable_check_and_init(material_tx_cmd_t *p)
 #endif
 }
 
-void mesh_tx_reliable_proc()
+void mesh_tx_reliable_proc(void)
 {
     if(mesh_tx_reliable.busy){
         if(clock_time_exceed(mesh_tx_reliable.tick, mesh_tx_reliable.invl_ms * 1000)){
@@ -2895,6 +2934,12 @@ int is_busy_reliable_cmd(u16 adr_dst){return 0;}
 #endif
 
 // ----------------------------unreliable
+/**
+ * @brief       This function tx command which no need status response from destination node.
+ * @param[in]   p	- tx parameters
+ * @return      0: success. others fail, please refer to "tx_errno_e"
+ * @note        
+ */
 int mesh_tx_cmd_unreliable(material_tx_cmd_t *p)
 {
     int err = -1;
@@ -3023,7 +3068,7 @@ void mesh_adv_txrx_to_self_en(u8 en)
 	mesh_adv_txrx_self_en = en;
 }
 
-int is_activated_factory_test_mode()
+int is_activated_factory_test_mode(void)
 {
     return (factory_test_mode_en && (!is_provision_success()));
 }
@@ -3044,7 +3089,7 @@ int is_valid_cfg_op_when_factory_test(u16 op)
     return 1;
 }
 
-void mesh_node_refresh_binding_tick()
+void mesh_node_refresh_binding_tick(void)
 {
 	#if (FEATURE_LOWPOWER_EN || SPIRIT_PRIVATE_LPN_EN)
     if(!lpn_provision_ok)
@@ -3397,7 +3442,7 @@ u8 get_ak_arr_idx_first_valid(u8 nk_array_idx)
 	return APP_KEY_MAX;
 }
 
-u8 get_nk_arr_idx_first_valid()
+u8 get_nk_arr_idx_first_valid(void)
 {
 	foreach(i,NET_KEY_MAX){
 		if(mesh_key.net_key[i][0].valid){
@@ -3407,7 +3452,7 @@ u8 get_nk_arr_idx_first_valid()
 	return NET_KEY_MAX;
 }
 
-mesh_net_key_t *get_nk_first_valid()
+mesh_net_key_t *get_nk_first_valid(void)
 {
 	foreach(i,NET_KEY_MAX){
 		if(mesh_key.net_key[i][0].valid){
@@ -3417,7 +3462,7 @@ mesh_net_key_t *get_nk_first_valid()
 	return 0;
 }
 
-mesh_net_key_t *get_nk_primary()
+mesh_net_key_t *get_nk_primary(void)
 {
 	mesh_net_key_t *p_nk = is_mesh_net_key_exist(0);   // primary NET key
 	if(0 == p_nk){
@@ -3490,7 +3535,7 @@ void mesh_provision_par_handle(provison_net_info_str *p_prov_data)
 	mesh_provision_par_set(p_prov_data);  // must at first in this function, because provision_mag.gatt_mode is use later.
 #endif
 
-#if ATT_TAB_SWITCH_ENABLE&&!WIN32
+#if ATT_TAB_SWITCH_ENABLE&&!defined(WIN32)
 	extern void my_att_init(u8 mode);
 	my_att_init (provision_mag.gatt_mode);
 #endif 
@@ -3548,7 +3593,7 @@ void mesh_set_ele_adr(u16 adr)
 
 int is_ele_in_node(u16 ele_adr, u16 node_adr, u32 cnt)  // use for provisioner.
 {
-    #if WIN32
+    #ifdef WIN32
     if((0 == cnt) && (ele_adr == node_adr)){
         LOG_MSG_ERR(TL_LOG_COMMON,0, 0,"element count is invalid: adr:0x%04x, cnt:%d", node_adr, cnt);
         // cnt = 1;
@@ -3563,17 +3608,17 @@ int is_own_ele(u16 adr)
     return ((adr >= ele_adr_primary)&&(adr < ele_adr_primary + g_ele_cnt));   // is_ele_in_node_()
 }
 
-int is_sno_exhausted()
+int is_sno_exhausted(void)
 {
     return (mesh_adv_tx_cmd_sno >= IV_UPDATE_START_SNO);
 }
 
-int is_iv_update_keep_enough_time_ll() // for trigger role
+int is_iv_update_keep_enough_time_ll(void) // for trigger role
 {
     return (iv_idx_st.keep_time_s > IV_UPDATE_KEEP_TMIE_MIN_S);
 }
 
-int is_iv_update_keep_enough_time_rx()      // for rx role
+int is_iv_update_keep_enough_time_rx(void)      // for rx role
 {
 #if (MESH_USER_DEFINE_MODE == MESH_SPIRIT_ENABLE || MESH_USER_DEFINE_MODE == MESH_TAIBAI_ENABLE || __PROJECT_MESH_SWITCH__)
     return 1;
@@ -3590,7 +3635,7 @@ void mesh_ivi_event_cb(u8 search_flag)
 }
 
 //receive security network beacon that it's iv index is equal to (current_iv_index + 1) in normal stage.
-void mesh_receive_ivi_plus_one_in_normal_cb()
+void mesh_receive_ivi_plus_one_in_normal_cb(void)
 {
 #if (MESH_USER_DEFINE_MODE == MESH_SPIRIT_ENABLE || MESH_USER_DEFINE_MODE == MESH_TAIBAI_ENABLE)
 	//set searching mode enter IV Index Recovery procedure
@@ -3620,7 +3665,7 @@ int is_tx_status_cmd2self(u16 op, u16 adr_dst)
     return 0;
 }
 
-static inline u8 get_rsp_sec_type()
+static inline u8 get_rsp_sec_type(void)
 {
     if(FRIENDSHIP == mesh_key.sec_type_sel){
         return MASTER;
@@ -3654,7 +3699,7 @@ int mesh_tx_cmd_rsp(u16 op, u8 *par, u32 par_len, u16 adr_src, u16 adr_dst, u8 *
         return 0;
     }
     
-    #if 0 // (WIN32 && MD_SERVER_EN)
+    #if 0 // (defined(WIN32) && MD_SERVER_EN)
     #if VC_APP_ENABLE
     if(ble_module_id_is_kmadongle()) // there is only client in gateway 
     #endif
@@ -3684,7 +3729,7 @@ int mesh_tx_cmd_rsp(u16 op, u8 *par, u32 par_len, u16 adr_src, u16 adr_dst, u8 *
 	}
 	
 //	LOG_MSG_LIB(TL_LOG_NODE_SDK,par,par_len,"cmd data rsp: adr_src0x%04x,dst adr 0x%04x ",adr_src,adr_dst);	
-	set_material_tx_cmd(&mat, op, par, par_len, adr_src, adr_dst, g_reliable_retry_cnt_def, 0, uuid, nk_array_idx, ak_array_idx, pub_md, BLS_HANDLE_MIN, immutable_flag, 0);
+	set_material_tx_cmd(&mat, op, par, par_len, adr_src, adr_dst, g_reliable_retry_cnt_def, 0, uuid, nk_array_idx, ak_array_idx, pub_md, MESH_CONN_HANDLE_AUTO, immutable_flag, 0);
 	int ret = mesh_tx_cmd_unreliable(&mat);
 	return ret;
 }
@@ -3696,7 +3741,7 @@ int mesh_tx_cmd_rsp_cfg_model(u16 op, u8 *par, u32 par_len, u16 adr_dst)
     }
 	u8 immutable_flag = ((MASTER==mesh_key.sec_type_sel) || (FRIENDSHIP==mesh_key.sec_type_sel))?1:0;
 	material_tx_cmd_t mat;
-	set_material_tx_cmd(&mat, op, par, par_len, ele_adr_primary, adr_dst, g_reliable_retry_cnt_def, 0, 0, mesh_key.netkey_sel_dec, -1, 0, BLS_HANDLE_MIN, immutable_flag, 0);
+	set_material_tx_cmd(&mat, op, par, par_len, ele_adr_primary, adr_dst, g_reliable_retry_cnt_def, 0, 0, mesh_key.netkey_sel_dec, -1, 0, MESH_CONN_HANDLE_AUTO, immutable_flag, 0);
 	int ret = mesh_tx_cmd_unreliable(&mat);
 	return ret;
 }
@@ -3707,7 +3752,7 @@ static u32 mesh_model_misc_save_addr;
 
 STATIC_ASSERT((sizeof(mesh_model_misc_save_t) + 4) % 16 == 0); // 16 byte align in flash should be better. 4 is size of flag,
 
-void mesh_model_misc_save()
+void mesh_model_misc_save(void)
 {
 	mesh_common_store(FLASH_ADR_MD_MISC_PAR);
 }
@@ -3728,7 +3773,7 @@ extern u32 mesh_md_mesh_ota_addr;
 
 // share area
 extern u32 mesh_md_g_power_onoff_addr;
-static u32 mesh_md_lightness_addr = FLASH_ADR_MD_LIGHTNESS;
+u32 mesh_md_lightness_addr = FLASH_ADR_MD_LIGHTNESS;
 extern u32 mesh_md_light_lc_addr;
 extern u32 mesh_md_light_hsl_addr;
 #if (LIGHT_TYPE_SEL != LIGHT_TYPE_POWER)
@@ -3751,7 +3796,7 @@ STATIC_ASSERT(sizeof(misc_save_t) == 28); // org 28
 
 #define MD_ID_NONE		0xFFFFFFFF
 
-#if !WIN32
+#ifndef WIN32
 const 
 #endif
 mesh_md_adr_map_t mesh_md_adr_map[] = {
@@ -3842,7 +3887,9 @@ const mesh_save_map_t mesh_save_map[] = {
 #if (LIGHT_TYPE_SEL == LIGHT_TYPE_POWER)
 	{FLASH_ADR_MD_LIGHTNESS, (u8 *)&model_sig_lightness, &mesh_md_lightness_addr, sizeof(model_sig_lightness)},
 #else
+    #if MD_LIGHTNESS_EN
 	{FLASH_ADR_MD_LIGHTNESS, (u8 *)&model_sig_lightness, &mesh_md_lightness_addr, sizeof(model_sig_lightness)},
+	#endif
 	#if MD_LIGHT_CONTROL_EN
 	{FLASH_ADR_MD_LIGHT_LC, (u8 *)&model_sig_light_lc, &mesh_md_light_lc_addr, sizeof(model_sig_light_lc)},
 	#endif
@@ -3872,11 +3919,11 @@ const mesh_save_map_t mesh_save_map[] = {
 #endif
 };
 const u32 mesh_save_map_array = ARRAY_SIZE(mesh_save_map);
-#if !WIN32&&TLV_ENABLE
+#if (!defined(WIN32) && TLV_ENABLE)
 STATIC_ASSERT(sizeof(model_sig_g_df_sbr_cfg)<= TLV_REC_WHOLE_PACKET_BUF);
 #endif
 
-#if WIN32
+#ifdef WIN32
 void APP_set_vd_id_cps(u16 vd_id)
 {
     foreach_arr(i, model_sig_cfg_s_cps.page0.ele_primary.md_vendor){
@@ -3904,12 +3951,37 @@ void APP_set_vd_id_mesh_save_map(u16 vd_id)
 }
 #endif
 
-/*
-	void mesh_par_retrieve():
-	input parameters:
-	out: just parameters, no save flag
-*/
-int mesh_par_retrieve(u8 *out, u32 *p_adr, u32 adr_base, u32 size){
+#if FLASH_MAP_AUTO_EXCHANGE_SOME_SECTORS_EN
+#define FLASH_MAP_AUTO_EXCHANGE_CHECK_ADDR					        (FLASH_ADR_MISC)// must check FLASH_ADR_MISC, because it is always existed, and include crc check or only one A5 flag.
+#endif
+
+#if (FLASH_MAP_AUTO_EXCHANGE_SOME_SECTORS_EN || FLASH_MAP_AUTO_MOVE_SW_LEVEL_SECTOR_TO_NEW_ADDR_EN)
+    #if (DEBUG_LOG_SETTING_DEVELOP_MODE_EN)                         // TODO: disable print debug log by default.
+#define LOG_FLASH_MAP_AUTO_EXCHANGE_DEBUG(pbuf, len, format, ...)   LOG_MSG_LIB(TL_LOG_NODE_BASIC, pbuf, len, format, ##__VA_ARGS__)
+#define LOG_MESH_PAR_SAVE_DEBUG(pbuf, len, format, ...)             //LOG_MSG_LIB(TL_LOG_NODE_BASIC, pbuf, len, format, ##__VA_ARGS__)
+    #endif
+#endif
+
+#ifndef LOG_FLASH_MAP_AUTO_EXCHANGE_DEBUG
+#define LOG_FLASH_MAP_AUTO_EXCHANGE_DEBUG(pbuf, len, format, ...)   //
+#endif
+
+#ifndef LOG_MESH_PAR_SAVE_DEBUG
+#define LOG_MESH_PAR_SAVE_DEBUG(pbuf, len, format, ...)             //
+#endif
+
+/**
+ * @brief       This function retrieve parameters in flash.
+ * @param[out]  out		- output data without save flag
+ * @param[out]  p_adr	- output the next writing address
+ * @param[in]   adr_base- the first address of this flash sector
+ * @param[in]   size	- output data size exclude save flag
+ * @param[out]  p_out_current_addr	- output the address of current valid parameter.
+ * @return      return error code, 0 mean success to retrieve parameters. not 0 means not found parameters.
+ * @note        
+ */
+int mesh_par_retrieve(u8 *out, u32 *p_adr, u32 adr_base, u32 size, u32 *p_out_current_addr)
+{
 #if WIN32 
     return mesh_par_retrieve_store_win32(out, p_adr, adr_base, size,MESH_PARA_RETRIEVE_VAL);
 #else
@@ -3922,32 +3994,63 @@ int mesh_par_retrieve(u8 *out, u32 *p_adr, u32 adr_base, u32 size){
 	#else
 	int err = -1;
 	*p_adr = adr_base + FLASH_SECTOR_SIZE-(FLASH_SECTOR_SIZE%(size+SIZE_SAVE_FLAG));
-	for(int adr_read = *p_adr - (size+SIZE_SAVE_FLAG); adr_read >= adr_base; adr_read -= (size + SIZE_SAVE_FLAG)){// from back to forward, crc16 of 4k byte cost 40ms in 16M clock
+    LOG_MESH_PAR_SAVE_DEBUG(0, 0, "par_retrieve the end flag addr: 0x%x, base addr: 0x%x, size without flag: %d", *p_adr, adr_base, size);
+	for(u32 adr_read = *p_adr - (size+SIZE_SAVE_FLAG); adr_read >= adr_base; adr_read -= (size + SIZE_SAVE_FLAG)){// from back to forward, crc16 of 4k byte cost 40ms in 16M clock
 		mesh_save_head_t head;
     	flash_read_page(adr_read, SIZE_SAVE_FLAG, (u8 *)&head);
+        //LOG_MESH_PAR_SAVE_DEBUG(&head, 4, "adr_read:0x%x, p_adr:0x%x, head: ", adr_read, *p_adr);
 		if(U32_MAX == *(u32 *)&head){ // checking 4 byte should be better
 			*p_adr = adr_read;
+            // LOG_MESH_PAR_SAVE_DEBUG(0, 0, "flag is NULL");
 		}else if(SAVE_FLAG == head.flag){
-			if(head.crc_en && (FLASH_ADR_MISC == adr_base)){ // only add crc for misc sector now.
+            LOG_MESH_PAR_SAVE_DEBUG(0, 0, "valid A5 flag, addr: 0x%x", adr_read);
+		    //LOG_MSG_LIB(TL_LOG_NODE_BASIC, &head, 4, "xxxx adr_read:0x%x, p_adr:0x%x, head: ", adr_read, *p_adr)
+			if(head.crc_en && ((FLASH_ADR_MISC == adr_base) // only add crc for misc sector now.
+			                    #if FLASH_MAP_AUTO_EXCHANGE_SOME_SECTORS_EN // because need to check crc in flash_map_auto_exchange_sectors_action_()
+			                    || (FLASH_ADR_MD_VD_LIGHT == adr_base) || (FLASH_MAP_AUTO_EXCHANGE_CHECK_ADDR == adr_base)
+			                    || (FLASH_ADR_SW_LEVEL == adr_base)
+			                    || (MD_MESH_OTA_EN && (FLASH_ADR_MD_MESH_OTA == adr_base))
+			                    || (MESH_MODEL_MISC_SAVE_EN && (FLASH_ADR_MD_MISC_PAR == adr_base))
+			                    #endif
+			                    #if FLASH_MAP_AUTO_MOVE_SW_LEVEL_SECTOR_TO_NEW_ADDR_EN
+                                || (FLASH_ADR_SW_LEVEL == adr_base)
+			                    #endif
+			)){
 				u8 temp[min(size, FLASH_SECTOR_SIZE)];
 				flash_read_page(adr_read + SIZE_SAVE_FLAG, size, temp); 	
 				if(crc16(temp, size) == head.crc){
+                    LOG_MESH_PAR_SAVE_DEBUG(0, 0, "crc valid");
 					memcpy(out, temp, size); // copy to "out" only after checking OK in case no valid data, especially there is only one record.
 					err = 0;
 					//LOG_MSG_LIB(TL_LOG_NODE_BASIC, 0, 0, "crc ok address base:0x%x,address:0x%x,next pos:0x%x",adr_base,adr_read,*p_adr);
+				}else{
+                    LOG_MESH_PAR_SAVE_DEBUG(0, 0, "crc fail");
 				}
 			}else{
+			    if(head.crc_en){
+                    LOG_MESH_PAR_SAVE_DEBUG(0, 0, "with crc, but not check");
+			    }else{
+                    LOG_MESH_PAR_SAVE_DEBUG(0, 0, "no crc");
+                }
+                
 				flash_read_page(adr_read + SIZE_SAVE_FLAG, size, out); 	
 				err = 0;
 			}
 
 			if(0 == err){
+			    if(p_out_current_addr){
+			        *p_out_current_addr = adr_read;
+			    }
+			    
 				break;
 			}
 		}else{ // include (SAVE_FLAG_PRE == head.flag)
+            LOG_MESH_PAR_SAVE_DEBUG(&head, 4, "continue, other flag: ");
 			continue;
 		}
 	}
+
+    LOG_MESH_PAR_SAVE_DEBUG(0, 0, "next time record addr: 0x%x", *p_adr);
 	return err;
 	#endif
 #endif
@@ -3990,7 +4093,7 @@ void mesh_flash_write_replace(u32 adr, const u8 *in, u32 size)
 		u32 adr_read = adr + pos;
 		const u8 *p_in = in+pos;
 		flash_read_page(adr_read, len_read, data_read);
-		foreach(i,len_read){
+		foreach_uint(i,len_read){
 			if(data_read[i] != p_in[i]){
 				flash_write_page(adr_read+i, 1, (u8 *)&p_in[i]); // par "in" is in RAM, followed by const just indicating should not be changed.
 			}
@@ -4027,7 +4130,7 @@ int mesh_flash_data_cmp(u32 adr, const u8 *in, u32 size)
 		flash_read_page(adr_read, len_read, data_read);
 		if(memcmp(data_read, p_in, len_read)){
 			same = 0;
-			foreach(i,len_read){
+			foreach_uint(i,len_read){
 				data_read[i] &= p_in[i];
 				if(data_read[i] != p_in[i]){
 					return FLASH_CMP_DIFF_AFTER_AND;
@@ -4058,6 +4161,9 @@ void mesh_par_write_with_check(u32 addr, u32 size, const u8 *in)
 	head.flag = SAVE_FLAG_PRE;
 	head.crc_en = 1;
 	head.crc = crc16(in, size);
+#if FLASH_MAP_AUTO_EXCHANGE_SOME_SECTORS_EN
+	//head.map_ver = FLASH_MAP_VER_1;
+#endif
 	flash_write_with_check(addr, SIZE_SAVE_FLAG, (u8 *)&head);
 	flash_write_with_check(addr + SIZE_SAVE_FLAG, size, in);
 	head.flag = SAVE_FLAG;
@@ -4074,7 +4180,7 @@ static int is_valid_mesh_par_addr(u32 addr)
 }
 
 void mesh_par_store_2(const u8 *in, u32 *p_adr, u32 adr_base, u32 size){
-#if WIN32 
+#ifdef WIN32 
     mesh_par_retrieve_store_win32((u8 *)in, p_adr, adr_base, size,MESH_PARA_STORE_VAL);
 #else
 	#if TLV_ENABLE
@@ -4146,7 +4252,7 @@ void mesh_par_store(const u8 *in, u32 *p_adr, u32 adr_base, u32 size)
 
 int mesh_common_retrieve_by_index(u8 index){
 	const mesh_save_map_t *p_map = &mesh_save_map[index];
-	int err = mesh_par_retrieve(p_map->p_save_par, p_map->p_adr, p_map->adr_base, p_map->size_save_par);
+	int err = mesh_par_retrieve(p_map->p_save_par, p_map->p_adr, p_map->adr_base, p_map->size_save_par, NULL);
     
     mesh_common_retrieve_cb(err, p_map->adr_base);
 	return err;
@@ -4184,7 +4290,7 @@ int mesh_common_store(u32 adr_base)
 	return mesh_common_retrieve_and_store(adr_base, 1);
 }
 
-void mesh_common_retrieve_all()
+void mesh_common_retrieve_all(void)
 {
 	foreach_arr(i,mesh_save_map){
 		mesh_common_retrieve_by_index(i);
@@ -4202,7 +4308,7 @@ void mesh_common_retrieve_all()
 	#endif
 }
 
-void mesh_common_save_all_md()
+void mesh_common_save_all_md(void)
 {
 	foreach_arr(i,mesh_md_adr_map){
 		mesh_common_store(mesh_md_adr_map[i].adr_base);
@@ -4217,7 +4323,7 @@ void mesh_common_retrieve_cb(int err, u32 adr_base){
     }
 }
 
-void mesh_common_reset_all()
+void mesh_common_reset_all(void)
 {
 	u8 reset;
 	flash_read_page(FLASH_ADR_MESH_KEY, sizeof(reset), &reset);
@@ -4251,9 +4357,9 @@ void mesh_common_reset_all()
 	mesh_global_var_init();
 	mesh_set_ele_adr_ll(ele_adr_primary, 0, 0);
 	#if MD_SERVER_EN
-	mesh_par_retrieve((u8 *)&light_res_sw_save, &mesh_sw_level_addr, FLASH_ADR_SW_LEVEL, sizeof(light_res_sw_save));//retrieve light_res_sw_save
+	mesh_par_retrieve((u8 *)&light_res_sw_save, &mesh_sw_level_addr, FLASH_ADR_SW_LEVEL, sizeof(light_res_sw_save), NULL);//retrieve light_res_sw_save
 	#endif
-	mesh_par_retrieve((u8 *)&provision_mag, &mesh_provision_mag_addr, FLASH_ADR_PROVISION_CFG_S, sizeof(provision_mag));//retrieve oob
+	mesh_par_retrieve((u8 *)&provision_mag, &mesh_provision_mag_addr, FLASH_ADR_PROVISION_CFG_S, sizeof(provision_mag), NULL);//retrieve oob
 	#if MD_SERVER_EN
 	mesh_model_cb_pub_st_register();	
 	#endif
@@ -4262,7 +4368,7 @@ void mesh_common_reset_all()
 STATIC_ASSERT((sizeof(misc_save_t)+SIZE_SAVE_FLAG)% 16 == 0);
 STATIC_ASSERT(sizeof(mesh_save_head_t) == SIZE_SAVE_FLAG);
 
-void mesh_misc_store(){
+void mesh_misc_store(void){
 	if(!node_need_store_misc){
 		return;
 	}
@@ -4285,7 +4391,7 @@ void mesh_misc_store(){
         misc_save.iv_update_trigger_flag = iv_idx_st.update_trigger_by_save;    // must, because store in mesh_misc_retrieve_
 	}
     // in the win32 mode will proc it directly 
-#if WIN32
+#ifdef WIN32
 	#if JSON_FILE_ENABLE
 	mesh_json_update_ivi_index(misc_save.iv_index);  // save misc_save.iv_update_trigger_flag to json later
 	#endif
@@ -4311,13 +4417,13 @@ void mesh_misc_store(){
 }
 
 
-int mesh_misc_retrieve(){
+int mesh_misc_retrieve(void){
     misc_save_t misc_save;
 	
-	int err = mesh_par_retrieve((u8 *)&misc_save, &mesh_misc_addr, flash_adr_misc, sizeof(misc_save_t));
+	int err = mesh_par_retrieve((u8 *)&misc_save, &mesh_misc_addr, flash_adr_misc, sizeof(misc_save_t), NULL);
 	if(err){
 		u32 back_sector = FLASH_ADR_FRIEND_SHIP;
-		err = mesh_par_retrieve((u8 *)&misc_save, &back_sector, FLASH_ADR_FRIEND_SHIP, sizeof(misc_save_t));
+		err = mesh_par_retrieve((u8 *)&misc_save, &back_sector, FLASH_ADR_FRIEND_SHIP, sizeof(misc_save_t), NULL);
 	}
 	
     if(!err){
@@ -4335,17 +4441,327 @@ int mesh_misc_retrieve(){
     return err;
 }
 
-void mesh_sno_save_check()
+void mesh_sno_save_check(void)
 {
     if(mesh_adv_tx_cmd_sno > (mesh_adv_tx_cmd_sno_last + MESH_CMD_SNO_SAVE_DELTA)){
         mesh_misc_store();
     }
 }
 
-#if WIN32
-u32 mesh_sno_get_save_delta()
+#ifdef WIN32
+u32 mesh_sno_get_save_delta(void)
 {
 	return MESH_CMD_SNO_SAVE_DELTA;
+}
+#endif
+
+#if FLASH_MAP_AUTO_EXCHANGE_SOME_SECTORS_ASSERT_EN
+/**
+ * should not cancel this assert for flash protection with flash mid 1360c8, etc.
+ * for flash protection function, automatically move some sectors that require frequent write operations to after 0x70000.
+ * if you did not modify flash map before, need to update flash map FLASH_ADR_RESET_CNT, FLASH_ADR_MISC and FLASH_ADR_SW_LEVEL by following new SDK.
+ * if you did modify flash map before, please contact us.
+ * please contact us if assert error happen here when compile.
+ */
+STATIC_ASSERT(FLASH_ADR_RESET_CNT >= 0x70000 && FLASH_ADR_MISC >= 0x70000 && FLASH_ADR_SW_LEVEL >= 0x70000);
+#endif
+
+#if (FLASH_MAP_AUTO_EXCHANGE_SOME_SECTORS_EN || FLASH_MAP_AUTO_MOVE_SW_LEVEL_SECTOR_TO_NEW_ADDR_EN)
+int flash_map_is_ota_ok_event_just_happen()
+{
+    // u32 fw_flag_telink = START_UP_FLAG ; // 4 byte at BOOT_MARK_ADDR has been cleared to 0.
+    u32 val_addr_0 = 0;
+    flash_read_page(ota_program_offset, sizeof(val_addr_0), (u8 *)&val_addr_0); // must the first byte, because it is also FLASH_MAP_AUTO_EXCHANGE_ACTIVE_FLAG_ADDRESS which sector was erased.
+    if((ONES_32 == val_addr_0)           // bls_ota_clearNewFwDataArea(0) is called after mesh_init_all_() -> mesh_flash_retrieve_()
+    //|| (!is_state_after_ota())    // no need
+    ){
+        // only check auto_exchange flash map after OTA event, cost time of checking is more than read misc, so check after that.
+        #if 0
+        LOG_FLASH_MAP_AUTO_EXCHANGE_DEBUG(0, 0, "TODO: to disable this mode: no OTA event, but continue for test mode");
+        #else
+        LOG_FLASH_MAP_AUTO_EXCHANGE_DEBUG(0, 0, "no OTA event, so no auto exchange flash map");
+        return 0; // if burn firmware with BDT, but not OTA, there will be reading parameters error when old firmware's sdk version is lower or equal than V4.1.0.0. and it is extpected.
+        #endif
+    }
+
+    return 1;
+}
+#endif
+
+#if FLASH_MAP_AUTO_EXCHANGE_SOME_SECTORS_EN
+#define FLASH_MAP_AUTO_EXCHANGE_ACTIVE_FLAG_ADDRESS     (ota_program_offset)
+#define FLASH_MAP_AUTO_EXCHANGE_ACTIVE_FLAG_VAL         (0xA55AA55A)
+
+STATIC_ASSERT(FLASH_MAP_AUTO_EXCHANGE_CHECK_ADDR == FLASH_ADR_MISC);		    // must check FLASH_ADR_MISC, because it is always existed, and include crc check or only one A5 flag. and it is assume that data at FLASH_MAP_AUTO_EXCHANGE_CHECK_ADDR is sno MISC data in flash_map_auto_exchange_some_sectors_proc_2.
+STATIC_ASSERT(FLASH_MAP_AUTO_EXCHANGE_ADDR_1_A == FLASH_ADR_MISC);		        // must check FLASH_ADR_MISC, because it is always existed, and include crc check or only one A5 flag.
+STATIC_ASSERT(FLASH_MAP_AUTO_EXCHANGE_ADDR_1_B == FLASH_ADR_MD_VD_LIGHT);		// because flash_map_auto_exchange_is_vendor_model() assume that data at FLASH_ADR_MISC was vendor model data.
+
+/**
+ * should not cancel this assert. please contact us if assert error happen here when compile.
+ * because when assert error hanpen, it is usually caused by changed flash map before.
+ * so we need to modify FLASH_ADR_MD_VD_LIGHT_LEGACY_VERSION.
+ */
+STATIC_ASSERT((FLASH_MAP_AUTO_EXCHANGE_CHECK_ADDR == FLASH_ADR_MD_VD_LIGHT_LEGACY_VERSION)); // because flash_map_auto_exchange_is_vendor_model() assume that data at FLASH_ADR_MISC was vendor model data. 
+
+
+static void flash_map_auto_exchange_sectors_backup(u32 flash_addr_src, u32 flash_addr_dst)
+{
+    flash_erase_sector(flash_addr_dst);
+    if(FLASH_ADR_RESET_CNT == flash_addr_dst){
+        // no need to restore, only erase action is enough.
+    }else{
+        u8 data[256];
+        foreach(i, FLASH_SECTOR_SIZE / sizeof(data)){
+            u32 offset = i * sizeof(data);
+            flash_read_page(flash_addr_src + offset, sizeof(data), data);
+            flash_write_page(flash_addr_dst + offset, sizeof(data), data);
+        }
+    }
+}
+
+int flash_map_auto_exchange_sectors_is_backup_ok()
+{
+    u32 flag = 0;
+    flash_read_page(FLASH_MAP_AUTO_EXCHANGE_ACTIVE_FLAG_ADDRESS, sizeof(flag), (u8 *)&flag);
+    return (FLASH_MAP_AUTO_EXCHANGE_ACTIVE_FLAG_VAL == flag);
+}
+
+static int flash_map_auto_exchange_sectors_action()
+{
+    LOG_FLASH_MAP_AUTO_EXCHANGE_DEBUG(0, 0, "exchange flash map start...");
+
+#if (OTA_ADD_MORE_CHECK_BEFORE_ERASE_FM_BAKUP_AREA)
+    blt_ota_software_check_flash_load_error(); // if any errors are found, will reboot inside
+#endif
+
+    u32 address_backup[][2] = { // exchange between the two address
+                                {FLASH_MAP_AUTO_EXCHANGE_ADDR_1_A, FLASH_MAP_AUTO_EXCHANGE_ADDR_1_B},
+                                {FLASH_MAP_AUTO_EXCHANGE_ADDR_2_A, FLASH_MAP_AUTO_EXCHANGE_ADDR_2_B},
+                                {FLASH_MAP_AUTO_EXCHANGE_ADDR_3_A, FLASH_MAP_AUTO_EXCHANGE_ADDR_3_B},
+                                {FLASH_MAP_AUTO_EXCHANGE_ADDR_1_B, FLASH_MAP_AUTO_EXCHANGE_ADDR_1_A},
+                                {FLASH_MAP_AUTO_EXCHANGE_ADDR_2_B, FLASH_MAP_AUTO_EXCHANGE_ADDR_2_A},
+                                {FLASH_MAP_AUTO_EXCHANGE_ADDR_3_B, FLASH_MAP_AUTO_EXCHANGE_ADDR_3_A},
+				              };
+
+    if(0 == flash_map_auto_exchange_sectors_is_backup_ok()){
+        LOG_FLASH_MAP_AUTO_EXCHANGE_DEBUG(0, 0, "exchange flash map backup ok flag is false");
+        foreach_arr(i, address_backup){
+            u32 addr_src = address_backup[i][1];
+            u32 addr_dst = ota_program_offset + (i + 1) * 0x1000;
+            LOG_FLASH_MAP_AUTO_EXCHANGE_DEBUG(0, 0, "backup src addr is: 0x%x, dst addr is: 0x%x", addr_src, addr_dst);
+            flash_map_auto_exchange_sectors_backup(addr_src, addr_dst); // the sector address of ota_program_offset is used to record flag FLASH_MAP_AUTO_EXCHANGE_ACTIVE_FLAG_ADDRESS.
+        }
+
+        // set flag of start restore, in case power off during restore process, and continue to restore after power up again.
+        flash_erase_sector(FLASH_MAP_AUTO_EXCHANGE_ACTIVE_FLAG_ADDRESS);
+        u32 flag = FLASH_MAP_AUTO_EXCHANGE_ACTIVE_FLAG_VAL;
+        flash_write_page(FLASH_MAP_AUTO_EXCHANGE_ACTIVE_FLAG_ADDRESS, sizeof(flag), (u8 *)&flag);
+    }else{
+        LOG_FLASH_MAP_AUTO_EXCHANGE_DEBUG(0, 0, "exchange flash map backup ok flag is ture");
+    }
+
+    // recover
+    foreach_arr(i, address_backup){
+        u32 addr_src = ota_program_offset + (i + 1) * 0x1000;
+        u32 addr_dst = address_backup[i][0];
+        LOG_FLASH_MAP_AUTO_EXCHANGE_DEBUG(0, 0, "restore src addr is: 0x%x, dst addr is: 0x%x", addr_src, addr_dst);
+        flash_map_auto_exchange_sectors_backup(addr_src, addr_dst); // the sector address of ota_program_offset is used to record flag FLASH_MAP_AUTO_EXCHANGE_ACTIVE_FLAG_ADDRESS.
+    }
+
+    // clear all backup data include flag
+    for(unsigned int i = 0; i < 1 + ARRAY_SIZE(address_backup); ++i){
+        u32 addr_clear = ota_program_offset + i * 0x1000;
+        LOG_FLASH_MAP_AUTO_EXCHANGE_DEBUG(0, 0, "clear backup addr is: 0x%x", addr_clear);
+        flash_erase_sector(addr_clear); // clear flag first should be better
+    }
+
+    LOG_FLASH_MAP_AUTO_EXCHANGE_DEBUG(0, 0, "exchange flash map success!!");
+
+    return 1;
+}
+
+static inline int is_mesh_save_record_flag(u32 flag)
+{
+    mesh_save_head_t *p_head = (mesh_save_head_t *)flag;
+    return (U32_MAX == flag || SAVE_FLAG_PRE == p_head->flag || SAVE_FLAG == p_head->flag);
+}
+
+/**
+ * @brief       This function check if parameters is vendor_model at this flash sector of sdk version equal or less than V4.1.0.0.
+ * @return      1: yes. 2: no.
+ * @note        
+ */
+static bool4 flash_map_auto_exchange_is_vendor_model()
+{
+    model_vd_light_t vd_md_temp;// = {0};
+    u32 mesh_vd_md_next_write = 0;
+    u32 mesh_vd_md_current_read = 0;
+    LOG_FLASH_MAP_AUTO_EXCHANGE_DEBUG(0, 0, "try to find vendor model at addr: 0x%x", FLASH_MAP_AUTO_EXCHANGE_CHECK_ADDR);
+    int err_vd = mesh_par_retrieve((u8 *)&vd_md_temp, &mesh_vd_md_next_write, FLASH_MAP_AUTO_EXCHANGE_CHECK_ADDR, sizeof(vd_md_temp), &mesh_vd_md_current_read); // try to read as vendor model.
+    if(0 == err_vd){
+        LOG_FLASH_MAP_AUTO_EXCHANGE_DEBUG(&vd_md_temp, sizeof(vd_md_temp), "maybe have found vendor model, addr_current: 0x%x, data: ", mesh_vd_md_current_read);
+        mesh_common_retrieve(FLASH_ADR_MD_CFG_S); // must read node address from FLASH_ADR_MD_CFG_S.
+
+        model_common_t *p_model = (model_common_t *)&vd_md_temp;
+        u32 next_head_val;
+        u32 addr_next_head = mesh_vd_md_current_read + sizeof(vd_md_temp) + SIZE_SAVE_FLAG;
+        //memcpy(&save_head_next, ((u8 *)p_model) + addr_next_head, sizeof(save_head_next)); // next flag of misc_save
+        flash_read_page(addr_next_head, sizeof(next_head_val), (u8 *)&next_head_val); // the close next head to current head.
+        LOG_FLASH_MAP_AUTO_EXCHANGE_DEBUG(0, 0, "vendor model next head addr: 0x%x, val: 0x%08x, next write addr: 0x%x", addr_next_head, next_head_val, mesh_vd_md_next_write);
+
+        if(is_mesh_save_record_flag(next_head_val)
+        && (p_model->ele_adr == model_sig_cfg_s.com.ele_adr)
+        && ((p_model->bind_key[0].rsv == 0)) // &&  (vd_md_temp.bind_key[0].bind_ok == 1) // some case may no key bind
+        && (p_model->no_pub == 0 && p_model->no_sub == 0 && p_model->rsv_bit == 0)){
+            // found vendor model
+            LOG_FLASH_MAP_AUTO_EXCHANGE_DEBUG(0, 0, "found vendor model, element addr: 0x%04x", p_model->ele_adr);
+            return 1; // found vendor model, need to exchange flash map
+        }
+        
+        LOG_FLASH_MAP_AUTO_EXCHANGE_DEBUG(0, 0, "invalid vendor model");
+    }else{
+        LOG_FLASH_MAP_AUTO_EXCHANGE_DEBUG(0, 0, "not found vendor model");
+    }
+
+    return 0;
+}
+
+/**
+ * @brief       This function for flash protection function, automatically move some sectors that require frequent write operations to after 0x70000.
+ * @return      0: no exchange action. 1: there is exchange action.
+ * @note        
+ */
+int flash_map_auto_exchange_some_sectors_proc_2()
+{
+	if(FLASH_ADR_MISC_LEGACY_VERSION < 0x70000 || FLASH_ADR_SW_LEVEL_LEGACY_VERSION < 0x70000 || FLASH_ADR_RESET_CNT_LEGACY_VERSION < 0x70000){
+#if 1 // check OTA event should be better to fast return, event though crc is used.
+        if(0 == flash_map_is_ota_ok_event_just_happen()){
+            return 0;
+        }
+#endif
+
+        if(flash_map_auto_exchange_sectors_is_backup_ok()){
+            LOG_FLASH_MAP_AUTO_EXCHANGE_DEBUG(0, 0, "found interrupt flag of exchanging sectors");
+            return flash_map_auto_exchange_sectors_action();
+        }
+
+        misc_save_t misc_save;
+        u32 mesh_misc_addr_next_write = 0;
+        u32 mesh_misc_addr_current_read = 0;
+        int err = mesh_par_retrieve((u8 *)&misc_save, &mesh_misc_addr_next_write, FLASH_MAP_AUTO_EXCHANGE_CHECK_ADDR, sizeof(misc_save_t), &mesh_misc_addr_current_read);
+		if(err){
+		    u32 flag_at_first_addr = 0;
+			flash_read_page(FLASH_MAP_AUTO_EXCHANGE_CHECK_ADDR, sizeof(flag_at_first_addr), (u8 *)&flag_at_first_addr);
+			LOG_FLASH_MAP_AUTO_EXCHANGE_DEBUG(0, 0, "not found misc par sector, first addr: 0x%x, flag val:  0x%08x", FLASH_MAP_AUTO_EXCHANGE_CHECK_ADDR, flag_at_first_addr);
+			if(U32_MAX == flag_at_first_addr){
+				// the old map is vendor model, so it would not be U32_MAX. // not consider it is not used as par sector before.
+				// if it is U32_MAX, it may be state after factory reset
+			}else{
+			    // maybe any other model with old A5 flag deleted.
+			    if(flash_map_auto_exchange_is_vendor_model()){
+                    return flash_map_auto_exchange_sectors_action(); // found vendor model, need to exchange flash map
+                }
+			}
+			
+            LOG_FLASH_MAP_AUTO_EXCHANGE_DEBUG(0, 0, "not found both misc par and vendor model");
+		}else{
+            mesh_save_head_t save_head_current;
+            flash_read_page(mesh_misc_addr_current_read, sizeof(save_head_current), (u8 *)&save_head_current); // next flag of misc_save
+            LOG_FLASH_MAP_AUTO_EXCHANGE_DEBUG(0, 0, "maybe have found misc par sector, addr current: 0x%x, head val: 0x%08x", mesh_misc_addr_current_read, save_head_current);
+
+            if(save_head_current.crc_en){ //  || FLASH_MAP_VER_1 == save_head_current.map_ver // no need, just use crc_en to check is enough.
+                LOG_FLASH_MAP_AUTO_EXCHANGE_DEBUG(0, 0, "found misc par sector with crc en");
+            }else{
+                /* no need to check next head, because crc_en should be enable for misc par sector if sdk version has the feature of FLASH_MAP_AUTO_EXCHANGE_SOME_SECTORS_EN.
+                   So there is a high possibility that it is a flash sector vendor model. 
+                   so just confirm if it is a vendor model, and no need to determine if it is a misc par sector.*/
+                #if 0 // no need to check next head
+                u32 save_head_next;
+                u32 addr_next_head = mesh_misc_addr_current_read + sizeof(misc_save_t) + SIZE_SAVE_FLAG;
+                flash_read_page(addr_next_head, sizeof(save_head_next), (u8 *)&save_head_next); // next flag of misc_save
+                LOG_FLASH_MAP_AUTO_EXCHANGE_DEBUG(0, 0, "maybe have found misc par sector, addr_current: 0x%x, addr_next_head: 0x%x, head val: 0x%08x", mesh_misc_addr_current_read, addr_next_head, save_head_next);
+                if(U32_MAX == save_head_next){
+                    // found misc parameter of FLASH_ADR_MISC, no need to exchange
+                    LOG_FLASH_MAP_AUTO_EXCHANGE_DEBUG(0, 0, "found misc par sector due to next head is NULL: ");
+                }else 
+                #endif
+                {
+                    // need to check if it is vendor model, because crc_en may be read as 0 when flash reading by mistake on powerup.
+                    if(flash_map_auto_exchange_is_vendor_model()){       // must check vendor model, if not, it may misidentified as needing to exchange again after swap misc data to this flash sector and before writing sno misc data with crc.
+                        // found vendor model
+                        return flash_map_auto_exchange_sectors_action(); // found vendor model, need to exchange flash map
+                    }else{
+                        LOG_FLASH_MAP_AUTO_EXCHANGE_DEBUG(0, 0, "found misc par sector due to no vendor model par found: ");
+                    }
+                }
+            }
+		}
+	}
+
+	return 0; // found parameter, no need to exchange flash map
+}
+
+static inline int flash_map_auto_exchange_some_sectors_proc()
+{
+    LOG_FLASH_MAP_AUTO_EXCHANGE_DEBUG(0, 0, "------ flash map auto exchange flow start......");
+    int ret = flash_map_auto_exchange_some_sectors_proc_2();
+    LOG_FLASH_MAP_AUTO_EXCHANGE_DEBUG(0, 0, "------ flash map auto exchange flow complete!------");
+
+#if 0
+    while(1)
+    {
+        wd_clear();
+        static volatile u32 flash_map_debug;flash_map_debug++;
+    }
+#endif
+
+    return ret;
+}
+#endif
+
+
+#if (APP_FLASH_PROTECTION_ENABLE && FLASH_PLUS_ENABLE && (!(WIN32 || __TLSR_RISCV_EN__ || TLV_ENABLE)))
+/**
+ * should not cancel this assert for flash protection with flash mid 1460c8, etc.
+ * for flash protection function, automatically move some sectors that require frequent write operations to after 0xc0000.
+ * if you did not modify flash map before, need to update flash map FLASH_ADR_SW_LEVEL by following the current SDK.
+ * please contact us if assert error happen here when compile.
+ */
+STATIC_ASSERT(FLASH_ADR_RESET_CNT >= 0xc0000 && FLASH_ADR_MISC >= 0xc0000 && FLASH_ADR_SW_LEVEL >= 0xc0000);
+#endif
+
+#if FLASH_MAP_AUTO_MOVE_SW_LEVEL_SECTOR_TO_NEW_ADDR_EN
+#if FLASH_MAP_AUTO_EXCHANGE_SOME_SECTORS_EN
+#error should not enable both at the same time
+#endif
+
+void flash_map_auto_move_sw_level_sector_proc()
+{
+    if(0 == flash_map_is_ota_ok_event_just_happen()){
+        return;
+    }
+    
+    light_res_sw_save_t sw_save_temp;// = {0};
+    u32 sw_level_next_write = 0;
+    u32 sw_addr_new = FLASH_ADR_SW_LEVEL;
+    LOG_FLASH_MAP_AUTO_EXCHANGE_DEBUG(0, 0, "try new addr: 0x%x", sw_addr_new);
+    int err_new = mesh_par_retrieve((u8 *)&sw_save_temp, &sw_level_next_write, sw_addr_new, sizeof(sw_save_temp), NULL); // try to get light level.
+    if(0 == err_new){
+        LOG_FLASH_MAP_AUTO_EXCHANGE_DEBUG(&sw_save_temp, sizeof(sw_save_temp), "found sw level, no need to exchange");
+    }else{
+        LOG_FLASH_MAP_AUTO_EXCHANGE_DEBUG(0, 0, "not found at new addr, try legacy addr: 0x%x", FLASH_ADR_SW_LEVEL_1M_LEGACY);
+        int err_legacy = mesh_par_retrieve((u8 *)&sw_save_temp, &sw_level_next_write, FLASH_ADR_SW_LEVEL_1M_LEGACY, sizeof(sw_save_temp), NULL); // try to get light level.
+        if(0 == err_legacy){
+            LOG_FLASH_MAP_AUTO_EXCHANGE_DEBUG(&sw_save_temp, sizeof(sw_save_temp), "found sw level, need to exchange: ");
+            flash_erase_sector(sw_addr_new);
+            sw_level_next_write = FLASH_ADR_SW_LEVEL; // store to the first slot
+            mesh_par_store((u8 *)&sw_save_temp, &sw_level_next_write, sw_addr_new, sizeof(sw_save_temp));
+            flash_erase_sector(FLASH_ADR_SW_LEVEL_1M_LEGACY);
+            LOG_FLASH_MAP_AUTO_EXCHANGE_DEBUG(0, 0, "exchange ok");
+        }else{
+            LOG_FLASH_MAP_AUTO_EXCHANGE_DEBUG(0, 0, "both not found, no need to exchange");
+        }
+    }
 }
 #endif
 
@@ -4354,7 +4770,7 @@ u32 mesh_sno_get_save_delta()
  * @return      none
  * @note        
  */
-void iv_index_set_sno_test()
+void iv_index_set_sno_test(void)
 {
     #if 0
     mesh_tx_sec_private_beacon_proc(1);
@@ -4369,10 +4785,10 @@ void iv_index_set_sno_test()
 }
 
 #if DEBUG_IV_UPDATE_TEST_EN
-void iv_index_read_print_test()
+void iv_index_read_print_test(void)
 {
     misc_save_t misc_save;
-    int err = mesh_par_retrieve((u8 *)&misc_save, &mesh_misc_addr, flash_adr_misc, sizeof(misc_save_t));
+    int err = mesh_par_retrieve((u8 *)&misc_save, &mesh_misc_addr, flash_adr_misc, sizeof(misc_save_t), NULL);
     if(err){
         LOG_MSG_INFO(TL_LOG_IV_UPDATE,0, 0,"IV index Read flash error:");
     }else{
@@ -4381,7 +4797,7 @@ void iv_index_read_print_test()
     }
 }
 
-void iv_index_set_keep_time_test()
+void iv_index_set_keep_time_test(void)
 {
     if(iv_idx_st.keep_time_s < 0x60000){
         iv_idx_st.keep_time_s = 0x60000;
@@ -4398,7 +4814,7 @@ enum{
     IV_TEST_BUTTON_READ             = 0x0d,
 };
 
-void iv_index_test_button_firmware()
+void iv_index_test_button_firmware(void)
 {
     static volatile u8 A_1button;
     if(A_1button){
@@ -4437,7 +4853,7 @@ int encode_decode_password(u8 *pd, u32 pd_len, u32 mic_len, int encode)
 }
 #endif
 
-void mesh_key_flash_sector_init()
+void mesh_key_flash_sector_init(void)
 {
 	mesh_key_addr = FLASH_ADR_MESH_KEY;
 	flash_erase_sector(FLASH_ADR_MESH_KEY);
@@ -4449,7 +4865,7 @@ void mesh_key_flash_sector_init()
  *         and set the timer stamp for reference
  * @retval None
  */
-void mesh_key_node_identity_init() // after power on ,we need to detect the flag ,and set timer part 
+void mesh_key_node_identity_init(void) // after power on ,we need to detect the flag ,and set timer part 
 {
 	foreach(i,NET_KEY_MAX){
 		mesh_net_key_t *p_in = &mesh_key.net_key[i][0];
@@ -4467,7 +4883,7 @@ void mesh_key_node_identity_init() // after power on ,we need to detect the flag
  *         for the duration of the Node Identity Advertisement
  * @retval None
  */
-void mesh_key_node_identity_set_prov_set()// after gatt provision ,use this fun for setting part 
+void mesh_key_node_identity_set_prov_set(void)// after gatt provision ,use this fun for setting part 
 {
 	u8 identity_trigger =0;
 	foreach(i,NET_KEY_MAX){
@@ -4513,7 +4929,7 @@ void mesh_key_node_identity_prov_set(u8 identity,u8 netkey_idx)// client send no
  *         more than 60s, the NODE_IDENTITY_TIMEOUT_S defines the duration.
  * @retval None
  */
-void mesh_switch_identity_proc()// run in loop
+void mesh_switch_identity_proc(void)// run in loop
 {
 	u8 identity_trigger =0;
 	foreach(i,NET_KEY_MAX){
@@ -4542,7 +4958,7 @@ void mesh_switch_identity_proc()// run in loop
 }
 
 
-void mesh_key_save()
+void mesh_key_save(void)
 {
     mesh_key_save_t key_save = {{0}};
     memcpy(key_save.dev_key, mesh_key.dev_key,16);
@@ -4575,9 +4991,9 @@ void mesh_key_save()
     mesh_par_store((u8 *)&key_save, &mesh_key_addr, FLASH_ADR_MESH_KEY, sizeof(key_save));
 }
 
-int mesh_key_retrieve(){
+int mesh_key_retrieve(void){
     mesh_key_save_t key_save = {{0}};
-    int err = mesh_par_retrieve((u8 *)&key_save, &mesh_key_addr, FLASH_ADR_MESH_KEY, sizeof(key_save));
+    int err = mesh_par_retrieve((u8 *)&key_save, &mesh_key_addr, FLASH_ADR_MESH_KEY, sizeof(key_save), NULL);
     
     #if KEY_SAVE_ENCODE_ENABLE
     if((0 == err) && KEY_SAVE_ENCODE_FLAG == key_save.encode_flag){
@@ -4652,12 +5068,12 @@ int mesh_model_store(bool4 sig_model, u32 md_id)
 }
 
 // common
-void mesh_flash_save_check()
+void mesh_flash_save_check(void)
 {
 	mesh_sno_save_check();
 }
 
-void mesh_flash_retrieve()
+void mesh_flash_retrieve(void)
 {
 #if (PROJECT_SEL == PROJECT_VC_DONGLE)
 	u8 mac[6] = {0xff,0xff,0xff,0xff,0xff,0xff};
@@ -4681,11 +5097,17 @@ void mesh_flash_retrieve()
     }
 #endif
 
+#if FLASH_MAP_AUTO_EXCHANGE_SOME_SECTORS_EN
+    flash_map_auto_exchange_some_sectors_proc(); // be called must before reading mesh parameters from flash and before calling bls_ota_clearNewFwDataArea_
+#elif FLASH_MAP_AUTO_MOVE_SW_LEVEL_SECTOR_TO_NEW_ADDR_EN
+    flash_map_auto_move_sw_level_sector_proc();
+#endif
+
     mesh_common_retrieve_all();		// should be first, because include model_sig_cfg_s
 	mesh_key_retrieve();            // should be after mesh common retrieve all() ,because of ele_adr_primary
 	mesh_misc_retrieve();           // should be after key mesh_common_retrieve_all(), because use is_provision_success() in it
 	
-#if (WIN32 && DEBUG_SHOW_VC_SELF_EN) // for test: because it have not save in VC.
+#if (defined(WIN32) && DEBUG_SHOW_VC_SELF_EN) // for test: because it have not save in VC.
     #if MD_LIGHT_CONTROL_EN
     foreach(i,LIGHT_CNT){
         model_sig_light_lc.mode[i] = 1;
@@ -4711,7 +5133,7 @@ void mesh_flash_retrieve()
 
 #endif
 
-void mesh_node_init()
+void mesh_node_init(void)
 {    
     // ivi index init
     if(ADR_LPN1 == ele_adr_primary){
@@ -4755,7 +5177,7 @@ int mesh_get_netkey_idx_appkey_idx(mesh_bulk_cmd_par_t *p_cmd)
 #if SIG_MESH_LOOP_PROC_10MS_EN
 // common
 static const u16 loop_interval_us = 10*1000;
-int is_mesh_latency_window()
+int is_mesh_latency_window(void)
 {
 #if (__TL_LIB_8269__ || (MCU_CORE_TYPE == MCU_CORE_8269))
     #if (!FEATURE_LOWPOWER_EN)
@@ -4791,23 +5213,26 @@ int mesh_nw_pdu_report_to_gatt(u16 conn_handle, u16 dst_addr, u8 *p, u8 len, u8 
 	}
 
 	__UNUSED mesh_notify_head_t notify_head;
-	notify_head.conn_handle = BLS_HANDLE_MIN;
 	notify_head.att_handle = GATT_PROXY_HANDLE;
 	notify_head.proxy_type = proxy_type; 
 	
-#if BLE_MULTIPLE_CONNECTION_ENABLE
-	foreach(idx, ACL_PERIPHR_MAX_NUM){
-		if(is_valid_addr_in_proxy_list(idx, dst_addr)){		
-			notify_head.conn_handle = (PROXY_CONFIG_FILTER_DST_ADR == dst_addr) ? conn_handle : get_slave_conn_handle_by_idx(idx);
+#if !BLE_MULTIPLE_CONNECTION_ENABLE
+	notify_head.conn_handle = BLS_CONN_HANDLE;
+#else
+	for(int i = ACL_CENTRAL_MAX_NUM; i < ACL_CENTRAL_MAX_NUM + ACL_PERIPHR_MAX_NUM; i++){
+		if(conn_dev_list[i].conn_state){
+			if(is_valid_addr_in_proxy_list(i - ACL_CENTRAL_MAX_NUM, dst_addr)){		
+				notify_head.conn_handle = (PROXY_CONFIG_FILTER_DST_ADR == dst_addr) ? conn_handle : conn_dev_list[i].conn_handle;
 #endif		
-			#if (!MESH_BLE_NOTIFY_FIFO_EN)
-			ret = notify_pkts(notify_head.conn_handle, p, len, GATT_PROXY_HANDLE, proxy_type);
-			#else
-			ret = my_fifo_push(&blt_notify_fifo, p, len, (u8 *)&notify_head, OFFSETOF(mesh_notify_head_t, data));
-			#endif
+				#if (!MESH_BLE_NOTIFY_FIFO_EN)
+				ret = notify_pkts(notify_head.conn_handle, p, len, GATT_PROXY_HANDLE, proxy_type);
+				#else
+				ret = my_fifo_push(&blt_notify_fifo, p, len, (u8 *)&notify_head, OFFSETOF(mesh_notify_head_t, data));
+				#endif
 #if BLE_MULTIPLE_CONNECTION_ENABLE
-			if(PROXY_CONFIG_FILTER_DST_ADR == dst_addr){
-				break;
+				if(PROXY_CONFIG_FILTER_DST_ADR == dst_addr){
+					break;
+				}
 			}
 		}
 	}	
@@ -4839,10 +5264,10 @@ int mesh_proxy_adv2gatt(u16 conn_handle, u16 dst_addr, u8 *bear, u8 adv_type)	//
 }
 #endif
 
-int mesh_notifyfifo_rxfifo()
+int mesh_notifyfifo_rxfifo(void)
 {
 	int ret = -1;
-#if (!WIN32 && MESH_BLE_NOTIFY_FIFO_EN)
+#if (!defined(WIN32) && MESH_BLE_NOTIFY_FIFO_EN)
 	my_fifo_buf_t *fifo = (my_fifo_buf_t *)my_fifo_get(&blt_notify_fifo);
 	mesh_notify_head_t *p_notify_head = (mesh_notify_head_t *)fifo->data;
 	if(fifo){
@@ -4883,6 +5308,14 @@ int relay_adv_prepare_handler(rf_packet_adv_t * p, int rand_en)  // no random fo
     my_fifo_poll_relay(p_fifo);   // must before get buffer.
     mesh_relay_buf_t *p_relay = my_fifo_get_relay(p_fifo);
     if(p_relay){ // means that need to send packet now.
+    	u8 adv_handle = 0;
+        #if (BLE_MULTIPLE_CONNECTION_ENABLE && EXTENDED_ADV_ENABLE)
+        adv_handle = is_extend_adv_disable(MESH_RELAY_HANDLE) ? MESH_RELAY_HANDLE : (is_extend_adv_disable(MESH_RELAY_HANDLE1) ? MESH_RELAY_HANDLE1 : 0xff);
+        if(0xff == adv_handle){
+            return 0; // relay handle not ready. 
+        }
+        #endif
+    
 		#if 0 // (__PROJECT_MESH_SWITCH__ && SWITCH_ALWAYS_MODE_GATT_EN) // no need to count down, so use the same way to handle.
 		// BSSMP/BSS/FEAT/BV-01-I,need relay interval 80ms, but this function pool interval is 160ms, 
 		// so no need to tick count down. 
@@ -4906,7 +5339,8 @@ int relay_adv_prepare_handler(rf_packet_adv_t * p, int rand_en)  // no random fo
 				;// TBD
 			}
 			else{
-				u8 index = model_sig_cfg_s.relay_retransmit.count - p_relay->cnt + 1;	// relay index start from 1.
+                mesh_transmit_t *p_trans_par = (mesh_transmit_t *)&p_bear->trans_par_val;
+				u8 index = model_sig_cfg_s.relay_retransmit.count - p_trans_par->count + 1;	// relay index start from 1.
 				SET_RELAY_TRANSMIT_INDEX(p_ttc->bit_field, p_bear->nw.ttl, index);
 				mesh_cmd_nw_t *p_nw = &p_bear->nw;
 				u8 len_nw = p_bear->len - 1; // 1:type
@@ -4917,10 +5351,10 @@ int relay_adv_prepare_handler(rf_packet_adv_t * p, int rand_en)  // no random fo
 		#endif
 		
         int ret = 0;
-        #if WIN32
+        #ifdef WIN32
         LOG_MSG_INFO(TL_LOG_NODE_BASIC,(u8 *)p_relay,p_relay->bear.len + 6,"Relay Buff:");
         #else
-        ret = mesh_adv_cmd_set((u8 *)p, (u8 *)&p_relay->bear);
+        ret = mesh_adv_cmd_set(adv_handle, (u8 *)p, (u8 *)&p_relay->bear);
         #endif
 
 		#if MESH_RX_TEST
@@ -4944,7 +5378,7 @@ int relay_adv_prepare_handler(rf_packet_adv_t * p, int rand_en)  // no random fo
 				#if TELINK_RELAY_TEST_EN
 				LOG_MSG_LIB(TL_LOG_NODE_SDK, 0, 0, "relay pop 1");
 				#endif
-	            #if WIN32
+	            #ifdef WIN32
 	            LOG_MSG_INFO(TL_LOG_NODE_BASIC, 0, 0, "Relay buffer pop");
 	            #endif
 			}else{
@@ -4999,11 +5433,11 @@ int my_fifo_push_relay (mesh_cmd_bear_t *p_in, u8 n, u8 ow)    // ow: over_write
 #define RELIABLE_INTERVAL_MS_MIN       	(2 * CMD_INTERVAL_MS + MESH_RSP_BASE_DELAY_STEP*10 + 300)	// relay + response
 #define RELIABLE_INTERVAL_MS_MAX_NORMAL (RELIABLE_INTERVAL_2S)
 
-#if WIN32
+#ifdef WIN32
 #define RELIABLE_INTERVAL_MS_MAX_LPN	(RELIABLE_INTERVAL_4S)
 #endif
 
-u32 get_reliable_interval_ms_min()
+u32 get_reliable_interval_ms_min(void)
 {
     return RELIABLE_INTERVAL_MS_MIN; // for FW_UPDATE_CANCEL
 }
@@ -5034,7 +5468,7 @@ u32 get_reliable_interval_ms(material_tx_cmd_t *p)
 		}
 		#endif
 		
-		#if WIN32
+		#ifdef WIN32
 		VC_node_info_t * p_info = get_VC_node_info(addr_dst, 0);
 		if(is_unicast_adr(addr_dst) && p_info && p_info->cps.page0_head.feature.low_power){
 			return RELIABLE_INTERVAL_MS_MAX_LPN;
@@ -5067,7 +5501,7 @@ u8 get_reliable_retry_cnt(material_tx_cmd_t *p)
 }
 #endif
 
-void mesh_node_identity_refresh()
+void mesh_node_identity_refresh(void)
 {
 #if MD_PRIVACY_BEA
 	mesh_node_identity_refresh_private();
@@ -5102,7 +5536,7 @@ void client_node_reset_cb(u16 adr_dst)
 }
 #endif
 
-void proc_node_reset()
+void proc_node_reset(void)
 {
 	if(del_node_tick && clock_time_exceed(del_node_tick, del_node_delay_ms * 1000) && (0 == my_fifo_data_cnt_get(&mesh_adv_cmd_fifo))){ 
 		del_node_tick = 0;	// must for WIN32
@@ -5117,9 +5551,9 @@ void proc_node_reset()
 #endif
 }
 
-void send_and_wait_completed_reset_node_status()
+void send_and_wait_completed_reset_node_status(void)
 {
-#if (!WIN32)
+#ifndef WIN32
 	my_fifo_reset(&mesh_adv_cmd_fifo);
 	cfg_cmd_reset_node(ele_adr_primary);// will send reset status	
 	del_node_tick = 0;
@@ -5171,7 +5605,7 @@ void mesh_service_change_report(u16 conn_handle)
     #endif
     {
         // force to do the service changes 
-        #if !WIN32
+        #ifndef WIN32
         u8 service_data[4]={0x01,0x00,0xff,0x00};
         // should keep the service change in the last 
 		blc_gatt_pushHandleValueIndicate(conn_handle, SERVICE_CHANGE_ATT_HANDLE_SLAVE,service_data,sizeof(service_data));
@@ -5210,7 +5644,7 @@ u8 mesh_node_st_len = sizeof(mesh_node_st_t);
 STATIC_ASSERT((MESH_NODE_ST_VAL_LEN >= 4) && ((MESH_NODE_ST_VAL_LEN <= 10)));
 STATIC_ASSERT(MESH_NODE_ST_PAR_LEN <= 7);
 
-void device_status_update()
+void device_status_update(void)
 {
     // packet
     u8 st_val_par[MESH_NODE_ST_PAR_LEN] = {0};
@@ -5227,7 +5661,7 @@ void device_status_update()
     ll_device_status_update(st_val_par, sizeof(st_val_par));
 }
 
-void mesh_node_buf_init ()
+void mesh_node_buf_init (void)
 {
 	for (int i=0; i<online_st_node_max_num; i++)
 	{
@@ -5251,7 +5685,7 @@ void online_st_rc_mesh_pkt(u8 *p_payload)
 
 STATIC_ASSERT(sizeof(online_st_report_t) <= 20);
 
-void online_st_proc()
+void online_st_proc(void)
 {
 	static u32 online_st_tx_tick;
     if(clock_time_exceed(online_st_tx_tick, ONLINE_ST_INTERVAL_MS*1000)){
@@ -5288,14 +5722,16 @@ void online_st_proc()
 			if (mesh_node_report_status ((u8 *)&report.node, ARRAY_SIZE(report.node)))
 			{
 				if((blc_ll_getCurrentState() == BLS_LINK_STATE_CONN)){
-					__UNUSED mesh_notify_head_t notify_head;
-					notify_head.conn_handle = BLS_HANDLE_MIN;
+					__UNUSED mesh_notify_head_t notify_head;					
 					notify_head.att_handle = ONLINE_ST_ATT_HANDLE_SLAVE;
 					notify_head.proxy_type = MSG_ONLINE_ST_PDU; 
 
-					#if BLE_MULTIPLE_CONNECTION_ENABLE
-					for(notify_head.conn_handle = BLS_HANDLE_MIN; notify_head.conn_handle < BLS_HANDLE_MAX; notify_head.conn_handle++){
-						if(blc_ll_isAclConnEstablished(notify_head.conn_handle)){
+					#if !BLE_MULTIPLE_CONNECTION_ENABLE
+					notify_head.conn_handle = BLS_CONN_HANDLE;
+					#else
+					for(int i = ACL_CENTRAL_MAX_NUM; i < ACL_CENTRAL_MAX_NUM + ACL_PERIPHR_MAX_NUM; i++){
+						if(conn_dev_list[i].conn_state){
+							notify_head.conn_handle = conn_dev_list[i].conn_handle;
 					#endif
 							online_st_gatt_enc((u8 *)&report, sizeof(report));
 					
@@ -5372,7 +5808,7 @@ void rssi_online_status_pkt_cb(mesh_node_st_t *p_node_st, u8 rssi, int online_ag
 void online_st_force_notify_check(mesh_cmd_bear_t *p_bear, u8 *ut_dec, int src_type){}
 #endif
 
-u8 get_online_st_adv_type()
+u8 get_online_st_adv_type(void)
 {
     return MESH_ADV_TYPE_ONLINE_ST;
 }
@@ -5392,7 +5828,7 @@ void sleep_us_clear_dog(u32 us)
     }
 }
 
-void mesh_loop_proc_prior()
+void mesh_loop_proc_prior(void)
 {
 	if(is_fn_support_and_en){
 		foreach(i,g_max_lpn_num){
@@ -5438,7 +5874,7 @@ void mesh_netkey_cb(u8 idx,u16 op)
 
 }
 
-void mesh_loop_process()
+void mesh_loop_process(void)
 {
     CB_USER_MAIN_LOOP();
     #if SPEECH_ENABLE
@@ -5469,11 +5905,11 @@ void mesh_loop_process()
 	mesh_proxy_sar_timeout_terminate();
 	// node reset 
 	proc_node_reset();
-	#if (!WIN32)
+	#ifndef WIN32
 	mesh_ota_reboot_proc();
 	#endif
 	// gatt provision timeout proc 
-	#if WIN32
+	#ifdef WIN32
 	check_prov_timeout();
 	#endif 
     // publish proc 
@@ -5482,7 +5918,7 @@ void mesh_loop_process()
 	#if (MD_MESH_OTA_EN && (DISTRIBUTOR_UPDATE_SERVER_EN || DISTRIBUTOR_UPDATE_CLIENT_EN))
 	mesh_ota_master_proc();
 	#endif
-	#if (WIN32 || GATEWAY_ENABLE)
+	#if (defined(WIN32) || GATEWAY_ENABLE)
 		#if(TESTCASE_FLAG_ENABLE)
 	extern u8 key_refresh_client_test_case_mode_en;
 	if(0 == key_refresh_client_test_case_mode_en)
@@ -5528,9 +5964,9 @@ void mesh_loop_process()
 }
 
 // for the adv will not send adv at the same time to control 
-void mesh_random_delay()
+void mesh_random_delay(void)
 {
-#if !WIN32
+#ifndef WIN32
 	#if __TLSR_RISCV_EN__
     u16 tr = REG_ADDR32(STIMER_BASE_ADDR) ^ clock_time ();   // 0 -- 65ms
 	#else
@@ -5568,7 +6004,7 @@ u8 mesh_init_flag = 1;
 
 void prov_random_proc(u8 *p_random)
 {
-    #if !WIN32
+    #ifndef WIN32
     for(int i=0;i<8;i++){
             p_random[i]= rand()&0xff;
     }
@@ -5576,12 +6012,12 @@ void prov_random_proc(u8 *p_random)
     #endif
 }
 
-void mesh_init_all()
+void mesh_init_all(void)
 {	
     mesh_init_flag = 1;
 
     LOG_MSG_INFO(TL_LOG_COMMON,0, 0,"System start ............");
-#if WIN32
+#ifdef WIN32
 	mesh_global_var_init();	// must call first in user init() for firmware SDK.
 #endif
 	#if TLV_ENABLE
@@ -5598,8 +6034,10 @@ void mesh_init_all()
 #endif
 	// read proxy list part 
 	set_proxy_initial_mode(0);
+#if MESH_HEARTBEAT_EN
 	// init the heartbeat msg 
 	init_heartbeat_str();
+#endif
     u8 node_ident_random[8];    // because it will be used in both mesh_flash_retrieve_()->mesh_net_key_set_() and mesh_provision_para_init_()
 	prov_random_proc(node_ident_random);
     // read parameters
@@ -5679,6 +6117,10 @@ int decrypt_secure_beacon_by_beaconkey(u8 *p_payload ,u8 *p_beaconkey,u8 *p_ivi)
 
 #endif
 
+#if MESH_GLOBAL_RX_PAR_EN
+mesh_global_rx_par_t g_mesh_global_rx_par;
+#endif
+
 int app_event_handler_adv(u8 *p_payload, int src_type, u8 need_proxy_and_trans_par_val)
 {
 	int err = 0;
@@ -5694,6 +6136,10 @@ int app_event_handler_adv(u8 *p_payload, int src_type, u8 need_proxy_and_trans_p
 	{
 	    // GATT may be a long packet, and the 'len' is calculated from payload length, so it's no need to check
 	}
+
+#if MESH_GLOBAL_RX_PAR_EN	
+	memset(&g_mesh_global_rx_par, 0, sizeof(g_mesh_global_rx_par)); // init
+#endif
 	
 	u8 adv_type = p_br->type;
 	if(adv_type == MESH_ADV_TYPE_MESSAGE){
@@ -5711,7 +6157,7 @@ int app_event_handler_adv(u8 *p_payload, int src_type, u8 need_proxy_and_trans_p
 	}
 	else if((adv_type == MESH_ADV_TYPE_PRO)
 		|| ((adv_type == MESH_ADV_TYPE_BEACON)&&(p_br->beacon.type == UNPROVISION_BEACON))){
-	    #if DEBUG_VC_FUNCTION && (!WIN32)
+	    #if DEBUG_VC_FUNCTION && (!defined(WIN32))
 		send_vc_fifo(TSCRIPT_CMD_VC_DEBUG,(u8 *)p_payload, mesh_adv_payload_len_get(p_br));
 	    #else
 		mesh_provision_rcv_process(p_payload,0);
@@ -5726,6 +6172,11 @@ int app_event_handler_adv(u8 *p_payload, int src_type, u8 need_proxy_and_trans_p
 	    online_st_rc_mesh_pkt(p_payload);
 	#endif
 	}
+	
+#if MESH_GLOBAL_RX_PAR_EN	
+	memset(&g_mesh_global_rx_par, 0, sizeof(g_mesh_global_rx_par)); // init
+#endif
+
 	return err;
 }
 
@@ -5736,7 +6187,7 @@ void mesh_gatt_bear_handle(u8 *bear)
 	app_event_handler_adv(&p_bear->len, MESH_BEAR_GATT, p_bear->trans_par_val);
 }
 
-int mesh_is_proxy_ready()
+int mesh_is_proxy_ready(void)
 {
 	if(PROXY_HCI_GATT == mesh_get_proxy_hci_type()){
 		#if (IS_VC_PROJECT && DEBUG_MESH_DONGLE_IN_VC_EN)
@@ -5780,7 +6231,7 @@ int is_private_beacon(u8 *p_data)
 }
 #endif
 
-int mesh_adv_cmd_set(u8 *p_adv, u8 *p_bear)
+int mesh_adv_cmd_set(u8 adv_handle, u8 *p_adv, u8 *p_bear)
 {
     mesh_cmd_bear_t *p_br = (mesh_cmd_bear_t *)p_bear;
     u8 len_payload = p_br->len + 1;
@@ -5812,6 +6263,26 @@ int mesh_adv_cmd_set(u8 *p_adv, u8 *p_bear)
 	}
 #endif
 #if EXTENDED_ADV_ENABLE
+    #if (BLE_MULTIPLE_CONNECTION_ENABLE)
+    mesh_transmit_t *p_trans_par = (mesh_transmit_t *)&p_br->trans_par_val;
+    u32 adv_invl = GET_ADV_INTERVAL_LEVEL((p_trans_par->invl_steps + 1) * 10);
+    if(len_payload > 31){      
+        blc_ll_setExtAdvParam( adv_handle,     ADV_EVT_PROP_EXTENDED_NON_CONNECTABLE_NON_SCANNABLE_UNDIRECTED, adv_invl,                       adv_invl,
+                               BLT_ENABLE_ADV_ALL,  OWN_ADDRESS_PUBLIC,                                             BLE_ADDR_PUBLIC,                NULL,
+                               ADV_FP_NONE,         TX_POWER_3dBm,                                                  BLE_PHY_MODE,                   0,
+                               BLE_PHY_MODE,        ADV_SID_0,                                                      0);
+    }
+    else{
+        blc_ll_setExtAdvParam( adv_handle,     ADV_EVT_PROP_LEGACY_NON_CONNECTABLE_NON_SCANNABLE_UNDIRECTED,   adv_invl,                       adv_invl,
+                               BLT_ENABLE_ADV_ALL,  OWN_ADDRESS_PUBLIC,                                             BLE_ADDR_PUBLIC,                NULL,
+                               ADV_FP_NONE,         TX_POWER_3dBm,                                                  BLE_PHY_MODE,                   0,
+                               BLE_PHY_MODE,        ADV_SID_0,                                                      0);           
+    }
+    
+    u8 adv_cnt = (MESH_ADV_HANDLE == adv_handle) ? (p_trans_par->count + 1) : 1;
+    blc_ll_setExtAdvData(adv_handle, len_payload, p->data);
+    blc_ll_setExtAdvEnable(BLC_ADV_ENABLE, adv_handle, 0, adv_cnt);
+    #else
 	if((MESH_ADV_TYPE_MESSAGE == p_br->type)
 		#if EXTENDED_ADV_PROV_ENABLE
 		|| (MESH_ADV_TYPE_PRO == p_br->type)
@@ -5824,6 +6295,7 @@ int mesh_adv_cmd_set(u8 *p_adv, u8 *p_bear)
             return PREPARE_HANDLE_ADV_EXTEND;
         }
     }
+    #endif
 #endif
 
     return 1;
@@ -5874,12 +6346,12 @@ void mesh_kr_cfgcl_start(u16 node_adr)
 	p->node_adr = node_adr;
 }
 
-void mesh_kr_cfgcl_retry_init()
+void mesh_kr_cfgcl_retry_init(void)
 {
 	key_refresh_cfgcl_proc.retry_cnt = MESH_KR_CFG_RETRY_MAX_CNT+1;
 }
 
-void mesh_kr_cfgcl_retry_decrease()
+void mesh_kr_cfgcl_retry_decrease(void)
 {
 	key_refresh_cfgcl_proc.retry_cnt--;
 	if(0 == key_refresh_cfgcl_proc.retry_cnt){
@@ -5892,7 +6364,7 @@ void mesh_kr_cfgcl_retry_decrease()
 	}		
 }
 
-void mesh_ker_cfgcl_proc_init()
+void mesh_ker_cfgcl_proc_init(void)
 {
 	key_refresh_cfgcl_proc_t *p_cfgcl = &(key_refresh_cfgcl_proc);
 	// reset the status of the states of the key_refresh_cfgcl_proc
@@ -5901,7 +6373,7 @@ void mesh_ker_cfgcl_proc_init()
 
 }
 
-void mesh_kr_cfgcl_proc()
+void mesh_kr_cfgcl_proc(void)
 {
 #if PTS_TEST_KEY_REFRESH_EN
 	key_refresh_cfgcl_proc_t *p = &key_refresh_cfgcl_proc;
@@ -6078,7 +6550,7 @@ void mesh_kr_cfgcl_status_update(mesh_rc_rsp_t *rsp)
 	if(op == NODE_RESET_STATUS){
 		VC_cmd_clear_all_node_info(rsp->src);
 	}else if(op == APPKEY_STATUS && p->fast_bind){
-        #if WIN32
+        #ifdef WIN32
 		App_key_bind_end_callback(MESH_APP_KEY_BIND_EVENT_SUC); 
 		#else
 		mesh_cfg_keybind_end_event(MESH_KEYBIND_EVE_SUC,key_refresh_cfgcl_proc.node_adr);
@@ -6167,7 +6639,7 @@ int is_valid_tlk_fw_buf(u8 *p_flag)
 
 void mesh_ota_read_data(u32 adr, u32 len, u8 * buf)
 {
-#if WIN32
+#ifdef WIN32
     #if DISTRIBUTOR_UPDATE_SERVER_EN
     extern u8 fw_ota_data_rx[];
     memcpy(buf, fw_ota_data_rx + adr, len);
@@ -6177,14 +6649,14 @@ void mesh_ota_read_data(u32 adr, u32 len, u8 * buf)
 #endif
 }
 
-u32 get_fw_len()
+u32 get_fw_len(void)
 {
 	u32 fw_len = 0;
 	mesh_ota_read_data(0x18, 4, (u8 *)&fw_len);	// use flash read should be better
 	return fw_len;
 }
 
-u8 get_ota_check_type()
+u8 get_ota_check_type(void)
 {
     u8 ota_type[2] = {0};
     mesh_ota_read_data(6, sizeof(ota_type), ota_type);
@@ -6194,7 +6666,7 @@ u8 get_ota_check_type()
 	return FW_CHECK_NONE;
 }
 
-u32 get_total_crc_type1_new_fw()
+u32 get_total_crc_type1_new_fw(void)
 {
 	u32 crc = 0;
 	u32 len = get_fw_len();
@@ -6205,7 +6677,7 @@ u32 get_total_crc_type1_new_fw()
 
 #define OTA_DATA_LEN_1      (16)    
 
-int is_valid_ota_check_type1()
+int is_valid_ota_check_type1(void)
 {	
 	u32 crc_org = 0;
 	u32 len = get_fw_len();
@@ -6226,7 +6698,7 @@ int is_valid_ota_check_type1()
         crc_new += crc16(buf, sizeof(buf));
         if(0 == (i & 0x0fff)){
 			// about take 88ms for 10k firmware;
-			#if (MODULE_WATCHDOG_ENABLE&&!WIN32)
+			#if (MODULE_WATCHDOG_ENABLE && !defined(WIN32))
 			wd_clear();
 			#endif
         }
@@ -6302,15 +6774,63 @@ int is_directed_forwarding_en(u16 netkey_offset){return 0;}
 int is_directed_forwarding_op(u16 op){return 0;}
 void mesh_directed_forwarding_proc(u8 *bear, u8 *par, int par_len, int src_type){}
 #endif
-#if (SLEEP_FUNCTION_DISABLE && ((MCU_CORE_TYPE == MCU_CORE_8258) || (MCU_CORE_TYPE == MCU_CORE_8278)))
+
+#if (((MCU_CORE_TYPE == MCU_CORE_8258) || (MCU_CORE_TYPE == MCU_CORE_8278)))
+#if 1 // be called in library
+void rf_ble_1m_param_init_no_ramcode(void);
+
+    #if (PM_DEEPSLEEP_RETENTION_ENABLE)
+void rf_ble_1m_param_init_ramcode(void);
+_attribute_ram_code_sec_noinline_ void rf_ble_1m_param_init(void){rf_ble_1m_param_init_ramcode();}
+    #else
+void rf_ble_1m_param_init_ramcode(void){ } // replace ramcode function to save 132 byte ramcode.
+void rf_ble_1m_param_init(void){rf_ble_1m_param_init_no_ramcode();}
+    #endif
+#endif
+
+#if 1 // be called in library
+void rf_set_power_level_index_no_ramcode(RF_PowerTypeDef level);
+
+    #if (PM_DEEPSLEEP_RETENTION_ENABLE)
+void rf_set_power_level_index_ramcode(RF_PowerTypeDef level);
+_attribute_ram_code_sec_noinline_ void rf_set_power_level_index(RF_PowerTypeDef level){rf_set_power_level_index_ramcode(level);}
+    #else
+void rf_set_power_level_index_ramcode(RF_PowerTypeDef level){ } // replace ramcode function to save 148 byte ramcode.
+void rf_set_power_level_index(RF_PowerTypeDef level){rf_set_power_level_index_no_ramcode(level);}
+    #endif
+#endif
+
+#if (0 == PM_DEEPSLEEP_RETENTION_ENABLE)
+    #if 1 // will not be called in library
+unsigned int pm_tim_recover_32k_rc(unsigned int now_tick_32k)
+{
+    // replace ramcode function to save 100byte ramcode.
+    return 0; // use 0 as default value of clock_time(), and should not be called.
+}
+
+void blc_ll_recoverDeepRetention(void)
+{
+    // will not be called, so remove ramcode prefix to save 204 byte
+}
+
+void blc_ll_initBasicMCU_ramcode (void)
+{
+    // will not be called, so remove ramcode prefix to save 112 byte
+}
+
+void rf_drv_init_ramcode (RF_ModeTypeDef rf_mode)
+{
+    // will not be called, so remove ramcode prefix to save 56 byte
+}
+    #endif
+
+    #if SLEEP_FUNCTION_DISABLE
 /*
 @ This function should not be called anytime
 */
 int  cpu_sleep_wakeup_none(SleepMode_TypeDef sleep_mode,  SleepWakeupSrc_TypeDef wakeup_src, unsigned int  wakeup_tick)
 {
-    while(1){
-        wd_clear();
-    }
+    return 0;
 }
 
 /*
@@ -6318,19 +6838,18 @@ int  cpu_sleep_wakeup_none(SleepMode_TypeDef sleep_mode,  SleepWakeupSrc_TypeDef
 */
 unsigned int pm_tim_recover_none(unsigned int now_tick_32k)
 {
-    while(1){
-        wd_clear();
-    }
-    return 0;
+    return 0; // save 100byte ramcode // use 0 as default value of clock_time(), and should not be called.
 }
 
-void blc_pm_select_none()
+void blc_pm_select_none(void)
 {
 	cpu_sleep_wakeup 	 	= cpu_sleep_wakeup_none;
 	pm_tim_recover  	 	= pm_tim_recover_none;
 
 	blt_miscParam.pm_enter_en 	= 1; // allow enter pm, 32k rc does not need to wait for 32k clk to be stable
 }
+    #endif
+#endif
 #endif
 
 #if (DRAFT_FEATURE_VENDOR_TYPE_SEL == DRAFT_FEATURE_VENDOR_TYPE_ONE_OP)
@@ -6453,9 +6972,9 @@ bind_key_t * is_exist_bind_key_extend_op(u16 appkey_idx){return 0;}
 #endif
 
 // -------- clock ---------
-void clock_switch_to_highest()
+void clock_switch_to_highest(void)
 {
-#if (!WIN32 && !__TLSR_RISCV_EN__ && (MCU_CORE_TYPE >= MCU_CORE_8258))
+#if (!defined(WIN32) && !__TLSR_RISCV_EN__ && (MCU_CORE_TYPE >= MCU_CORE_8258))
 	#if (CLOCK_SYS_CLOCK_HZ < 48000000)
 	u32 r = irq_disable();
 	sys_clock_init(SYS_CLK_48M_Crystal);
@@ -6464,9 +6983,9 @@ void clock_switch_to_highest()
 #endif
 }
 
-void clock_switch_to_normal()
+void clock_switch_to_normal(void)
 {
-#if (!WIN32 && !__TLSR_RISCV_EN__ && (MCU_CORE_TYPE >= MCU_CORE_8258))
+#if (!defined(WIN32) && !__TLSR_RISCV_EN__ && (MCU_CORE_TYPE >= MCU_CORE_8258))
 	#if (CLOCK_SYS_CLOCK_HZ < 48000000)
 	u32 r = irq_disable();
 	sys_clock_init(SYS_CLK_CRYSTAL);
@@ -6478,7 +6997,7 @@ void clock_switch_to_normal()
 #endif
 }
 
-#if (!WIN32 && (0 == __TLSR_RISCV_EN__))
+#if (!defined(WIN32) && (0 == __TLSR_RISCV_EN__))
 u64 mul32x32_64(u32 a, u32 b)
 {
 	u32 r = irq_disable(); // must, because mul32x32_64_org can not be reentry due to reading high 32bit of result from a register.
@@ -6509,54 +7028,79 @@ void mz_mul2 (unsigned int * r, unsigned int * a, int na, unsigned int b)
 }
 #endif
 
-
 #if (EXTENDED_ADV_ENABLE)
 	
 #include "stack/ble/ble.h"
 
-
+#if BLE_MULTIPLE_CONNECTION_ENABLE
+#define	APP_ADV_SETS_NUMBER                       4         // Number of Supported Advertising Sets
+#else
 #define	APP_ADV_SETS_NUMBER						  1			// Number of Supported Advertising Sets
+#define	USER_EXT_ADV_FILTER_EN					  0         // Telink mesh message receive rf_pkt_aux_adv_ind_1 format only. User can set to 1 and add your filter rules in mesh_blc_aux_adv_filter(), then your ADV will be reported to app_event_handler().
+#define MAX_AUX_OFFSET_MS_DEF					  3			
+#endif
 #define APP_MAX_LENGTH_ADV_DATA					  320		// Maximum Advertising Data Length,   (if legacy ADV, max length 31 bytes is enough)
 #define APP_MAX_LENGTH_SCAN_RESPONSE_DATA		  31		// Maximum Scan Response Data Length, (if legacy ADV, max length 31 bytes is enough)
 
-#define	USER_EXT_ADV_FILTER_EN					  0         // Telink mesh message receive rf_pkt_aux_adv_ind_1 format only. User can set to 1 and add your filter rules in mesh_blc_aux_adv_filter(), then your ADV will be reported to app_event_handler().
-#define MAX_AUX_OFFSET_MS_DEF					  3			
-
+/*********************************** Extended ADV data buffer allocation, Begin ************************************/
 //_attribute_data_retention_
 u8	app_adv_set_param[ADV_SET_PARAM_LENGTH * APP_ADV_SETS_NUMBER];
+#if !BLE_MULTIPLE_CONNECTION_ENABLE
 //_attribute_data_retention_
 u8	app_primary_adv_pkt[MAX_LENGTH_PRIMARY_ADV_PKT * APP_ADV_SETS_NUMBER];
 //_attribute_data_retention_
 u8	app_secondary_adv_pkt[MAX_LENGTH_SECOND_ADV_PKT * APP_ADV_SETS_NUMBER];
+#endif
 //_attribute_data_retention_
 u8	app_advData[APP_MAX_LENGTH_ADV_DATA * APP_ADV_SETS_NUMBER];
 //_attribute_data_retention_
 u8	app_scanRspData[APP_MAX_LENGTH_SCAN_RESPONSE_DATA * APP_ADV_SETS_NUMBER];
+/*********************************** Extended ADV data buffer allocation, End** ************************************/
+
 extern u8 max_aux_offset_ms;
 
-
-void mesh_blc_ll_initExtendedAdv()
+void mesh_blc_ll_initExtendedAdv(void)
 {
+    /* Extended ADV module and ADV Set Parameters buffer initialization */
+#if BLE_MULTIPLE_CONNECTION_ENABLE
+    blc_ll_initExtendedAdvModule_initExtendedAdvSetParamBuffer(app_adv_set_param, APP_ADV_SETS_NUMBER);
+    blc_ll_initExtendedAdvDataBuffer(app_advData, APP_MAX_LENGTH_ADV_DATA);
+    blc_ll_initExtendedScanRspDataBuffer(app_scanRspData, APP_MAX_LENGTH_SCAN_RESPONSE_DATA);
+#else
     blc_ll_initExtendedAdvertising_module(app_adv_set_param, app_primary_adv_pkt, APP_ADV_SETS_NUMBER);
     blc_ll_initExtSecondaryAdvPacketBuffer(app_secondary_adv_pkt, MAX_LENGTH_SECOND_ADV_PKT);
     blc_ll_initExtAdvDataBuffer(app_advData, APP_MAX_LENGTH_ADV_DATA);
     //  blc_ll_initExtScanRspDataBuffer(app_scanRspData, APP_MAX_LENGTH_SCAN_RESPONSE_DATA);
     blc_ll_setAuxAdvChnIdxByCustomers(0);
 	
-#if USER_EXT_ADV_FILTER_EN 
+    #if USER_EXT_ADV_FILTER_EN 
 	max_aux_offset_ms = 30;	// make sure larger than MAX_AUX_OFFSET_MS_DEF. ADV_EXT_IND and AUX_ADV_IND are received in one rf irq. 3ms(MAX_AUX_OFFSET_MS_DEF) is not enough.
-#else
+    #else
 	max_aux_offset_ms = MAX_AUX_OFFSET_MS_DEF; 	// auxiliary offset max is 3ms by default.
+    #endif
 #endif
 }
 
+#if !BLE_MULTIPLE_CONNECTION_ENABLE
 void mesh_blc_ll_setExtAdvData(u8 adv_pdu_len, u8 *data)    // called in blt library
 {
     blc_ll_setExtAdvData( ADV_HANDLE0, DATA_OPER_COMPLETE, DATA_FRAGM_ALLOWED, adv_pdu_len, data);
 }
+#endif
 
-u8 mesh_blc_ll_setExtAdvParamAndEnable()
+u8 mesh_blc_ll_setExtAdvParamAndEnable(void)
 {
+#if BLE_MULTIPLE_CONNECTION_ENABLE
+    u8 status = blc_ll_setExtAdvParam( GATT_ADV_HANDLE,         ADV_EVT_PROP_LEGACY_CONNECTABLE_SCANNABLE_UNDIRECTED,  ADV_INTERVAL_50MS,           ADV_INTERVAL_100MS,
+                                   BLT_ENABLE_ADV_ALL,  OWN_ADDRESS_PUBLIC,                                    BLE_ADDR_PUBLIC,                 NULL,
+                                   ADV_FP_NONE,         TX_POWER_3dBm,                                         BLE_PHY_1M,                      0,
+                                   BLE_PHY_1M,          ADV_SID_0,                                             0);
+
+    #if (BLE_PHY_MODE == BLE_PHY_CODED)
+    blc_ll_setDefaultConnCodingIndication(CODED_PHY_PREFER_S8);
+    #endif
+    // enable adv after set adv data in app_advertise_prepare_handler() 
+#else
     u32 my_adv_interval_min = ADV_INTERVAL_MIN;
     u32 my_adv_interval_max = ADV_INTERVAL_MAX;
 
@@ -6566,35 +7110,14 @@ u8 mesh_blc_ll_setExtAdvParamAndEnable()
            ADV_FP_NONE,         TX_POWER_8dBm,                                                  BLE_PHY_1M,                     0,
            BLE_PHY_1M,          ADV_SID_0,                                                      0);
 
-#if 1+TEST_EXT_ADV
-    u8  testAdvData[300];
-
-#if 0   //AdvData: 100 bytes, check that APP_MAX_LENGTH_ADV_DATA must bigger than 100
-    blc_ll_setExtAdvData( ADV_HANDLE0, DATA_OPER_COMPLETE, DATA_FRAGM_ALLOWED, 100, testAdvData);
-#elif 1 //AdvData: 251 bytes, check that APP_MAX_LENGTH_ADV_DATA must bigger than 300
-    blc_ll_setExtAdvData( ADV_HANDLE0, DATA_OPER_COMPLETE, DATA_FRAGM_ALLOWED, 241, testAdvData);
-#elif 0 //AdvData: 300 bytes, check that APP_MAX_LENGTH_ADV_DATA must bigger than 300
-    blc_ll_setExtAdvData( ADV_HANDLE0, DATA_OPER_FIRST,    DATA_FRAGM_ALLOWED, 251, testAdvData);
-    blc_ll_setExtAdvData( ADV_HANDLE0, DATA_OPER_LAST,     DATA_FRAGM_ALLOWED, 49,  testAdvData + 251);
-#elif 0 //AdvData: 600 bytes, check that APP_MAX_LENGTH_ADV_DATA must bigger than 600
-    blc_ll_setExtAdvData( ADV_HANDLE0, DATA_OPER_FIRST,    DATA_FRAGM_ALLOWED, 251, testAdvData);
-    blc_ll_setExtAdvData( ADV_HANDLE0, DATA_OPER_INTER,    DATA_FRAGM_ALLOWED, 251, testAdvData + 251);
-    blc_ll_setExtAdvData( ADV_HANDLE0, DATA_OPER_LAST,     DATA_FRAGM_ALLOWED, 98,  testAdvData + 502);
-#elif 1 //AdvData: 1010 bytes,  check that APP_MAX_LENGTH_ADV_DATA must bigger than 1010
-    blc_ll_setExtAdvData( ADV_HANDLE0, DATA_OPER_FIRST,    DATA_FRAGM_ALLOWED, 251, testAdvData);
-    blc_ll_setExtAdvData( ADV_HANDLE0, DATA_OPER_INTER,    DATA_FRAGM_ALLOWED, 251, testAdvData + 251);
-    blc_ll_setExtAdvData( ADV_HANDLE0, DATA_OPER_INTER,    DATA_FRAGM_ALLOWED, 251, testAdvData + 502);
-    blc_ll_setExtAdvData( ADV_HANDLE0, DATA_OPER_INTER,    DATA_FRAGM_ALLOWED, 251, testAdvData + 753);
-    blc_ll_setExtAdvData( ADV_HANDLE0, DATA_OPER_LAST,     DATA_FRAGM_ALLOWED, 6,   testAdvData + 1004);
-#endif
-#endif
-
     u8 status = blc_ll_setExtAdvEnable_1( BLC_ADV_ENABLE, 1, ADV_HANDLE0, 0 , 0);
+#endif
 
     return status;
 }
 
-typedef struct{	
+#if !BLE_MULTIPLE_CONNECTION_ENABLE
+typedef struct __attribute__((packed)) {	
 	u8 nid  :7;
 	u8 ivi  :1;
 	u8 ttl  :7;
@@ -6605,7 +7128,7 @@ typedef struct{
     u8 obfuse_other_random[5];    // 5 = (6 + (7-1))-sizeof(sno,src,dst) // obfuscation will use data to "memcpy (random + 9, p_ctl + 6, 7);"
 }mesh_nw_obfuse_t;
 
-typedef struct{	
+typedef struct __attribute__((packed)) {	
     u8 len;
     u8 type;    // adv type
 	mesh_nw_obfuse_t nw_obfuse;
@@ -6692,6 +7215,7 @@ _attribute_ram_code_ int mesh_blc_aux_adv_filter(u8 *raw_pkt)
 	return accept_flag;
 }
 #endif
+#endif
 
 u32 mesh_max_payload_get (u32 ctl, bool4 extend_adv_short_unseg)
 {
@@ -6700,7 +7224,7 @@ u32 mesh_max_payload_get (u32 ctl, bool4 extend_adv_short_unseg)
     
     u8 delta_extend_len = GET_DELTA_EXTEND_BEAR;
 
-    #if ((MESH_DLE_MODE == MESH_DLE_MODE_EXTEND_BEAR) || WIN32)
+    #if ((MESH_DLE_MODE == MESH_DLE_MODE_EXTEND_BEAR) || defined(WIN32))
     if(extend_adv_short_unseg){
         delta_extend_len = 0;
     }
@@ -6732,8 +7256,8 @@ int is_not_use_extend_adv(u16 op)
     return 0;
 #endif
 
-#if (WIN32 || (GATEWAY_ENABLE && EXTENDED_ADV_ENABLE))
-    #if WIN32
+#if (defined(WIN32) || (GATEWAY_ENABLE && EXTENDED_ADV_ENABLE))
+    #ifdef WIN32
     u8 option_val = isVC_DLEModeExtendBearer();
     #else
     u8 option_val = g_gw_extend_adv_option;
@@ -6747,7 +7271,7 @@ int is_not_use_extend_adv(u16 op)
 #endif
 
     // -- EXTEND_ADV_OPTION_OTA_ONLY
-#if ((MESH_DLE_MODE == MESH_DLE_MODE_EXTEND_BEAR) || WIN32)
+#if ((MESH_DLE_MODE == MESH_DLE_MODE_EXTEND_BEAR) || defined(WIN32))
     if(0
     // || (IS_VENDOR_OP(op))
     #if EXTENDED_ADV_PROV_ENABLE
@@ -6783,7 +7307,7 @@ int is_not_use_extend_adv(u16 op)
  */
 int is_not_use_extend_adv_ctl(u16 ctl_op)
 {
-#if ((MESH_DLE_MODE == MESH_DLE_MODE_EXTEND_BEAR) || WIN32)
+#if ((MESH_DLE_MODE == MESH_DLE_MODE_EXTEND_BEAR) || defined(WIN32))
     return 1; // always use short unsegment now
 #endif
 
@@ -6797,7 +7321,7 @@ void blc_smp_module_disable()
 }
 #endif
 
-#if (((MCU_CORE_TYPE == MCU_CORE_8258) || (MCU_CORE_TYPE == MCU_CORE_8278)) && !WIN32)
+#if (((MCU_CORE_TYPE == MCU_CORE_8258) || (MCU_CORE_TYPE == MCU_CORE_8278)) && !defined(WIN32))
 /**
  * @brief       This function server to get cpu wakeup source
  * @return      CPU_WATCHDOG_RESET: watchdog reset. 
@@ -6807,7 +7331,7 @@ void blc_smp_module_disable()
  * @note        calling this function must be after "cpu_wakeup init()" because can not read anlog,
                 and must before wakeup io setting(if exist).
  */
-int get_cpu_wakeup_source()
+int get_cpu_wakeup_source(void)
 {
 	if(read_reg8(0x72) & BIT(0)){
 		write_reg8(0x72, BIT(0)); // manual clear watchdog reset flag after read.
@@ -6827,7 +7351,7 @@ int get_cpu_wakeup_source()
 #endif
 
 #if (/*MD_MESH_OTA_EN && */(DISTRIBUTOR_UPDATE_SERVER_EN || FEATURE_LOWPOWER_EN))
-#if !WIN32
+#ifndef WIN32
 STATIC_ASSERT(!(DISTRIBUTOR_UPDATE_SERVER_EN && FEATURE_LOWPOWER_EN)); // FLD_MESH_OTA_100 FLAG is gatt connected flag before OTA reboot for LPN.
 
 /**
@@ -6835,9 +7359,9 @@ STATIC_ASSERT(!(DISTRIBUTOR_UPDATE_SERVER_EN && FEATURE_LOWPOWER_EN)); // FLD_ME
  * @return      none
  * @note        for LPN it is used for gatt connected flag before OTA reboot.
  */
-void set_mesh_ota_distribute_100_flag()
+void set_mesh_ota_distribute_100_flag(void)
 {
-	analog_write(DEEP_ANA_REG0, analog_read(DEEP_ANA_REG0) | FLD_MESH_OTA_100_FLAG);
+	analog_write(MESH_DEEP_ANA_REG, analog_read(MESH_DEEP_ANA_REG) | FLD_MESH_OTA_100_FLAG);
 }
 
 /**
@@ -6845,9 +7369,9 @@ void set_mesh_ota_distribute_100_flag()
  * @return      none
  * @note        for LPN it is used for gatt connected flag before OTA reboot.
  */
-void clr_mesh_ota_distribute_100_flag()
+void clr_mesh_ota_distribute_100_flag(void)
 {
-	analog_write(DEEP_ANA_REG0, analog_read(DEEP_ANA_REG0) & (~ FLD_MESH_OTA_100_FLAG));
+	analog_write(MESH_DEEP_ANA_REG, analog_read(MESH_DEEP_ANA_REG) & (~ FLD_MESH_OTA_100_FLAG));
 }
 
 /**
@@ -6855,19 +7379,19 @@ void clr_mesh_ota_distribute_100_flag()
  * @return      1: yes, 0: no.
  * @note        for LPN it is used for gatt connected flag before OTA reboot.
  */
-int is_mesh_ota_distribute_100_flag()
+int is_mesh_ota_distribute_100_flag(void)
 {
-	return (analog_read(DEEP_ANA_REG0) & FLD_MESH_OTA_100_FLAG);
+	return (analog_read(MESH_DEEP_ANA_REG) & FLD_MESH_OTA_100_FLAG);
 }
 #else
-void set_mesh_ota_distribute_100_flag()
+void set_mesh_ota_distribute_100_flag(void)
 {
 	LOG_MSG_INFO (TL_LOG_CMD_NAME, 0, 0, "___________________ mesh ota update VC self success! in DISTRIBUTOR_NO_UPDATA_START_2_SELF mode!");
 }
 #endif
 #endif
 
-#if !WIN32
+#ifndef WIN32
 /**
  * @brief       This function check if the startup flag is valid
  * @param[in]   flag_addr		- address of startup flag
@@ -6891,20 +7415,23 @@ int is_valid_startup_flag(u32 flag_addr, int check_all_flag)
     return 1;
 }
 
+
+#if (0 == BLE_MULTIPLE_CONNECTION_ENABLE) // multiple connection sdk check in ota_server.c.
 /**
  * @brief       This function check startup flag of current firmware. will reboot if found error.
  * @return      none
  * @note        
  */
-void check_self_startup_flag(void)
+bool blt_ota_software_check_flash_load_error(void)
 {
-#if (__TLSR_RISCV_EN__)
+#if  (__TLSR_RISCV_EN__) // check in ota_server.c for B91m, and need to consider case of hardware secure boot.
 	u32 addr_current_fw = (ota_program_offset ? 0 : ota_program_bootAddr) + BOOT_MARK_ADDR;
 #elif(__TL_LIB_8267__ || (MCU_CORE_TYPE && MCU_CORE_TYPE == MCU_CORE_8267) || __TL_LIB_8269__ || (MCU_CORE_TYPE && MCU_CORE_TYPE == MCU_CORE_8269))
-	u32 addr_current_fw = (ota_program_offset ? 0 : 0x40000) + 8;
+	u32 addr_current_fw = (ota_program_offset ? 0 : 0x40000) + 8; 				// for dual mode, ota_program_offset is always not 0, even though with pingpong OTA mode.
 #elif(__TL_LIB_8258__ || (MCU_CORE_TYPE && MCU_CORE_TYPE == MCU_CORE_8258) || (MCU_CORE_TYPE == MCU_CORE_8278)) //8258
-	u32 addr_current_fw = (ota_program_offset ? 0 : ota_program_bootAddr) + 8;
+	u32 addr_current_fw = (ota_program_offset ? 0 : ota_program_bootAddr) + 8; 	// for dual mode, ota_program_offset is always not 0, even though with pingpong OTA mode. 
 #endif
+
 	if(0 == is_valid_startup_flag(addr_current_fw, 1)){
 		// should not happen here.
 		// this error may cause by flash read error due to low voltage of power. in this case, 63e is error, such as 0 was changed to 512k.
@@ -6913,8 +7440,13 @@ void check_self_startup_flag(void)
 		//LOG_MSG_ERR(TL_LOG_MESH, 0, 0, "startup flag error!");
 		start_reboot();
 		//while(1); // did while(1) inside start_reboot_.
+		return TRUE;
 	}
+
+	// case of e.g. 0x00000 & 0x20000 both valid boot flag, should not reboot in this case, because it will reboot all the time when run at 0x40000, and burn firmware at 0.
+    return FALSE;
 }
+#endif
 #endif
 
 /**

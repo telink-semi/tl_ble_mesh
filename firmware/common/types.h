@@ -22,7 +22,7 @@
  *
  *******************************************************************************************************/
 #pragma once
-#if !WIN32	
+#ifndef WIN32	
 #include <stdbool.h>	// BLE_SRC_TELINK_MESH_EN
 #endif
 

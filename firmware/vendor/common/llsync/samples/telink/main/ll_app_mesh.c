@@ -67,7 +67,7 @@ void llsync_start_silence_adv_timeout_check()
 	llsync_mesh_adv_start(LLSYNC_MESH_UNNET_ADV); // just to start timer event to run silence adv event.
 }
 
-void llsync_stop_silence_adv_timeout_check()
+void llsync_stop_silence_adv_timeout_check(void)
 {
 	if((LLSYNC_MESH_SILENCE_ADV_TIMER == sg_mesh_net.timer_type) || (LLSYNC_MESH_UNNET_ADV_TIMER == sg_mesh_net.timer_type)){
 		sg_mesh_net.timer_cnt  = 0;
@@ -77,7 +77,7 @@ void llsync_stop_silence_adv_timeout_check()
 	}
 }
 
-void llsync_tlk_init_three_para_and_mac()
+void llsync_tlk_init_three_para_and_mac(void)
 {
 	llsync_mesh_dev_info_get_from_flash(&sg_dev_info);
 	foreach(i, sizeof(tbl_mac)){
@@ -96,14 +96,14 @@ void llsync_tlk_init_three_para_and_mac()
 	}
 }
 
-void llsync_set_dev_auth()
+void llsync_set_dev_auth(void)
 {
 	u8 sha256_out[32];
 	llsync_mesh_auth_clac(dev_random, sha256_out);
 	mesh_set_dev_auth(sha256_out, 16);
 }
 
-void llsync_tlk_init_scan_rsp()
+void llsync_tlk_init_scan_rsp(void)
 {
 	u8 rsp[31+1];
 	u8 rsp_len = 0;

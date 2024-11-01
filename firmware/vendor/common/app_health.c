@@ -33,7 +33,7 @@
 
 model_health_t 			model_sig_health;
 
-u8 init_health_para()
+u8 init_health_para(void)
 {
 	mesh_health_mag_sts_t *p_health = &(model_sig_health.srv.health_mag);
 	p_health->cur_sts.company_id = p_health->fault_sts.company_id = g_vendor_id;

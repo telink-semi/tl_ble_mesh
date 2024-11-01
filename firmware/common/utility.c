@@ -133,7 +133,7 @@ int my_fifo_push (my_fifo_t *f, u8 *p, u16 n, u8 *head, u8 head_len) // BLE_SRC_
 		return -1;
 	}
 
-	if (n + (2+head_len) > f->size)    // sizeof(len) == 2
+	if ((u32)(n + (2+head_len)) > f->size)    // sizeof(len) == 2
 	{
 		return -1;
 	}

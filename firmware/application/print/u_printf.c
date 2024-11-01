@@ -465,7 +465,7 @@ _PRINT_FUN_RAMCODE_ int printf_Bin2Text (char *lpD, int lpD_len_max, char *lpS, 
 	int d = 0;
 
     #define LINE_MAX_LOG        (5)
-	if(m > BIT(LINE_MAX_LOG)){
+	if((u64)m > BIT(LINE_MAX_LOG)){
 	    if(lpD_len_max > 2){
     		lpD[d++] = '\r';
     		lpD[d++] = '\n';
@@ -489,7 +489,7 @@ _PRINT_FUN_RAMCODE_ int printf_Bin2Text (char *lpD, int lpD_len_max, char *lpS, 
 		if((i & BIT_MASK_LEN(LINE_MAX_LOG)) != BIT_MASK_LEN(LINE_MAX_LOG)){	// end of line
     		lpD[d++] = ' ';
 
-            if(m > BIT(LINE_MAX_LOG)){
+            if((u64)m > BIT(LINE_MAX_LOG)){
     		    if ((i&7)==7){
     		        lpD[d++] = ' ';
     		    }
@@ -573,7 +573,7 @@ int my_sprintf(char *out, const char *format, ...) {
 
 void u_array_printf(unsigned char*data, unsigned int len) {
 	my_printf("{");
-	for(int i = 0; i < len; ++i){
+	for(u32 i = 0; i < len; ++i){
 		my_printf("%X%s", data[i], i<(len)-1? ":":" ");
 	}
 	my_printf("}\n");

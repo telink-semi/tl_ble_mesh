@@ -38,6 +38,6 @@ void Fifo_Free(FIFI_WITH_SEM *fifo);
 int  Fifo_Write(FIFI_WITH_SEM *fifo, char* data, int len);
 int  Fifo_Read(FIFI_WITH_SEM *fifo, char* data, int len, int shift_len);
 void Fifo_Reset(FIFI_WITH_SEM *fifo);
-int Fifo_Data_Len(FIFI_WITH_SEM *fifo);
+unsigned int Fifo_Data_Len(FIFI_WITH_SEM *fifo);
 
 #endif

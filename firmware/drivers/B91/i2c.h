@@ -21,18 +21,18 @@
  *          limitations under the License.
  *
  *******************************************************************************************************/
-/**	@page I2C
+/** @page I2C
  *
- *	Introduction
- *	===============
- *	i2c support master mode or slave mode.
+ *  Introduction
+ *  ===============
+ *  i2c support master mode or slave mode.
  *
- *	API Reference
- *	===============
- *	Header File: i2c.h
- *	
- *	How to use this driver
- *	==============
+ *  API Reference
+ *  ===============
+ *  Header File: i2c.h
+ *  
+ *  How to use this driver
+ *  ==============
  -# I2C Master
   -# Initialization and Configuration
      -# nodma/dma:
@@ -122,34 +122,34 @@ extern unsigned char i2c_slave_rx_index;
  *  @brief  select pin as SDA and SCL of i2c
  */
 typedef enum{
-	I2C_GPIO_SDA_B3		= GPIO_PB3,
-	I2C_GPIO_SDA_C2		= GPIO_PC2,
-	I2C_GPIO_SDA_E2		= GPIO_PE2,
-	I2C_GPIO_SDA_E3		= GPIO_PE3,
+    I2C_GPIO_SDA_B3     = GPIO_PB3,
+    I2C_GPIO_SDA_C2     = GPIO_PC2,
+    I2C_GPIO_SDA_E2     = GPIO_PE2,
+    I2C_GPIO_SDA_E3     = GPIO_PE3,
 }i2c_sda_pin_e;
 
 
 typedef enum{
-	I2C_GPIO_SCL_B2		= GPIO_PB2,
-	I2C_GPIO_SCL_C1		= GPIO_PC1,
-	I2C_GPIO_SCL_E0		= GPIO_PE0,
-	I2C_GPIO_SCL_E1		= GPIO_PE1,
+    I2C_GPIO_SCL_B2     = GPIO_PB2,
+    I2C_GPIO_SCL_C1     = GPIO_PC1,
+    I2C_GPIO_SCL_E0     = GPIO_PE0,
+    I2C_GPIO_SCL_E1     = GPIO_PE1,
 }i2c_scl_pin_e;
 
 
 
 typedef enum{
-	I2C_RX_BUF_MASK         =  BIT(2),
-	I2C_TX_BUF_MASK         =  BIT(3),
-	I2C_TX_DONE_MASK		=  BIT(4),
-	I2C_RX_DONE_MASK        =  BIT(5),
+    I2C_RX_BUF_MASK         =  BIT(2),
+    I2C_TX_BUF_MASK         =  BIT(3),
+    I2C_TX_DONE_MASK        =  BIT(4),
+    I2C_RX_DONE_MASK        =  BIT(5),
 }i2c_irq_mask_e;
 
 
 
 typedef enum{
-	I2C_RX_BUFF_CLR  		= BIT(6),
-	I2C_TX_BUFF_CLR         = BIT(7),
+    I2C_RX_BUFF_CLR         = BIT(6),
+    I2C_TX_BUFF_CLR         = BIT(7),
 }i2c_buff_clr_e;
 
 /**
@@ -161,16 +161,16 @@ typedef enum{
  */
 typedef enum{
 
-	I2C_TXDONE_STATUS          = BIT(0),
-	I2C_TX_BUF_STATUS          = BIT(1),
-	I2C_RXDONE_STATUS          = BIT(2),
-	I2C_RX_BUF_STATUS          = BIT(3),
+    I2C_TXDONE_STATUS          = BIT(0),
+    I2C_TX_BUF_STATUS          = BIT(1),
+    I2C_RXDONE_STATUS          = BIT(2),
+    I2C_RX_BUF_STATUS          = BIT(3),
 
 }i2c_irq_status_e;
 
 
 typedef enum{
-I2C_TX_DONE_CLR  		= BIT(4),
+I2C_TX_DONE_CLR         = BIT(4),
 }i2c_irq_clr_e;
 
 /**
@@ -213,15 +213,15 @@ static inline unsigned char i2c_get_rx_buf_cnt(void)
 static inline void i2c_rx_irq_trig_cnt(unsigned char cnt)
 {
    /*
-	  in the i2c_rx_irq_trig_cnt interface,originally first set i2c_rc_irq_trig_cnt to 0 and then assign,
+      in the i2c_rx_irq_trig_cnt interface,originally first set i2c_rc_irq_trig_cnt to 0 and then assign,
       if the rx_buff mask is opened first, when set i2c_rc_irq_trig_cnt to 0,rx_fifo is empty, an interrupt will be triggered by mistake.
    */
-	reg_i2c_trig=(((reg_i2c_trig)&(~FLD_I2C_RX_IRQ_TRIG_LEV))|(cnt& 0x0f));
+    reg_i2c_trig=(((reg_i2c_trig)&(~FLD_I2C_RX_IRQ_TRIG_LEV))|(cnt& 0x0f));
 }
 
 /**
  * @brief      The function of this interface is equivalent to that after the user finishes calling the write or read interface, the stop signal is not sent,
- * 			   and then the write or read command is executed again. The driver defaults that every write or read API will send a stop command at the end
+ *             and then the write or read command is executed again. The driver defaults that every write or read API will send a stop command at the end
  * @param[in]  en - Input parameters.Decide whether to disable the stop function after each write or read interface
  * @return     none
  */
@@ -250,7 +250,7 @@ void i2c_master_init(void);
  */
 static inline void i2c_set_irq_mask(i2c_irq_mask_e mask)
 {
-	reg_i2c_sct0  |=  mask;
+    reg_i2c_sct0  |=  mask;
 }
 
 /**
@@ -260,19 +260,19 @@ static inline void i2c_set_irq_mask(i2c_irq_mask_e mask)
  */
 static inline void i2c_clr_irq_mask(i2c_irq_mask_e mask)
 {
-	reg_i2c_sct0  &=  (~mask);
+    reg_i2c_sct0  &=  (~mask);
 }
 
 
 /**
  * @brief      This function serves to get i2c interrupt status.
  * @param[in] status     i2c interrupt status.
- * @retval	  non-zero   -  the interrupt occurred.
- * @retval	  zero  -  the interrupt did not occur.
+ * @retval    non-zero   -  the interrupt occurred.
+ * @retval    zero  -  the interrupt did not occur.
  */
 static inline unsigned char i2c_get_irq_status(i2c_irq_status_e status)
 {
-	return reg_i2c_irq_status&status;
+    return reg_i2c_irq_status&status;
 }
 
 /**
@@ -289,7 +289,7 @@ static inline unsigned char i2c_get_irq_status(i2c_irq_status_e status)
  */
 static inline void i2c_slave_clr_rx_index()
 {
-	i2c_slave_rx_index=0;
+    i2c_slave_rx_index=0;
 }
 
 /**
@@ -299,11 +299,11 @@ static inline void i2c_slave_clr_rx_index()
  */
 static inline void i2c_clr_fifo(i2c_buff_clr_e clr)
 {
-	 reg_i2c_status = clr;
-	 if(I2C_RX_BUFF_CLR == clr)
-	{
-		i2c_slave_clr_rx_index();
-	}
+     reg_i2c_status = clr;
+     if(I2C_RX_BUFF_CLR == clr)
+    {
+        i2c_slave_clr_rx_index();
+    }
 }
 
 /**
@@ -312,7 +312,7 @@ static inline void i2c_clr_fifo(i2c_buff_clr_e clr)
  */
 static inline void  i2c_clr_irq_status(i2c_irq_clr_e status)
 {
-	    reg_i2c_irq_status=status;
+        reg_i2c_irq_status=status;
 }
 
 /**
@@ -321,8 +321,8 @@ static inline void  i2c_clr_irq_status(i2c_irq_clr_e status)
  */
 static inline void i2c_reset(void)
 {
-	reg_rst0 &= ~(FLD_RST0_I2C);
-	reg_rst0 |= FLD_RST0_I2C;
+    reg_rst0 &= ~(FLD_RST0_I2C);
+    reg_rst0 |= FLD_RST0_I2C;
 }
 
 /**
@@ -332,7 +332,7 @@ static inline void i2c_reset(void)
  */
 static inline void i2c_slave_stretch_en(void){
 
-	reg_i2c_slave_stretch_en |= FLD_I2C_R_CLK_STRETCH_SEN;
+    reg_i2c_slave_stretch_en |= FLD_I2C_R_CLK_STRETCH_SEN;
 }
 
 /**
@@ -341,7 +341,7 @@ static inline void i2c_slave_stretch_en(void){
  */
 static inline void i2c_slave_stretch_dis(void){
 
-	reg_i2c_slave_stretch_en &= ~FLD_I2C_R_CLK_STRETCH_SEN;
+    reg_i2c_slave_stretch_en &= ~FLD_I2C_R_CLK_STRETCH_SEN;
 }
 
 /**
@@ -350,7 +350,7 @@ static inline void i2c_slave_stretch_dis(void){
  *@return    none.
  */
 static inline void i2c_slave_manual_stretch_en(){
-	reg_i2c_slave_stretch_en|=FLD_I2C_R_MANUAL_STRETCH;
+    reg_i2c_slave_stretch_en|=FLD_I2C_R_MANUAL_STRETCH;
 }
 
 /**
@@ -358,7 +358,7 @@ static inline void i2c_slave_manual_stretch_en(){
  *@return    none.
  */
 static inline void i2c_slave_manual_stretch_clr(){
-	reg_i2c_slave_stretch_en |= FLD_I2C_MANUAL_STRETCH_CLR;
+    reg_i2c_slave_stretch_en |= FLD_I2C_MANUAL_STRETCH_CLR;
 }
 /**
  *@brief     This function serves to enable i2c master stretch function,
@@ -367,7 +367,7 @@ static inline void i2c_slave_manual_stretch_clr(){
  */
 static inline void i2c_master_stretch_en(void){
 
-	reg_i2c_sct0 |=FLD_I2C_R_CLK_STRETCH_EN;
+    reg_i2c_sct0 |=FLD_I2C_R_CLK_STRETCH_EN;
 }
 
 /**
@@ -376,7 +376,7 @@ static inline void i2c_master_stretch_en(void){
  */
 static inline void i2c_master_stretch_dis(void){
 
-	reg_i2c_sct0 &=~(FLD_I2C_R_CLK_STRETCH_EN);
+    reg_i2c_sct0 &=~(FLD_I2C_R_CLK_STRETCH_EN);
 }
 
 
@@ -472,7 +472,7 @@ void i2c_slave_set_tx_dma( unsigned char *data, unsigned char len);
  * @param[in]  data - This parameter is the first address of the received data buffer, which must be 4 bytes aligned, otherwise the program will enter an exception.
  *                    and the actual buffer size defined by the user needs to be not smaller than the len, otherwise there may be an out-of-bounds problem.
  * @param[in]  len  - This parameter is used to set the size of the received dma and must be set to a multiple of 4. The maximum value that can be set is 0xFFFFFC.
- * @return 	   none
+ * @return     none
  */
 void i2c_slave_set_rx_dma(unsigned char *data, unsigned char len);
 

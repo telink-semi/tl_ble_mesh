@@ -30,7 +30,7 @@
 /**
  * @brief   BLE parameters on flash
  */
-typedef struct{
+typedef struct __attribute__((packed)) {
 	u8		cap_frqoffset_en;
 	u8		cap_frqoffset_value;
 
@@ -70,13 +70,7 @@ void blc_flash_read_mid_get_vendor_set_capacity(void)
 	 */
 	/* attention: blc_flash_mid/blc_flash_vendor/blc_flash_capacity will be used by application and stack later
 	 * so do not change code here */
-#if(MCU_CORE_TYPE == MCU_CORE_B91||MCU_CORE_TYPE == MCU_CORE_B92)
-	blc_flash_mid = flash_read_mid();
-#elif((MCU_CORE_TYPE == MCU_CORE_B930)|| (MCU_CORE_TYPE == MCU_CORE_B95)||(MCU_CORE_TYPE == MCU_CORE_B931))
-	blc_flash_mid = flash_read_mid_with_device_num(APP_FLASH_SLAVE_DEVICE_NUM);
-#else
-    #error "Confirm api interface (flash_read_mid)"
-#endif
+	blc_flash_mid = ble_flash_read_mid();
 
 	blc_flash_vendor = flash_get_vendor(blc_flash_mid);
 	blc_flash_capacity = ((blc_flash_mid & 0x00ff0000)>>16);
@@ -137,7 +131,7 @@ void blc_readFlashSize_autoConfigCustomFlashSector(void)
 		tlkapi_printf(APP_FLASH_INIT_LOG_EN, "[FLASH][INI] 4M Flash, MAC on %x", flash_sector_mac_address);
 	}
 #endif
-#if (FLASH_P25Q128L_SUPPORT_EN) //16M
+#if (FLASH_P25Q128L_SUPPORT_EN || FLASH_P25Q128H_SUPPORT_EN) //16M
 	else if(blc_flash_capacity == FLASH_SIZE_16M){
 		flash_sector_mac_address = CFG_ADR_MAC_16M_FLASH;
 		flash_sector_calibration = CFG_ADR_CALIBRATION_16M_FLASH;
@@ -192,16 +186,15 @@ void blc_app_loadCustomizedParameters_normal(void)
 {
 	if(flash_sector_calibration)
 	{
-		if(!blt_miscParam.ext_cap_en){
-			//customize freq_offset adjust cap value, if not customized, default ana_8A is 0x60
-			u8 cap_frqoft;
-			flash_read_page(flash_sector_calibration + CALIB_OFFSET_CAP_INFO, 1, &cap_frqoft);
-			if( cap_frqoft != 0xff ){
-				blc_nvParam.cap_frqoffset_en = 1;
-				blc_nvParam.cap_frqoffset_value = cap_frqoft;
-				rf_update_internal_cap(blc_nvParam.cap_frqoffset_value);
-			}
+		//customize freq_offset adjust cap value, if not customized, default ana_8A is 0x60
+		u8 cap_frqoft;
+		flash_read_page(flash_sector_calibration + CALIB_OFFSET_CAP_INFO, 1, &cap_frqoft);
+		if( cap_frqoft != 0xff ){
+			blc_nvParam.cap_frqoffset_en = 1;
+			blc_nvParam.cap_frqoffset_value = cap_frqoft;
+			rf_update_internal_cap(blc_nvParam.cap_frqoffset_value);
 		}
+
 #if (MCU_CORE_TYPE == MCU_CORE_B91)
 
 		//read flash value-->efuse value-->one point value

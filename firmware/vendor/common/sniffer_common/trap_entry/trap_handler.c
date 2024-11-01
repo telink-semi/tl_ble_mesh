@@ -21,9 +21,9 @@
  *          limitations under the License.
  *
  *******************************************************************************************************/
+#include "core.h"
 #include "tl_common.h"
 #include "drivers.h"
-#include "core.h"
 #include "trap_entry.h"
 
 
