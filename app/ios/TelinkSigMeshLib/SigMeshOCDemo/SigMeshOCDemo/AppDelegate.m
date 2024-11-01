@@ -33,37 +33,38 @@
 
 
 - (BOOL)application:(UIApplication *)application didFinishLaunchingWithOptions:(NSDictionary *)launchOptions {
-    //1.Config App tint
+    //(Optional)1.Config App tint
     [self configAppTint];
-    //2.Config App key bind type
+    //(Optional)2.Config App key bind type
     [self configKeyBindType];
-    //3.Config App add static OOB device by No-OOB enable
+    //(Optional)3.Config App add static OOB device by No-OOB enable
     [self configAddStaticOOBDeviceByNoOOBEnable];
-    //4.Config App extend bearer mode
+    //(Optional)4.Config App extend bearer mode
     [self configAppExtendBearerMode];
-    //5.Config App provision elliptic curve algorithm
+    //(Optional)5.Config App provision elliptic curve algorithm
     [self configAppProvisionEllipticCurveAlgorithm];
-    //6.Config SDK log level
+    //(Optional)6.Config SDK log level
     [self configSDKLogLevel];
-    //7.Config SigDataSource default parameter of SDK
+    //(Optional)7.Config SigDataSource default parameter of SDK
     [self configSigDataSourceDefaultParameter];
-    //8.(必须实现)Start Mesh SDK
+    //(必须实现)8.Start Mesh SDK
     [SDKLibCommand startMeshSDK];
     //9.Import one mesh dictionary from app to SDK
     [self importOneMeshDictionaryFromAppToSDK];
-    //10.Create Telink Bin Folder in iPhone
+    //(Optional)10.Create Telink Bin Folder in iPhone
     [self createTelinkBinFolder];
-    //11.Config Filter
+    //(Optional)11.Config Filter
     [self configFilter];
-    //12.Config Provision Mode
+    //(Optional)12.Config Provision Mode
     [self configProvisionMode];
-    //13.Config Import Complete Action
+    //(Optional)13.Config Import Complete Action
     [self configImportCompleteAction];
-    //14.Config Default Root Certificate Data
+    //(Optional)14.Config Default Root Certificate Data
     [self configDefaultRootCertificateData];
-    //15.Config sortType of nodeList
+    //(Optional)15.Config sortType of nodeList
     [self configSortTypeOfNodeList];
-
+    //(Optional)16.Config IP Of Share Mesh By Cloud
+    [self configBaseURLForCloudSharing];
     return YES;
 }
 
@@ -171,10 +172,6 @@
 //    NSData *nodeInfoData = [NSData dataWithBytes:TemByte length:76];
 //    [model setCompositionData:nodeInfoData];
 //    [SigDataSource.share.defaultNodeInfos addObject:model];
-
-    //6.添加更多的默认Composition Data数据，如果客户没有使用下面这3款型号的芯片，可以不掉下面的方法。
-    //v3.3.3.6版本开始，新增8278、8269、9518的cpsData.
-    [self addMoreCompositionData];
 
     //7.(可选)SDK默认publish周期为20秒，通过修改可以修改SDK的默认publish参数，或者客户自行实现publish检测机制。
 //    SigPeriodModel *periodModel = [[SigPeriodModel alloc] init];
@@ -313,49 +310,14 @@
     }
 }
 
-/// v3.3.3.6版本开始，新增8278、8269、9518的cpsData.
-- (void)addMoreCompositionData {
-    struct TelinkPID telinkPid_8258_CT = {};
-    struct TelinkPID telinkPid_8258_HSL = {};
-    struct TelinkPID telinkPid_8258_Panel = {};
-    struct TelinkPID telinkPid_8258_LPN = {};
-    struct TelinkPID telinkPid_8278_CT = {};
-    struct TelinkPID telinkPid_8278_HSL = {};
-    struct TelinkPID telinkPid_8278_Panel = {};
-    struct TelinkPID telinkPid_8278_LPN = {};
-    struct TelinkPID telinkPid_8269_CT = {};
-    struct TelinkPID telinkPid_8269_HSL = {};
-    struct TelinkPID telinkPid_8269_Panel = {};
-    struct TelinkPID telinkPid_8269_LPN = {};
-    struct TelinkPID telinkPid_9518_CT = {};
-    struct TelinkPID telinkPid_9518_HSL = {};
-    struct TelinkPID telinkPid_9518_Panel = {};
-    struct TelinkPID telinkPid_9518_LPN = {};
-
-    telinkPid_8258_CT.MCUChipType = telinkPid_8258_HSL.MCUChipType = telinkPid_8258_Panel.MCUChipType = telinkPid_8258_LPN.MCUChipType = CHIP_TYPE_8258;
-    telinkPid_8278_CT.MCUChipType = telinkPid_8278_HSL.MCUChipType = telinkPid_8278_Panel.MCUChipType = telinkPid_8278_LPN.MCUChipType = CHIP_TYPE_8278;
-    telinkPid_8269_CT.MCUChipType = telinkPid_8269_HSL.MCUChipType = telinkPid_8269_Panel.MCUChipType = telinkPid_8269_LPN.MCUChipType = CHIP_TYPE_8269;
-    telinkPid_9518_CT.MCUChipType = telinkPid_9518_HSL.MCUChipType = telinkPid_9518_Panel.MCUChipType = telinkPid_9518_LPN.MCUChipType = CHIP_TYPE_9518;
-
-    telinkPid_8258_CT.majorProductType = telinkPid_8258_HSL.majorProductType = telinkPid_8258_Panel.majorProductType = telinkPid_8278_CT.majorProductType = telinkPid_8278_HSL.majorProductType = telinkPid_8278_Panel.majorProductType = telinkPid_8269_CT.majorProductType = telinkPid_8269_HSL.majorProductType = telinkPid_8269_Panel.majorProductType = telinkPid_9518_CT.majorProductType = telinkPid_9518_HSL.majorProductType = telinkPid_9518_Panel.majorProductType = MajorProductType_light;
-    telinkPid_8258_LPN.majorProductType = telinkPid_8278_LPN.majorProductType = telinkPid_8269_LPN.majorProductType = telinkPid_9518_LPN.majorProductType = MajorProductType_LPN;
-    telinkPid_8258_CT.minorProductType = telinkPid_8278_CT.minorProductType = telinkPid_8269_CT.minorProductType = telinkPid_9518_CT.minorProductType = telinkPid_8258_LPN.minorProductType = telinkPid_8278_LPN.minorProductType = telinkPid_8269_LPN.minorProductType = telinkPid_9518_LPN.minorProductType = SigNodePID_CT;
-    telinkPid_8258_HSL.minorProductType = telinkPid_8278_HSL.minorProductType = telinkPid_8269_HSL.minorProductType = telinkPid_9518_HSL.minorProductType = SigNodePID_HSL;
-    telinkPid_8258_Panel.minorProductType = telinkPid_8278_Panel.minorProductType = telinkPid_8269_Panel.minorProductType = telinkPid_9518_Panel.minorProductType = SigNodePID_PANEL;
-
-    DeviceTypeModel *model_8278_CT = [[DeviceTypeModel alloc] initWithCID:kCompanyID PID:telinkPid_8278_CT.value compositionData:nil];
-    DeviceTypeModel *model_8269_CT = [[DeviceTypeModel alloc] initWithCID:kCompanyID PID:telinkPid_8269_CT.value compositionData:nil];
-    DeviceTypeModel *model_9518_CT = [[DeviceTypeModel alloc] initWithCID:kCompanyID PID:telinkPid_9518_CT.value compositionData:nil];
-    DeviceTypeModel *model_8278_HSL = [[DeviceTypeModel alloc] initWithCID:kCompanyID PID:telinkPid_8278_HSL.value compositionData:nil];
-    DeviceTypeModel *model_8269_HSL = [[DeviceTypeModel alloc] initWithCID:kCompanyID PID:telinkPid_8269_HSL.value compositionData:nil];
-    DeviceTypeModel *model_9518_HSL = [[DeviceTypeModel alloc] initWithCID:kCompanyID PID:telinkPid_9518_HSL.value compositionData:nil];
-    DeviceTypeModel *model_8278_Panel = [[DeviceTypeModel alloc] initWithCID:kCompanyID PID:telinkPid_8278_Panel.value compositionData:nil];
-    DeviceTypeModel *model_8269_Panel = [[DeviceTypeModel alloc] initWithCID:kCompanyID PID:telinkPid_8269_Panel.value compositionData:nil];
-    DeviceTypeModel *model_9518_Panel = [[DeviceTypeModel alloc] initWithCID:kCompanyID PID:telinkPid_9518_Panel.value compositionData:nil];
-    DeviceTypeModel *model_8278_LPN = [[DeviceTypeModel alloc] initWithCID:kCompanyID PID:telinkPid_8278_LPN.value compositionData:nil];
-    DeviceTypeModel *model_8269_LPN = [[DeviceTypeModel alloc] initWithCID:kCompanyID PID:telinkPid_8269_LPN.value compositionData:nil];
-    DeviceTypeModel *model_9518_LPN = [[DeviceTypeModel alloc] initWithCID:kCompanyID PID:telinkPid_9518_LPN.value compositionData:nil];
-    [SigDataSource.share.defaultNodeInfos addObjectsFromArray:@[model_8278_CT, model_8269_CT, model_9518_CT, model_8278_HSL, model_8269_HSL, model_9518_HSL, model_8278_Panel, model_8269_Panel, model_9518_Panel, model_8278_LPN, model_8269_LPN, model_9518_LPN]];
+/// v4.1.0.2版本开始，新增云端分享的IP地址修改，默认是Telink的IP。如果Telink进行了服务器迁移或者客户将这套服务器程序重新运行到自己的服务器上，可以通过修改这个IP来快速实现服务器地址切换而不需要重新编译App。
+- (void)configBaseURLForCloudSharing {
+    NSString *baseUrlString = [[NSUserDefaults standardUserDefaults] valueForKey:kDefaultBaseURL];
+    if (baseUrlString == nil) {
+        // 无需处理
+    } else {
+        TelinkHttpManager.share.baseUrl = baseUrlString;
+    }
 }
 
 - (UIInterfaceOrientationMask)application:(UIApplication *)application supportedInterfaceOrientationsForWindow:(nullable UIWindow *)window {
@@ -388,5 +350,8 @@
     // Called when the application is about to terminate. Save data if appropriate. See also applicationDidEnterBackground:.
 }
 
+- (BOOL)application:(UIApplication *)app openURL:(NSURL *)url options:(NSDictionary<UIApplicationOpenURLOptionsKey,id> *)options {
+    return YES;
+}
 
 @end

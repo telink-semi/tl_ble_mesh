@@ -40,7 +40,7 @@
 
 - (void)normalSetting{
     [super normalSetting];
-    self.title = @"HSL";
+    self.title = @"Color Setting";
     self.tableView.separatorStyle = UITableViewCellSeparatorStyleNone;//去掉下划线
     self.tableView.tableFooterView = [[UIView alloc] initWithFrame:CGRectZero];
     [self.tableView registerNib:[UINib nibWithNibName:CellIdentifiers_ColorModelCellID bundle:nil] forCellReuseIdentifier:CellIdentifiers_ColorModelCellID];

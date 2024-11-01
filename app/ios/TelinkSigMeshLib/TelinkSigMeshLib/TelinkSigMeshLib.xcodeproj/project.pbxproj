@@ -360,6 +360,10 @@
 		9119C7442B1DB29200C21F80 /* TelinkHttpTool.m in Sources */ = {isa = PBXBuildFile; fileRef = 9119C7422B1DB29200C21F80 /* TelinkHttpTool.m */; };
 		9119C7472B1DB29D00C21F80 /* TelinkCloudModel.m in Sources */ = {isa = PBXBuildFile; fileRef = 9119C7452B1DB29D00C21F80 /* TelinkCloudModel.m */; };
 		9119C7482B1DB29D00C21F80 /* TelinkCloudModel.h in Headers */ = {isa = PBXBuildFile; fileRef = 9119C7462B1DB29D00C21F80 /* TelinkCloudModel.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		911B87772CBE68200062048F /* SDKLibCommand+EnOcean.h in Headers */ = {isa = PBXBuildFile; fileRef = 911B87752CBE68200062048F /* SDKLibCommand+EnOcean.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		911B87782CBE68200062048F /* SDKLibCommand+EnOcean.m in Sources */ = {isa = PBXBuildFile; fileRef = 911B87762CBE68200062048F /* SDKLibCommand+EnOcean.m */; };
+		911B87792CBE68200062048F /* SDKLibCommand+EnOcean.m in Sources */ = {isa = PBXBuildFile; fileRef = 911B87762CBE68200062048F /* SDKLibCommand+EnOcean.m */; };
+		911B877A2CBE68200062048F /* SDKLibCommand+EnOcean.h in Headers */ = {isa = PBXBuildFile; fileRef = 911B87752CBE68200062048F /* SDKLibCommand+EnOcean.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		914D041F2B2AA8CF00824A17 /* TelinkCloudSigMeshLib.h in Headers */ = {isa = PBXBuildFile; fileRef = 914D041E2B2AA8CF00824A17 /* TelinkCloudSigMeshLib.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		916964242AC56AEC0010D34A /* SDKLibCommand+privateBeacon.h in Headers */ = {isa = PBXBuildFile; fileRef = 916963FB2AC56AEC0010D34A /* SDKLibCommand+privateBeacon.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		916964262AC56AEC0010D34A /* SDKLibCommand+privateBeacon.m in Sources */ = {isa = PBXBuildFile; fileRef = 916963FC2AC56AEC0010D34A /* SDKLibCommand+privateBeacon.m */; };
@@ -609,6 +613,8 @@
 		9119C7422B1DB29200C21F80 /* TelinkHttpTool.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = TelinkHttpTool.m; sourceTree = "<group>"; };
 		9119C7452B1DB29D00C21F80 /* TelinkCloudModel.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = TelinkCloudModel.m; sourceTree = "<group>"; };
 		9119C7462B1DB29D00C21F80 /* TelinkCloudModel.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = TelinkCloudModel.h; sourceTree = "<group>"; };
+		911B87752CBE68200062048F /* SDKLibCommand+EnOcean.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "SDKLibCommand+EnOcean.h"; sourceTree = "<group>"; };
+		911B87762CBE68200062048F /* SDKLibCommand+EnOcean.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = "SDKLibCommand+EnOcean.m"; sourceTree = "<group>"; };
 		914D041E2B2AA8CF00824A17 /* TelinkCloudSigMeshLib.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = TelinkCloudSigMeshLib.h; sourceTree = "<group>"; };
 		916963FB2AC56AEC0010D34A /* SDKLibCommand+privateBeacon.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "SDKLibCommand+privateBeacon.h"; sourceTree = "<group>"; };
 		916963FC2AC56AEC0010D34A /* SDKLibCommand+privateBeacon.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "SDKLibCommand+privateBeacon.m"; sourceTree = "<group>"; };
@@ -916,6 +922,7 @@
 		25335DD4235ED9F0006C79C1 /* Utils */ = {
 			isa = PBXGroup;
 			children = (
+				911B87742CBE67DA0062048F /* EnOcean */,
 				916964172AC56AEC0010D34A /* CDTP */,
 				916963FD2AC56AEC0010D34A /* CertificateBaseProvision */,
 				916964102AC56AEC0010D34A /* DirectForwarding */,
@@ -1082,6 +1089,15 @@
 				9119C7452B1DB29D00C21F80 /* TelinkCloudModel.m */,
 			);
 			path = Cloud;
+			sourceTree = "<group>";
+		};
+		911B87742CBE67DA0062048F /* EnOcean */ = {
+			isa = PBXGroup;
+			children = (
+				911B87752CBE68200062048F /* SDKLibCommand+EnOcean.h */,
+				911B87762CBE68200062048F /* SDKLibCommand+EnOcean.m */,
+			);
+			path = EnOcean;
 			sourceTree = "<group>";
 		};
 		916963FA2AC56AEC0010D34A /* PrivateBeacon */ = {
@@ -1463,6 +1479,7 @@
 				91BAA71B2B030EC300C4C64F /* opensslconf-i386.h in Headers */,
 				91BAA6FF2B030EC300C4C64F /* err.h in Headers */,
 				259020902369390E005649DE /* SigProxyConfigurationMessage.h in Headers */,
+				911B87772CBE68200062048F /* SDKLibCommand+EnOcean.h in Headers */,
 				25B95FEA238E4DBD00244D14 /* BackgroundTimer.h in Headers */,
 				258A004123A8BA5A003D2148 /* OTAManager.h in Headers */,
 				25B95FEE238E595600244D14 /* SigConst.h in Headers */,
@@ -1602,6 +1619,7 @@
 				9119C6C22B1DA82700C21F80 /* CDTPClientModel.h in Headers */,
 				9119C6C32B1DA82700C21F80 /* SigNetworkManager.h in Headers */,
 				9119C6C42B1DA82700C21F80 /* bio.h in Headers */,
+				911B877A2CBE68200062048F /* SDKLibCommand+EnOcean.h in Headers */,
 				9119C6C52B1DA82700C21F80 /* SigProvisioningManager.h in Headers */,
 				9119C6C62B1DA82700C21F80 /* crypto.h in Headers */,
 				9119C6C72B1DA82700C21F80 /* SigAuthenticationModel.h in Headers */,
@@ -1912,6 +1930,7 @@
 				916964382AC56AEC0010D34A /* SDKLibCommand+firmwareUpdate.m in Sources */,
 				25D88BEC2361455C00D4F0F7 /* SigNetworkLayer.m in Sources */,
 				25335F42235EE94C006C79C1 /* LibTools.m in Sources */,
+				911B87782CBE68200062048F /* SDKLibCommand+EnOcean.m in Sources */,
 				916964282AC56AEC0010D34A /* SDKLibCommand+certificate.m in Sources */,
 				25D88C212361459100D4F0F7 /* SigUpperTransportLayer.m in Sources */,
 				25335F75235EF339006C79C1 /* SigKeyBindManager.m in Sources */,
@@ -1969,6 +1988,7 @@
 				9119C7442B1DB29200C21F80 /* TelinkHttpTool.m in Sources */,
 				9119C6FD2B1DA82700C21F80 /* SigControlMessage.m in Sources */,
 				9119C6FE2B1DA82700C21F80 /* SigDataSource.m in Sources */,
+				911B87792CBE68200062048F /* SDKLibCommand+EnOcean.m in Sources */,
 				9119C6FF2B1DA82700C21F80 /* SigHeartbeatMessage.m in Sources */,
 				9119C7002B1DA82700C21F80 /* SigConst.m in Sources */,
 				9119C7012B1DA82700C21F80 /* SigAccessMessage.m in Sources */,

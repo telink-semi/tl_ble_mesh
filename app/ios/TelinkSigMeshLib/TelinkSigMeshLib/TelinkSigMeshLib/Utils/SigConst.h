@@ -587,4 +587,21 @@ UIKIT_EXTERN UInt32 const kDefaultIvIndex;//0x0
 /*默认一个unsegmented Access PDU的最大长度，大于该长度则需要进行segment分包，默认值为kUnsegmentedMessageLowerTransportPDUMaxLength（15）*/
 UIKIT_EXTERN UInt16 const kUnsegmentedMessageLowerTransportPDUMaxLength;//15
 
+UIKIT_EXTERN NSString *const securityKeyKey;
+UIKIT_EXTERN NSString *const orderingCodeKey;
+UIKIT_EXTERN NSString *const stepCodeRevisionKey;
+UIKIT_EXTERN NSString *const NFCPINCodeKey;
+UIKIT_EXTERN NSString *const serialNumberKey;
+UIKIT_EXTERN NSString *const Index;
+UIKIT_EXTERN NSString *const Type;
+UIKIT_EXTERN NSString *const Value;
+UIKIT_EXTERN NSString *const IsActionMerge;
+UIKIT_EXTERN NSString *const RegisterAddressList;
+UIKIT_EXTERN NSString *const PublishAddress;
+UIKIT_EXTERN NSString *const ButtonConfigList;
+UIKIT_EXTERN NSString *const ButtonInfo;
+UIKIT_EXTERN NSString *const ActionLayoutType;
+UIKIT_EXTERN NSString *const kDefaultPinCode;//@"0000E215"
+UIKIT_EXTERN NSString *const kDefaultEnOceanPID;//@"E215"
+
 NS_ASSUME_NONNULL_END

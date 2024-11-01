@@ -71,6 +71,22 @@
         case AddDeviceModelStateProvisioning:
             _stateLabel.text = @"PROVISIONING";
             break;
+            //fast provision
+        case AddDeviceModelStateDeviceFound:
+            _stateLabel.text = @"device found";
+            break;
+        case AddDeviceModelStateSetAddressRequest:
+            _stateLabel.text = @"setting address";
+            break;
+        case AddDeviceModelStateSetAddressResponse:
+            _stateLabel.text = @"set address success";
+            break;
+        case AddDeviceModelStateSettingProvisionData:
+            _stateLabel.text = @"Setting provision data";
+            break;
+        case AddDeviceModelStateProvisionSuccess:
+            _stateLabel.text = @"provision success";
+            break;
 
         default:
             break;

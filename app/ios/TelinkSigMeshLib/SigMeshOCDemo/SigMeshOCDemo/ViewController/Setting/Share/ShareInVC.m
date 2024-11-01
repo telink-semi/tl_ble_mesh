@@ -167,8 +167,9 @@
                     [weakSelf getTelinkJsonWithUUID:uuidString];
                 }else{
                     //hasn't data
-                    [[NSNotificationCenter defaultCenter] postNotificationName:@"BackToMain" object:nil];
-                    [weakSelf showTips:@"QRCode is error."];
+                    [weakSelf showAlertSureWithTitle:kDefaultAlertTitle message:@"QRCode is error." sure:^(UIAlertAction *action) {
+                        [[NSNotificationCenter defaultCenter] postNotificationName:@"BackToMain" object:nil];
+                    }];
                     return;
                 }
             }
@@ -184,10 +185,10 @@
         [TelinkHttpManager.share downloadJsonDictionaryWithUUID:uuid didLoadData:^(id  _Nullable result, NSError * _Nullable err) {
             dispatch_async(dispatch_get_main_queue(), ^{
                 if (err) {
-                    NSString *errstr = [NSString stringWithFormat:@"%@",err];
-                    TelinkLogInfo(@"%@",errstr);
-                    [weakSelf showTips:errstr];
-                    [[NSNotificationCenter defaultCenter] postNotificationName:@"BackToMain" object:nil];
+                    TelinkLogInfo(@"%@",err.localizedDescription);
+                    [weakSelf showAlertSureWithTitle:kDefaultAlertTitle message:err.localizedDescription sure:^(UIAlertAction *action) {
+                        [[NSNotificationCenter defaultCenter] postNotificationName:@"BackToMain" object:nil];
+                    }];
                 } else {
                     TelinkLogInfo(@"result=%@",result);
                     NSDictionary *dic = (NSDictionary *)result;
@@ -195,8 +196,9 @@
                     if (isSuccess) {
                         [weakSelf showDownloadJsonSuccess:[LibTools getDictionaryWithJsonString:dic[@"data"]] uuid:uuid];
                     }else{
-                        [weakSelf showTips:dic[@"msg"]];
-                        [[NSNotificationCenter defaultCenter] postNotificationName:@"BackToMain" object:nil];
+                        [weakSelf showAlertSureWithTitle:kDefaultAlertTitle message:dic[@"msg"] sure:^(UIAlertAction *action) {
+                            [[NSNotificationCenter defaultCenter] postNotificationName:@"BackToMain" object:nil];
+                        }];
                     }
                 }
             });

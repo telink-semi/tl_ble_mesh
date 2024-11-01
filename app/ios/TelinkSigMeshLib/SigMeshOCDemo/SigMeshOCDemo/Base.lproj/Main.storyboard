@@ -2,7 +2,8 @@
 <document type="com.apple.InterfaceBuilder3.CocoaTouch.Storyboard.XIB" version="3.0" toolsVersion="32700.99.1234" targetRuntime="iOS.CocoaTouch" propertyAccessControl="none" useAutolayout="YES" useTraitCollections="YES" useSafeAreas="YES" colorMatched="YES" initialViewController="2Qi-x5-oWD">
     <device id="retina4_7" orientation="portrait" appearance="light"/>
     <dependencies>
-        <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="22684"/>
+        <deployment identifier="iOS"/>
+        <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="22685"/>
         <capability name="Named colors" minToolsVersion="9.0"/>
         <capability name="Safe area layout guides" minToolsVersion="9.0"/>
         <capability name="System colors in document resources" minToolsVersion="11.0"/>
@@ -1370,43 +1371,36 @@ mac:AABBCCDDEEFF</string>
                                     <action selector="clickGoBack:" destination="aUE-sx-BZX" eventType="touchUpInside" id="Ghp-6Z-bBi"/>
                                 </connections>
                             </button>
-                            <collectionView clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="scaleToFill" dataMode="prototypes" translatesAutoresizingMaskIntoConstraints="NO" id="zne-aZ-E3l">
+                            <tableView clipsSubviews="YES" contentMode="scaleToFill" alwaysBounceVertical="YES" dataMode="prototypes" style="plain" separatorStyle="none" rowHeight="-1" estimatedRowHeight="-1" sectionHeaderHeight="-1" estimatedSectionHeaderHeight="-1" sectionFooterHeight="-1" estimatedSectionFooterHeight="-1" translatesAutoresizingMaskIntoConstraints="NO" id="DfX-ln-rUy">
                                 <rect key="frame" x="0.0" y="64" width="375" height="553"/>
-                                <color key="backgroundColor" white="1" alpha="1" colorSpace="calibratedWhite"/>
-                                <collectionViewFlowLayout key="collectionViewLayout" minimumLineSpacing="10" minimumInteritemSpacing="10" id="AVQ-8b-frN">
-                                    <size key="itemSize" width="135" height="80"/>
-                                    <size key="headerReferenceSize" width="0.0" height="0.0"/>
-                                    <size key="footerReferenceSize" width="0.0" height="0.0"/>
-                                    <inset key="sectionInset" minX="10" minY="10" maxX="10" maxY="10"/>
-                                </collectionViewFlowLayout>
-                                <cells/>
+                                <color key="backgroundColor" name="telinkTabBarBackgroundColor"/>
                                 <connections>
-                                    <outlet property="dataSource" destination="aUE-sx-BZX" id="THu-OF-5nb"/>
-                                    <outlet property="delegate" destination="aUE-sx-BZX" id="9eJ-os-49O"/>
+                                    <outlet property="dataSource" destination="aUE-sx-BZX" id="JRP-h4-Nel"/>
+                                    <outlet property="delegate" destination="aUE-sx-BZX" id="2a2-dh-x7e"/>
                                 </connections>
-                            </collectionView>
+                            </tableView>
                         </subviews>
                         <viewLayoutGuide key="safeArea" id="h4L-5m-2IV"/>
                         <color key="backgroundColor" white="1" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
                         <constraints>
-                            <constraint firstItem="zne-aZ-E3l" firstAttribute="top" secondItem="h4L-5m-2IV" secondAttribute="top" id="90k-6E-UbL"/>
-                            <constraint firstItem="zne-aZ-E3l" firstAttribute="leading" secondItem="h4L-5m-2IV" secondAttribute="leading" id="AA3-T4-ExG"/>
-                            <constraint firstItem="zne-aZ-E3l" firstAttribute="trailing" secondItem="h4L-5m-2IV" secondAttribute="trailing" id="Edx-FU-gyf"/>
+                            <constraint firstItem="GUU-IH-ZBd" firstAttribute="top" secondItem="DfX-ln-rUy" secondAttribute="bottom" id="B25-px-yCm"/>
+                            <constraint firstItem="DfX-ln-rUy" firstAttribute="top" secondItem="h4L-5m-2IV" secondAttribute="top" id="DpU-8v-x45"/>
+                            <constraint firstItem="DfX-ln-rUy" firstAttribute="leading" secondItem="h4L-5m-2IV" secondAttribute="leading" id="GNJ-f8-9tx"/>
                             <constraint firstAttribute="trailing" secondItem="GUU-IH-ZBd" secondAttribute="trailing" id="Jua-9C-dtu"/>
                             <constraint firstItem="GUU-IH-ZBd" firstAttribute="bottom" secondItem="h4L-5m-2IV" secondAttribute="bottom" id="Sh7-UA-cPu"/>
                             <constraint firstItem="GUU-IH-ZBd" firstAttribute="leading" secondItem="h4L-5m-2IV" secondAttribute="leading" id="V5l-ei-Ncl"/>
-                            <constraint firstItem="GUU-IH-ZBd" firstAttribute="top" secondItem="zne-aZ-E3l" secondAttribute="bottom" id="cod-8z-S3f"/>
+                            <constraint firstItem="DfX-ln-rUy" firstAttribute="trailing" secondItem="h4L-5m-2IV" secondAttribute="trailing" id="kuh-eb-V0m"/>
                         </constraints>
                     </view>
                     <simulatedNavigationBarMetrics key="simulatedTopBarMetrics" prompted="NO"/>
                     <connections>
-                        <outlet property="collectionView" destination="zne-aZ-E3l" id="nGC-3A-3Jv"/>
                         <outlet property="goBackButton" destination="GUU-IH-ZBd" id="8Bq-Ih-L6s"/>
+                        <outlet property="tableView" destination="DfX-ln-rUy" id="gF6-96-jkP"/>
                     </connections>
                 </viewController>
                 <placeholder placeholderIdentifier="IBFirstResponder" id="v1i-KF-bOb" userLabel="First Responder" sceneMemberID="firstResponder"/>
             </objects>
-            <point key="canvasLocation" x="6966" y="-546"/>
+            <point key="canvasLocation" x="6965.6000000000004" y="-546.47676161919048"/>
         </scene>
         <!--Auto Add DeviceVC-->
         <scene sceneID="FuX-tl-pNT">
@@ -1542,7 +1536,7 @@ mac:AABBCCDDEEFF</string>
             <color white="1" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
         </systemColor>
         <systemColor name="systemGray5Color">
-            <color red="0.89803921568627454" green="0.89803921568627454" blue="0.91764705882352937" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
+            <color red="0.8980392157" green="0.8980392157" blue="0.91764705879999997" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
         </systemColor>
     </resources>
 </document>

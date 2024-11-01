@@ -1,5 +1,7 @@
 # Uncomment the next line to define a global platform for your project
-# platform :ios, '11.0'
+# platform :ios, '12.0'
+
+#source 'https://github.com/CocoaPods/Specs.git'
 
 target 'SigLoopAddDemo' do
   # Comment the next line if you don't want to use dynamic frameworks
@@ -8,7 +10,7 @@ target 'SigLoopAddDemo' do
   # Pods for SigLoopAddDemo
 
   pod 'AFNetworking'
-  pod 'Reachability'
+  pod 'Reachability', :git => 'https://github.com/tonymillion/Reachability.git', :tag => 'v3.7.6'
   pod 'BRPickerView'
   pod 'IQKeyboardManager' #iOS11 and later
   pod 'WMZPageController'
@@ -22,7 +24,7 @@ target 'SigMeshCloud' do
   # Pods for SigMeshCloud
 
   pod 'AFNetworking'
-  pod 'Reachability'
+  pod 'Reachability', :git => 'https://github.com/tonymillion/Reachability.git', :tag => 'v3.7.6'
   pod 'BRPickerView'
   pod 'IQKeyboardManager' #iOS11 and later
   pod 'WMZPageController'
@@ -35,7 +37,7 @@ target 'SigMeshOCDemo' do
 
   # Pods for SigMeshOCDemo
 
-  pod 'Reachability'
+  pod 'Reachability', :git => 'https://github.com/tonymillion/Reachability.git', :tag => 'v3.7.6'
   pod 'BRPickerView'
   pod 'IQKeyboardManager' #iOS11 and later
   pod 'WMZPageController'

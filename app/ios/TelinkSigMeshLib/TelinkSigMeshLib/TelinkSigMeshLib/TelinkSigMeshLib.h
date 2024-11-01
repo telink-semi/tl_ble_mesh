@@ -78,6 +78,7 @@ FOUNDATION_EXPORT const unsigned char TelinkSigMeshLibVersionString[];
 #import <TelinkSigMeshLib/SDKLibCommand+firmwareUpdate.h>
 #import <TelinkSigMeshLib/SDKLibCommand+remoteProvision.h>
 #import <TelinkSigMeshLib/SDKLibCommand+directForwarding.h>
+#import <TelinkSigMeshLib/SDKLibCommand+EnOcean.h>
 #import <TelinkSigMeshLib/OTSCommand.h>
 #import <TelinkSigMeshLib/OTSBaseModel.h>
 #import <TelinkSigMeshLib/OTSHandle.h>

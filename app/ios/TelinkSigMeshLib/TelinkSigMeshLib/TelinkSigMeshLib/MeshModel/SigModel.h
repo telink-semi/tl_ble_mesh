@@ -24,7 +24,7 @@
 #import <Foundation/Foundation.h>
 NS_ASSUME_NONNULL_BEGIN
 
-@class SigNetkeyDerivatives,OpenSSLHelper,SigRangeModel,SigSceneRangeModel,SigNodeFeatures,SigRelayRetransmitModel,SigNetworktransmitModel,SigElementModel,SigNodeKeyModel,SigModelIDModel,SigRetransmitModel,SigPeriodModel,SigHeartbeatPubModel,SigHeartbeatSubModel,SigBaseMeshMessage,SigConfigNetworkTransmitSet,SigConfigNetworkTransmitStatus,SigPublishModel,SigNodeModel,SigMeshMessage,SigNetkeyModel,SigAppkeyModel,SigIvIndex,SigPage0,SigSubnetBridgeModel,SigMeshAddress, SigDirectControlStatus, SigForwardingTableModel,SigProvisioningCapabilitiesPdu,SigConfigModelPublicationStatus;
+@class SigNetkeyDerivatives,OpenSSLHelper,SigRangeModel,SigSceneRangeModel,SigNodeFeatures,SigRelayRetransmitModel,SigNetworktransmitModel,SigElementModel,SigNodeKeyModel,SigModelIDModel,SigRetransmitModel,SigPeriodModel,SigHeartbeatPubModel,SigHeartbeatSubModel,SigBaseMeshMessage,SigConfigNetworkTransmitSet,SigConfigNetworkTransmitStatus,SigPublishModel,SigNodeModel,SigMeshMessage,SigNetkeyModel,SigAppkeyModel,SigIvIndex,SigPage0,SigSubnetBridgeModel,SigMeshAddress, SigDirectControlStatus, SigForwardingTableModel,SigProvisioningCapabilitiesPdu,SigConfigModelPublicationStatus, EnOceanInfo, EnOceanButtonInfo;
 
 //typedef void(^bleEnableCallback)(CBCentralManager *central,BOOL enable);
 //typedef void(^bleChangeNotifyCallback)(CBPeripheral *peripheral,BOOL isNotifying);
@@ -1898,6 +1898,20 @@ static Byte LPNByte[] = {(Byte) 0x11, (Byte) 0x02, (Byte) 0x01, (Byte) 0x02, (By
 @property (nonatomic,strong) NSMutableArray <SigSensorDescriptorModel *>*sensorDescriptorArray;
 @property (nonatomic,strong) NSMutableArray <SigSensorCadenceModel *>*sensorCadenceArray;
 
+//下面的属性是EnOcean专用属性，根据pid判断是否为EnOcean设备。unicastAddress、pid、macAddress共用
+/// Security Key
+@property (nonatomic, strong) NSString *securityKey;
+/// Ordering Code
+@property (nonatomic, strong) NSString *orderingCode;
+/// Step Code - Revision
+@property (nonatomic, strong) NSString *stepCodeRevision;
+/// NFC PIN Code
+@property (nonatomic, strong) NSString *NFCPINCode;
+/// Serial Number
+@property (nonatomic, strong) NSString *serialNumber;
+/// EnOcean Button Info
+@property (nonatomic, strong) EnOceanButtonInfo *buttonInfo;
+
 //The following properties are not stored JSON
 @property (nonatomic,assign) DeviceState state;
 @property (nonatomic,assign) BOOL isKeyBindSuccess;
@@ -1929,6 +1943,10 @@ static Byte LPNByte[] = {(Byte) 0x11, (Byte) 0x02, (Byte) 0x01, (Byte) 0x02, (By
 /// The On-Demand_Private_GATT_Proxy field indicates the current On-Demand Private GATT Proxy state of the node.
 @property (nonatomic, assign) UInt8 onDemandPrivateGATTProxy;
 
+- (instancetype)initWithNode:(SigNodeModel *)node;
+
+- (instancetype)initEnOceanNodeWithEnOceanInfo:(EnOceanInfo *)info;
+
 ///return node true brightness, range is 0~100
 - (UInt8)trueBrightness;
 
@@ -1945,8 +1963,6 @@ static Byte LPNByte[] = {(Byte) 0x11, (Byte) 0x02, (Byte) 0x01, (Byte) 0x02, (By
 - (UInt8)getElementCount;
 
 - (NSMutableArray *)getAddressesWithModelID:(NSNumber *)sigModelID;
-
-- (instancetype)initWithNode:(SigNodeModel *)node;
 
 - (UInt16)address;
 - (void)setAddress:(UInt16)address;
@@ -1986,6 +2002,9 @@ static Byte LPNByte[] = {(Byte) 0x11, (Byte) 0x02, (Byte) 0x01, (Byte) 0x02, (By
 
 /// Return whether the node is a ambient light sensor.
 - (BOOL)isAmbientLightSensor;
+
+/// Return whether the node is a EnOcean switch device.
+- (BOOL)isEnOceanDevice;
 
 /// Return whether the node has this propertyID.
 /// @param propertyID property ID
@@ -2780,6 +2799,126 @@ static Byte LPNByte[] = {(Byte) 0x11, (Byte) 0x02, (Byte) 0x01, (Byte) 0x02, (By
 @property (nonatomic, assign) UInt16 unicastAddress;
 @property (nonatomic, strong) NSNumber *seqAuth;
 @property (nonatomic, strong, nullable) SigNodeSeqZeroModel *seqZero;
+@end
+
+
+@interface EnOceanButtonItemInfo : NSObject
+/// index=0,mean key0 and key1; index=1,mean key2 and key3;
+@property (nonatomic, assign) int index;
+/// 当前item的配置是否的合并的配置，如果是，则会占用Index和Index+1两个Index的值。
+@property (nonatomic, assign) BOOL isActionMerge;
+/// publish
+@property (nonatomic, assign) UInt16 publishAddress;
+//@property (nonatomic, strong) NSMutableArray <NSNumber *>*publishAddressList;
+/// onoff light ct or sceneRecall
+@property (nonatomic, assign) EnOceanButtonItemType type;
+/// onoff:0/1, light:-100~100, ct:-100~100, scene recall: sceneid1
+@property (nonatomic, assign) SInt8 value;
+
+- (instancetype)initWithOldEnOceanButtonItemInfo:(EnOceanButtonItemInfo *)itemInfo;
+
+/// get dictionary from EnOceanButtonItemInfo object.
+/// @returns return dictionary object.
+- (NSDictionary *)getDictionaryOfEnOceanButtonItemInfo;
+
+/// Set dictionary to EnOceanButtonItemInfo object.
+/// @param dictionary EnOceanButtonItemInfo dictionary object.
+- (void)setDictionaryToEnOceanButtonItemInfo:(NSDictionary *)dictionary;
+
+- (NSString *)getButtonItemNameString;
+- (NSString *)getButtonItemActionString;
+
+@end
+
+
+@interface EnOceanButtonInfo : NSObject
+/// 记录配置的按钮配置布局类型，默认值为EnOceanActionLayoutType_12_34
+@property (nonatomic, assign) EnOceanActionLayoutType actionLayoutType;
+@property (nonatomic, strong) NSMutableArray <NSNumber *>*registerAddressList;
+@property (nonatomic, strong) NSMutableArray <EnOceanButtonItemInfo *>*buttonConfigList;
+
+- (instancetype)initWithOldEnOceanButtonInfo:(EnOceanButtonInfo *)info;
+
+/// get dictionary from EnOceanButtonInfo object.
+/// @returns return dictionary object.
+- (NSDictionary *)getDictionaryOfEnOceanButtonInfo;
+
+/// Set dictionary to EnOceanButtonInfo object.
+/// @param dictionary EnOceanButtonInfo dictionary object.
+- (void)setDictionaryToEnOceanButtonInfo:(NSDictionary *)dictionary;
+
+@end
+
+
+@interface EnOceanInfo : NSObject
+/// Static Source Address
+@property (nonatomic, strong) NSString *staticSourceAddress;
+/// Security Key
+@property (nonatomic, strong) NSString *securityKey;
+/// Ordering Code
+@property (nonatomic, strong) NSString *orderingCode;
+/// Step Code - Revision
+@property (nonatomic, strong) NSString *stepCodeRevision;
+/// NFC PIN Code
+@property (nonatomic, strong) NSString *NFCPINCode;
+/// Serial Number
+@property (nonatomic, strong) NSString *serialNumber;
+/**
+ *地址：0x01,0x02,0x03，转为空中的蓝牙数据时，需要转换小端的UInt16数据。
+ *pair 分配给无源开关的虚拟地址
+ */
+@property (nonatomic, assign) UInt16 deviceAddress;
+/// EnOcean Button Info
+@property (nonatomic, strong) EnOceanButtonInfo *buttonInfo;
+/// 设备类型标识
+@property (nonatomic, assign) UInt16 productId;
+
+- (instancetype)initWithQRCodeString:(NSString *)string;
+
+- (instancetype)initWithOldEnOceanInfo:(EnOceanInfo *)info;
+
+/// get dictionary from EnOceanInfo object.
+/// @returns return dictionary object.
+- (NSDictionary *)getDictionaryOfEnOceanInfo;
+
+/// Set dictionary to EnOceanInfo object.
+/// @param dictionary EnOceanInfo dictionary object.
+- (void)setDictionaryToEnOceanInfo:(NSDictionary *)dictionary;
+
+- (void)addDefaultButtonConfigListWithActionLayoutType:(EnOceanActionLayoutType)actionLayoutType;
+
+@end
+
+
+/// read four pages
+@interface MiFareReadCommand : NSObject
+@property (nonatomic, assign) MiFareCommandCode commandCode;
+/// start page address
+@property (nonatomic, assign) UInt8 address;
+- (NSData *)getCommandParameters;
+- (instancetype)initWithAddress:(UInt8)address;
+@end
+
+
+/// write one page
+@interface MiFareWriteCommand : NSObject
+@property (nonatomic, assign) MiFareCommandCode commandCode;
+/// page address
+@property (nonatomic, assign) UInt8 address;
+/// Data of one page, size is 4.
+@property (nonatomic, strong) NSData *data;
+- (NSData *)getCommandParameters;
+- (instancetype)initWithAddress:(UInt8)address data:(NSData *)data;
+@end
+
+
+/// password authentication
+@interface MiFarePasswordAuthenticationCommand : NSObject
+@property (nonatomic, assign) MiFareCommandCode commandCode;
+/// Data of password, size is 4.
+@property (nonatomic, strong) NSData *passwordData;
+- (NSData *)getCommandParameters;
+- (instancetype)initWithPasswordData:(NSData *)passwordData;
 @end
 
 NS_ASSUME_NONNULL_END

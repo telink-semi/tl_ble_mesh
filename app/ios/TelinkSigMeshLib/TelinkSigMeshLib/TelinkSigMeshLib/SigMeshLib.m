@@ -744,7 +744,7 @@ static SigMeshLib *shareLib = nil;
 /// @param source The Unicast Address of the Element from which the message was sent.
 /// @param destination The address to which the message was sent.
 - (void)didReceiveMessage:(SigMeshMessage *)message sentFromSource:(UInt16)source toDestination:(UInt16)destination {
-    TelinkLogInfo(@"didReceiveMessage=%@,message.parameters=%@,source=0x%x,destination=0x%x", message, message.parameters, source,destination);
+    TelinkLogInfo(@"didReceiveMessage=%@,message.opCode=0x%04X,message.parameters=%@,source=0x%x,destination=0x%x", message, message.opCode, message.parameters, source,destination);
     SigNodeModel *node = [self.dataSource getNodeWithAddress:source];
 
     //根据设备是否打开了publish功能来判断是否给该设备添加监测离线的定时器。

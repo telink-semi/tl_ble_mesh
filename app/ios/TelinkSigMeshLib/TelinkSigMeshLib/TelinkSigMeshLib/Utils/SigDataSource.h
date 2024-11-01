@@ -25,7 +25,7 @@
 
 NS_ASSUME_NONNULL_BEGIN
 
-@class SigNetkeyModel,SigProvisionerModel,SigAppkeyModel,SigSceneModel,SigGroupModel,SigNodeModel, SigExclusionListObjectModel, SigIvIndex,SigBaseMeshMessage, SigForwardingTableModel,SigDataSource;
+@class SigNetkeyModel,SigProvisionerModel,SigAppkeyModel,SigSceneModel,SigGroupModel,SigNodeModel, SigExclusionListObjectModel, SigIvIndex,SigBaseMeshMessage, SigForwardingTableModel,SigDataSource, SigEnOceanPublishSetBaseRequestMessage;
 
 @protocol SigDataSourceDelegate <NSObject>
 @optional
@@ -755,6 +755,10 @@ NS_ASSUME_NONNULL_BEGIN
  * @note    This API is using to fix the bug about level control of group.
  */
 - (UInt16)getExtendGroupAddressWithBaseGroupAddress:(UInt16)baseGroupAddress;
+
+#pragma mark - EnOcean API
+
+- (NSMutableArray <SigEnOceanPublishSetBaseRequestMessage *>*)getRequestCommandListWithEnOceanInfo:(EnOceanInfo *)info;
 
 #pragma mark - Special handling: store the PrivateGattProxy+ConfigGattProxy+PrivateBeacon+ConfigBeacon of node in current mesh
 

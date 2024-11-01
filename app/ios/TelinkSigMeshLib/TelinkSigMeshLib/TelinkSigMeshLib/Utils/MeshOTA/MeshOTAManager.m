@@ -68,7 +68,7 @@
 @property (nonatomic, assign) UInt8 allBlockCount;//记录block总个数
 @property (nonatomic, assign) UInt8 blockIndex;//记录当前block的index
 @property (nonatomic, strong) NSData *currentBlockData;//记录当前block的data
-@property (nonatomic, assign) NSInteger chunksCountofCurrentBlock;//记录当前block的chunk总个数
+@property (nonatomic, assign) NSInteger chunksCountOfCurrentBlock;//记录当前block的chunk总个数
 @property (nonatomic, assign) NSInteger chunkIndex;//记录当前chunk的index
 @property (nonatomic, assign) NSInteger successActionInCurrentProgress;//记录当前阶段成功的设备个数
 @property (nonatomic, strong) NSMutableDictionary <NSNumber *, NSArray *>*losePacketsDict;//step10阶段传输失败的包。
@@ -86,6 +86,7 @@
 @property (nonatomic, strong) SigNodeModel *connectedNodeModel;//记录本次meshOTA的指令节点
 
 @property (nonatomic, assign) NSInteger firmwareDistributionGetCount;//记录当前Distributor还剩余DistributionGet指令的次数，默认10秒一次，查6次。
+@property (nonatomic, assign) BOOL waitNodeReboot;//如果直连节点需要升级，在step26会等待设备重启，再直接进入step27查询设备版本号。
 
 @end
 
@@ -235,7 +236,6 @@
                 if (![self.successAddressArray containsObject:nodeAddress]) {
                     continue;
                 }
-                //待验证实际升级时下面几个参数是否正确。
                 SigUpdatingNodeEntryModel *model = [[SigUpdatingNodeEntryModel alloc] initWithAddress:nodeAddress.intValue retrievedUpdatePhase:SigFirmwareUpdatePhaseType_applySuccess updateStatus:SigFirmwareUpdateServerAndClientModelStatusType_success transferStatus:SigBLOBTransferStatusType_success transferProgress:50 updateFirmwareImageIndex:0];
                 [list addObject:model];
             }
@@ -307,22 +307,22 @@
         case SigFirmwareUpdateProgressFirmwareUpdateStart:
             tem = @"firmwareUpdateStart(Distributor->updating node(s))";
             break;
-        case SigFirmwareUpdateProgressDistributorToUpdatingNodesBLOBTransferGet:
+        case SigFirmwareUpdateProgressDistributorToUpdatingNodeBLOBTransferGet:
             tem = @"BLOBTransferGet(Distributor->updating node(s))";
             break;
-        case SigFirmwareUpdateProgressDistributorToUpdatingNodesBLOBInformationGet:
+        case SigFirmwareUpdateProgressDistributorToUpdatingNodeBLOBInformationGet:
             tem = @"BLOBInformationGet(Distributor->updating node(s))";
             break;
-        case SigFirmwareUpdateProgressDistributorToUpdatingNodesBLOBTransferStart:
+        case SigFirmwareUpdateProgressDistributorToUpdatingNodeBLOBTransferStart:
             tem = @"BLOBTransferStart(Distributor->updating node(s))";
             break;
-        case SigFirmwareUpdateProgressDistributorToUpdatingNodesBLOBBlockStart:
+        case SigFirmwareUpdateProgressDistributorToUpdatingNodeBLOBBlockStart:
             tem = @"BLOBBlockStart(Distributor->updating node(s))";
             break;
-        case SigFirmwareUpdateProgressDistributorToUpdatingNodesBLOBChunkTransfer:
+        case SigFirmwareUpdateProgressDistributorToUpdatingNodeBLOBChunkTransfer:
             tem = @"BLOBChunkTransfer(Distributor->updating node(s))";
             break;
-        case SigFirmwareUpdateProgressDistributorToUpdatingNodesBLOBBlockGet:
+        case SigFirmwareUpdateProgressDistributorToUpdatingNodeBLOBBlockGet:
             tem = @"BLOBBlockGet(Distributor->updating node(s))";
             break;
         case SigFirmwareUpdateProgressFirmwareDistributionReceiversGet:
@@ -374,8 +374,13 @@
             [self createErrorWithString:@"Node is disconnected, MeshOTA fail"];
             [self performSelector:@selector(firmwareUpdateFailAction) onThread:self.meshOTAThread withObject:nil waitUntilDone:YES];
         } else {
-            if ((self.firmwareUpdateProgress >= SigFirmwareUpdateProgressDistributorToUpdatingNodesBLOBTransferGet && self.firmwareUpdateProgress != SigFirmwareUpdateProgressFirmwareDistributionApply) || self.firmwareUpdateProgress == SigFirmwareUpdateProgressCheckLastFirmwareUpdateStatue || self.firmwareUpdateProgress == SigFirmwareUpdateProgressInitiatorToDistributorBLOBChunkTransfer) {
+            if ((self.firmwareUpdateProgress >= SigFirmwareUpdateProgressDistributorToUpdatingNodeBLOBTransferGet && self.firmwareUpdateProgress != SigFirmwareUpdateProgressFirmwareDistributionApply) || self.firmwareUpdateProgress == SigFirmwareUpdateProgressCheckLastFirmwareUpdateStatue || self.firmwareUpdateProgress == SigFirmwareUpdateProgressInitiatorToDistributorBLOBChunkTransfer || self.firmwareUpdateProgress == SigFirmwareUpdateProgressFirmwareDistributionGet) {
                 //处理逻辑：当设备端做为Distributor且处于Distributor的处理阶段时，即使APP断开与Distributor的连接也不会进入失败流程，而是重连原来的直连节点
+                //||SigFirmwareUpdateProgressFirmwareDistributionGet,需要重启时，
+                if (self.firmwareUpdateProgress == SigFirmwareUpdateProgressFirmwareDistributionGet && self.waitNodeReboot) {
+                    self.checkVersionCount = 6;
+                    self.firmwareUpdateProgress = SigFirmwareUpdateInformationGetCheckVersion;
+                }
                 SigNodeModel *node = [SigDataSource.share getNodeWithAddress:self.distributorAddress];
                 NSMutableArray *nodeList = [NSMutableArray array];
                 if (self.phoneIsDistributor) {
@@ -438,19 +443,16 @@
     if ([message isKindOfClass:[SigBLOBPartialBlockReport class]]) {
         TelinkLogVerbose(@"MeshOTAManager Receive:%@,source=%d,destination=%d",[LibTools convertDataToHexStr:message.parameters],source,destination);
         self.BLOBPartialBlockReport = (SigBLOBPartialBlockReport *)message;
-        if (self.isMeshOTAing && self.transferModeOfUpdateNodes == SigTransferModeState_pullBLOBTransferMode) {
+        if (self.isMeshOTAing && self.transferModeOfUpdateNodes == SigTransferModeState_pullBLOBTransferMode && self.firmwareUpdateProgress >= SigFirmwareUpdateProgressDistributorToUpdatingNodeBLOBBlockStart && self.firmwareUpdateProgress <= SigFirmwareUpdateProgressDistributorToUpdatingNodeBLOBBlockGet) {
             if (self.BLOBPartialBlockReport.encodedMissingChunks) {
 //                TelinkLogError(@"=====chunk，接收到地址%d需要发送的chunk=%@",source,self.BLOBPartialBlockReport.encodedMissingChunks);
                 self.losePacketsDict[@(source)] = self.BLOBPartialBlockReport.encodedMissingChunks;
                 [self stopLPNReachablleTimer];
                 [self handleLPNReportAction];
-            } else {
-                if (self.firmwareUpdateProgress >= SigFirmwareUpdateProgressDistributorToUpdatingNodesBLOBBlockStart && self.firmwareUpdateProgress <= SigFirmwareUpdateProgressDistributorToUpdatingNodesBLOBBlockGet) {
-                    if (self.chunkIndex != 0) {//原因：有时候，发送start时就返回一个空的BLOBPartialBlockReport，导致APP走到查询流程。
-                        //当前block发送完成，检查是否漏包，不漏则blockIndex加一进行下一个block的发送。
-                        [self performSelector:@selector(distributorToUpdatingNodesBLOBBlockGet) onThread:self.meshOTAThread withObject:nil waitUntilDone:NO];
-                    }
-                }
+            } else if (self.chunkIndex != 0) {
+                //原因：有时候，发送start时就返回一个空的BLOBPartialBlockReport，导致APP走到查询流程。
+                    //当前block发送完成，检查是否漏包，不漏则blockIndex加一进行下一个block的发送。
+                [self performSelector:@selector(distributorToUpdatingNodeBLOBBlockGet) onThread:self.meshOTAThread withObject:nil waitUntilDone:NO];
             }
         }
     }
@@ -470,28 +472,26 @@
     if (self.losePacketsDict.count == 0) {
         return;
     }
-    self.firmwareUpdateProgress = SigFirmwareUpdateProgressDistributorToUpdatingNodesBLOBChunkTransfer;
+    self.firmwareUpdateProgress = SigFirmwareUpdateProgressDistributorToUpdatingNodeBLOBChunkTransfer;
+    TelinkLogInfo(@"\n\n==========firmware update:step%d.2\n\n",self.firmwareUpdateProgress);
 
     UInt16 destination = [self.losePacketsDict.allKeys.firstObject intValue];
     for (NSNumber *missingChunkIndex in self.losePacketsDict[@(destination)]) {
         self.chunkIndex = missingChunkIndex.intValue;
         NSData *chunkData = nil;
-        if (self.chunkIndex == self.chunksCountofCurrentBlock - 1) {
+        if (self.chunkIndex == self.chunksCountOfCurrentBlock - 1) {
             //end chunk of current block
             chunkData = [self.currentBlockData subdataWithRange:NSMakeRange(self.chunkSize * self.chunkIndex, self.currentBlockData.length - self.chunkSize * self.chunkIndex)];
         } else {
             chunkData = [self.currentBlockData subdataWithRange:NSMakeRange(self.chunkSize * self.chunkIndex, self.chunkSize)];
         }
         __weak typeof(self) weakSelf = self;
-        TelinkLogInfo(@"all Block count=%d,current block index=%d,all chunk count=%d,current chunk index=%d ",self.allBlockCount,self.blockIndex,self.chunksCountofCurrentBlock,self.chunkIndex);
+        TelinkLogInfo(@"all Block count=%d,current block index=%d,all chunk count=%d,current chunk index=%d ",self.allBlockCount,self.blockIndex,self.chunksCountOfCurrentBlock,self.chunkIndex);
         //该处为新meshOTA逻辑，需要模拟Distributor广播固件到updating nodes，并模拟adv回包，即self.firmwareDistributionReceiversList.
         [self createSigFirmwareDistributionReceiversListWithCurrentChunkData:chunkData otaData:self.firmwareDataOnDistributor];
         [self callbackAdvDistributionProgressBlock];
         self.semaphore = dispatch_semaphore_create(0);
-        TelinkLogVerbose(@"send chunk index=%d,self.chunksCountofCurrentBlock=%d",self.chunkIndex,self.chunksCountofCurrentBlock);
-
-        //v3.3.0开始新增优化逻辑：当只有一个节点且为直连节点时，不再通过组地址进行OTA数据发送，只对直连节点进行OTA数据发送即可。
-//        TelinkLogError(@"=====chunk，开始给地址%d发送chunk%d,block%d",destination,self.chunkIndex,self.blockIndex);
+        TelinkLogVerbose(@"send chunk index=%d,self.chunksCountOfCurrentBlock=%d",self.chunkIndex,self.chunksCountOfCurrentBlock);
 
         self.messageHandle = [SDKLibCommand BLOBChunkTransferWithDestination:destination chunkNumber:self.chunkIndex chunkData:chunkData sendBySegmentPdu:NO retryCount:0 responseMaxCount:0 resultCallback:^(BOOL isResponseAll, NSError * _Nullable error) {
             TelinkLogInfo(@"isResponseAll=%d,error=%@",isResponseAll,error);
@@ -581,6 +581,10 @@
     if (_meshOTAThread.isCancelled && !_meshOTAThread.isExecuting) {
         [_meshOTAThread start];
     }
+    if (self.phoneIsDistributor) {
+        //如果手机作为Distributor，则手机必须发送apply指令。
+        self.updatePolicy = SigUpdatePolicyType_verifyOnly;
+    }
     self.failError = nil;
     self.distributorAddress = SigMeshLib.share.dataSource.unicastAddressOfConnected;
     self.connectedNodeModel = SigMeshLib.share.dataSource.getCurrentConnectedNode;
@@ -598,6 +602,7 @@
     [self.allAddressArray addObjectsFromArray:deviceAddresses];
     self.testFinish = otaData.length > 1024*3;
     self.incomingFirmwareMetadata = incomingFirmwareMetadata;
+    self.waitNodeReboot = NO;
     UInt16 gAddress = kMeshOTAGroupAddress;
     _distributionMulticastAddress = [NSData dataWithBytes:&gAddress length:2];
     if (SigBearer.share.dataDelegate) {
@@ -695,6 +700,7 @@
     [SDKLibCommand setBluetoothCentralUpdateStateCallback:nil];
     SigBearer.share.isAutoReconnect = NO;
     self.phoneIsDistributor = NO;
+    self.waitNodeReboot = NO;
 
     NSMutableArray *rssiArray = [NSMutableArray array];
     __weak typeof(self) weakSelf = self;
@@ -731,6 +737,16 @@
 /// Stop Firmware Update
 /// @param completeBlock The handle of stop Firmware Update finish.
 - (void)stopFirmwareUpdateWithCompleteHandle:(CompleteBlock)completeBlock {
+    __weak typeof(self) weakSelf = self;
+    [SDKLibCommand firmwareDistributionCancelWithDestination:self.distributorAddress retryCount:2 responseMaxCount:1 successCallback:^(UInt16 source, UInt16 destination, SigFirmwareDistributionStatus * _Nonnull responseMessage) {
+        TelinkLogDebug(@"initiator firmwareDistributionCancel=%@,source=%d,destination=%d",[LibTools convertDataToHexStr:responseMessage.parameters],source,destination);
+    } resultCallback:^(BOOL isResponseAll, NSError * _Nullable error) {
+        TelinkLogInfo(@"isResponseAll=%d,error=%@",isResponseAll,error);
+        [weakSelf stopFirmwareUpdateActionWithCompleteHandle:completeBlock];
+    }];
+}
+
+- (void)stopFirmwareUpdateActionWithCompleteHandle:(CompleteBlock)completeBlock {
     TelinkLogVerbose(@"");
     if (self.oldBearerDataDelegate) {
         SigBearer.share.dataDelegate = self.oldBearerDataDelegate;
@@ -738,7 +754,6 @@
     if (self.oldDelegateForDeveloper) {
         SigMeshLib.share.delegateForDeveloper = self.oldDelegateForDeveloper;
     }
-
     [self showMeshOTAResult];
     [self recoveryExtendBearerMode];
     SigBearer.share.isAutoReconnect = YES;
@@ -756,32 +771,8 @@
     dispatch_async(dispatch_get_main_queue(), ^{
         [NSObject cancelPreviousPerformRequestsWithTarget:self selector:@selector(fiemwareUpdateFirmwareDistributionReceiversGet) object:nil];
     });
-    if (SigBearer.share.isOpen) {
-        __weak typeof(self) weakSelf = self;
-        __block BOOL isSuccess = NO;
-        NSOperationQueue *operationQueue = [[NSOperationQueue alloc] init];
-        [operationQueue addOperationWithBlock:^{
-            //这个block语句块在子线程中执行
-            weakSelf.semaphore = dispatch_semaphore_create(0);
-            weakSelf.messageHandle = [SDKLibCommand firmwareDistributionCancelWithDestination:weakSelf.distributorAddress retryCount:2 responseMaxCount:1 successCallback:^(UInt16 source, UInt16 destination, SigFirmwareDistributionStatus * _Nonnull responseMessage) {
-                TelinkLogDebug(@"initiator firmwareDistributionCancel=%@,source=%d,destination=%d",[LibTools convertDataToHexStr:responseMessage.parameters],source,destination);
-                if (responseMessage.status == SigFirmwareDistributionServerAndClientModelStatusType_success && responseMessage.distributionPhase == SigDistributionPhaseState_idle) {
-                    isSuccess = YES;
-                }
-            } resultCallback:^(BOOL isResponseAll, NSError * _Nullable error) {
-                TelinkLogInfo(@"isResponseAll=%d,error=%@",isResponseAll,error);
-                dispatch_semaphore_signal(weakSelf.semaphore);
-            }];
-            //Most provide 3 seconds to firmwareUpdateStart(Distributor->updating node(s)) every node.
-            dispatch_semaphore_wait(weakSelf.semaphore, kTimeOutOfEveryStep);
-            [SigDataSource.share setAllDevicesOutline];
-            if (completeBlock) {
-                completeBlock(isSuccess);
-            }
-        }];
-    } else {
-        [ConnectTools.share stopConnectToolsWithComplete:nil];
-        [SigDataSource.share setAllDevicesOutline];
+    if (completeBlock) {
+        completeBlock(YES);
     }
 }
 
@@ -793,7 +784,6 @@
             if (self.phoneIsDistributor) {
                 //如果外部配置设置phone作为distributor，则直接跳过DistributionCapabilitiesGet流程。
                 TelinkLogVerbose(@"外部配置设置phone作为distributor，则直接跳过DistributionCapabilitiesGet流程!");
-                self.phoneIsDistributor = YES;
                 self.distributorAddress = SigMeshLib.share.dataSource.curLocationNodeModel.address;
                 [self performSelector:@selector(firmwareUpdateFirmwareDistributionCapabilitiesGetSuccessAction) onThread:self.meshOTAThread withObject:nil waitUntilDone:NO];
             } else {
@@ -801,19 +791,19 @@
             }
         }
             break;
-        case SigFirmwareUpdateProgressDistributorToUpdatingNodesBLOBTransferGet:
-        case SigFirmwareUpdateProgressDistributorToUpdatingNodesBLOBTransferStart:
-        case SigFirmwareUpdateProgressDistributorToUpdatingNodesBLOBBlockStart:
-        case SigFirmwareUpdateProgressDistributorToUpdatingNodesBLOBBlockGet:
+        case SigFirmwareUpdateProgressDistributorToUpdatingNodeBLOBTransferGet:
+        case SigFirmwareUpdateProgressDistributorToUpdatingNodeBLOBTransferStart:
+        case SigFirmwareUpdateProgressDistributorToUpdatingNodeBLOBBlockStart:
+        case SigFirmwareUpdateProgressDistributorToUpdatingNodeBLOBBlockGet:
         case SigFirmwareUpdateProgressFirmwareDistributionReceiversGet:
         {
             [self performSelector:@selector(fiemwareUpdateFirmwareDistributionReceiversGet) onThread:self.meshOTAThread withObject:nil waitUntilDone:NO];
         }
             break;
-        case SigFirmwareUpdateProgressDistributorToUpdatingNodesBLOBChunkTransfer:
+        case SigFirmwareUpdateProgressDistributorToUpdatingNodeBLOBChunkTransfer:
         {
             if (self.phoneIsDistributor) {
-                [self performSelector:@selector(distributorToUpdatingNodesBLOBChunkTransfer) onThread:self.meshOTAThread withObject:nil waitUntilDone:NO];
+                [self performSelector:@selector(distributorToUpdatingNodeBLOBChunkTransfer) onThread:self.meshOTAThread withObject:nil waitUntilDone:NO];
             } else {
                 [self performSelector:@selector(fiemwareUpdateFirmwareDistributionReceiversGet) onThread:self.meshOTAThread withObject:nil waitUntilDone:NO];
             }
@@ -862,8 +852,10 @@
             SigMeshLib.share.networkTransmitCount = responseMessage.count;
             SigMeshLib.share.networkTransmitIntervalSteps = responseMessage.steps;
         } resultCallback:^(BOOL isResponseAll, NSError * _Nullable error) {
-            TelinkLogInfo(@"isResponseAll=%d,error=%@",isResponseAll,error);
-            dispatch_semaphore_signal(weakSelf.semaphore);
+            if (weakSelf.firmwareUpdateProgress == SigFirmwareUpdateProgressCheckLastFirmwareUpdateStatue) {
+                TelinkLogInfo(@"isResponseAll=%d,error=%@",isResponseAll,error);
+                dispatch_semaphore_signal(weakSelf.semaphore);
+            }
         }];
         dispatch_semaphore_wait(weakSelf.semaphore, dispatch_semaphore_wait(weakSelf.semaphore, dispatch_time(DISPATCH_TIME_NOW, NSEC_PER_SEC * 10.0)));
 
@@ -885,13 +877,28 @@
                         [cancelArray addObject:nodeAddress];
                     }
                 } resultCallback:^(BOOL isResponseAll, NSError * _Nullable error) {
-                    TelinkLogInfo(@"isResponseAll=%d,error=%@",isResponseAll,error);
-                    dispatch_semaphore_signal(weakSelf.semaphore);
+                    if (weakSelf.firmwareUpdateProgress == SigFirmwareUpdateProgressCheckLastFirmwareUpdateStatue) {
+                        TelinkLogInfo(@"isResponseAll=%d,error=%@",isResponseAll,error);
+                        dispatch_semaphore_signal(weakSelf.semaphore);
+                    }
                 }];
                 //Most provide 3 seconds to firmwareUpdateGet every node.
                 dispatch_semaphore_wait(weakSelf.semaphore, kTimeOutOfEveryStep);
             }
         }
+        //下一版本再讨论完善这个Cancel流程
+//        __block BOOL needCancelDistribution = NO;
+//        weakSelf.semaphore = dispatch_semaphore_create(0);
+//        weakSelf.messageHandle = [SDKLibCommand firmwareDistributionGetWithDestination:SigDataSource.share.unicastAddressOfConnected retryCount:2 responseMaxCount:1 successCallback:^(UInt16 source, UInt16 destination, SigFirmwareDistributionStatus * _Nonnull responseMessage) {
+//            TelinkLogDebug(@"firmwareDistributionGet=%@,source=%d,destination=%d",[LibTools convertDataToHexStr:responseMessage.parameters],source,destination);
+//            if (responseMessage.distributionPhase != SigDistributionPhaseState_idle) {
+//                needCancelDistribution = YES;
+//            }
+//        } resultCallback:^(BOOL isResponseAll, NSError * _Nullable error) {
+//            TelinkLogInfo(@"isResponseAll=%d,error=%@",isResponseAll,error);
+//            dispatch_semaphore_signal(weakSelf.semaphore);
+//        }];
+//        dispatch_semaphore_wait(weakSelf.semaphore, kTimeOutOfEveryStep);
         BOOL reBoot = NO;
         for (NSNumber *nodeAddress in cancelArray) {
             UInt16 address = nodeAddress.intValue;
@@ -903,12 +910,28 @@
             weakSelf.messageHandle = [SDKLibCommand firmwareUpdateCancelWithDestination:address retryCount:2 responseMaxCount:1 successCallback:^(UInt16 source, UInt16 destination, SigFirmwareUpdateStatus * _Nonnull responseMessage) {
                 TelinkLogDebug(@"firmwareUpdateCancel(Distributor->updating node(s))=%@,source=%d,destination=%d",[LibTools convertDataToHexStr:responseMessage.parameters],source,destination);
             } resultCallback:^(BOOL isResponseAll, NSError * _Nullable error) {
-                TelinkLogInfo(@"isResponseAll=%d,error=%@",isResponseAll,error);
-                dispatch_semaphore_signal(weakSelf.semaphore);
+                if (weakSelf.firmwareUpdateProgress == SigFirmwareUpdateProgressCheckLastFirmwareUpdateStatue) {
+                    TelinkLogInfo(@"isResponseAll=%d,error=%@",isResponseAll,error);
+                    dispatch_semaphore_signal(weakSelf.semaphore);
+                }
             }];
             //Most provide 3 seconds to firmwareUpdateCancel(Distributor->updating node(s)) every node.
             dispatch_semaphore_wait(weakSelf.semaphore, kTimeOutOfEveryStep);
         }
+        //下一版本再讨论完善这个Cancel流程
+//        if (needCancelDistribution) {
+//            reBoot = YES;
+//            weakSelf.semaphore = dispatch_semaphore_create(0);
+//            TelinkLogInfo(@"firmwareDistributionCancel=0x%x",SigDataSource.share.unicastAddressOfConnected);
+//            weakSelf.messageHandle = [SDKLibCommand firmwareDistributionCancelWithDestination:SigDataSource.share.unicastAddressOfConnected retryCount:2 responseMaxCount:1 successCallback:^(UInt16 source, UInt16 destination, SigFirmwareDistributionStatus * _Nonnull responseMessage) {
+//                TelinkLogDebug(@"firmwareDistributionCancel=%@,source=%d,destination=%d",[LibTools convertDataToHexStr:responseMessage.parameters],source,destination);
+//            } resultCallback:^(BOOL isResponseAll, NSError * _Nullable error) {
+//                TelinkLogInfo(@"isResponseAll=%d,error=%@",isResponseAll,error);
+//                dispatch_semaphore_signal(weakSelf.semaphore);
+//            }];
+//            dispatch_semaphore_wait(weakSelf.semaphore, kTimeOutOfEveryStep);
+//        }
+//        if (cancelArray.count || needCancelDistribution) {
         if (cancelArray.count) {
             if (reBoot) {
                 //设备端需要10秒钟的时间进行重启，重启后在断开连接处进行重连操作。
@@ -965,12 +988,14 @@
             [SDKLibCommand firmwareDistributionCapabilitiesGetWithDestination:self.distributorAddress retryCount:2 responseMaxCount:1 successCallback:^(UInt16 source, UInt16 destination, SigFirmwareDistributionCapabilitiesStatus * _Nonnull responseMessage) {
                 TelinkLogDebug(@"initiator firmwareDistributionCapabilitiesGet=%@,source=0x%x,destination=0x%x",[LibTools convertDataToHexStr:responseMessage.parameters],source,destination);
             } resultCallback:^(BOOL isResponseAll, NSError * _Nullable error) {
-                TelinkLogInfo(@"isResponseAll=%d,error=%@",isResponseAll,error);
-                if (error) {
-                    hasFail = YES;
-                    [weakSelf createErrorWithString:[NSString stringWithFormat:@"The distributorAddress=0x%04X has not response SigFirmwareDistributionCapabilitiesStatus", weakSelf.distributorAddress]];
+                if (weakSelf.firmwareUpdateProgress == SigFirmwareUpdateProgressFirmwareDistributionCapabilitiesGet) {
+                    TelinkLogInfo(@"isResponseAll=%d,error=%@",isResponseAll,error);
+                    if (error) {
+                        hasFail = YES;
+                        [weakSelf createErrorWithString:[NSString stringWithFormat:@"The distributorAddress=0x%04X has not response SigFirmwareDistributionCapabilitiesStatus", weakSelf.distributorAddress]];
+                    }
+                    dispatch_semaphore_signal(weakSelf.semaphore);
                 }
-                dispatch_semaphore_signal(weakSelf.semaphore);
             }];
             //Most provide 3 seconds to firmwareDistributionCapabilitiesGet every node.
             dispatch_semaphore_wait(self.semaphore, kTimeOutOfEveryStep);
@@ -1048,8 +1073,10 @@
                     }
                 }
             } resultCallback:^(BOOL isResponseAll, NSError * _Nullable error) {
-                TelinkLogInfo(@"isResponseAll=%d,error=%@",isResponseAll,error);
-                dispatch_semaphore_signal(weakSelf.semaphore);
+                if (weakSelf.firmwareUpdateProgress == SigFirmwareUpdateProgressFirmwareUpdateInformationGet) {
+                    TelinkLogInfo(@"isResponseAll=%d,error=%@",isResponseAll,error);
+                    dispatch_semaphore_signal(weakSelf.semaphore);
+                }
             }];
             //Most provide 3 seconds to firmwareUpdateInformationGet every node.
             dispatch_semaphore_wait(self.semaphore, kTimeOutOfEveryStep);
@@ -1123,8 +1150,10 @@
                     }
                 }
             } resultCallback:^(BOOL isResponseAll, NSError * _Nullable error) {
-                TelinkLogInfo(@"isResponseAll=%d,error=%@",isResponseAll,error);
-                dispatch_semaphore_signal(weakSelf.semaphore);
+                if (weakSelf.firmwareUpdateProgress == SigFirmwareUpdateProgressFirmwareUpdateFirmwareMetadataCheck) {
+                    TelinkLogInfo(@"isResponseAll=%d,error=%@",isResponseAll,error);
+                    dispatch_semaphore_signal(weakSelf.semaphore);
+                }
             }];
             //Most provide 3 seconds to firmwareUpdateFirmwareMetadataCheck every node.
             dispatch_semaphore_wait(self.semaphore, kTimeOutOfEveryStep);
@@ -1199,8 +1228,10 @@
                         }
                     }
                 } resultCallback:^(BOOL isResponseAll, NSError * _Nullable error) {
-                    TelinkLogInfo(@"isResponseAll=%d,error=%@",isResponseAll,error);
-                    dispatch_semaphore_signal(weakSelf.semaphore);
+                    if (weakSelf.firmwareUpdateProgress == SigFirmwareUpdateProgressSubscriptionAdd) {
+                        TelinkLogInfo(@"isResponseAll=%d,error=%@",isResponseAll,error);
+                        dispatch_semaphore_signal(weakSelf.semaphore);
+                    }
                 }];
                 //Most provide 3 seconds to configModelSubscriptionAdd every node.
                 dispatch_semaphore_wait(self.semaphore, kTimeOutOfEveryStep);
@@ -1254,12 +1285,14 @@
         response = responseMessage;
         weakSelf.firmwareDistributionReceiversList = responseMessage;
     } resultCallback:^(BOOL isResponseAll, NSError * _Nullable error) {
-        TelinkLogInfo(@"isResponseAll=%d,error=%@",isResponseAll,error);
-        if (error) {
-            hasFail = YES;
-            [weakSelf createErrorWithString:[NSString stringWithFormat:@"The distributorAddress=0x%04X has not response SigFirmwareDistributionReceiversList", weakSelf.distributorAddress]];
+        if (weakSelf.firmwareUpdateProgress == SigFirmwareUpdateProgressFirmwareDistributionReceiversAdd) {
+            TelinkLogInfo(@"isResponseAll=%d,error=%@",isResponseAll,error);
+            if (error) {
+                hasFail = YES;
+                [weakSelf createErrorWithString:[NSString stringWithFormat:@"The distributorAddress=0x%04X has not response SigFirmwareDistributionReceiversList", weakSelf.distributorAddress]];
+            }
+            dispatch_semaphore_signal(weakSelf.semaphore);
         }
-        dispatch_semaphore_signal(weakSelf.semaphore);
     }];
     if (self.phoneIsDistributor) {
         //手机端既作为initiator，也作为Distributor。
@@ -1284,12 +1317,14 @@
                 }
             }
         } resultCallback:^(BOOL isResponseAll, NSError * _Nullable error) {
-            TelinkLogInfo(@"isResponseAll=%d,error=%@",isResponseAll,error);
-            if (error) {
-                hasFail = YES;
-                [weakSelf createErrorWithString:[NSString stringWithFormat:@"The distributorAddress=0x%04X has not response SigFirmwareDistributionReceiversStatus", weakSelf.distributorAddress]];
+            if (weakSelf.firmwareUpdateProgress == SigFirmwareUpdateProgressFirmwareDistributionReceiversAdd) {
+                TelinkLogInfo(@"isResponseAll=%d,error=%@",isResponseAll,error);
+                if (error) {
+                    hasFail = YES;
+                    [weakSelf createErrorWithString:[NSString stringWithFormat:@"The distributorAddress=0x%04X has not response SigFirmwareDistributionReceiversStatus", weakSelf.distributorAddress]];
+                }
+                dispatch_semaphore_signal(weakSelf.semaphore);
             }
-            dispatch_semaphore_signal(weakSelf.semaphore);
         }];
         if (self.phoneIsDistributor) {
             //手机端既作为initiator，也作为Distributor。
@@ -1335,11 +1370,13 @@
                 }
             } resultCallback:^(BOOL isResponseAll, NSError * _Nullable error) {
                 TelinkLogInfo(@"isResponseAll=%d,error=%@",isResponseAll,error);
-                if (error) {
-                    hasFail = YES;
-                    [weakSelf createErrorWithString:[NSString stringWithFormat:@"The distributorAddress=0x%04X has not response SigFirmwareDistributionReceiversStatus", weakSelf.distributorAddress]];
+                if (weakSelf.firmwareUpdateProgress == SigFirmwareUpdateProgressFirmwareDistributionReceiversAdd) {
+                    if (error) {
+                        hasFail = YES;
+                        [weakSelf createErrorWithString:[NSString stringWithFormat:@"The distributorAddress=0x%04X has not response SigFirmwareDistributionReceiversStatus", weakSelf.distributorAddress]];
+                    }
+                    dispatch_semaphore_signal(weakSelf.semaphore);
                 }
-                dispatch_semaphore_signal(weakSelf.semaphore);
             }];
             if (self.phoneIsDistributor) {
                 //手机端既作为initiator，也作为Distributor。
@@ -1430,12 +1467,14 @@
             TelinkLogInfo(@"response from other node.");
         }
     } resultCallback:^(BOOL isResponseAll, NSError * _Nullable error) {
-        TelinkLogInfo(@"isResponseAll=%d,error=%@",isResponseAll,error);
-        if (error) {
-            hasFail = YES;
-            [weakSelf createErrorWithString:[NSString stringWithFormat:@"The distributorAddress=0x%04X has not response SigFirmwareDistributionUploadStatus", weakSelf.distributorAddress]];
+        if (weakSelf.firmwareUpdateProgress == SigFirmwareUpdateProgressFirmwareDistributionUploadStart) {
+            TelinkLogInfo(@"isResponseAll=%d,error=%@",isResponseAll,error);
+            if (error) {
+                hasFail = YES;
+                [weakSelf createErrorWithString:[NSString stringWithFormat:@"The distributorAddress=0x%04X has not response SigFirmwareDistributionUploadStatus", weakSelf.distributorAddress]];
+            }
+            dispatch_semaphore_signal(weakSelf.semaphore);
         }
-        dispatch_semaphore_signal(weakSelf.semaphore);
     }];
     if (self.phoneIsDistributor) {
         //手机端既作为initiator，也作为Distributor。
@@ -1493,11 +1532,13 @@
 //            }
         }
     } resultCallback:^(BOOL isResponseAll, NSError * _Nullable error) {
-        TelinkLogInfo(@"isResponseAll=%d,error=%@",isResponseAll,error);
-        if (error) {
-            [weakSelf createErrorWithString:[NSString stringWithFormat:@"The distributorAddress=0x%04X has not response SigBLOBTransferStatus", weakSelf.distributorAddress]];
+        if (weakSelf.firmwareUpdateProgress == SigFirmwareUpdateProgressInitiatorToDistributorBLOBTransferGet) {
+            TelinkLogInfo(@"isResponseAll=%d,error=%@",isResponseAll,error);
+            if (error) {
+                [weakSelf createErrorWithString:[NSString stringWithFormat:@"The distributorAddress=0x%04X has not response SigBLOBTransferStatus", weakSelf.distributorAddress]];
+            }
+            dispatch_semaphore_signal(weakSelf.semaphore);
         }
-        dispatch_semaphore_signal(weakSelf.semaphore);
     }];
     if (self.phoneIsDistributor) {
         //手机端既作为initiator，也作为Distributor。
@@ -1573,11 +1614,13 @@
             hasSuccess = YES;
         }
     } resultCallback:^(BOOL isResponseAll, NSError * _Nullable error) {
-        TelinkLogInfo(@"isResponseAll=%d,error=%@",isResponseAll,error);
-        if (error) {
-            [weakSelf createErrorWithString:[NSString stringWithFormat:@"The distributorAddress=0x%04X has not response SigBLOBInformationStatus", weakSelf.distributorAddress]];
+        if (weakSelf.firmwareUpdateProgress == SigFirmwareUpdateProgressInitiatorToDistributorBLOBInformationGet) {
+            TelinkLogInfo(@"isResponseAll=%d,error=%@",isResponseAll,error);
+            if (error) {
+                [weakSelf createErrorWithString:[NSString stringWithFormat:@"The distributorAddress=0x%04X has not response SigBLOBInformationStatus", weakSelf.distributorAddress]];
+            }
+            dispatch_semaphore_signal(weakSelf.semaphore);
         }
-        dispatch_semaphore_signal(weakSelf.semaphore);
     }];
     if (self.phoneIsDistributor) {
         //手机端既作为initiator，也作为Distributor。
@@ -1657,11 +1700,13 @@
 //                        }
         }
     } resultCallback:^(BOOL isResponseAll, NSError * _Nullable error) {
-        TelinkLogInfo(@"isResponseAll=%d,error=%@",isResponseAll,error);
-        if (error) {
-            [weakSelf createErrorWithString:[NSString stringWithFormat:@"The distributorAddress=0x%04X has not response SigBLOBTransferStatus", weakSelf.distributorAddress]];
+        if (weakSelf.firmwareUpdateProgress == SigFirmwareUpdateProgressInitiatorToDistributorBLOBTransferStart) {
+            TelinkLogInfo(@"isResponseAll=%d,error=%@",isResponseAll,error);
+            if (error) {
+                [weakSelf createErrorWithString:[NSString stringWithFormat:@"The distributorAddress=0x%04X has not response SigBLOBTransferStatus", weakSelf.distributorAddress]];
+            }
+            dispatch_semaphore_signal(weakSelf.semaphore);
         }
-        dispatch_semaphore_signal(weakSelf.semaphore);
     }];
     if (self.phoneIsDistributor) {
         //手机端既作为initiator，也作为Distributor。
@@ -1717,8 +1762,10 @@
             hasSuccess = YES;
         }
     } resultCallback:^(BOOL isResponseAll, NSError * _Nullable error) {
-        TelinkLogInfo(@"isResponseAll=%d,error=%@",isResponseAll,error);
-        dispatch_semaphore_signal(weakSelf.semaphore);
+        if (weakSelf.firmwareUpdateProgress == SigFirmwareUpdateProgressInitiatorToDistributorBLOBBlockStart) {
+            TelinkLogInfo(@"isResponseAll=%d,error=%@",isResponseAll,error);
+            dispatch_semaphore_signal(weakSelf.semaphore);
+        }
     }];
     if (self.phoneIsDistributor) {
         //手机端既作为initiator，也作为Distributor。
@@ -1768,10 +1815,10 @@
     self.firmwareUpdateProgress = SigFirmwareUpdateProgressInitiatorToDistributorBLOBChunkTransfer;
     TelinkLogInfo(@"\n\n==========firmware update:step%d\n\n",self.firmwareUpdateProgress);
 
-    self.chunksCountofCurrentBlock = ceil(self.currentBlockData.length / (double)self.chunkSize);
+    self.chunksCountOfCurrentBlock = ceil(self.currentBlockData.length / (double)self.chunkSize);
     __block BOOL hasSuccess = NO;
 
-    for (int i = (int)self.chunkIndex; i < self.chunksCountofCurrentBlock; i ++) {
+    for (int i = (int)self.chunkIndex; i < self.chunksCountOfCurrentBlock; i ++) {
         if (![self isMeshOTAing]) {
             return;
         }
@@ -1780,7 +1827,7 @@
         }
         self.chunkIndex = i;
         NSData *chunkData = nil;
-        if (i == self.chunksCountofCurrentBlock - 1) {
+        if (i == self.chunksCountOfCurrentBlock - 1) {
             //end chunk of current block
             chunkData = [self.currentBlockData subdataWithRange:NSMakeRange(self.chunkSize * i, self.currentBlockData.length - self.chunkSize * i)];
         } else {
@@ -1788,7 +1835,7 @@
         }
         __weak typeof(self) weakSelf = self;
         if (!self.phoneIsDistributor) {
-            TelinkLogInfo(@"all Block count=%d,current block index=%d,all chunk count=%d,current chunk index=%d ",self.allBlockCount,self.blockIndex,self.chunksCountofCurrentBlock,self.chunkIndex);
+            TelinkLogInfo(@"all Block count=%d,current block index=%d,all chunk count=%d,current chunk index=%d ",self.allBlockCount,self.blockIndex,self.chunksCountOfCurrentBlock,self.chunkIndex);
         }
         [self showMeshOTAProgressWithCurrentChunkData:chunkData otaData:self.otaData progressBlock:self.gattDistributionProgressBlock];
         BOOL sendBySegmentPdu = NO;
@@ -1799,11 +1846,11 @@
         } else {
             self.semaphore = dispatch_semaphore_create(0);
             self.messageHandle = [SDKLibCommand BLOBChunkTransferWithDestination:self.distributorAddress chunkNumber:self.chunkIndex chunkData:chunkData sendBySegmentPdu:sendBySegmentPdu retryCount:0 responseMaxCount:0 resultCallback:^(BOOL isResponseAll, NSError * _Nullable error) {
-                TelinkLogInfo(@"isResponseAll=%d,error=%@",isResponseAll,error);
-                if (error) {
-                    dispatch_semaphore_signal(weakSelf.semaphore);
-                } else {
-                    hasSuccess = YES;
+                if (weakSelf.firmwareUpdateProgress == SigFirmwareUpdateProgressInitiatorToDistributorBLOBChunkTransfer) {
+                    TelinkLogInfo(@"isResponseAll=%d,error=%@",isResponseAll,error);
+                    if (error == nil) {
+                        hasSuccess = YES;
+                    }
                     dispatch_semaphore_signal(weakSelf.semaphore);
                 }
             }];
@@ -1862,12 +1909,12 @@
         NSArray *losePacketsDictAllKeys = self.losePacketsDict.allKeys;
         for (NSNumber *addressNumber in losePacketsDictAllKeys) {
             UInt16 destination = (UInt16)addressNumber.intValue;
-            NSArray *loaeChunkIndexes = self.losePacketsDict[addressNumber];
-            for (NSNumber *chunkIndexNumber in loaeChunkIndexes) {
+            NSArray *loseChunkIndexes = self.losePacketsDict[addressNumber];
+            for (NSNumber *chunkIndexNumber in loseChunkIndexes) {
                 NSInteger chunkIndex = chunkIndexNumber.intValue;
                 self.chunkIndex = chunkIndex;
                 NSData *chunkData = nil;
-                if (chunkIndex == self.chunksCountofCurrentBlock - 1) {
+                if (chunkIndex == self.chunksCountOfCurrentBlock - 1) {
                     //end chunk of current block
                     chunkData = [self.currentBlockData subdataWithRange:NSMakeRange(self.chunkSize * chunkIndex, self.currentBlockData.length - self.chunkSize * chunkIndex)];
                 } else {
@@ -1875,22 +1922,24 @@
                 }
                 __weak typeof(self) weakSelf = self;
                 self.semaphore = dispatch_semaphore_create(0);
-                TelinkLogInfo(@"all Block count=%d,current block index=%d,destination = 0x%x,all chunk count=%d,current chunk index=%d ",self.allBlockCount,self.blockIndex,destination,self.chunksCountofCurrentBlock,self.chunkIndex);
+                TelinkLogInfo(@"all Block count=%d,current block index=%d,destination = 0x%x,all chunk count=%d,current chunk index=%d ",self.allBlockCount,self.blockIndex,destination,self.chunksCountOfCurrentBlock,self.chunkIndex);
                 BOOL sendBySegmentPdu = NO;
                 self.messageHandle = [SDKLibCommand BLOBChunkTransferWithDestination:destination chunkNumber:self.chunkIndex chunkData:chunkData sendBySegmentPdu:sendBySegmentPdu retryCount:0 responseMaxCount:0 resultCallback:^(BOOL isResponseAll, NSError * _Nullable error) {
-                    TelinkLogInfo(@"isResponseAll=%d,error=%@",isResponseAll,error);
-                    if (error) {
-                        hasFail = YES;
-                        [self createErrorWithString:[NSString stringWithFormat:@"App transfer BLOBChunk to destination=0x%04X fail", destination]];
-                        dispatch_semaphore_signal(weakSelf.semaphore);
-                    } else {
-                        weakSelf.successActionInCurrentProgress ++;
-                            if (destination == kMeshOTAGroupAddress && !sendBySegmentPdu && (chunkData.length + 2) <= (SigMeshLib.share.dataSource.defaultUnsegmentedMessageLowerTransportPDUMaxLength - 1 - 4)) {//该指令是1个字节Opcode，4个字节MIC。剩余是AccessPDU。
-                            dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(kUnSegmentPacketInterval * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
-                                dispatch_semaphore_signal(weakSelf.semaphore);
-                            });
-                        } else {
+                    if (weakSelf.firmwareUpdateProgress == SigFirmwareUpdateProgressInitiatorToDistributorBLOBChunkTransfer) {
+                        TelinkLogInfo(@"isResponseAll=%d,error=%@",isResponseAll,error);
+                        if (error) {
+                            hasFail = YES;
+                            [self createErrorWithString:[NSString stringWithFormat:@"App transfer BLOBChunk to destination=0x%04X fail", destination]];
                             dispatch_semaphore_signal(weakSelf.semaphore);
+                        } else {
+                            weakSelf.successActionInCurrentProgress ++;
+                                if (destination == kMeshOTAGroupAddress && !sendBySegmentPdu && (chunkData.length + 2) <= (SigMeshLib.share.dataSource.defaultUnsegmentedMessageLowerTransportPDUMaxLength - 1 - 4)) {//该指令是1个字节Opcode，4个字节MIC。剩余是AccessPDU。
+                                dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(kUnSegmentPacketInterval * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
+                                    dispatch_semaphore_signal(weakSelf.semaphore);
+                                });
+                            } else {
+                                dispatch_semaphore_signal(weakSelf.semaphore);
+                            }
                         }
                     }
                 }];
@@ -1953,7 +2002,7 @@
                     weakSelf.failError = [NSError errorWithDomain:errorString code:-weakSelf.firmwareUpdateProgress userInfo:nil];
                     TelinkLogInfo(@"%@",errorString);
                     NSMutableArray *chunkIndexes = [NSMutableArray array];
-                    for (int i=0; i<weakSelf.chunksCountofCurrentBlock; i++) {
+                    for (int i=0; i<weakSelf.chunksCountOfCurrentBlock; i++) {
                         [chunkIndexes addObject:@(i)];
                     }
                     weakSelf.losePacketsDict[@(source)] = chunkIndexes;
@@ -1967,11 +2016,13 @@
             }
         }
     } resultCallback:^(BOOL isResponseAll, NSError * _Nullable error) {
-        TelinkLogInfo(@"isResponseAll=%d,error=%@",isResponseAll,error);
-        if (error) {
-            [weakSelf createErrorWithString:[NSString stringWithFormat:@"The distributorAddress=0x%04X has not response SigBLOBBlockStatus", weakSelf.distributorAddress]];
+        if (weakSelf.firmwareUpdateProgress == SigFirmwareUpdateProgressInitiatorToDistributorBLOBBlockGet) {
+            TelinkLogInfo(@"isResponseAll=%d,error=%@",isResponseAll,error);
+            if (error) {
+                [weakSelf createErrorWithString:[NSString stringWithFormat:@"The distributorAddress=0x%04X has not response SigBLOBBlockStatus", weakSelf.distributorAddress]];
+            }
+            dispatch_semaphore_signal(weakSelf.semaphore);
         }
-        dispatch_semaphore_signal(weakSelf.semaphore);
     }];
     if (self.phoneIsDistributor) {
         //手机端既作为initiator，也作为Distributor。
@@ -1990,8 +2041,8 @@
             NSMutableArray *newLoseChunkIndexes = [NSMutableArray array];
             NSDictionary *losePacketsDict = [NSDictionary dictionaryWithDictionary:self.losePacketsDict];
             for (NSNumber *addressNumber in losePacketsDict.allKeys) {
-                NSArray *loaeChunkIndexes = losePacketsDict[addressNumber];
-                for (NSNumber *chunkIndex in loaeChunkIndexes) {
+                NSArray *loseChunkIndexes = losePacketsDict[addressNumber];
+                for (NSNumber *chunkIndex in loseChunkIndexes) {
                     if (![newLoseChunkIndexes containsObject:chunkIndex]) {
                         [newLoseChunkIndexes addObject:chunkIndex];
                     }
@@ -2082,12 +2133,14 @@
             TelinkLogInfo(@"response from other node.");
         }
     } resultCallback:^(BOOL isResponseAll, NSError * _Nullable error) {
-        TelinkLogInfo(@"isResponseAll=%d,error=%@",isResponseAll,error);
-        if (error) {
-            hasFail = YES;
-            [weakSelf createErrorWithString:[NSString stringWithFormat:@"The distributorAddress=0x%04X has not response SigFirmwareDistributionStatus", weakSelf.distributorAddress]];
+        if (weakSelf.firmwareUpdateProgress == SigFirmwareUpdateProgressFirmwareDistributionStart) {
+            TelinkLogInfo(@"isResponseAll=%d,error=%@",isResponseAll,error);
+            if (error) {
+                hasFail = YES;
+                [weakSelf createErrorWithString:[NSString stringWithFormat:@"The distributorAddress=0x%04X has not response SigFirmwareDistributionStatus", weakSelf.distributorAddress]];
+            }
+            dispatch_semaphore_signal(weakSelf.semaphore);
         }
-        dispatch_semaphore_signal(weakSelf.semaphore);
     }];
     if (self.phoneIsDistributor) {
         //手机端既作为initiator，也作为Distributor。
@@ -2126,9 +2179,14 @@
         [self performSelector:@selector(firmwareUpdateFirmwareUpdateStart) onThread:self.meshOTAThread withObject:nil waitUntilDone:YES];
     } else {
         TelinkLogVerbose(@"");
-        dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(10.0 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
+        //如果是只升级一个distributor节点，节点会在step14完成后立刻断开连接，所以注释这个10秒的延时。
+//        if (self.allAddressArray.count == 1 && self.phoneIsDistributor == NO && self.allAddressArray.firstObject.intValue == SigDataSource.share.unicastAddressOfConnected) {
             [self performSelector:@selector(fiemwareUpdateFirmwareDistributionReceiversGet) onThread:self.meshOTAThread withObject:nil waitUntilDone:NO];
-        });
+//        } else {
+//            dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(10.0 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
+//                [self performSelector:@selector(fiemwareUpdateFirmwareDistributionReceiversGet) onThread:self.meshOTAThread withObject:nil waitUntilDone:NO];
+//            });
+//        }
     }
 }
 
@@ -2188,8 +2246,10 @@
                     }
                 }
             } resultCallback:^(BOOL isResponseAll, NSError * _Nullable error) {
-                TelinkLogInfo(@"isResponseAll=%d,error=%@",isResponseAll,error);
-                dispatch_semaphore_signal(weakSelf.semaphore);
+                if (weakSelf.firmwareUpdateProgress == SigFirmwareUpdateProgressFirmwareUpdateStart) {
+                    TelinkLogInfo(@"isResponseAll=%d,error=%@",isResponseAll,error);
+                    dispatch_semaphore_signal(weakSelf.semaphore);
+                }
             }];
             //Most provide 3 seconds to firmwareUpdateStart(Distributor->updating node(s)) every node.
             dispatch_semaphore_wait(self.semaphore, kTimeOutOfEveryStep);
@@ -2211,7 +2271,7 @@
 }
 
 - (void)firmwareUpdateFirmwareUpdateStartSuccessAction {
-    [self performSelector:@selector(distributorToUpdatingNodesBLOBTransferGet) onThread:self.meshOTAThread withObject:nil waitUntilDone:YES];
+    [self performSelector:@selector(distributorToUpdatingNodeBLOBTransferGet) onThread:self.meshOTAThread withObject:nil waitUntilDone:YES];
 }
 
 - (void)firmwareUpdateFirmwareUpdateStartFailAction {
@@ -2223,8 +2283,8 @@
 //参考原来meshOTA的BLOB逻辑
 
 #pragma mark - Firmware update step16:BLOBTransferGet(Distributor->updating node(s))
-- (void)distributorToUpdatingNodesBLOBTransferGet {
-    self.firmwareUpdateProgress = SigFirmwareUpdateProgressDistributorToUpdatingNodesBLOBTransferGet;
+- (void)distributorToUpdatingNodeBLOBTransferGet {
+    self.firmwareUpdateProgress = SigFirmwareUpdateProgressDistributorToUpdatingNodeBLOBTransferGet;
     TelinkLogInfo(@"\n\n==========firmware update:step%d\n\n",self.firmwareUpdateProgress);
 
     __block BOOL hasSuccess = NO;
@@ -2255,8 +2315,10 @@
                     }
                 }
             } resultCallback:^(BOOL isResponseAll, NSError * _Nullable error) {
-                TelinkLogInfo(@"isResponseAll=%d,error=%@",isResponseAll,error);
-                dispatch_semaphore_signal(weakSelf.semaphore);
+                if (weakSelf.firmwareUpdateProgress == SigFirmwareUpdateProgressDistributorToUpdatingNodeBLOBTransferGet) {
+                    TelinkLogInfo(@"isResponseAll=%d,error=%@",isResponseAll,error);
+                    dispatch_semaphore_signal(weakSelf.semaphore);
+                }
             }];
             //Most provide 3 seconds to BLOBTransferGet(Distributor->updating node(s)) every node.
             dispatch_semaphore_wait(self.semaphore, kTimeOutOfEveryStep);
@@ -2268,28 +2330,28 @@
         }
     }
     if (hasSuccess) {
-        [self distributorToUpdatingNodesBLOBTransferGetSuccessAction];
+        [self distributorToUpdatingNodeBLOBTransferGetSuccessAction];
     } else {
         if (!self.failError) {
             [self createErrorWithString:@"All nodes have not response SigBLOBTransferStatus"];
         }
-        [self distributorToUpdatingNodesBLOBTransferGetFailAction];
+        [self distributorToUpdatingNodeBLOBTransferGetFailAction];
     }
 }
 
-- (void)distributorToUpdatingNodesBLOBTransferGetSuccessAction {
-    [self performSelector:@selector(distributorToUpdatingNodesBLOBInformationGet) onThread:self.meshOTAThread withObject:nil waitUntilDone:YES];
+- (void)distributorToUpdatingNodeBLOBTransferGetSuccessAction {
+    [self performSelector:@selector(distributorToUpdatingNodeBLOBInformationGet) onThread:self.meshOTAThread withObject:nil waitUntilDone:YES];
 }
 
-- (void)distributorToUpdatingNodesBLOBTransferGetFailAction {
+- (void)distributorToUpdatingNodeBLOBTransferGetFailAction {
     [self performSelector:@selector(firmwareUpdateFailAction) onThread:self.meshOTAThread withObject:nil waitUntilDone:YES];
 }
 
 //参考原来meshOTA的BLOB逻辑
 
 #pragma mark - Firmware update step17:BLOBInformationGet(Distributor->updating node(s))
-- (void)distributorToUpdatingNodesBLOBInformationGet {
-    self.firmwareUpdateProgress = SigFirmwareUpdateProgressDistributorToUpdatingNodesBLOBInformationGet;
+- (void)distributorToUpdatingNodeBLOBInformationGet {
+    self.firmwareUpdateProgress = SigFirmwareUpdateProgressDistributorToUpdatingNodeBLOBInformationGet;
     TelinkLogInfo(@"\n\n==========firmware update:step%d\n\n",self.firmwareUpdateProgress);
 
     __block BOOL hasSuccess = NO;
@@ -2337,8 +2399,10 @@
                     }
                 }
             } resultCallback:^(BOOL isResponseAll, NSError * _Nullable error) {
-                TelinkLogInfo(@"isResponseAll=%d,error=%@",isResponseAll,error);
+                if (weakSelf.firmwareUpdateProgress == SigFirmwareUpdateProgressDistributorToUpdatingNodeBLOBInformationGet) {
+                    TelinkLogInfo(@"isResponseAll=%d,error=%@",isResponseAll,error);
                     dispatch_semaphore_signal(weakSelf.semaphore);
+                }
             }];
             //Most provide 3 seconds to BLOBInformationGet(Distributor->updating node(s)) every node.
             dispatch_semaphore_wait(self.semaphore, kTimeOutOfEveryStep);
@@ -2369,31 +2433,31 @@
             }
 
             //存在合法的blockSizeLog和chunkSize，进行下一步流程。
-            [self distributorToUpdatingNodesBLOBInformationGetSuccessAction];
+            [self distributorToUpdatingNodeBLOBInformationGetSuccessAction];
 
         } else {
             self.failError = [NSError errorWithDomain:[NSString stringWithFormat:@"fail in BLOBInformationGet(Distributor->updating node(s)), BLOBInformation is empty."] code:-weakSelf.firmwareUpdateProgress userInfo:nil];
-            [self distributorToUpdatingNodesBLOBInformationGetFailAction];
+            [self distributorToUpdatingNodeBLOBInformationGetFailAction];
         }
     } else {
         [self createErrorWithString:@"All nodes have not response SigBLOBInformationStatus"];
-        [self distributorToUpdatingNodesBLOBInformationGetFailAction];
+        [self distributorToUpdatingNodeBLOBInformationGetFailAction];
     }
 }
 
-- (void)distributorToUpdatingNodesBLOBInformationGetSuccessAction {
-    [self performSelector:@selector(distributorToUpdatingNodesBLOBTransferStart) onThread:self.meshOTAThread withObject:nil waitUntilDone:YES];
+- (void)distributorToUpdatingNodeBLOBInformationGetSuccessAction {
+    [self performSelector:@selector(distributorToUpdatingNodeBLOBTransferStart) onThread:self.meshOTAThread withObject:nil waitUntilDone:YES];
 }
 
-- (void)distributorToUpdatingNodesBLOBInformationGetFailAction {
+- (void)distributorToUpdatingNodeBLOBInformationGetFailAction {
     [self performSelector:@selector(firmwareUpdateFailAction) onThread:self.meshOTAThread withObject:nil waitUntilDone:YES];
 }
 
 //参考原来meshOTA的BLOB逻辑
 
 #pragma mark - Firmware update step18:BLOBTransferStart(Distributor->updating node(s))
-- (void)distributorToUpdatingNodesBLOBTransferStart {
-    self.firmwareUpdateProgress = SigFirmwareUpdateProgressDistributorToUpdatingNodesBLOBTransferStart;
+- (void)distributorToUpdatingNodeBLOBTransferStart {
+    self.firmwareUpdateProgress = SigFirmwareUpdateProgressDistributorToUpdatingNodeBLOBTransferStart;
     TelinkLogInfo(@"\n\n==========firmware update:step%d\n\n",self.firmwareUpdateProgress);
 
     __block BOOL hasSuccess = NO;
@@ -2425,8 +2489,10 @@
                         }
                     }
                 } resultCallback:^(BOOL isResponseAll, NSError * _Nullable error) {
-                    TelinkLogInfo(@"isResponseAll=%d,error=%@",isResponseAll,error);
-                    dispatch_semaphore_signal(weakSelf.semaphore);
+                    if (weakSelf.firmwareUpdateProgress == SigFirmwareUpdateProgressDistributorToUpdatingNodeBLOBTransferStart) {
+                        TelinkLogInfo(@"isResponseAll=%d,error=%@",isResponseAll,error);
+                        dispatch_semaphore_signal(weakSelf.semaphore);
+                    }
                 }];
                 //Most provide 3 seconds to BLOBTransferStart(Distributor->updating node(s)) every node.
                 dispatch_semaphore_wait(self.semaphore, kTimeOutOfEveryStep);
@@ -2438,30 +2504,30 @@
             }
     }
     if (hasSuccess) {
-        [self distributorToUpdatingNodesBLOBTransferStartSuccessAction];
+        [self distributorToUpdatingNodeBLOBTransferStartSuccessAction];
     } else {
         [self createErrorWithString:@"All nodes have not response SigBLOBTransferStatus"];
-        [self distributorToUpdatingNodesBLOBTransferStartFailAction];
+        [self distributorToUpdatingNodeBLOBTransferStartFailAction];
     }
 }
 
-- (void)distributorToUpdatingNodesBLOBTransferStartSuccessAction {
+- (void)distributorToUpdatingNodeBLOBTransferStartSuccessAction {
     self.blockIndex = 0;
     double blockSize = (double)pow(2, self.blockSizeLog);
     self.allBlockCount = ceil(self.firmwareDataOnDistributor.length / blockSize);
     self.retryCountInBLOBChunkTransfer = 0;
-    [self performSelector:@selector(distributorToUpdatingNodesBLOBBlockStart) onThread:self.meshOTAThread withObject:nil waitUntilDone:YES];
+    [self performSelector:@selector(distributorToUpdatingNodeBLOBBlockStart) onThread:self.meshOTAThread withObject:nil waitUntilDone:YES];
 }
 
-- (void)distributorToUpdatingNodesBLOBTransferStartFailAction {
+- (void)distributorToUpdatingNodeBLOBTransferStartFailAction {
     [self performSelector:@selector(firmwareUpdateFailAction) onThread:self.meshOTAThread withObject:nil waitUntilDone:YES];
 }
 
 //参考原来meshOTA的BLOB逻辑
 
 #pragma mark - Firmware update step19:BLOBBlockStart(Distributor->updating node(s))
-- (void)distributorToUpdatingNodesBLOBBlockStart {
-    self.firmwareUpdateProgress = SigFirmwareUpdateProgressDistributorToUpdatingNodesBLOBBlockStart;
+- (void)distributorToUpdatingNodeBLOBBlockStart {
+    self.firmwareUpdateProgress = SigFirmwareUpdateProgressDistributorToUpdatingNodeBLOBBlockStart;
     TelinkLogInfo(@"\n\n==========firmware update:step%d\n\n",self.firmwareUpdateProgress);
 
     self.chunkIndex = 0;
@@ -2508,8 +2574,10 @@
                     }
                 }
             } resultCallback:^(BOOL isResponseAll, NSError * _Nullable error) {
-                TelinkLogInfo(@"isResponseAll=%d,error=%@",isResponseAll,error);
-                dispatch_semaphore_signal(weakSelf.semaphore);
+                if (weakSelf.firmwareUpdateProgress == SigFirmwareUpdateProgressDistributorToUpdatingNodeBLOBBlockStart) {
+                    TelinkLogInfo(@"isResponseAll=%d,error=%@",isResponseAll,error);
+                    dispatch_semaphore_signal(weakSelf.semaphore);
+                }
             }];
             //Most provide 3 seconds to BLOBBlockStart(Distributor->updating node(s)) every node.
             dispatch_semaphore_wait(self.semaphore, kTimeOutOfEveryStep);
@@ -2523,13 +2591,13 @@
     if (SigBearer.share.isOpen) {
         if (!isPullMode) {
             if (hasSuccess) {
-                [self distributorToUpdatingNodesBLOBBlockStartSuccessAction];
+                [self distributorToUpdatingNodeBLOBBlockStartSuccessAction];
             } else {
                 [self createErrorWithString:@"All nodes have not response SigBLOBBlockStatus"];
-                [self distributorToUpdatingNodesBLOBBlockStartFailAction];
+                [self distributorToUpdatingNodeBLOBBlockStartFailAction];
             }
         } else {
-            self.chunksCountofCurrentBlock = ceil(self.currentBlockData.length / (double)self.chunkSize);
+            self.chunksCountOfCurrentBlock = ceil(self.currentBlockData.length / (double)self.chunkSize);
             [weakSelf handleLPNReportAction];
         }
     } else {
@@ -2537,28 +2605,28 @@
     }
 }
 
-- (void)distributorToUpdatingNodesBLOBBlockStartSuccessAction {
+- (void)distributorToUpdatingNodeBLOBBlockStartSuccessAction {
     if (self.transferModeOfUpdateNodes == SigTransferModeState_pushBLOBTransferMode) {
         self.chunkIndex = 0;
-        [self performSelector:@selector(distributorToUpdatingNodesBLOBChunkTransfer) onThread:self.meshOTAThread withObject:nil waitUntilDone:NO];
+        [self performSelector:@selector(distributorToUpdatingNodeBLOBChunkTransfer) onThread:self.meshOTAThread withObject:nil waitUntilDone:NO];
     } else {
         //pull模式，等待Report
         self.BLOBPartialBlockReport = nil;
     }
 }
 
-- (void)distributorToUpdatingNodesBLOBBlockStartFailAction {
+- (void)distributorToUpdatingNodeBLOBBlockStartFailAction {
     [self performSelector:@selector(firmwareUpdateFailAction) onThread:self.meshOTAThread withObject:nil waitUntilDone:YES];
 }
 
 //参考原来meshOTA的BLOB逻辑
 
 #pragma mark - Firmware update step20:BLOBChunkTransfer(Distributor->updating node(s))
-- (void)distributorToUpdatingNodesBLOBChunkTransfer {
-    self.firmwareUpdateProgress = SigFirmwareUpdateProgressDistributorToUpdatingNodesBLOBChunkTransfer;
+- (void)distributorToUpdatingNodeBLOBChunkTransfer {
+    self.firmwareUpdateProgress = SigFirmwareUpdateProgressDistributorToUpdatingNodeBLOBChunkTransfer;
     TelinkLogInfo(@"\n\n==========firmware update:step%d\n\n",self.firmwareUpdateProgress);
 
-    self.chunksCountofCurrentBlock = ceil(self.currentBlockData.length / (double)self.chunkSize);
+    self.chunksCountOfCurrentBlock = ceil(self.currentBlockData.length / (double)self.chunkSize);
     __block BOOL hasSuccess = NO;
 
     //v3.3.3开始新增优化逻辑：APP作为distributor，升级节点有且只有一个节点，且为直连节点时，使用直连节点地址；其它情况为组播地址。
@@ -2583,7 +2651,7 @@
         }
     }
 
-    for (int i = (int)self.chunkIndex; i < self.chunksCountofCurrentBlock; i ++) {
+    for (int i = (int)self.chunkIndex; i < self.chunksCountOfCurrentBlock; i ++) {
         if (![self isMeshOTAing]) {
             return;
         }
@@ -2592,14 +2660,14 @@
         }
         self.chunkIndex = i;
         NSData *chunkData = nil;
-        if (i == self.chunksCountofCurrentBlock - 1) {
+        if (i == self.chunksCountOfCurrentBlock - 1) {
             //end chunk of current block
             chunkData = [self.currentBlockData subdataWithRange:NSMakeRange(self.chunkSize * i, self.currentBlockData.length - self.chunkSize * i)];
         } else {
             chunkData = [self.currentBlockData subdataWithRange:NSMakeRange(self.chunkSize * i, self.chunkSize)];
         }
         __weak typeof(self) weakSelf = self;
-        TelinkLogInfo(@"all Block count=%d,current block index=%d,all chunk count=%d,current chunk index=%d ",self.allBlockCount,self.blockIndex,self.chunksCountofCurrentBlock,self.chunkIndex);
+        TelinkLogInfo(@"all Block count=%d,current block index=%d,all chunk count=%d,current chunk index=%d ",self.allBlockCount,self.blockIndex,self.chunksCountOfCurrentBlock,self.chunkIndex);
         //该处为新meshOTA逻辑，需要模拟Distributor广播固件到updating nodes，并模拟adv回包，即self.firmwareDistributionReceiversList.
         [self createSigFirmwareDistributionReceiversListWithCurrentChunkData:chunkData otaData:self.firmwareDataOnDistributor];
         [self callbackAdvDistributionProgressBlock];
@@ -2615,42 +2683,44 @@
 
         BOOL sendBySegmentPdu = NO;
         self.messageHandle = [SDKLibCommand BLOBChunkTransferWithDestination:destination chunkNumber:self.chunkIndex chunkData:chunkData sendBySegmentPdu:sendBySegmentPdu retryCount:0 responseMaxCount:0 resultCallback:^(BOOL isResponseAll, NSError * _Nullable error) {
-            TelinkLogInfo(@"isResponseAll=%d,error=%@",isResponseAll,error);
-            if (error) {
-                [self createErrorWithString:[NSString stringWithFormat:@"App transfer BLOBChunk to destination=0x%04X fail", destination]];
-                dispatch_semaphore_signal(weakSelf.semaphore);
-            } else {
-                hasSuccess = YES;
-                if (destination == kMeshOTAGroupAddress && !sendBySegmentPdu && (chunkData.length + 2) <= (SigMeshLib.share.dataSource.defaultUnsegmentedMessageLowerTransportPDUMaxLength - 1 - 4)) {//该指令是1个字节Opcode，4个字节MIC。剩余是AccessPDU。
-//                if (destination == kMeshOTAGroupAddress && (chunkData.length + 2) <= (SigMeshLib.share.dataSource.defaultUnsegmentedMessageLowerTransportPDUMaxLength - 1 - 4)) {//该指令是1个字节Opcode，4个字节MIC。剩余是AccessPDU。
-                    float interval = kUnSegmentPacketInterval;
-                    if (SigMeshLib.share.dataSource.telinkExtendBearerMode == SigTelinkExtendBearerMode_extendGATTAndAdv) {
-                        interval = 0.280;
-                    }
-                    TelinkLogInfo(@"distributor分发地址为广播地址，延时%f秒",interval);
-                    dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(interval * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
-                        dispatch_semaphore_signal(weakSelf.semaphore);
-                    });
+            if (weakSelf.firmwareUpdateProgress == SigFirmwareUpdateProgressDistributorToUpdatingNodeBLOBChunkTransfer) {
+                TelinkLogInfo(@"isResponseAll=%d,error=%@",isResponseAll,error);
+                if (error) {
+                    [self createErrorWithString:[NSString stringWithFormat:@"App transfer BLOBChunk to destination=0x%04X fail", destination]];
+                    dispatch_semaphore_signal(weakSelf.semaphore);
                 } else {
-                    //为修复手机作为distribution升级多个节点时，发送blob完成后还有异常调用发送接口的bug。
-                    if (destination != SigMeshLib.share.dataSource.unicastAddressOfConnected) {
-                        SigNodeModel *node = [SigMeshLib.share.dataSource getNodeWithAddress:destination];
-                        float interval = 0.0;
-                        if (node && node.isLPN) {
-                            //延时200ms
-                            //为修复手机作为distribution升级一个非直连LPN节点时，且直连节点friend关闭时，发送blob完成后miss很多包的bug。
-                            interval = 0.200;
-                        } else {
-                            interval = 0.120;
+                    hasSuccess = YES;
+                    if (destination == kMeshOTAGroupAddress && !sendBySegmentPdu && (chunkData.length + 2) <= (SigMeshLib.share.dataSource.defaultUnsegmentedMessageLowerTransportPDUMaxLength - 1 - 4)) {//该指令是1个字节Opcode，4个字节MIC。剩余是AccessPDU。
+    //                if (destination == kMeshOTAGroupAddress && (chunkData.length + 2) <= (SigMeshLib.share.dataSource.defaultUnsegmentedMessageLowerTransportPDUMaxLength - 1 - 4)) {//该指令是1个字节Opcode，4个字节MIC。剩余是AccessPDU。
+                        float interval = kUnSegmentPacketInterval;
+                        if (SigMeshLib.share.dataSource.telinkExtendBearerMode == SigTelinkExtendBearerMode_extendGATTAndAdv) {
+                            interval = 0.280;
                         }
-                        TelinkLogInfo(@"distributor分发地址为单播地址，延时%f秒",interval);
+                        TelinkLogInfo(@"distributor分发地址为广播地址，延时%f秒",interval);
                         dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(interval * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
                             dispatch_semaphore_signal(weakSelf.semaphore);
                         });
                     } else {
-                        //直连不延时
-//                    TelinkLogInfo(@"distributor分发地址为单播地址，不延时");
-                        dispatch_semaphore_signal(weakSelf.semaphore);
+                        //为修复手机作为distribution升级多个节点时，发送blob完成后还有异常调用发送接口的bug。
+                        if (destination != SigMeshLib.share.dataSource.unicastAddressOfConnected) {
+                            SigNodeModel *node = [SigMeshLib.share.dataSource getNodeWithAddress:destination];
+                            float interval = 0.0;
+                            if (node && node.isLPN) {
+                                //延时200ms
+                                //为修复手机作为distribution升级一个非直连LPN节点时，且直连节点friend关闭时，发送blob完成后miss很多包的bug。
+                                interval = 0.200;
+                            } else {
+                                interval = 0.120;
+                            }
+                            TelinkLogInfo(@"distributor分发地址为单播地址，延时%f秒",interval);
+                            dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(interval * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
+                                dispatch_semaphore_signal(weakSelf.semaphore);
+                            });
+                        } else {
+                            //直连不延时
+    //                    TelinkLogInfo(@"distributor分发地址为单播地址，不延时");
+                            dispatch_semaphore_signal(weakSelf.semaphore);
+                        }
                     }
                 }
             }
@@ -2666,12 +2736,12 @@
 
     if (!hasSuccess) {
         if (SigBearer.share.isOpen) {
-            [self distributorToUpdatingNodesBLOBChunkTransferFailAction];
+            [self distributorToUpdatingNodeBLOBChunkTransferFailAction];
         } else {
             return;
         }
     } else {
-        [self distributorToUpdatingNodesBLOBChunkTransferSuccessFinishAction];
+        [self distributorToUpdatingNodeBLOBChunkTransferSuccessFinishAction];
     }
 }
 
@@ -2686,7 +2756,6 @@
         if ([self.failAddressArray containsObject:nodeAddress]) {
             continue;
         }
-        //待验证实际升级时下面几个参数是否正确。
         SigUpdatingNodeEntryModel *model = [[SigUpdatingNodeEntryModel alloc] initWithAddress:nodeAddress.intValue retrievedUpdatePhase:SigFirmwareUpdatePhaseType_transferActive updateStatus:SigFirmwareUpdateServerAndClientModelStatusType_success transferStatus:SigBLOBTransferStatusType_success transferProgress:intPro updateFirmwareImageIndex:0];
         [list addObject:model];
     }
@@ -2696,21 +2765,27 @@
     self.firmwareDistributionReceiversList = responseMessage;
 }
 
-- (void)distributorToUpdatingNodesBLOBChunkTransferWithLosePackets {
-    self.firmwareUpdateProgress = SigFirmwareUpdateProgressDistributorToUpdatingNodesBLOBChunkTransfer;
+- (void)distributorToUpdatingNodeBLOBChunkTransferWithLosePackets {
+    self.firmwareUpdateProgress = SigFirmwareUpdateProgressDistributorToUpdatingNodeBLOBChunkTransfer;
     TelinkLogInfo(@"\n\n==========firmware update:step%d.1\n\n",self.firmwareUpdateProgress);
     __block BOOL hasFail = NO;
     self.successActionInCurrentProgress = 0;
     if (self.losePacketsDict && self.losePacketsDict.allKeys.count > 0) {
         NSArray *losePacketsDictAllKeys = self.losePacketsDict.allKeys;
+        NSInteger allPacketCount = 0;
+        NSInteger curPacketIndex = 0;
+        for (NSNumber *addressNumber in losePacketsDictAllKeys) {
+            NSArray *loseChunkIndexes = self.losePacketsDict[addressNumber];
+            allPacketCount += loseChunkIndexes.count;
+        }
         for (NSNumber *addressNumber in losePacketsDictAllKeys) {
             UInt16 destination = (UInt16)addressNumber.intValue;
-            NSArray *loaeChunkIndexes = self.losePacketsDict[addressNumber];
-            for (NSNumber *chunkIndexNumber in loaeChunkIndexes) {
+            NSArray *loseChunkIndexes = self.losePacketsDict[addressNumber];
+            for (NSNumber *chunkIndexNumber in loseChunkIndexes) {
                 NSInteger chunkIndex = chunkIndexNumber.intValue;
                 self.chunkIndex = chunkIndex;
                 NSData *chunkData = nil;
-                if (chunkIndex == self.chunksCountofCurrentBlock - 1) {
+                if (chunkIndex == self.chunksCountOfCurrentBlock - 1) {
                     //end chunk of current block
                     chunkData = [self.currentBlockData subdataWithRange:NSMakeRange(self.chunkSize * chunkIndex, self.currentBlockData.length - self.chunkSize * chunkIndex)];
                 } else {
@@ -2718,47 +2793,53 @@
                 }
                 __weak typeof(self) weakSelf = self;
                 self.semaphore = dispatch_semaphore_create(0);
-                TelinkLogInfo(@"all Block count=%d,current block index=%d,destination = 0x%x,all chunk count=%d,current chunk index=%d ",self.allBlockCount,self.blockIndex,destination,self.chunksCountofCurrentBlock,self.chunkIndex);
+                TelinkLogInfo(@"all Block count=%d,current block index=%d,destination = 0x%x,all chunk count=%d,current chunk index=%d ",self.allBlockCount,self.blockIndex,destination,self.chunksCountOfCurrentBlock,self.chunkIndex);
 
+                // Replenish Packet, callback some parameter for UI
+                if (self.replenishPacketCallback) {
+                    self.replenishPacketCallback(allPacketCount, curPacketIndex + [loseChunkIndexes indexOfObject:chunkIndexNumber], self.allBlockCount, self.blockIndex, self.chunksCountOfCurrentBlock, self.chunkIndex, destination);
+                }
                 BOOL sendBySegmentPdu = NO;
                 self.messageHandle = [SDKLibCommand BLOBChunkTransferWithDestination:destination chunkNumber:self.chunkIndex chunkData:chunkData sendBySegmentPdu:sendBySegmentPdu retryCount:0 responseMaxCount:0 resultCallback:^(BOOL isResponseAll, NSError * _Nullable error) {
-                    TelinkLogInfo(@"isResponseAll=%d,error=%@",isResponseAll,error);
-                    if (error) {
-                        hasFail = YES;
-                        [weakSelf createErrorWithString:[NSString stringWithFormat:@"App transfer BLOBChunk to destination=0x%04X fail", destination]];
-                        dispatch_semaphore_signal(weakSelf.semaphore);
-                    } else {
-                        weakSelf.successActionInCurrentProgress ++;
-                        if (destination == kMeshOTAGroupAddress && !sendBySegmentPdu && (chunkData.length + 2) <= (SigMeshLib.share.dataSource.defaultUnsegmentedMessageLowerTransportPDUMaxLength - 1 - 4)) {//该指令是1个字节Opcode，4个字节MIC。剩余是AccessPDU。
-//                        if (destination == kMeshOTAGroupAddress && (chunkData.length + 2) <= (SigMeshLib.share.dataSource.defaultUnsegmentedMessageLowerTransportPDUMaxLength - 1 - 4)) {//该指令是1个字节Opcode，4个字节MIC。剩余是AccessPDU。
-                            float interval = kUnSegmentPacketInterval;
-                            if (SigMeshLib.share.dataSource.telinkExtendBearerMode == SigTelinkExtendBearerMode_extendGATTAndAdv) {
-                                interval = 0.280;
-                            }
-                            TelinkLogInfo(@"distributor分发地址为广播地址，延时%f秒",interval);
-                            dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(interval * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
-                                dispatch_semaphore_signal(weakSelf.semaphore);
-                            });
+                    if (weakSelf.firmwareUpdateProgress == SigFirmwareUpdateProgressDistributorToUpdatingNodeBLOBChunkTransfer) {
+                        TelinkLogInfo(@"isResponseAll=%d,error=%@",isResponseAll,error);
+                        if (error) {
+                            hasFail = YES;
+                            [weakSelf createErrorWithString:[NSString stringWithFormat:@"App transfer BLOBChunk to destination=0x%04X fail", destination]];
+                            dispatch_semaphore_signal(weakSelf.semaphore);
                         } else {
-                            //为修复手机作为distribution升级多个节点时，发送blob完成后还有异常调用发送接口的bug。
-                            if (destination != SigMeshLib.share.dataSource.unicastAddressOfConnected) {
-                                SigNodeModel *node = [SigMeshLib.share.dataSource getNodeWithAddress:destination];
-                                float interval = 0.0;
-                                if (node && node.isLPN) {
-                                    //延时200ms
-                                    //为修复手机作为distribution升级一个非直连LPN节点时，且直连节点friend关闭时，发送blob完成后miss很多包的bug。
-                                    interval = 0.200;
-                                } else {
-                                    interval = 0.120;
+                            weakSelf.successActionInCurrentProgress ++;
+                            if (destination == kMeshOTAGroupAddress && !sendBySegmentPdu && (chunkData.length + 2) <= (SigMeshLib.share.dataSource.defaultUnsegmentedMessageLowerTransportPDUMaxLength - 1 - 4)) {//该指令是1个字节Opcode，4个字节MIC。剩余是AccessPDU。
+    //                        if (destination == kMeshOTAGroupAddress && (chunkData.length + 2) <= (SigMeshLib.share.dataSource.defaultUnsegmentedMessageLowerTransportPDUMaxLength - 1 - 4)) {//该指令是1个字节Opcode，4个字节MIC。剩余是AccessPDU。
+                                float interval = kUnSegmentPacketInterval;
+                                if (SigMeshLib.share.dataSource.telinkExtendBearerMode == SigTelinkExtendBearerMode_extendGATTAndAdv) {
+                                    interval = 0.280;
                                 }
-                                TelinkLogInfo(@"distributor分发地址为单播地址，延时%f秒",interval);
+                                TelinkLogInfo(@"distributor分发地址为广播地址，延时%f秒",interval);
                                 dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(interval * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
                                     dispatch_semaphore_signal(weakSelf.semaphore);
                                 });
                             } else {
-                                //直连不延时
-//                    TelinkLogInfo(@"distributor分发地址为单播地址，不延时");
-                                dispatch_semaphore_signal(weakSelf.semaphore);
+                                //为修复手机作为distribution升级多个节点时，发送blob完成后还有异常调用发送接口的bug。
+                                if (destination != SigMeshLib.share.dataSource.unicastAddressOfConnected) {
+                                    SigNodeModel *node = [SigMeshLib.share.dataSource getNodeWithAddress:destination];
+                                    float interval = 0.0;
+                                    if (node && node.isLPN) {
+                                        //延时200ms
+                                        //为修复手机作为distribution升级一个非直连LPN节点时，且直连节点friend关闭时，发送blob完成后miss很多包的bug。
+                                        interval = 0.200;
+                                    } else {
+                                        interval = 0.120;
+                                    }
+                                    TelinkLogInfo(@"distributor分发地址为单播地址，延时%f秒",interval);
+                                    dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(interval * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
+                                        dispatch_semaphore_signal(weakSelf.semaphore);
+                                    });
+                                } else {
+                                    //直连不延时
+    //                    TelinkLogInfo(@"distributor分发地址为单播地址，不延时");
+                                    dispatch_semaphore_signal(weakSelf.semaphore);
+                                }
                             }
                         }
                     }
@@ -2766,29 +2847,30 @@
                 //Most provide 24*60*60 seconds for BLOBChunkTransfer(Distributor->updating node(s)) in every chunk.
                 dispatch_semaphore_wait(self.semaphore, dispatch_time(DISPATCH_TIME_NOW, NSEC_PER_SEC * 24*60*60.0));
             }
+            curPacketIndex += loseChunkIndexes.count;
         }
     }
     if (hasFail) {
-        [self distributorToUpdatingNodesBLOBChunkTransferFailAction];
+        [self distributorToUpdatingNodeBLOBChunkTransferFailAction];
     } else {
-        [self distributorToUpdatingNodesBLOBChunkTransferSuccessFinishAction];
+        [self distributorToUpdatingNodeBLOBChunkTransferSuccessFinishAction];
     }
 }
 
 
-- (void)distributorToUpdatingNodesBLOBChunkTransferSuccessFinishAction {
-    [self performSelector:@selector(distributorToUpdatingNodesBLOBBlockGet) onThread:self.meshOTAThread withObject:nil waitUntilDone:NO];
+- (void)distributorToUpdatingNodeBLOBChunkTransferSuccessFinishAction {
+    [self performSelector:@selector(distributorToUpdatingNodeBLOBBlockGet) onThread:self.meshOTAThread withObject:nil waitUntilDone:NO];
 }
 
-- (void)distributorToUpdatingNodesBLOBChunkTransferFailAction {
+- (void)distributorToUpdatingNodeBLOBChunkTransferFailAction {
     [self performSelector:@selector(firmwareUpdateFailAction) onThread:self.meshOTAThread withObject:nil waitUntilDone:YES];
 }
 
 //参考原来meshOTA的BLOB逻辑
 
 #pragma mark - Firmware update step21:BLOBBlockGet(Distributor->updating node(s))
-- (void)distributorToUpdatingNodesBLOBBlockGet {
-    self.firmwareUpdateProgress = SigFirmwareUpdateProgressDistributorToUpdatingNodesBLOBBlockGet;
+- (void)distributorToUpdatingNodeBLOBBlockGet {
+    self.firmwareUpdateProgress = SigFirmwareUpdateProgressDistributorToUpdatingNodeBLOBBlockGet;
     TelinkLogInfo(@"\n\n==========firmware update:step%d\n\n",self.firmwareUpdateProgress);
 
     self.losePacketsDict = [NSMutableDictionary dictionary];
@@ -2831,7 +2913,7 @@
                             [weakSelf createErrorWithString:[NSString stringWithFormat:@"SigBLOBBlockStatus.status=0x%x, format=0x%x,  blockIndex=%d, source=0x%04X", responseMessage.status, responseMessage.format, weakSelf.blockIndex, source]];
                             TelinkLogInfo(@"%@", [NSString stringWithFormat:@"SigBLOBBlockStatus.status=0x%x, format=0x%x,  blockIndex=%d, source=0x%04X", responseMessage.status, responseMessage.format, weakSelf.blockIndex, source]);
                             NSMutableArray *chunkIndexes = [NSMutableArray array];
-                            for (int i=0; i<weakSelf.chunksCountofCurrentBlock; i++) {
+                            for (int i=0; i<weakSelf.chunksCountOfCurrentBlock; i++) {
                                 [chunkIndexes addObject:@(i)];
                             }
                             weakSelf.losePacketsDict[@(source)] = chunkIndexes;
@@ -2845,13 +2927,15 @@
                     }
                 }
             } resultCallback:^(BOOL isResponseAll, NSError * _Nullable error) {
-                TelinkLogInfo(@"isResponseAll=%d,error=%@",isResponseAll,error);
-                if (error) {
-                    if (![weakSelf.failAddressArray containsObject:nodeAddress]) {
-                        [weakSelf.failAddressArray addObject:nodeAddress];
+                if (weakSelf.firmwareUpdateProgress == SigFirmwareUpdateProgressDistributorToUpdatingNodeBLOBBlockGet) {
+                    TelinkLogInfo(@"isResponseAll=%d,error=%@",isResponseAll,error);
+                    if (error) {
+                        if (![weakSelf.failAddressArray containsObject:nodeAddress]) {
+                            [weakSelf.failAddressArray addObject:nodeAddress];
+                        }
                     }
+                    dispatch_semaphore_signal(weakSelf.semaphore);
                 }
-                dispatch_semaphore_signal(weakSelf.semaphore);
             }];
             //Most provide 3 seconds to BLOBBlockGet(Distributor->updating node(s)) every node.
             dispatch_semaphore_wait(self.semaphore, kTimeOutOfEveryStep);
@@ -2873,8 +2957,8 @@
             NSMutableArray *newLoseChunkIndexes = [NSMutableArray array];
             NSDictionary *losePacketsDict = [NSDictionary dictionaryWithDictionary:self.losePacketsDict];
             for (NSNumber *addressNumber in losePacketsDict.allKeys) {
-                NSArray *loaeChunkIndexes = losePacketsDict[addressNumber];
-                for (NSNumber *chunkIndex in loaeChunkIndexes) {
+                NSArray *loseChunkIndexes = losePacketsDict[addressNumber];
+                for (NSNumber *chunkIndex in loseChunkIndexes) {
                     if (![newLoseChunkIndexes containsObject:chunkIndex]) {
                         [newLoseChunkIndexes addObject:chunkIndex];
                     }
@@ -2888,28 +2972,28 @@
                 }
                 TelinkLogInfo(@"newLoseChunkIndexes=%@",newLoseChunkIndexes);
                 self.losePacketsDict = [NSMutableDictionary dictionaryWithDictionary:newDict];
-                [self distributorToUpdatingNodesBLOBChunkTransferWithLosePackets];
+                [self distributorToUpdatingNodeBLOBChunkTransferWithLosePackets];
             }else{
-                [self distributorToUpdatingNodesBLOBBlockGetFailAction];
+                [self distributorToUpdatingNodeBLOBBlockGetFailAction];
             }
         } else {
-            [self distributorToUpdatingNodesBLOBBlockGetFailAction];
+            [self distributorToUpdatingNodeBLOBBlockGetFailAction];
         }
     } else {
         if (hasSuccess) {
-            [self distributorToUpdatingNodesBLOBBlockGetSuccessAction];
+            [self distributorToUpdatingNodeBLOBBlockGetSuccessAction];
         } else {
-            [self distributorToUpdatingNodesBLOBBlockGetFailAction];
+            [self distributorToUpdatingNodeBLOBBlockGetFailAction];
         }
     }
 }
 
-- (void)distributorToUpdatingNodesBLOBBlockGetSuccessAction {
+- (void)distributorToUpdatingNodeBLOBBlockGetSuccessAction {
     if (self.blockIndex < self.allBlockCount - 1) {
         // send next block data
         self.blockIndex ++;
         self.retryCountInBLOBChunkTransfer = 0;
-        [self performSelector:@selector(distributorToUpdatingNodesBLOBBlockStart) onThread:self.meshOTAThread withObject:nil waitUntilDone:NO];
+        [self performSelector:@selector(distributorToUpdatingNodeBLOBBlockStart) onThread:self.meshOTAThread withObject:nil waitUntilDone:NO];
     } else if (self.blockIndex == self.allBlockCount - 1) {
         // all blocks had send
         TelinkLogVerbose(@"");
@@ -2920,11 +3004,11 @@
     }
 }
 
-- (void)distributorToUpdatingNodesBLOBBlockGetFailAction {
+- (void)distributorToUpdatingNodeBLOBBlockGetFailAction {
     if (self.retryCountInBLOBChunkTransfer < kRetryCountInBLOBChunkTransfer) {
         TelinkLogInfo(@"retry send block.");
         self.retryCountInBLOBChunkTransfer ++;
-        [self performSelector:@selector(distributorToUpdatingNodesBLOBBlockStart) onThread:self.meshOTAThread withObject:nil waitUntilDone:YES];
+        [self performSelector:@selector(distributorToUpdatingNodeBLOBBlockStart) onThread:self.meshOTAThread withObject:nil waitUntilDone:YES];
     } else {
         TelinkLogInfo(@"App retry transfer BLOBChunk to nodes three times but still failed");
         [self createErrorWithString:@"App retry transfer BLOBChunk to nodes three times but still failed"];
@@ -2937,6 +3021,18 @@
  模拟Distributor进行固件广播end
  */
 
+
+/*
+ step22~step28：
+ 
+ if distributor fw need to be updated, then it will call set_mesh_ota_distribute_100_flag_() when receive fw update apply, then reboot.
+   after reboot, App will send  FW_DISTRIBUT_RECEIVERS_GET commnad to get transfer_progress with 50,
+   which means distributor OTA flow has completed and has cleared mesh ota flow. then App can get firmware version at this time.
+
+   if distributor no need to be updated, distributor will not automatically reboot,
+   and wait for App to send FW_DISTRIBUT_GET to get phase of DISTRIBUT_PHASE_COMPLETED, then App send FW_UPDATE_INFO_GET to get firmware version.
+   then send distribute cancel command to let distributor to reboot to clear mesh ota flow.
+*/
 
 //8.7.6 Checking distribution progress
 //8.1.3.6 Checking the progress of a firmware image transfer(Distributor广播固件状态/或者校验固件状态/或者apply固件状态，initiator定时查询设备的OTA状态即可)
@@ -2957,9 +3053,11 @@
             weakSelf.firmwareDistributionReceiversList = responseMessage;
             [weakSelf callbackAdvDistributionProgressBlock];
         } resultCallback:^(BOOL isResponseAll, NSError * _Nullable error) {
-            TelinkLogInfo(@"isResponseAll=%d,error=%@",isResponseAll,error);
-            [weakSelf createErrorWithString:[NSString stringWithFormat:@"The distributorAddress=0x%04X has not response SigFirmwareDistributionReceiversList", weakSelf.distributorAddress]];
-            dispatch_semaphore_signal(weakSelf.semaphore);
+            if (weakSelf.firmwareUpdateProgress == SigFirmwareUpdateProgressFirmwareDistributionReceiversGet) {
+                TelinkLogInfo(@"isResponseAll=%d,error=%@",isResponseAll,error);
+                [weakSelf createErrorWithString:[NSString stringWithFormat:@"The distributorAddress=0x%04X has not response SigFirmwareDistributionReceiversList", weakSelf.distributorAddress]];
+                dispatch_semaphore_signal(weakSelf.semaphore);
+            }
         }];
         if (self.phoneIsDistributor) {
             //手机端既作为initiator，也作为Distributor。
@@ -2983,16 +3081,12 @@
                 if (model.retrievedUpdatePhase == SigFirmwareUpdatePhaseType_transferError || model.retrievedUpdatePhase == SigFirmwareUpdatePhaseType_verificationFailed || model.retrievedUpdatePhase == SigFirmwareUpdatePhaseType_transferCanceled || model.retrievedUpdatePhase == SigFirmwareUpdatePhaseType_applyFailed || model.retrievedUpdatePhase == SigFirmwareUpdatePhaseType_unknown) {
                     [self.failAddressArray addObject:@(model.address)];
                     needCheckNextIndex = YES;
-                } else if (model.retrievedUpdatePhase == SigFirmwareUpdatePhaseType_idle || model.retrievedUpdatePhase == SigFirmwareUpdatePhaseType_applyingUpdate || model.retrievedUpdatePhase == SigFirmwareUpdatePhaseType_applySuccess) {
+                } else if (model.transferProgress == 50 && (model.retrievedUpdatePhase == SigFirmwareUpdatePhaseType_idle || (self.updatePolicy == SigUpdatePolicyType_verifyAndApply && model.retrievedUpdatePhase == SigFirmwareUpdatePhaseType_applySuccess) || (self.updatePolicy == SigUpdatePolicyType_verifyOnly && (model.retrievedUpdatePhase == SigFirmwareUpdatePhaseType_verifyingUpdate || model.retrievedUpdatePhase == SigFirmwareUpdatePhaseType_verificationSuccess)))) {
                     needCheckNextIndex = YES;
-                } else if (model.retrievedUpdatePhase == SigFirmwareUpdatePhaseType_transferActive) {
+                } else if (model.retrievedUpdatePhase == SigFirmwareUpdatePhaseType_transferActive || (model.transferProgress == 0 && (model.retrievedUpdatePhase == SigFirmwareUpdatePhaseType_idle || model.retrievedUpdatePhase == SigFirmwareUpdatePhaseType_verifyingUpdate))) {
                     needReceiversGetAgain = YES;
-                } else if (model.retrievedUpdatePhase == SigFirmwareUpdatePhaseType_verificationSuccess || model.retrievedUpdatePhase == SigFirmwareUpdatePhaseType_verifyingUpdate) {
-                    if (self.updatePolicy == SigUpdatePolicyType_verifyOnly || self.phoneIsDistributor) {
-                        needCheckNextIndex = YES;
-                    } else {
-                        needReceiversGetAgain = YES;
-                    }
+                } else if (model.transferProgress == 50 && model.retrievedUpdatePhase == SigFirmwareUpdatePhaseType_applyingUpdate) {
+                    needReceiversGetAgain = YES;
                 }
             }
 
@@ -3046,7 +3140,7 @@
                 continue;
             }
             if (![self.successAddressArray containsObject:address]) {
-                TelinkLogVerbose(@"0x%X apply success!!!",address);
+                TelinkLogVerbose(@"0x%X verify success!!!",address);
                 [self.successAddressArray addObject:address];
             }
         }
@@ -3074,13 +3168,10 @@
     if (self.updatePolicy == SigUpdatePolicyType_verifyAndApply) {
         if (self.firmwareDistributionReceiversList && self.firmwareDistributionReceiversList.receiversList && self.firmwareDistributionReceiversList.receiversList.count) {
             SigUpdatingNodeEntryModel *receiver = self.firmwareDistributionReceiversList.receiversList.firstObject;
-            if ((receiver && receiver.transferProgress == 50 && receiver.retrievedUpdatePhase == SigFirmwareUpdatePhaseType_idle) || receiver.retrievedUpdatePhase == SigFirmwareUpdatePhaseType_verificationSuccess || receiver.retrievedUpdatePhase == SigFirmwareUpdatePhaseType_applyingUpdate || receiver.retrievedUpdatePhase == SigFirmwareUpdatePhaseType_applySuccess) {
+            if (receiver && receiver.transferProgress == 50 && ((receiver.retrievedUpdatePhase == SigFirmwareUpdatePhaseType_idle) || (self.updatePolicy == SigUpdatePolicyType_verifyOnly && (receiver.retrievedUpdatePhase == SigFirmwareUpdatePhaseType_verifyingUpdate || receiver.retrievedUpdatePhase == SigFirmwareUpdatePhaseType_verificationSuccess)) || (self.updatePolicy == SigUpdatePolicyType_verifyAndApply && receiver.retrievedUpdatePhase == SigFirmwareUpdatePhaseType_applySuccess))) {
                 if (self.phoneIsDistributor) {
                     [self performSelector:@selector(firmwareUpdateFirmwareUpdateGet) onThread:self.meshOTAThread withObject:nil waitUntilDone:YES];
                 } else {
-//                    self.checkVersionCount = 6;
-//                    [self firmwareUpdateFirmwareDistributionGetSuccessAction];
-                    self.firmwareDistributionGetCount = 6;
                     [self firmwareUpdateFirmwareUpdateApplySuccessAction];
                 }
                 return;
@@ -3141,12 +3232,14 @@
             TelinkLogInfo(@"response from other node.");
         }
     } resultCallback:^(BOOL isResponseAll, NSError * _Nullable error) {
-        TelinkLogInfo(@"isResponseAll=%d,error=%@",isResponseAll,error);
-        if (error) {
-            hasFail = YES;
-            [weakSelf createErrorWithString:[NSString stringWithFormat:@"The distributorAddress=0x%04X has not response SigFirmwareDistributionStatus", weakSelf.distributorAddress]];
+        if (weakSelf.firmwareUpdateProgress == SigFirmwareUpdateProgressFirmwareDistributionApply) {
+            TelinkLogInfo(@"isResponseAll=%d,error=%@",isResponseAll,error);
+            if (error) {
+                hasFail = YES;
+                [weakSelf createErrorWithString:[NSString stringWithFormat:@"The distributorAddress=0x%04X has not response SigFirmwareDistributionStatus", weakSelf.distributorAddress]];
+            }
+            dispatch_semaphore_signal(weakSelf.semaphore);
         }
-        dispatch_semaphore_signal(weakSelf.semaphore);
     }];
     if (self.phoneIsDistributor) {
         //手机端既作为initiator，也作为Distributor。
@@ -3222,8 +3315,10 @@
                     }
                 }
             } resultCallback:^(BOOL isResponseAll, NSError * _Nullable error) {
-                TelinkLogInfo(@"isResponseAll=%d,error=%@",isResponseAll,error);
-                dispatch_semaphore_signal(weakSelf.semaphore);
+                if (weakSelf.firmwareUpdateProgress == SigFirmwareUpdateProgressFirmwareUpdateGet) {
+                    TelinkLogInfo(@"isResponseAll=%d,error=%@",isResponseAll,error);
+                    dispatch_semaphore_signal(weakSelf.semaphore);
+                }
             }];
             //Most provide 3 seconds to firmwareUpdateGet(Distributor->updating node(s)) every node.
             dispatch_semaphore_wait(self.semaphore, kTimeOutOfEveryStep);
@@ -3309,8 +3404,10 @@
                     }
                 }
             } resultCallback:^(BOOL isResponseAll, NSError * _Nullable error) {
-                TelinkLogInfo(@"isResponseAll=%d,error=%@",isResponseAll,error);
+                if (weakSelf.firmwareUpdateProgress == SigFirmwareUpdateProgressFirmwareUpdateApply) {
+                    TelinkLogInfo(@"isResponseAll=%d,error=%@",isResponseAll,error);
                     dispatch_semaphore_signal(weakSelf.semaphore);
+                }
             }];
             //Most provide 3 seconds to BLOBBlockStart every node.
             dispatch_semaphore_wait(self.semaphore, kTimeOutOfEveryStep);
@@ -3332,6 +3429,7 @@
 }
 
 - (void)firmwareUpdateFirmwareUpdateApplySuccessAction {
+    self.firmwareDistributionGetCount = 6;
     [self performSelector:@selector(firmwareUpdateFirmwareDistributionGet) onThread:self.meshOTAThread withObject:nil waitUntilDone:YES];
 }
 
@@ -3358,18 +3456,19 @@
     self.semaphore = dispatch_semaphore_create(0);
     self.messageHandle = [SDKLibCommand firmwareDistributionGetWithDestination:self.distributorAddress retryCount:SigDataSource.share.defaultRetryCount responseMaxCount:1 successCallback:^(UInt16 source, UInt16 destination, SigFirmwareDistributionStatus * _Nonnull responseMessage) {
         TelinkLogDebug(@"firmwareDistributionGet(Initiator->Distributor)=%@,source=%d,destination=%d",[LibTools convertDataToHexStr:responseMessage.parameters],source,destination);
-//            if (responseMessage.distributionPhase == SigDistributionPhaseState_completed) {//Distributor apply完成但未重启
-        if (responseMessage.distributionPhase == SigDistributionPhaseState_completed || responseMessage.distributionPhase == SigDistributionPhaseState_applyingUpdate || (responseMessage.status == SigFirmwareDistributionServerAndClientModelStatusType_success && responseMessage.distributionPhase == SigDistributionPhaseState_idle)) {//Distributor apply完成但未重启 或者 Distributor 正在apply 或者 Distributor apply完成并重启
+        if (responseMessage.status == SigFirmwareDistributionServerAndClientModelStatusType_success && (responseMessage.distributionPhase == SigDistributionPhaseState_idle || responseMessage.distributionPhase == SigDistributionPhaseState_completed)) {//Distributor apply完成但未重启 或者 Distributor apply完成并重启
             needGetAgain = NO;
         } else {
             [weakSelf createErrorWithString:[NSString stringWithFormat:@"SigFirmwareDistributionStatus.status=0x%x, distributionPhase=0x%x, source=0x%04X", responseMessage.status, responseMessage.distributionPhase, source]];
         }
     } resultCallback:^(BOOL isResponseAll, NSError * _Nullable error) {
-        TelinkLogInfo(@"isResponseAll=%d,error=%@",isResponseAll,error);
-        if (error) {
-            [weakSelf createErrorWithString:[NSString stringWithFormat:@"The distributorAddress=0x%04X has not response SigFirmwareDistributionStatus", weakSelf.distributorAddress]];
+        if (weakSelf.firmwareUpdateProgress == SigFirmwareUpdateProgressFirmwareDistributionGet) {
+            TelinkLogInfo(@"isResponseAll=%d,error=%@",isResponseAll,error);
+            if (error) {
+                [weakSelf createErrorWithString:[NSString stringWithFormat:@"The distributorAddress=0x%04X has not response SigFirmwareDistributionStatus", weakSelf.distributorAddress]];
+            }
+            dispatch_semaphore_signal(weakSelf.semaphore);
         }
-        dispatch_semaphore_signal(weakSelf.semaphore);
     }];
     if (self.phoneIsDistributor) {
         //手机端既作为initiator，也作为Distributor。
@@ -3391,8 +3490,16 @@
                 [self firmwareUpdateFirmwareDistributionGetFailAction];
             } else {
                 //成功
-                self.checkVersionCount = 6;
-                [self firmwareUpdateFirmwareDistributionGetSuccessAction];
+                if ([self.allAddressArray containsObject:@(SigDataSource.share.unicastAddressOfConnected)]) {
+                    //直连设备会断开连接
+                    self.waitNodeReboot = YES;
+                } else {
+                    //直连设备不会断开连接
+                    //10秒后开始第一轮版本号查询（闪灯 6 秒，重启擦除 flash 也要 2秒左右）
+                    self.checkVersionCount = 6;
+                    [NSObject cancelPreviousPerformRequestsWithTarget:self selector:@selector(firmwareUpdateFirmwareDistributionGetSuccessAction) object:nil];
+                    [self performSelector:@selector(firmwareUpdateFirmwareDistributionGetSuccessAction) withObject:nil afterDelay:10.0];
+                }
             }
         }
     }
@@ -3472,11 +3579,13 @@
                 }
             }
         } resultCallback:^(BOOL isResponseAll, NSError * _Nullable error) {
-            TelinkLogInfo(@"isResponseAll=%d,error=%@",isResponseAll,error);
-            if (error) {
-                [weakSelf createErrorWithString:[NSString stringWithFormat:@"The distributorAddress=0x%04X has not response SigFirmwareUpdateInformationStatus", nodeAddress.intValue]];
+            if (weakSelf.firmwareUpdateProgress == SigFirmwareUpdateInformationGetCheckVersion) {
+                TelinkLogInfo(@"isResponseAll=%d,error=%@",isResponseAll,error);
+                if (error) {
+                    [weakSelf createErrorWithString:[NSString stringWithFormat:@"The distributorAddress=0x%04X has not response SigFirmwareUpdateInformationStatus", nodeAddress.intValue]];
+                }
+                dispatch_semaphore_signal(weakSelf.semaphore);
             }
-            dispatch_semaphore_signal(weakSelf.semaphore);
         }];
         //Most provide 3 seconds to firmwareUpdateInformationGet every node.
         dispatch_semaphore_wait(self.semaphore, kTimeOutOfEveryStep);
@@ -3538,12 +3647,14 @@
     self.messageHandle = [SDKLibCommand firmwareDistributionCancelWithDestination:self.distributorAddress retryCount:2 responseMaxCount:1 successCallback:^(UInt16 source, UInt16 destination, SigFirmwareDistributionStatus * _Nonnull responseMessage) {
         TelinkLogDebug(@"firmwareDistributionCancel(Initiator->Distributor)=%@,source=%d,destination=%d",[LibTools convertDataToHexStr:responseMessage.parameters],source,destination);
     } resultCallback:^(BOOL isResponseAll, NSError * _Nullable error) {
-        TelinkLogInfo(@"isResponseAll=%d,error=%@",isResponseAll,error);
-        if (error) {
-            hasFail = YES;
-            [weakSelf createErrorWithString:[NSString stringWithFormat:@"The distributorAddress=0x%04X has not response SigFirmwareDistributionStatus", weakSelf.distributorAddress]];
+        if (weakSelf.firmwareUpdateProgress == SigFirmwareUpdateProgressFirmwareDistributionCancel) {
+            TelinkLogInfo(@"isResponseAll=%d,error=%@",isResponseAll,error);
+            if (error) {
+                hasFail = YES;
+                [weakSelf createErrorWithString:[NSString stringWithFormat:@"The distributorAddress=0x%04X has not response SigFirmwareDistributionStatus", weakSelf.distributorAddress]];
+            }
+            dispatch_semaphore_signal(weakSelf.semaphore);
         }
-        dispatch_semaphore_signal(weakSelf.semaphore);
     }];
     if (self.phoneIsDistributor) {
         //手机端既作为initiator，也作为Distributor。
@@ -3571,13 +3682,29 @@
 
 #pragma mark - firmware update fail
 - (void)firmwareUpdateFailAction {
+    if (SigBearer.share.isOpen) {
+        __weak typeof(self) weakSelf = self;
+        self.semaphore = dispatch_semaphore_create(0);
+        self.messageHandle = [SDKLibCommand firmwareDistributionCancelWithDestination:weakSelf.distributorAddress retryCount:2 responseMaxCount:1 successCallback:^(UInt16 source, UInt16 destination, SigFirmwareDistributionStatus * _Nonnull responseMessage) {
+            TelinkLogDebug(@"initiator firmwareDistributionCancel=%@,source=%d,destination=%d",[LibTools convertDataToHexStr:responseMessage.parameters],source,destination);
+
+        } resultCallback:^(BOOL isResponseAll, NSError * _Nullable error) {
+            TelinkLogInfo(@"isResponseAll=%d,error=%@",isResponseAll,error);
+            dispatch_semaphore_signal(weakSelf.semaphore);
+        }];
+        dispatch_semaphore_wait(self.semaphore, kTimeOutOfEveryStep);
+        [SigDataSource.share setAllDevicesOutline];
+    } else {
+        [ConnectTools.share stopConnectToolsWithComplete:nil];
+        [SigDataSource.share setAllDevicesOutline];
+    }
     if (self.errorBlock) {
         if (!self.failError) {
             self.failError = [NSError errorWithDomain:@"firmware update fail" code:-1 userInfo:nil];
         }
         self.errorBlock(self.failError);
     }
-    [self stopFirmwareUpdateWithCompleteHandle:nil];
+    [self stopFirmwareUpdateActionWithCompleteHandle:nil];
 }
 
 - (void)recoveryExtendBearerMode {

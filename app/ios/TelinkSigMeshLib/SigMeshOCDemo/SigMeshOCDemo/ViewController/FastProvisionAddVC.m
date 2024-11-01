@@ -22,14 +22,13 @@
  *******************************************************************************************************/
 
 #import "FastProvisionAddVC.h"
-#import "AddDeviceItemCell.h"
+#import "AddDeviceCell.h"
 #import "UIViewController+Message.h"
 
-@interface FastProvisionAddVC ()<UICollectionViewDelegate,UICollectionViewDataSource>
-@property (weak, nonatomic) IBOutlet UICollectionView *collectionView;
+@interface FastProvisionAddVC ()<UITableViewDelegate,UITableViewDataSource>
+@property (weak, nonatomic) IBOutlet UITableView *tableView;
 @property (weak, nonatomic) IBOutlet UIButton *goBackButton;
 @property (strong, nonatomic) NSMutableArray <AddDeviceModel *>*source;
-@property (strong, nonatomic) UIBarButtonItem *refreshItem;
 @property (nonatomic,strong) NSString *currentUUID;
 @property (nonatomic,assign) BOOL isAdding;
 @property (nonatomic,assign) BOOL currentConnectedNodeIsUnprovisioned;
@@ -37,15 +36,23 @@
 
 @implementation FastProvisionAddVC
 
-#pragma mark - UICollectionViewDelegate
-- (nonnull __kindof UICollectionViewCell *)collectionView:(nonnull UICollectionView *)collectionView cellForItemAtIndexPath:(nonnull NSIndexPath *)indexPath {
-    AddDeviceItemCell *cell = (AddDeviceItemCell *)[collectionView dequeueReusableCellWithReuseIdentifier:CellIdentifiers_AddDeviceItemCellID forIndexPath:indexPath];
-    AddDeviceModel *model = self.source[indexPath.row];
-    [cell updateContent:model];
+#pragma mark - UITableViewDelegate,UITableViewDataSource
+
+- (UITableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath {
+    UITableViewCell *cell = [tableView dequeueReusableCellWithIdentifier:CellIdentifiers_AddDeviceCellID forIndexPath:indexPath];
+    [self configureCell:cell forRowAtIndexPath:indexPath];
     return cell;
 }
 
-- (NSInteger)collectionView:(nonnull UICollectionView *)collectionView numberOfItemsInSection:(NSInteger)section {
+- (void)configureCell:(UITableViewCell *)cell forRowAtIndexPath:(NSIndexPath *)indexPath {
+    AddDeviceCell *itemCell = (AddDeviceCell *)cell;
+    AddDeviceModel *model = self.source[indexPath.row];
+    [itemCell updateContent:model];
+    itemCell.closeButton.hidden = YES;
+    itemCell.addButton.hidden = YES;
+}
+
+- (NSInteger)tableView:(UITableView *)tableView numberOfRowsInSection:(NSInteger)section {
     return self.source.count;
 }
 
@@ -129,10 +136,10 @@
 //    [SigFastProvisionAddManager.share startFastProvisionWithProvisionAddress:provisionAddress productId:SigNodePID_CT compositionData:[NSData dataWithBytes:CTByte length:sizeof(CTByte)] currentConnectedNodeIsUnprovisioned:self.currentConnectedNodeIsUnprovisioned scanResponseCallback:^(NSData * _Nonnull deviceKey, NSString * _Nonnull macAddress, UInt16 address, UInt16 pid) {
 //        [weakSelf updateScannedDeviceWithDeviceKey:deviceKey macAddress:macAddress address:address pid:pid];
 //    } startProvisionCallback:^{
-//        [weakSelf updateStartProvision];
+//        [weakSelf updateSettingProvisionData];
 //    } addSingleDeviceSuccessCallback:^(NSData * _Nonnull deviceKey, NSString * _Nonnull macAddress, UInt16 address, UInt16 pid) {
 //        TelinkLogInfo(@"fast provision single success, deviceKey=%@, macAddress=%@, address=0x%x, pid=%d",[LibTools convertDataToHexStr:deviceKey],macAddress,address,pid);
-//        [weakSelf updateDeviceSuccessWithDeviceKey:deviceKey macAddress:macAddress address:address pid:pid];
+//        [weakSelf updateFastProvisionSuccessWithDeviceKey:deviceKey macAddress:macAddress address:address pid:pid];
 //    } finish:^(NSError * _Nullable error) {
 //        TelinkLogInfo(@"error=%@",error);
 //        [weakSelf addFinish];
@@ -146,13 +153,19 @@
     for (DeviceTypeModel *model in SigDataSource.share.defaultNodeInfos) {
         [productIds addObject:@(model.PID)];
     }
+    [SigFastProvisionAddManager.share setSetAddressRequestBlock:^(NSData * _Nonnull deviceKey, NSString * _Nonnull macAddress, UInt16 address, UInt16 pid) {
+        [weakSelf updateSetAddressRequestWithDeviceKey:deviceKey macAddress:macAddress address:address pid:pid];
+    }];
+    [SigFastProvisionAddManager.share setSetAddressResponseBlock:^(NSData * _Nonnull deviceKey, NSString * _Nonnull macAddress, UInt16 address, UInt16 pid) {
+        [weakSelf updateSetAddressResponseWithDeviceKey:deviceKey macAddress:macAddress address:address pid:pid];
+    }];
     [SigFastProvisionAddManager.share startFastProvisionWithProvisionAddress:provisionAddress productIds:productIds currentConnectedNodeIsUnprovisioned:self.currentConnectedNodeIsUnprovisioned scanResponseCallback:^(NSData * _Nonnull deviceKey, NSString * _Nonnull macAddress, UInt16 address, UInt16 pid) {
         [weakSelf updateScannedDeviceWithDeviceKey:deviceKey macAddress:macAddress address:address pid:pid];
     } startProvisionCallback:^{
-        [weakSelf updateStartProvision];
+        [weakSelf updateSettingProvisionData];
     } addSingleDeviceSuccessCallback:^(NSData * _Nonnull deviceKey, NSString * _Nonnull macAddress, UInt16 address, UInt16 pid) {
         TelinkLogInfo(@"fast provision single success, deviceKey=%@, macAddress=%@, address=0x%x, pid=%d",[LibTools convertDataToHexStr:deviceKey],macAddress,address,pid);
-        [weakSelf updateDeviceSuccessWithDeviceKey:deviceKey macAddress:macAddress address:address pid:pid];
+        [weakSelf updateFastProvisionSuccessWithDeviceKey:deviceKey macAddress:macAddress address:address pid:pid];
     } finish:^(NSError * _Nullable error) {
         TelinkLogInfo(@"error=%@",error);
         if (error) {
@@ -167,7 +180,6 @@
 
 - (void)userAbled:(BOOL)able{
     dispatch_async(dispatch_get_main_queue(), ^{
-        self.refreshItem.enabled = able;
         self.goBackButton.enabled = able;
         [self.goBackButton setBackgroundColor:able ? UIColor.telinkButtonBlue : UIColor.telinkButtonUnableBlue];
     });
@@ -179,68 +191,85 @@
     scanModel.macAddress = macAddress;
     model.scanRspModel = scanModel;
     model.scanRspModel.address = address;
-    model.state = AddDeviceModelStateScanned;
+    model.scanRspModel.advUuid = [LibTools convertDataToHexStr:[LibTools calcUuidByMac:[LibTools nsstringToHex:model.scanRspModel.macAddress]]];
+    model.state = AddDeviceModelStateDeviceFound;
     if (![self.source containsObject:model]) {
         [self.source addObject:model];
     } else {
         [self.source replaceObjectAtIndex:[self.source indexOfObject:model] withObject:model];
     }
-    dispatch_async(dispatch_get_main_queue(), ^{
-        [self.collectionView reloadData];
-        [self scrollToBottom];
-    });
+    [self refreshUI];
 }
 
-- (void)updateStartProvision {
+- (void)updateSetAddressRequestWithDeviceKey:(NSData *)deviceKey macAddress:(NSString *)macAddress address:(UInt16)address pid:(UInt16)pid {
+    AddDeviceModel *model = [self getAddDeviceModelWithMacAddress:macAddress];
+    model.scanRspModel.address = address;
+    if (model) {
+        model.state = AddDeviceModelStateSetAddressRequest;
+    }
+    [self refreshUI];
+}
+
+- (void)updateSetAddressResponseWithDeviceKey:(NSData *)deviceKey macAddress:(NSString *)macAddress address:(UInt16)address pid:(UInt16)pid {
+    AddDeviceModel *model = [self getAddDeviceModelWithMacAddress:macAddress];
+    model.scanRspModel.address = address;
+    if (model) {
+        model.state = AddDeviceModelStateSetAddressResponse;
+    }
+    [self refreshUI];
+}
+
+- (void)updateSettingProvisionData {
     NSArray *array = [NSArray arrayWithArray:self.source];
     for (AddDeviceModel *model in array) {
-        model.state = AddDeviceModelStateProvisioning;
+        model.state = AddDeviceModelStateSettingProvisionData;
     }
-    dispatch_async(dispatch_get_main_queue(), ^{
-        [self.collectionView reloadData];
-        [self scrollToBottom];
-    });
+    [self refreshUI];
 }
 
-- (void)updateDeviceSuccessWithDeviceKey:(NSData *)deviceKey macAddress:(NSString *)macAddress address:(UInt16)address pid:(UInt16)pid {
-    AddDeviceModel *model = [[AddDeviceModel alloc] init];
-    SigScanRspModel *scanModel = [[SigScanRspModel alloc] init];
-    scanModel.macAddress = macAddress;
-    model.scanRspModel = scanModel;
+- (void)updateFastProvisionSuccessWithDeviceKey:(NSData *)deviceKey macAddress:(NSString *)macAddress address:(UInt16)address pid:(UInt16)pid {
+    AddDeviceModel *model = [self getAddDeviceModelWithMacAddress:macAddress];
     model.scanRspModel.address = address;
-    model.state = AddDeviceModelStateBindSuccess;
-    if (![self.source containsObject:model]) {
-        [self.source addObject:model];
-    } else {
-        [self.source replaceObjectAtIndex:[self.source indexOfObject:model] withObject:model];
+    if (model) {
+        model.state = AddDeviceModelStateProvisionSuccess;
     }
-    dispatch_async(dispatch_get_main_queue(), ^{
-        [self.collectionView reloadData];
-        [self scrollToBottom];
-    });
+    [self refreshUI];
+}
+
+- (AddDeviceModel *)getAddDeviceModelWithMacAddress:(NSString *)macAddress {
+    AddDeviceModel *model = nil;
+    NSArray *array = [NSArray arrayWithArray:self.source];
+    for (AddDeviceModel *tem in array) {
+        if ([tem.scanRspModel.macAddress isEqualToString:macAddress]) {
+            model = tem;
+            break;
+        }
+    }
+    return model;
 }
 
 - (void)addFinish {
     BOOL needRefresh = NO;
     NSArray *array = [NSArray arrayWithArray:self.source];
     for (AddDeviceModel *model in array) {
-        if (model.state != AddDeviceModelStateBindSuccess) {
+        if (model.state != AddDeviceModelStateProvisionSuccess) {
             model.state = AddDeviceModelStateProvisionFail;
             needRefresh = YES;
         }
     }
     if (needRefresh) {
-        dispatch_async(dispatch_get_main_queue(), ^{
-            [self.collectionView reloadData];
-            [self scrollToBottom];
-        });
+        [self refreshUI];
     }
 }
 
 - (void)scrollToBottom{
-    NSInteger item = [self.collectionView numberOfItemsInSection:0] - 1;
-    NSIndexPath *lastItemIndex = [NSIndexPath indexPathForItem:item inSection:0];
-    [self.collectionView scrollToItemAtIndexPath:lastItemIndex atScrollPosition:UICollectionViewScrollPositionTop animated:NO];
+    NSIndexPath *lastItemIndex = [NSIndexPath indexPathForRow:self.source.count - 1 inSection:0];
+    [self.tableView scrollToRowAtIndexPath:lastItemIndex atScrollPosition:UITableViewScrollPositionTop animated:NO];
+}
+
+- (void)refreshUI {
+    [self.tableView performSelectorOnMainThread:@selector(reloadData) withObject:nil waitUntilDone:YES];
+    [self performSelectorOnMainThread:@selector(scrollToBottom) withObject:nil waitUntilDone:YES];
 }
 
 - (IBAction)clickGoBack:(UIButton *)sender {
@@ -282,11 +311,11 @@
     [self setTitle:@"Device Scan" subTitle:@"Fast"];
     self.source = [[NSMutableArray alloc] init];
 
-    [self.collectionView registerNib:[UINib nibWithNibName:CellIdentifiers_AddDeviceItemCellID bundle:nil] forCellWithReuseIdentifier:CellIdentifiers_AddDeviceItemCellID];
-    //init rightBarButtonItem
-//    self.refreshItem = [[UIBarButtonItem alloc] initWithBarButtonSystemItem:UIBarButtonSystemItemRefresh target:self action:@selector(startAddDevice)];
-//    self.navigationItem.rightBarButtonItem = self.refreshItem;
-
+    [self.tableView registerNib:[UINib nibWithNibName:CellIdentifiers_AddDeviceCellID bundle:nil] forCellReuseIdentifier:CellIdentifiers_AddDeviceCellID];
+    UIView *footerView = [[UIView alloc] initWithFrame:CGRectZero];
+    self.tableView.tableFooterView = footerView;
+    self.tableView.estimatedRowHeight = 50.0;
+    self.tableView.allowsSelection = NO;
 }
 
 - (void)viewWillAppear:(BOOL)animated{

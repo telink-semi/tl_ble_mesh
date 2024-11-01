@@ -143,11 +143,14 @@
 }
 
 - (void)refreshDistributorUI {
+    //进入MeshOTA，如果直连节点支持作为distributor，distributor默认选中直连节点；如果直连节点不支持作为distributor，distributor默认选中手机。
     SigNodeModel *node = SigDataSource.share.getCurrentConnectedNode;
     SigModelIDModel *modelId = [node getModelIDModelWithModelID:kSigModel_FirmwareDistributionServer_ID];
     if (modelId == nil) {
         [self.connectedDeviceButton setImage:[UIImage imageNamed:@"bukexuan"] forState:UIControlStateNormal];
         [self clickPhone:self.phoneButton];
+    } else {
+        [self clickConnectedDevice:self.connectedDeviceButton];
     }
 }
 
@@ -230,6 +233,7 @@
     MeshOTAManager.share.otaData = data;
 #endif
 
+    [self setReplenishPacketBlock];
     MeshOTAManager.share.needCheckVersionAfterApply = YES;
     [MeshOTAManager.share continueFirmwareUpdateWithDeviceAddresses:addresses advDistributionProgressHandle:^(SigFirmwareDistributionReceiversList *responseMessage) {
         [weakSelf showAdvDistributionProgressHandle:responseMessage];
@@ -239,6 +243,15 @@
         [weakSelf showerrorHandle:error];
     }];
     [self configReconnectUI];
+}
+
+- (void)setReplenishPacketBlock {
+    __weak typeof(self) weakSelf = self;
+    [MeshOTAManager.share setReplenishPacketCallback:^(NSInteger totalPacketCount, NSInteger currentPacketIndex, NSInteger allBlockCount, NSInteger currentBlockIndex, NSInteger chunksCountOfCurrentBlock, NSInteger currentChunkIndex, UInt16 destinationAddress) {
+        dispatch_async(dispatch_get_main_queue(), ^{
+            [weakSelf.navigationController.view makeToast:[NSString stringWithFormat:@"Replenishing the packet···(%ld/%ld)\nallBlockCount:%ld\ncurrentBlockIndex:%ld\nchunksCountOfCurrentBlock:%ld\ncurrentChunkIndex:%ld\ndestinationAddress:0x%04X", totalPacketCount, currentPacketIndex, allBlockCount, currentBlockIndex, chunksCountOfCurrentBlock, currentChunkIndex, destinationAddress]];
+        });
+    }];
 }
 
 - (void)configReconnectUI {
@@ -434,13 +447,16 @@
     [self.allItemVIDDict removeAllObjects];
     //2.firmwareUpdateInformationGet，该消息在modelID：kSigModel_FirmwareUpdateServer_ID里面。
     UInt16 modelIdentifier = kSigModel_FirmwareUpdateServer_ID;
-    NSArray *curNodes = [NSArray arrayWithArray:SigDataSource.share.curNodes];
-    NSInteger responseMax = 0;
+    NSArray *curNodes = [NSArray arrayWithArray:self.selectItemArray];
     NSMutableArray *LPNArray = [NSMutableArray array];
+    //address of not LPN
+    NSMutableArray *nodeArray = [NSMutableArray array];
+    //response status of not LPN
+    NSMutableArray *responseArray = [NSMutableArray array];
     for (SigNodeModel *model in curNodes) {
         NSArray *addressArray = [model getAddressesWithModelID:@(modelIdentifier)];
         if (model.state != DeviceStateOutOfLine && addressArray && addressArray.count > 0 && model.features.lowPowerFeature == SigNodeFeaturesState_notSupported) {
-            responseMax ++;
+            [nodeArray addObject:@(model.address)];
         }
         if (model.features.lowPowerFeature != SigNodeFeaturesState_notSupported) {
             [LPNArray addObject:model];
@@ -449,10 +465,10 @@
     NSOperationQueue *operationQueue = [[NSOperationQueue alloc] init];
     [operationQueue addOperationWithBlock:^{
         //这个block语句块在子线程中执行
-        //如果responseMax = 0，则无需发送到0xFFFF获取版本号。
-        if (responseMax > 0 || (responseMax == 0 && LPNArray.count == 0)) {
+        //如果nodeArray.count = 0，则无需发送到0xFFFF获取版本号。
+        if (nodeArray.count > 0) {
             dispatch_semaphore_t semaphore = dispatch_semaphore_create(0);
-            [SDKLibCommand firmwareUpdateInformationGetWithDestination:kMeshAddress_allNodes firstIndex:0 entriesLimit:1 retryCount:SigDataSource.share.defaultRetryCount responseMaxCount:responseMax successCallback:^(UInt16 source, UInt16 destination, SigFirmwareUpdateInformationStatus * _Nonnull responseMessage) {
+            [SDKLibCommand firmwareUpdateInformationGetWithDestination:kMeshAddress_allNodes firstIndex:0 entriesLimit:1 retryCount:SigDataSource.share.defaultRetryCount responseMaxCount:0 successCallback:^(UInt16 source, UInt16 destination, SigFirmwareUpdateInformationStatus * _Nonnull responseMessage) {
                 if (responseMessage.firmwareInformationListCount > 0) {
                     /*
                      responseMessage.firmwareInformationList.firstObject.currentFirmwareID.length = 4: 2 bytes pid(设备类型) + 2 bytes vid(版本id).
@@ -465,16 +481,21 @@
                         if (currentFirmwareID.length >= 4) memcpy(&vid, pu + 2, 2);
                         vid = CFSwapInt16HostToBig(vid);
                         TelinkLogDebug(@"firmwareUpdateInformationGet=%@,pid=%d,vid=%d",[LibTools convertDataToHexStr:currentFirmwareID],pid,vid);
-                        weakSelf.allNodeFirmwareUpdateInformationStatusDict[@(source)] = responseMessage;
-                        [weakSelf updateNodeModelVidWithAddress:source vid:vid];
+                        if ([nodeArray containsObject:@(source)] && ![responseArray containsObject:@(source)]) {
+                            [responseArray addObject:@(source)];
+                            weakSelf.allNodeFirmwareUpdateInformationStatusDict[@(source)] = responseMessage;
+                            [weakSelf updateNodeModelVidWithAddress:source vid:vid];
+                        }
+                        if (nodeArray.count == responseArray.count) {
+                            dispatch_semaphore_signal(semaphore);
+                        }
                     }
                 }
             } resultCallback:^(BOOL isResponseAll, NSError * _Nullable error) {
                 TelinkLogInfo(@"isResponseAll=%d,error=%@",isResponseAll,error);
-                dispatch_semaphore_signal(semaphore);
             }];
             //Most provide 4 seconds
-            dispatch_semaphore_wait(semaphore, dispatch_time(DISPATCH_TIME_NOW, NSEC_PER_SEC * 10.0));
+            dispatch_semaphore_wait(semaphore, dispatch_time(DISPATCH_TIME_NOW, NSEC_PER_SEC * 4.0));
         }
         if (LPNArray && LPNArray.count) {
             for (SigNodeModel *model in LPNArray) {
@@ -501,7 +522,7 @@
                     dispatch_semaphore_signal(semaphore);
                 }];
                 //Most provide 4 seconds
-                dispatch_semaphore_wait(semaphore, dispatch_time(DISPATCH_TIME_NOW, NSEC_PER_SEC * 10.0));
+                dispatch_semaphore_wait(semaphore, dispatch_time(DISPATCH_TIME_NOW, NSEC_PER_SEC * 4.0));
             }
         }
     }];
@@ -515,7 +536,7 @@
     }
 }
 
-- (IBAction)clickSelectDevicesButton:(UIButton *)sender {
+- (IBAction)clickSelectDeviceButton:(UIButton *)sender {
 #ifndef kIsTelinkCloudSigMeshLib
     DeviceSelectVC *vc = [[DeviceSelectVC alloc] init];
 #else
@@ -709,6 +730,7 @@
 #endif
     [[NSUserDefaults standardUserDefaults] synchronize];
 
+    [self setReplenishPacketBlock];
     [MeshOTAManager.share setFirmwareUpdateFirmwareMetadataCheckSuccessHandle:^(NSDictionary *dict) {
         [weakSelf.tableView performSelectorOnMainThread:@selector(reloadData) withObject:nil waitUntilDone:YES];
     }];
