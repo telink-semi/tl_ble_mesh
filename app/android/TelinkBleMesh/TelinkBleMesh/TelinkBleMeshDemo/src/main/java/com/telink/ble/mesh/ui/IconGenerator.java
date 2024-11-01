@@ -28,6 +28,7 @@ import com.telink.ble.mesh.model.AppSettings;
 import com.telink.ble.mesh.model.NodeInfo;
 import com.telink.ble.mesh.model.NodeSensorState;
 import com.telink.ble.mesh.model.OnlineState;
+import com.telink.ble.mesh.ui.eh.SwitchUtils;
 
 /**
  * Created by kee on 2018/9/29.
@@ -40,6 +41,9 @@ public class IconGenerator {
      * @return resId
      */
     public static int getIcon(NodeInfo device) {
+        if (device == null) {
+            return R.drawable.ic_question;
+        }
         return getIcon(device, device.getOnlineState());
     }
 
@@ -50,6 +54,10 @@ public class IconGenerator {
     public static int getIcon(NodeInfo device, OnlineState onlineState) {
         if (device == null) {
             return R.drawable.ic_question;
+        }
+        boolean isEhSwitch = SwitchUtils.isSwitch(device);
+        if (isEhSwitch){
+            return R.drawable.icon_switch_ios_lg;
         }
         boolean isSensor = device.isSensor();
         final int pid = device.compositionData != null ? device.compositionData.pid : 0;

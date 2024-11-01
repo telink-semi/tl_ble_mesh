@@ -22,14 +22,19 @@
  *******************************************************************************************************/
 package com.telink.ble.mesh.ui;
 
+import android.Manifest;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.pm.PackageManager;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.view.MenuItem;
+import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AlertDialog;
+import androidx.core.app.ActivityCompat;
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentManager;
 
@@ -62,6 +67,7 @@ import com.telink.ble.mesh.model.NodeInfo;
 import com.telink.ble.mesh.model.OnlineState;
 import com.telink.ble.mesh.model.UnitConvert;
 import com.telink.ble.mesh.model.db.MeshInfoService;
+import com.telink.ble.mesh.model.db.ObjectBox;
 import com.telink.ble.mesh.ui.fragment.DeviceFragment;
 import com.telink.ble.mesh.ui.fragment.GroupFragment;
 import com.telink.ble.mesh.ui.fragment.NetworkFragment;
@@ -80,18 +86,36 @@ public class MainActivity extends BaseActivity implements BottomNavigationView.O
     private NetworkFragment networkFragment;
     private SettingFragment settingFragment;
     private Handler mHandler = new Handler();
+    private static final String KEY_NAV_ITEM = "com.telink.ble.mesh.main.KEY_NAV_ITEM";
+    private BottomNavigationView bottom_nav;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        initBottomNav();
-        addEventListeners();
-        startMeshService();
-        resetNodeState();
+        initDb();
+        if (savedInstanceState != null && savedInstanceState.containsKey(KEY_NAV_ITEM)) {
+            MeshLogger.d("restore bottom nav");
+            if (bottom_nav != null)
+                bottom_nav.setSelectedItemId(savedInstanceState.getInt(KEY_NAV_ITEM));
+        }
+    }
 
-        FUCacheService.getInstance().load(this); // load FirmwareUpdate cache
-        CertCacheService.getInstance().load(this); // load cert cache
+
+    private void initDb() {
+        if (!ObjectBox.init(this)) {
+            MeshLogger.d("init db error");
+            showConfirmDialog("db init error, may be caused by version degradation, you can install latest apk or clear data and retry?", (dialog, which) -> {
+                ObjectBox.deleteAll(getApplicationContext());
+                if (!ObjectBox.init(this)) {
+                    MeshLogger.d("init db error - repeat");
+                } else {
+                    startMeshService();
+                }
+            });
+        } else {
+            startMeshService();
+        }
     }
 
     private void addEventListeners() {
@@ -102,8 +126,8 @@ public class MainActivity extends BaseActivity implements BottomNavigationView.O
     }
 
     private void initBottomNav() {
-        BottomNavigationView bottomNavigationView = findViewById(R.id.bottom_nav);
-        bottomNavigationView.setOnNavigationItemSelectedListener(this);
+        bottom_nav = findViewById(R.id.bottom_nav);
+        bottom_nav.setOnNavigationItemSelectedListener(this);
         fm = getSupportFragmentManager();
         deviceFragment = new DeviceFragment();
         groupFragment = new GroupFragment();
@@ -124,6 +148,9 @@ public class MainActivity extends BaseActivity implements BottomNavigationView.O
      * init and setup mesh network
      */
     private void startMeshService() {
+        initBottomNav();
+        addEventListeners();
+        TelinkMeshApplication.getInstance().initMeshInfo();
         // init
         MeshService.getInstance().init(this, TelinkMeshApplication.getInstance());
 
@@ -139,6 +166,10 @@ public class MainActivity extends BaseActivity implements BottomNavigationView.O
 
         /// set DLE enable
         MeshService.getInstance().resetExtendBearerMode(SharedPreferenceHelper.getExtendBearerMode(this));
+
+        resetNodeState();
+        FUCacheService.getInstance().load(this); // load FirmwareUpdate cache
+        CertCacheService.getInstance().load(this); // load cert cache
     }
 
     // set all devices to offline
@@ -157,7 +188,13 @@ public class MainActivity extends BaseActivity implements BottomNavigationView.O
     protected void onDestroy() {
         super.onDestroy();
         TelinkMeshApplication.getInstance().removeEventListener(this);
-        MeshService.getInstance().clear();
+        boolean isAppForeground = TelinkMeshApplication.getInstance().isForeground();
+        MeshLogger.d("isAppForeground ? " + isAppForeground);
+        if (!isAppForeground) {
+            MeshService.getInstance().clear();
+        }
+
+
     }
 
 
@@ -172,6 +209,9 @@ public class MainActivity extends BaseActivity implements BottomNavigationView.O
     private void autoConnect() {
         MeshLogger.log("main auto connect");
         MeshInfo meshInfo = TelinkMeshApplication.getInstance().getMeshInfo();
+        if (meshInfo == null) {
+            return;
+        }
         if (meshInfo.nodes.size() == 0) {
             MeshService.getInstance().idle(true);
         } else {
@@ -336,4 +376,64 @@ public class MainActivity extends BaseActivity implements BottomNavigationView.O
     }
 
 
+    private long backTimestamp = 0;
+    private static final long EXIT_LIMIT = 2 * 1000;
+
+    @Override
+    public void onBackPressed() {
+        long curTime = System.currentTimeMillis();
+        if (curTime - backTimestamp < EXIT_LIMIT) {
+            super.onBackPressed();
+            return;
+        }
+
+        backTimestamp = curTime;
+        toastMsg("back again to exit within 2 seconds");
+    }
+
+
+    @Override
+    protected void onSaveInstanceState(Bundle outState) {
+        super.onSaveInstanceState(outState);
+        MeshLogger.d("main - onSaveInstanceState");
+        outState.putInt(KEY_NAV_ITEM, bottom_nav.getSelectedItemId());
+    }
+
+
+
+    private static final int PERMISSION_REQUEST_CODE_CAMERA = 0x01;
+
+
+    public void checkPermissionAndStart() {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.M) {
+            if (networkFragment != null) {
+                networkFragment.startQrScanActivity();
+            }
+        } else {
+            if (ActivityCompat.checkSelfPermission(this, Manifest.permission.CAMERA)
+                    == PackageManager.PERMISSION_GRANTED) {
+                if (networkFragment != null) {
+                    networkFragment.startQrScanActivity();
+                }
+            } else {
+                ActivityCompat.requestPermissions(this,
+                        new String[]{Manifest.permission.CAMERA}, PERMISSION_REQUEST_CODE_CAMERA);
+            }
+        }
+    }
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+        MeshLogger.d("onRequestPermissionsResult : " + requestCode);
+        if (requestCode == PERMISSION_REQUEST_CODE_CAMERA) {
+            if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                if (networkFragment != null) {
+                    networkFragment.startQrScanActivity();
+                }
+            } else {
+                Toast.makeText(this, "camera permission denied", Toast.LENGTH_SHORT).show();
+            }
+        }
+    }
 }

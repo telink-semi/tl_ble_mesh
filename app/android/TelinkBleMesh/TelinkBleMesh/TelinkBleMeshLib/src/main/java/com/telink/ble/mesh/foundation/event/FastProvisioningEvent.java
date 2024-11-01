@@ -30,18 +30,53 @@ import com.telink.ble.mesh.foundation.Event;
 
 /**
  * Created by kee on 2017/8/30.
- */
-
-/**
  * This class represents a FastProvisioningEvent, which is a specific type of Event that is used to notify about events related to fast provisioning.
  * It extends the Event class and has additional properties and methods specific to fast provisioning events.
  */
 public class FastProvisioningEvent extends Event<String> {
 
     // Constants for different types of fast provisioning events
-    public static final String EVENT_TYPE_FAST_PROVISIONING_ADDRESS_SET = "com.telink.sig.mesh.EVENT_TYPE_FAST_PROVISIONING_ADDRESS_SET";
-    public static final String EVENT_TYPE_FAST_PROVISIONING_ADDRESS_SET_FAIL = "com.telink.sig.mesh.EVENT_TYPE_FAST_PROVISIONING_ADDRESS_SET_FAIL";
+
+    public static final String EVENT_TYPE_FAST_PROVISIONING_CONNECTING = "com.telink.sig.mesh.EVENT_TYPE_FAST_PROVISIONING_CONNECTING";
+
+    // reset network - start
+    public static final String EVENT_TYPE_FAST_PROVISIONING_RESET_NWK = "com.telink.sig.mesh.EVENT_TYPE_FAST_PROVISIONING_RESET_NWK";
+
+
+    // get address
+    public static final String EVENT_TYPE_FAST_PROVISIONING_GET_ADDRESS = "com.telink.sig.mesh.EVENT_TYPE_FAST_PROVISIONING_GET_ADDRESS";
+
+    // get address response
+    public static final String EVENT_TYPE_FAST_PROVISIONING_GET_ADDRESS_RSP = "com.telink.sig.mesh.EVENT_TYPE_FAST_PROVISIONING_GET_ADDRESS_RSP";
+
+    /**
+     * (device)setting address
+     */
+    public static final String EVENT_TYPE_FAST_PROVISIONING_SET_ADDRESS = "com.telink.sig.mesh.EVENT_TYPE_FAST_PROVISIONING_SET_ADDRESS";
+
+    /**
+     * (device)set address success
+     */
+    public static final String EVENT_TYPE_FAST_PROVISIONING_SET_ADDRESS_SUCCESS = "com.telink.sig.mesh.EVENT_TYPE_FAST_PROVISIONING_SET_ADDRESS_SUCCESS";
+
+    /**
+     * (device)set address fail
+     */
+    public static final String EVENT_TYPE_FAST_PROVISIONING_SET_ADDRESS_FAIL = "com.telink.sig.mesh.EVENT_TYPE_FAST_PROVISIONING_SET_ADDRESS_FAIL";
+
+    /**
+     * setting provision data
+     */
+    public static final String EVENT_TYPE_FAST_PROVISIONING_SET_DATA = "com.telink.sig.mesh.EVENT_TYPE_FAST_PROVISIONING_SET_DATA";
+
+    /**
+     * complete and success
+     */
     public static final String EVENT_TYPE_FAST_PROVISIONING_SUCCESS = "com.telink.sig.mesh.EVENT_TYPE_FAST_PROVISIONING_SUCCESS";
+
+    /**
+     * complete and fail
+     */
     public static final String EVENT_TYPE_FAST_PROVISIONING_FAIL = "com.telink.sig.mesh.EVENT_TYPE_FAST_PROVISIONING_FAIL";
 
     // Properties

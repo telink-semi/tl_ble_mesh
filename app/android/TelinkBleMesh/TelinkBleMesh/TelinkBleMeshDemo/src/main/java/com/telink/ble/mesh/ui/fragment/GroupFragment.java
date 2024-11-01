@@ -36,7 +36,6 @@ import com.telink.ble.mesh.TelinkMeshApplication;
 import com.telink.ble.mesh.demo.R;
 import com.telink.ble.mesh.model.GroupInfo;
 import com.telink.ble.mesh.ui.GroupSettingActivity;
-import com.telink.ble.mesh.ui.adapter.BaseRecyclerViewAdapter;
 import com.telink.ble.mesh.ui.adapter.GroupAdapter;
 
 import java.util.List;
@@ -49,6 +48,7 @@ import java.util.List;
 
 public class GroupFragment extends BaseFragment {
     private List<GroupInfo> groups;
+    private GroupAdapter mAdapter;
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
@@ -64,17 +64,22 @@ public class GroupFragment extends BaseFragment {
         RecyclerView rv_group = view.findViewById(R.id.rv_group);
         groups = TelinkMeshApplication.getInstance().getMeshInfo().groups;
 
-        GroupAdapter mAdapter = new GroupAdapter(getActivity(), groups);
+        mAdapter = new GroupAdapter(getActivity(), groups);
 
         rv_group.setLayoutManager(new LinearLayoutManager(getActivity()));
         rv_group.setAdapter(mAdapter);
 
         mAdapter.setOnItemLongClickListener(position -> {
             Intent intent = new Intent(getActivity(), GroupSettingActivity.class);
-            intent.putExtra("group", groups.get(position));
+            intent.putExtra("groupAddress", groups.get(position).address);
             startActivity(intent);
             return false;
         });
     }
 
+    @Override
+    public void onResume() {
+        super.onResume();
+        mAdapter.notifyDataSetChanged();
+    }
 }

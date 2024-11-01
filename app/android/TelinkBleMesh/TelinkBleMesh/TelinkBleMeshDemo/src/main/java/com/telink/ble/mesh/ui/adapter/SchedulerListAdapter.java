@@ -38,6 +38,7 @@ import com.telink.ble.mesh.model.db.SchedulerRegister;
 import com.telink.ble.mesh.ui.SchedulerSettingActivity;
 
 import java.util.List;
+import java.util.Locale;
 
 /**
  * scheduler list
@@ -88,7 +89,7 @@ public class SchedulerListAdapter extends BaseRecyclerViewAdapter<SchedulerListA
 
         Scheduler scheduler = mSchedulerList.get(position);
         SchedulerRegister register = scheduler.register.getTarget();
-        holder.tv_scheduler_id.setText("scheduler index: 0x" + Long.toHexString(scheduler.getIndex()));
+        holder.tv_scheduler_id.setText(String.format(Locale.getDefault(), "scheduler index: 0x%02X \nelement : %d", scheduler.getIndex(), scheduler.elementOffset));
         holder.iv_edit.setTag(position);
         holder.iv_edit.setOnClickListener(editClick);
         StringBuilder info = new StringBuilder();

@@ -31,12 +31,12 @@ import android.widget.TextView;
 
 import androidx.recyclerview.widget.RecyclerView;
 
-import com.telink.ble.mesh.core.DeviceProperty;
 import com.telink.ble.mesh.demo.R;
 import com.telink.ble.mesh.foundation.MeshService;
 import com.telink.ble.mesh.model.NodeInfo;
 import com.telink.ble.mesh.model.NodeSensorState;
 import com.telink.ble.mesh.ui.IconGenerator;
+import com.telink.ble.mesh.ui.eh.SwitchUtils;
 import com.telink.ble.mesh.util.Arrays;
 import com.telink.ble.mesh.util.MeshLogger;
 
@@ -97,8 +97,9 @@ public class OnlineDeviceListAdapter extends BaseRecyclerViewAdapter<OnlineDevic
         } else {
             info = String.format("%04X", device.meshAddress);
         }
-
-        if (device.bound && device.compositionData != null) {
+        if (SwitchUtils.isSwitch(device)) {
+            // skip
+        } else if (device.bound && device.compositionData != null) {
             if (isSensor) {
                 NodeSensorState sensorState = device.getFirstSensorState();
                 if (sensorState != null) {

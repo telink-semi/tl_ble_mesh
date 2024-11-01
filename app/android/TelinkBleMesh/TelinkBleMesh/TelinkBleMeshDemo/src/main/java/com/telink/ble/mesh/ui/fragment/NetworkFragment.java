@@ -46,13 +46,16 @@ import com.telink.ble.mesh.model.MeshInfo;
 import com.telink.ble.mesh.ui.DeviceBatchSettingActivity;
 import com.telink.ble.mesh.ui.DirectForwardingListActivity;
 import com.telink.ble.mesh.ui.FUActivity;
+import com.telink.ble.mesh.ui.MainActivity;
 import com.telink.ble.mesh.ui.MeshInfoActivity;
-import com.telink.ble.mesh.ui.PrivateBeaconSettingActivity;
 import com.telink.ble.mesh.ui.SceneListActivity;
+import com.telink.ble.mesh.ui.eh.SwitchNfcPairActivity;
+import com.telink.ble.mesh.ui.eh.SwitchScanActivity;
 import com.telink.ble.mesh.util.Arrays;
 import com.telink.ble.mesh.util.MeshLogger;
 
 import java.nio.ByteBuffer;
+import java.util.Objects;
 
 /**
  * setting
@@ -62,6 +65,7 @@ public class NetworkFragment extends BaseFragment implements View.OnClickListene
     private Handler delayHandler = new Handler();
     private BleAdvertiser advertiser;
     private ProgressBar pb_sol;
+
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         return inflater.inflate(R.layout.fragment_network, null);
@@ -80,6 +84,8 @@ public class NetworkFragment extends BaseFragment implements View.OnClickListene
         view.findViewById(R.id.view_df).setOnClickListener(this);
         view.findViewById(R.id.view_sol).setOnClickListener(this);
         view.findViewById(R.id.view_node_batch).setOnClickListener(this);
+        view.findViewById(R.id.view_scan_en_qr).setOnClickListener(this);
+        view.findViewById(R.id.view_nfc).setOnClickListener(this);
         pb_sol = view.findViewById(R.id.pb_sol);
         TelinkMeshApplication.getInstance().addEventListener(MeshEvent.EVENT_TYPE_MESH_RESET, this);
     }
@@ -134,7 +140,20 @@ public class NetworkFragment extends BaseFragment implements View.OnClickListene
             case R.id.view_node_batch:
                 startActivity(new Intent(getActivity(), DeviceBatchSettingActivity.class));
                 break;
+
+
+            case R.id.view_scan_en_qr:
+                ((MainActivity) Objects.requireNonNull(getActivity())).checkPermissionAndStart();
+                break;
+            case R.id.view_nfc:
+                startActivity(new Intent(getActivity(), SwitchNfcPairActivity.class));
+                break;
         }
+    }
+
+
+    public void startQrScanActivity() {
+        startActivity(new Intent(getActivity(), SwitchScanActivity.class));
     }
 
     @Override

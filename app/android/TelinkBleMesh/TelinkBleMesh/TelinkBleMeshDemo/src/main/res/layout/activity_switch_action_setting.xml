@@ -1,0 +1,234 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical">
+
+    <include layout="@layout/title" />
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginLeft="8dp"
+        android:layout_marginTop="8dp"
+        android:text="Action Type:"
+        android:textSize="15dp"
+        android:textStyle="bold" />
+
+    <RadioGroup
+        android:id="@+id/rg_action_type"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginLeft="8dp"
+        android:orientation="vertical">
+
+        <RadioButton
+            android:id="@+id/rb_on_off"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="OnOff" />
+
+        <RadioButton
+            android:id="@+id/rb_lightness"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Delta Lightness" />
+
+        <RadioButton
+            android:id="@+id/rb_ct"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Delta CT" />
+
+        <RadioButton
+            android:id="@+id/rb_scene"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Scene Recall" />
+    </RadioGroup>
+
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="0.2dp"
+        android:layout_marginVertical="4dp"
+        android:background="@color/grey" />
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginLeft="8dp"
+        android:layout_marginTop="4dp"
+        android:text="Action Config:"
+        android:textSize="15dp"
+        android:textStyle="bold" />
+
+
+    <TextView
+        android:id="@+id/tv_tip"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginLeft="8dp"
+        android:layout_marginTop="4dp"
+        android:text="Tips:"
+        android:textSize="11dp"
+        android:textStyle="italic" />
+
+    <androidx.cardview.widget.CardView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        app:cardCornerRadius="4dp"
+        app:cardPreventCornerOverlap="false"
+        app:cardUseCompatPadding="true">
+
+        <FrameLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:padding="12dp">
+
+            <RadioGroup
+                android:id="@+id/rg_on_off"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:visibility="gone">
+
+                <RadioButton
+                    android:id="@+id/rb_on"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:checked="true"
+                    android:text="On" />
+
+                <RadioButton
+                    android:id="@+id/rb_off"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Off" />
+            </RadioGroup>
+
+
+            <RadioGroup
+                android:id="@+id/rg_lightness"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:visibility="gone">
+
+                <RadioButton
+                    android:id="@+id/rb_increase"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:checked="true"
+                    android:text="  +" />
+
+                <RadioButton
+                    android:id="@+id/rb_decrease"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="  -" />
+
+
+                <View
+                    android:layout_width="match_parent"
+                    android:layout_height="0.2dp"
+                    android:layout_marginVertical="4dp"
+                    android:background="@color/grey" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Delta Value: "
+                    android:textSize="13sp"
+                    android:textStyle="bold" />
+
+                <EditText
+                    android:id="@+id/et_delta"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:digits="@string/number_input"
+                    android:text="20"
+                    android:textSize="12sp" />
+            </RadioGroup>
+
+            <!--      scene id      -->
+            <LinearLayout
+                android:id="@+id/ll_scene"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical">
+
+                <View
+                    android:layout_width="match_parent"
+                    android:layout_height="0.2dp"
+                    android:layout_marginVertical="4dp"
+                    android:background="@color/grey" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Scene Id(HEX): "
+                    android:textSize="13sp"
+                    android:textStyle="bold" />
+
+                <EditText
+                    android:id="@+id/et_scene_id"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:digits="@string/hex_input"
+                    android:text="01"
+                    android:textSize="12sp" />
+            </LinearLayout>
+
+
+        </FrameLayout>
+    </androidx.cardview.widget.CardView>
+
+
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="0.2dp"
+        android:layout_marginVertical="4dp"
+        android:background="@color/grey" />
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginLeft="8dp"
+        android:layout_marginTop="4dp"
+        android:text="Publish Address:"
+        android:textSize="15dp"
+        android:textStyle="bold" />
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:layout_margin="8dp">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="0x" />
+
+        <EditText
+            android:id="@+id/et_pub_adr"
+            android:layout_width="0dp"
+            android:layout_weight="1"
+            android:layout_height="wrap_content"
+            android:digits="@string/hex_input"
+            android:text="20"
+            android:textSize="12sp" />
+
+        <Button
+            android:id="@+id/btn_address"
+            style="?android:attr/borderlessButtonStyle"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textAllCaps="false"
+            android:text="AddressList"
+            android:textColor="@color/colorPrimary" />
+    </LinearLayout>
+</LinearLayout>

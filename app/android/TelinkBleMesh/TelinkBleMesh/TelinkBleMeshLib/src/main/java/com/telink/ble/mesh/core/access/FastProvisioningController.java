@@ -133,6 +133,9 @@ public class FastProvisioningController {
 
     public static final int STATE_SET_ADDR_FAIL = 0x20;
 
+
+    public static final int STATE_GET_ADDR_RSP = 0x21;
+
     private int state;
 
     private Handler delayHandler;
@@ -224,7 +227,7 @@ public class FastProvisioningController {
                 this.configuration.getResetDelay());
         if (this.onMeshMessagePrepared(resetMessage)) {
             // if reset message sent, start reset timer
-            onStateUpdate(STATE_RESET_NETWORK, "reset provisioner network", null);
+            onStateUpdate(STATE_RESET_NETWORK, "reset provisioner network", null, true);
             delayHandler.removeCallbacks(resetNetworkTask);
             delayHandler.postDelayed(resetNetworkTask, PROVISIONER_DELAY + configuration.getResetDelay());
         } else {
@@ -242,7 +245,7 @@ public class FastProvisioningController {
 
     // get address
     private void startFastScanning(int address) {
-        onStateUpdate(STATE_GET_ADDR, "mesh get address", null);
+        onStateUpdate(STATE_GET_ADDR, "mesh get address", null, true);
         MeshGetAddressMessage getAddressMessage = MeshGetAddressMessage.getSimple(0xFFFF, configuration.getDefaultAppKeyIndex(), ROUND_MAX, configuration.getScanningPid());
         getAddressMessage.setAddress(address);
         byte[] params = getAddressMessage.getParams();
@@ -265,7 +268,7 @@ public class FastProvisioningController {
                 } else {
                     log("all device set address complete no other device found");
                     confirmRetryCnt = 0;
-                    setMeshNetInfo();
+                    setMeshNetInfo(false);
                 }
 //                settingIndex = -1;
             } else {
@@ -273,6 +276,16 @@ public class FastProvisioningController {
             }
         }
     };
+
+    private void pushNewDevice(FastProvisioningDevice fastProvisioningDevice) {
+        if (!provisioningDeviceList.contains(fastProvisioningDevice)) {
+            provisioningDeviceList.add(fastProvisioningDevice);
+            restartScanningTimeoutTask();
+            postStateCb(STATE_GET_ADDR_RSP, "get address response", fastProvisioningDevice);
+        } else {
+            log("provisioning device exists: " + Arrays.bytesToHexString(fastProvisioningDevice.getMac()));
+        }
+    }
 
     private void setNextMeshAddress() {
         log("set next -- " + provisioningDeviceList.size() + " -- " + settingIndex);
@@ -284,7 +297,7 @@ public class FastProvisioningController {
                         Arrays.bytesToHexString(provisioningDevice.getMac()),
                         provisioningDevice.getOriginAddress(),
                         provisioningDevice.getNewAddress(), settingIndex));
-                onStateUpdate(STATE_SET_ADDR, "mesh set address", provisioningDevice);
+                onStateUpdate(STATE_SET_ADDR, "mesh set address", provisioningDevice, true);
 
                 MeshSetAddressMessage setAddressMessage = MeshSetAddressMessage.getSimple(
                         0xFFFF, // provisioningDevice.getOriginAddress()
@@ -316,8 +329,8 @@ public class FastProvisioningController {
     /**
      * set mesh info after no device can be found by scanning
      */
-    private void setMeshNetInfo() {
-        onStateUpdate(STATE_SET_NET_INFO, "mesh set net info", null);
+    private void setMeshNetInfo(boolean retry) {
+        onStateUpdate(STATE_SET_NET_INFO, "mesh set net info", null, !retry);
         byte[] netInfoData = getNetInfoData();
         MeshSetNetInfoMessage setNetInfoMessage = MeshSetNetInfoMessage.getSimple(0xFFFF,
                 configuration.getDefaultAppKeyIndex(),
@@ -328,7 +341,7 @@ public class FastProvisioningController {
     }
 
     private void sendConfirmRequest() {
-        onStateUpdate(STATE_CONFIRM, "fast provision confirming", null);
+        onStateUpdate(STATE_CONFIRM, "fast provision confirming", null, true);
         confirmRetryNeeded = false;
         MeshConfirmRequestMessage confirmRequestMessage = MeshConfirmRequestMessage.getSimple(0xFFFF, configuration.getDefaultAppKeyIndex());
         onMeshMessagePrepared(confirmRequestMessage);
@@ -343,7 +356,7 @@ public class FastProvisioningController {
                 if (confirmRetryCnt > CONFIRM_RETRY_MAX) {
                     onFastProvisionComplete(false, "confirm check retry max");
                 } else {
-                    setMeshNetInfo();
+                    setMeshNetInfo(true);
 //                    sendConfirmRequest();
                 }
             } else {
@@ -358,16 +371,17 @@ public class FastProvisioningController {
      * @param success true: no confirm response, all device provision success
      *                false: other error
      */
-    private void onFastProvisionComplete(final boolean success, String desc) {
+    private void onFastProvisionComplete(final boolean success, final String desc) {
         log("complete: " + desc + " success?" + success);
         sendCompleteMessage();
         delayHandler.postDelayed(new Runnable() {
             @Override
             public void run() {
                 clear();
-                onStateUpdate(success ? STATE_SUCCESS : STATE_FAIL, "fast provision complete", null);
+                onStateUpdate(success ? STATE_SUCCESS : STATE_FAIL, desc, null, true);
             }
-        }, PROVISIONER_DELAY + configuration.getResetDelay());
+        }, PROVISIONER_DELAY);
+        // PROVISIONER_DELAY + configuration.getResetDelay()
     }
 
     private void sendCompleteMessage() {
@@ -410,7 +424,7 @@ public class FastProvisioningController {
         if (opcode == Opcode.VD_MESH_ADDR_SET.value && state == STATE_SET_ADDR) {
             if (!success) {
                 FastProvisioningDevice provisioningDevice = provisioningDeviceList.get(settingIndex - 1);
-                onStateUpdate(STATE_SET_ADDR_FAIL, "device set address fail", provisioningDevice);
+                postStateCb(STATE_SET_ADDR_FAIL, "device set address fail", provisioningDevice);
                 setNextMeshAddress();
             }
         }
@@ -438,12 +452,7 @@ public class FastProvisioningController {
                                 pid,
                                 elementCount,
                                 statusMessage.getMac());
-                        if (!provisioningDeviceList.contains(fastProvisioningDevice)) {
-                            provisioningDeviceList.add(fastProvisioningDevice);
-                            restartScanningTimeoutTask();
-                        } else {
-                            log("provisioning device exists: " + Arrays.bytesToHexString(statusMessage.getMac()));
-                        }
+                        pushNewDevice(fastProvisioningDevice);
                     }
                 }
                 break;
@@ -455,7 +464,7 @@ public class FastProvisioningController {
                     if (device != null) {
                         if (!device.isSetAdrComplete()) {
                             device.setSetAdrComplete(true);
-                            onStateUpdate(STATE_SET_ADDR_SUCCESS, "device set address success", device);
+                            postStateCb(STATE_SET_ADDR_SUCCESS, "device set address success", device);
                             setNextMeshAddress();
                         } else {
                             log(String.format("device already set address complete : %04X", device.getOriginAddress()));
@@ -487,8 +496,16 @@ public class FastProvisioningController {
         return null;
     }
 
-    private void onStateUpdate(int state, String desc, Object obj) {
+    private void onStateUpdate(int state, String desc, Object obj, boolean postCb) {
+        log("fast pv state update : " + state + " -- " + desc);
         this.state = state;
+        if (postCb) {
+            postStateCb(state, desc, obj);
+        }
+    }
+
+    // only invoke callback, do not changed the state
+    private void postStateCb(int state, String desc, Object obj) {
         if (accessBridge != null) {
             accessBridge.onAccessStateChanged(state, desc, AccessBridge.MODE_FAST_PROVISION, obj);
         }

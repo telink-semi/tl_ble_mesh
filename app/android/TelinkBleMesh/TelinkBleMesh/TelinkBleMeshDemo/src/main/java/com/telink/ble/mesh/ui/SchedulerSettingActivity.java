@@ -27,6 +27,8 @@ import android.os.Bundle;
 import android.text.TextUtils;
 import android.view.MenuItem;
 import android.view.View;
+import android.widget.AdapterView;
+import android.widget.ArrayAdapter;
 import android.widget.CheckBox;
 import android.widget.CompoundButton;
 import android.widget.EditText;
@@ -35,6 +37,7 @@ import android.widget.RadioGroup;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import androidx.appcompat.widget.AppCompatSpinner;
 import androidx.appcompat.widget.Toolbar;
 import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
@@ -61,6 +64,9 @@ import com.telink.ble.mesh.ui.adapter.SelectableListAdapter;
 import com.telink.ble.mesh.util.Arrays;
 import com.telink.ble.mesh.util.MeshLogger;
 
+import java.util.List;
+import java.util.Locale;
+
 /**
  * set scheduler
  * Created by kee on 2018/9/18.
@@ -77,6 +83,8 @@ public class SchedulerSettingActivity extends BaseActivity implements View.OnCli
     private Scheduler scheduler;
     private byte index;
     private boolean timeSetting = false;
+    private int scPst;
+    private int elementOffset = 0;
 
     // January/February/March/April/May/June/July/August/September/October/November/December
     private SelectableListAdapter.SelectableBean[] monthList = {
@@ -114,7 +122,7 @@ public class SchedulerSettingActivity extends BaseActivity implements View.OnCli
         Intent intent = getIntent();
         int address = intent.getIntExtra("address", -1);
         mDevice = TelinkMeshApplication.getInstance().getMeshInfo().getDeviceByMeshAddress(address);
-        int scPst = intent.getIntExtra("schedulerPosition", -1);
+        scPst = intent.getIntExtra("schedulerPosition", -1);
         if (scPst == -1) {
             index = mDevice.allocSchedulerIndex();
             if (index == -1) {
@@ -124,6 +132,7 @@ public class SchedulerSettingActivity extends BaseActivity implements View.OnCli
             }
         } else {
             scheduler = mDevice.schedulers.get(scPst);
+            elementOffset = scheduler.elementOffset;
             index = scheduler.getIndex();
         }
         setContentView(R.layout.activity_scheduler_setting);
@@ -166,6 +175,39 @@ public class SchedulerSettingActivity extends BaseActivity implements View.OnCli
         }
     }
 
+    private void initElementSpinner() {
+        AppCompatSpinner spinner = findViewById(R.id.sp_ele);
+        if (scPst != -1) {
+            // edit mode
+            spinner.setEnabled(false);
+        }
+        List<Integer> elementList = mDevice.getEleListByModel(MeshSigModel.SIG_MD_SCHED_S.modelId);
+        String[] values = new String[elementList.size()];
+        int adr;
+        for (int i = 0; i < elementList.size(); i++) {
+            adr = elementList.get(i);
+            values[i] = String.format(Locale.getDefault(), "element %d(address=0x%04X)", adr - mDevice.meshAddress, adr);
+        }
+
+        spinner.setDropDownWidth(600);
+        spinner.setDropDownHorizontalOffset(100);
+        spinner.setDropDownVerticalOffset(100);
+        ArrayAdapter<String> spinnerAdapter = new ArrayAdapter<String>(this,
+                R.layout.layout_spinner_item_ele_select, R.id.tv_name, values);
+        spinner.setAdapter(spinnerAdapter);
+        spinner.setSelection(elementOffset);
+        spinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+            @Override
+            public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
+                elementOffset = elementList.get(position) - mDevice.meshAddress;
+                MeshLogger.d("SchedulerSetting - selected element changed = " + elementOffset);
+            }
+
+            @Override
+            public void onNothingSelected(AdapterView<?> parent) {
+            }
+        });
+    }
 
     private void setTime() {
 
@@ -391,11 +433,13 @@ public class SchedulerSettingActivity extends BaseActivity implements View.OnCli
                 .setAction((byte) action)
                 .setTransTime((byte) transitionTime)
                 .setSceneId((short) sceneId).build();
+        scheduler.elementOffset = elementOffset;
 //        long register = scheduler.getRegisterParam0();
         byte[] schedulerData = scheduler.toBytes();
         MeshLogger.log("scheduler data: " + Arrays.bytesToHexString(schedulerData, ""));
 //        int scene = scheduler.getRegisterParam1();
-        int eleAdr = mDevice.getTargetEleAdr(MeshSigModel.SIG_MD_SCHED_S.modelId);
+//        int eleAdr = mDevice.getTargetEleAdr(MeshSigModel.SIG_MD_SCHED_S.modelId);
+        int eleAdr = elementOffset + mDevice.meshAddress;
         if (eleAdr == -1) {
             toastMsg("scheduler model not found");
             return;
@@ -455,6 +499,8 @@ public class SchedulerSettingActivity extends BaseActivity implements View.OnCli
         ((RadioButton) findViewById(R.id.rb_action_scene)).setOnCheckedChangeListener(this);
         cb_month_all.setOnClickListener(this);
         cb_week_all.setOnClickListener(this);
+
+        initElementSpinner();
 //        findViewById(R.id.btn_save).setOnClickListener(this);
 
 //        findViewById(R.id.btn_set_time).setOnClickListener(this);
@@ -596,6 +642,7 @@ public class SchedulerSettingActivity extends BaseActivity implements View.OnCli
             Scheduler remoteScheduler = Scheduler.fromBytes(schedulerParams);
             if (remoteScheduler != null && this.scheduler.getIndex() == remoteScheduler.getIndex()) {
                 toastMsg("scheduler saved");
+                MeshLogger.d("scheduler saved : " + scheduler.elementOffset);
                 mDevice.saveScheduler(scheduler);
                 mDevice.save();
                 finish();

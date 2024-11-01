@@ -30,6 +30,7 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
 import android.view.View;
+import android.view.WindowManager;
 import android.widget.Button;
 import android.widget.LinearLayout;
 import android.widget.ProgressBar;
@@ -50,6 +51,7 @@ import com.telink.ble.mesh.core.access.fu.DistributorType;
 import com.telink.ble.mesh.core.access.fu.FUCallback;
 import com.telink.ble.mesh.core.access.fu.FUState;
 import com.telink.ble.mesh.core.access.fu.UpdatePolicy;
+import com.telink.ble.mesh.core.message.MeshSigModel;
 import com.telink.ble.mesh.core.message.NotificationMessage;
 import com.telink.ble.mesh.core.message.config.NetworkTransmitGetMessage;
 import com.telink.ble.mesh.core.message.firmwareupdate.AdditionalInformation;
@@ -231,7 +233,11 @@ public class FUActivity extends BaseActivity implements View.OnClickListener,
                 tv_info.setText(info);
 
                 // insert log
-                appendLog(info);
+                logInfoList.add(new LogInfo("FW-UPDATE", info, MeshLogger.LEVEL_DEBUG));
+                if (bottomDialog.isShowing()) {
+                    logInfoAdapter.notifyDataSetChanged();
+                    rv_log.smoothScrollToPosition(logInfoList.size() - 1);
+                }
             } else if (msg.what == MSG_INIT_PROGRESS) {
                 // update progress
                 int progress = msg.arg1;
@@ -253,6 +259,7 @@ public class FUActivity extends BaseActivity implements View.OnClickListener,
             return;
         }
         setContentView(R.layout.activity_fu);
+        getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
         extendBearerMode = SharedPreferenceHelper.getExtendBearerMode(this);
         mesh = TelinkMeshApplication.getInstance().getMeshInfo();
         setTitle("Mesh OTA");
@@ -349,8 +356,7 @@ public class FUActivity extends BaseActivity implements View.OnClickListener,
 
 //        readFirmware("/storage/emulated/0/kee/sigMesh/20210422_mesh_OTA/8258_mesh_V4.3_for_OTA.bin");
 
-
-        infoHandler.obtainMessage(MSG_INFO, "IDLE").sendToTarget();
+        appendLog("IDLE");
     }
 
     private void continueFirmwareUpdate() {
@@ -358,7 +364,7 @@ public class FUActivity extends BaseActivity implements View.OnClickListener,
         enableUI(false);
         FUCache fuCache = FUCacheService.getInstance().get();
         if (fuCache == null) {
-            infoHandler.obtainMessage(MSG_INFO, "firmware update cache error").sendToTarget();
+            appendLog("firmware update cache error");
         } else {
             MeshLogger.d("fuCache : " + fuCache.toString());
             this.distAddress = fuCache.distAddress;
@@ -390,7 +396,7 @@ public class FUActivity extends BaseActivity implements View.OnClickListener,
             isComplete = false;
             MeshService.getInstance().startMeshOta(meshOtaParameters);
 
-            infoHandler.obtainMessage(MSG_INFO, "continue firmware update : " + configuration.getBriefDesc(extendBearerMode)).sendToTarget();
+            appendLog("continue firmware update : " + configuration.getBriefDesc(extendBearerMode));
         }
     }
 
@@ -440,6 +446,7 @@ public class FUActivity extends BaseActivity implements View.OnClickListener,
         ll_policy = findViewById(R.id.ll_policy);
         rg_dist = findViewById(R.id.rg_dist);
         rb_device = findViewById(R.id.rb_device);
+        rb_device.setEnabled(isDistSpt());
         rb_phone = findViewById(R.id.rb_phone);
         rb_plc_ver_apl = findViewById(R.id.rb_plc_ver_apl);
         rb_plc_ver = findViewById(R.id.rb_plc_ver);
@@ -552,7 +559,7 @@ public class FUActivity extends BaseActivity implements View.OnClickListener,
                 }
 
 
-                infoHandler.obtainMessage(MSG_INFO, "Mesh OTA preparing...").sendToTarget();
+                appendLog("Mesh OTA preparing...");
                 enableUI(false);
 
                 MeshInfo meshInfo = TelinkMeshApplication.getInstance().getMeshInfo();
@@ -572,7 +579,7 @@ public class FUActivity extends BaseActivity implements View.OnClickListener,
 
                 MeshOtaParameters meshOtaParameters = new MeshOtaParameters(configuration);
                 isComplete = false;
-                infoHandler.obtainMessage(MSG_INFO, "start firmware update : " + configuration.getBriefDesc(extendBearerMode)).sendToTarget();
+                appendLog("start firmware update : " + configuration.getBriefDesc(extendBearerMode));
                 MeshService.getInstance().startMeshOta(meshOtaParameters);
                 break;
 
@@ -610,7 +617,7 @@ public class FUActivity extends BaseActivity implements View.OnClickListener,
         runOnUiThread(() -> {
             btn_start.setEnabled(enable);
             btn_get_version.setEnabled(enable);
-            rb_device.setEnabled(enable);
+            rb_device.setEnabled(enable && isDistSpt());
             rb_phone.setEnabled(enable);
             rb_plc_ver_apl.setEnabled(enable);
             rb_plc_ver.setEnabled(enable);
@@ -619,22 +626,26 @@ public class FUActivity extends BaseActivity implements View.OnClickListener,
         });
     }
 
+    /**
+     * check dose the direct connected device support distribution
+     *
+     * @return
+     */
+    private boolean isDistSpt() {
+        int adr = MeshService.getInstance().getDirectConnectedNodeAddress();
+        NodeInfo node = mesh.getDeviceByMeshAddress(adr);
+        return node != null && node.getTargetEleAdr(MeshSigModel.SIG_MD_FW_DISTRIBUT_S.modelId) != -1;
+    }
+
     private void appendLog(String logInfo) {
         MeshLogger.d("mesh-OTA appendLog: " + logInfo);
-        logInfoList.add(new LogInfo("FW-UPDATE", logInfo, MeshLogger.LEVEL_DEBUG));
-        runOnUiThread(() -> {
-            if (bottomDialog.isShowing()) {
-                logInfoAdapter.notifyDataSetChanged();
-                rv_log.smoothScrollToPosition(logInfoList.size() - 1);
-            }
-        });
-
+        infoHandler.obtainMessage(MSG_INFO, logInfo).sendToTarget();
     }
 
     private final Runnable RECONNECT_TASK = () -> showConfirmDialog("Device reconnect fail, quit mesh OTA ? ", (dialog, which) -> {
         MeshService.getInstance().idle(true);
         isComplete = true;
-        infoHandler.obtainMessage(MSG_INFO, "Quit !!!").sendToTarget();
+        appendLog("Quit !!!");
     });
 
     /****************************************************************
@@ -649,7 +660,7 @@ public class FUActivity extends BaseActivity implements View.OnClickListener,
                 delayHandler.removeCallbacks(RECONNECT_TASK);
                 delayHandler.postDelayed(RECONNECT_TASK, 3 * 60 * 1000);
             }
-            infoHandler.obtainMessage(MSG_INFO, "GATT disconnected").sendToTarget();
+            appendLog("GATT disconnected");
         } else if (eventType.equals(FirmwareUpdateInfoStatusMessage.class.getName())) {
             final NotificationMessage notificationMessage = ((StatusNotificationEvent) event).getNotificationMessage();
             FirmwareUpdateInfoStatusMessage infoStatusMessage = (FirmwareUpdateInfoStatusMessage) notificationMessage.getStatusMessage();
@@ -755,20 +766,17 @@ public class FUActivity extends BaseActivity implements View.OnClickListener,
     @Override
     public void onLog(String tag, String log, int logLevel) {
 //        MeshLogger.log(log, tag, logLevel);
-        /*
-        logInfoList.add(new LogInfo(tag, log, logLevel));
-        if (bottomDialog.isShowing()) {
-            logInfoAdapter.notifyDataSetChanged();
-            rv_log.smoothScrollToPosition(logInfoList.size() - 1);
-        }*/
+        if (logLevel >= MeshLogger.LEVEL_WARN) {
+            appendLog(log);
+        }
     }
 
     @Override
     public void onStateUpdated(FUState state, String extraInfo) {
-        String info = state.desc + (extraInfo == null ? "" : (" - " + extraInfo));
+        String info = state.desc + (extraInfo == null ? "" : (" (" + extraInfo + ")"));
         dismissConfirmDialog();
         delayHandler.removeCallbacks(RECONNECT_TASK);
-        infoHandler.obtainMessage(MSG_INFO, info).sendToTarget();
+        appendLog(info);
         if (state == FUState.DISTRIBUTING_BY_DEVICE && distributorType == DistributorType.DEVICE) {
             FUCache fuCache = new FUCache();
             fuCache.distAddress = distAddress;
@@ -786,6 +794,7 @@ public class FUActivity extends BaseActivity implements View.OnClickListener,
         }
         if (state == FUState.UPDATE_COMPLETE || state == FUState.UPDATE_FAIL) {
             this.isComplete = true;
+            FUCacheService.getInstance().clear(this);
             runOnUiThread(this::showCompleteDialog);
 
         }

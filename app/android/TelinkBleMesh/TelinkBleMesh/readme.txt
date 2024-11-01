@@ -2,6 +2,26 @@
 version record:
 versionName - version code - date
 
+V4.1.0.3 - 10 - 202401101 (released by tl_ble_mesh)
+
+- feat(android): add support for cloud url editable
+- feat(android): optimize fast provision function, add logs during fast provisioning
+- feat(android): add support connect specified node over GATT
+
+----------------
+
+V4.1.0.2 - 9 - 20240722 (4.1.0.1 is used for B91)
+
+- feat: add support for scene configuration in multiple elements
+- feat: add support for NLC and sensor
+- feat: add support for device sort by name and address
+- feat: add support for setting direct forwarding in batches
+- feat: add support for on-demand gatt proxy and solicitation pdu
+- perf: optimized the fast provision function and related event reporting
+- fix: fix mesh OTA error that caused by the receiver index  error
+- feat: add support for manually modifying the cloud URL, this feature is located at the: main#setting#settings#Base URL
+
+----------------
 
 V4.1.0.0 - 7 - 20231108
 

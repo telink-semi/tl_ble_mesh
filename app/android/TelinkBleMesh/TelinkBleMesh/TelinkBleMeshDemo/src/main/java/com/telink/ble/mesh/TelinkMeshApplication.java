@@ -22,12 +22,19 @@
  *******************************************************************************************************/
 package com.telink.ble.mesh;
 
+import android.app.Activity;
 import android.os.Build;
+import android.os.Bundle;
 import android.os.Handler;
 import android.os.HandlerThread;
 
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+
 import com.telink.ble.mesh.core.message.MeshSigModel;
+import com.telink.ble.mesh.core.message.MeshStatus;
 import com.telink.ble.mesh.core.message.NotificationMessage;
+import com.telink.ble.mesh.core.message.Opcode;
 import com.telink.ble.mesh.core.message.StatusMessage;
 import com.telink.ble.mesh.core.message.generic.LevelStatusMessage;
 import com.telink.ble.mesh.core.message.generic.OnOffStatusMessage;
@@ -50,6 +57,7 @@ import com.telink.ble.mesh.model.OnlineState;
 import com.telink.ble.mesh.model.UnitConvert;
 import com.telink.ble.mesh.model.db.MeshInfoService;
 import com.telink.ble.mesh.model.db.ObjectBox;
+import com.telink.ble.mesh.ui.eh.EhRspStatusMessage;
 import com.telink.ble.mesh.util.MeshLogger;
 
 import java.lang.reflect.Constructor;
@@ -72,6 +80,8 @@ public class TelinkMeshApplication extends MeshApplication {
 
     private Handler mOfflineCheckHandler;
 
+    // foreground activity count
+    private int fgActCnt;
     @Override
     public void onCreate() {
         super.onCreate();
@@ -82,9 +92,8 @@ public class TelinkMeshApplication extends MeshApplication {
         MeshLogger.enableRecord(SharedPreferenceHelper.isLogEnable(this));
         AppCrashHandler.init(this);
         closePErrorDialog();
-        ObjectBox.init(this);
-        checkMeshInfo();
-        loadSortType();
+        regActLfCb();
+        MeshStatus.Container.register(Opcode.VD_EH_PAIR_STS.value, EhRspStatusMessage.class);
     }
 
     /**
@@ -94,7 +103,7 @@ public class TelinkMeshApplication extends MeshApplication {
      * 3. if not exist, create a new mesh network
      * 4. setup the mesh network
      */
-    private void checkMeshInfo() {
+    public void initMeshInfo() {
         MeshInfoService.getInstance().init(ObjectBox.get());
         MeshInfo meshInfo = null;
         long id = SharedPreferenceHelper.getSelectedMeshId(this);
@@ -107,6 +116,8 @@ public class TelinkMeshApplication extends MeshApplication {
         }
         MeshInfoService.getInstance().addMeshInfo(meshInfo);
         SharedPreferenceHelper.setSelectedMeshId(this, meshInfo.id);
+
+        loadSortType();
     }
 
     private void closePErrorDialog() {
@@ -380,4 +391,48 @@ public class TelinkMeshApplication extends MeshApplication {
     }
 
 
+    private void regActLfCb(){
+
+        registerActivityLifecycleCallbacks(new ActivityLifecycleCallbacks() {
+            @Override
+            public void onActivityCreated(@NonNull Activity activity, @Nullable Bundle savedInstanceState) {
+
+            }
+
+            @Override
+            public void onActivityStarted(@NonNull Activity activity) {
+                fgActCnt++;
+            }
+
+            @Override
+            public void onActivityResumed(@NonNull Activity activity) {
+
+            }
+
+            @Override
+            public void onActivityPaused(@NonNull Activity activity) {
+
+            }
+
+            @Override
+            public void onActivityStopped(@NonNull Activity activity) {
+                fgActCnt--;
+            }
+
+            @Override
+            public void onActivitySaveInstanceState(@NonNull Activity activity, @NonNull Bundle outState) {
+
+            }
+
+            @Override
+            public void onActivityDestroyed(@NonNull Activity activity) {
+
+            }
+        });
+    }
+
+
+    public boolean isForeground() {
+        return fgActCnt >= 1;
+    }
 }

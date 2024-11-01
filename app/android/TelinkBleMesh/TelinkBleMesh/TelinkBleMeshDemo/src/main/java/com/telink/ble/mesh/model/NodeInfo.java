@@ -33,6 +33,9 @@ import com.telink.ble.mesh.entity.CompositionData;
 import com.telink.ble.mesh.entity.Element;
 import com.telink.ble.mesh.model.db.MeshInfoService;
 import com.telink.ble.mesh.model.db.Scheduler;
+import com.telink.ble.mesh.ui.eh.SwitchAction;
+import com.telink.ble.mesh.ui.eh.SwitchState;
+import com.telink.ble.mesh.ui.eh.SwitchUtils;
 import com.telink.ble.mesh.util.Arrays;
 import com.telink.ble.mesh.util.MeshLogger;
 
@@ -210,6 +213,18 @@ public class NodeInfo implements Serializable {
 
     public ToMany<NodeSensorState> sensorStateList;
 
+
+    /**
+     * switch actions
+     */
+    public ToMany<SwitchAction> switchActions;
+
+    /**
+     * used to save state when pair with mesh devices
+     */
+    public ToMany<SwitchState> switchStates;
+
+    public boolean isFromNfc = false;
 
     @Transient
     private OfflineCheckTask offlineCheckTask = (OfflineCheckTask) () -> {
@@ -584,4 +599,46 @@ public class NodeInfo implements Serializable {
         }
         return null;
     }
+
+    public int getLightState(int lightAddress) {
+        for (SwitchState st : switchStates) {
+            if (st.lightAddress == lightAddress) {
+                return st.state;
+            }
+        }
+        return 0;
+    }
+
+
+    /**
+     * did the light set switch publish
+     *
+     * @return
+     */
+    public boolean isLightPubSet(NodeInfo light) {
+        return getLightState(light.meshAddress) == SwitchUtils.SWITCH_STATE_PUBLISH_SET_COMPLETE;
+    }
+
+    public boolean isLightPaired(NodeInfo light) {
+        return getLightState(light.meshAddress) >= SwitchUtils.SWITCH_STATE_PAIR_COMPLETE;
+    }
+
+    public void updateLightState(int lightAddress, int state) {
+        SwitchState switchState = null;
+        for (SwitchState st : switchStates) {
+            if (st.lightAddress == lightAddress) {
+                switchState = st;
+                break;
+            }
+        }
+        if (switchState == null) {
+            switchState = new SwitchState();
+            switchState.lightAddress = lightAddress;
+            switchState.state = state;
+            switchStates.add(switchState);
+        } else {
+            switchState.state = state;
+        }
+    }
+
 }
