@@ -41,6 +41,7 @@ import com.telink.ble.mesh.ui.IconGenerator;
 import java.util.List;
 
 /**
+ * @deprecated
  * select device
  * Created by kee on 2017/8/18.
  */

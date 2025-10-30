@@ -22,7 +22,6 @@
  *******************************************************************************************************/
 package com.telink.ble.mesh.ui.fragment;
 
-import android.content.DialogInterface;
 import android.content.Intent;
 import android.os.Bundle;
 import android.os.Handler;
@@ -53,6 +52,7 @@ import com.telink.ble.mesh.foundation.event.StatusNotificationEvent;
 import com.telink.ble.mesh.model.NodeInfo;
 import com.telink.ble.mesh.model.PublishModel;
 import com.telink.ble.mesh.model.db.MeshInfoService;
+import com.telink.ble.mesh.ui.BaseActivity;
 import com.telink.ble.mesh.ui.CompositionDataActivity;
 import com.telink.ble.mesh.ui.DeviceConfigActivity;
 import com.telink.ble.mesh.ui.DeviceOtaActivity;
@@ -221,18 +221,26 @@ public class DeviceSettingFragment extends BaseFragment implements View.OnClickL
         kickDirect = deviceInfo.meshAddress == MeshService.getInstance().getDirectConnectedNodeAddress();
         showWaitingDialog("kick out processing");
         if (!kickDirect) {
-            delayHandler.postDelayed(this::onKickOutFinish, 3 * 1000);
+            delayHandler.postDelayed(() -> onKickOutFinish(false), 3 * 1000);
         } else {
-            delayHandler.postDelayed(this::onKickOutFinish, 10 * 1000);
+            delayHandler.postDelayed(() -> onKickOutFinish(false), 10 * 1000);
         }
     }
 
-    private void onKickOutFinish() {
+    private void onKickOutFinish(boolean success) {
+        dismissWaitingDialog();
         delayHandler.removeCallbacksAndMessages(null);
+        if (success) {
+            removeDeviceInfo();
+        } else {
+            ((BaseActivity) getActivity()).showConfirmDialog("kick out fail, remove node info from local storage?", (dialog, which) -> removeDeviceInfo());
+        }
+    }
+
+    private void removeDeviceInfo() {
         MeshService.getInstance().removeDevice(deviceInfo.meshAddress);
         TelinkMeshApplication.getInstance().getMeshInfo().removeNode(deviceInfo);
-//        TelinkMeshApplication.getInstance().getMeshInfo().saveOrUpdate(getActivity().getApplicationContext());
-        dismissWaitingDialog();
+        toastMsg("node removed");
         Objects.requireNonNull(getActivity()).finish();
     }
 
@@ -240,7 +248,7 @@ public class DeviceSettingFragment extends BaseFragment implements View.OnClickL
     public void performed(Event<String> event) {
         if (event.getType().equals(MeshEvent.EVENT_TYPE_DISCONNECTED)) {
             if (kickDirect) {
-                onKickOutFinish();
+                onKickOutFinish(true);
             } else {
 //                refreshUI();
             }
@@ -264,7 +272,7 @@ public class DeviceSettingFragment extends BaseFragment implements View.OnClickL
 
         } else if (event.getType().equals(NodeResetStatusMessage.class.getName())) {
             if (!kickDirect) {
-                onKickOutFinish();
+                onKickOutFinish(true);
             }
         }
     }

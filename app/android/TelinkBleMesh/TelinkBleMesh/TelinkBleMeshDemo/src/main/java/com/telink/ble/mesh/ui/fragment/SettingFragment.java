@@ -22,7 +22,6 @@
  *******************************************************************************************************/
 package com.telink.ble.mesh.ui.fragment;
 
-import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
@@ -42,8 +41,10 @@ import com.telink.ble.mesh.ui.DebugActivity;
 import com.telink.ble.mesh.ui.LogActivity;
 import com.telink.ble.mesh.ui.NetworkListActivity;
 import com.telink.ble.mesh.ui.OobListActivity;
+import com.telink.ble.mesh.ui.PrivateDeviceListActivity;
 import com.telink.ble.mesh.ui.SettingsActivity;
 import com.telink.ble.mesh.ui.test.IntervalTestActivity;
+import com.telink.ble.mesh.ui.test.ReliableTestActivity;
 import com.telink.ble.mesh.ui.test.ResponseTestActivity;
 import com.telink.ble.mesh.util.ContextUtil;
 
@@ -55,7 +56,8 @@ public class SettingFragment extends BaseFragment implements View.OnClickListene
     View ll_location_setting;
     private final String[] TEST_ACTION = {
             "Response Test",
-            "Interval Test"};
+            "Interval Test",
+            "Reliable Test"};
     private AlertDialog cmdDialog;
 
     @Override
@@ -81,8 +83,9 @@ public class SettingFragment extends BaseFragment implements View.OnClickListene
         view.findViewById(R.id.view_oob).setOnClickListener(this);
         view.findViewById(R.id.view_log).setOnClickListener(this);
         view.findViewById(R.id.view_tests).setOnClickListener(this);
+        view.findViewById(R.id.view_pvt_dev).setOnClickListener(this);
 
-        view.findViewById(R.id.view_tests).setVisibility(View.GONE); // for release
+//        view.findViewById(R.id.view_tests).setVisibility(View.GONE); // for release
 
         View view_cert = view.findViewById(R.id.view_cert);
         view_cert.setOnClickListener(this);
@@ -117,6 +120,7 @@ public class SettingFragment extends BaseFragment implements View.OnClickListene
                 Intent enableLocationIntent = new Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS);
                 startActivityForResult(enableLocationIntent, 1);
                 break;
+
             case R.id.btn_location_ignore:
                 SharedPreferenceHelper.setLocationIgnore(getActivity(), true);
                 ll_location_setting.setVisibility(View.GONE);
@@ -129,6 +133,7 @@ public class SettingFragment extends BaseFragment implements View.OnClickListene
             case R.id.view_oob:
                 startActivity(new Intent(getActivity(), OobListActivity.class));
                 break;
+
             case R.id.view_cert:
                 startActivity(new Intent(getActivity(), CertListActivity.class));
                 break;
@@ -137,22 +142,25 @@ public class SettingFragment extends BaseFragment implements View.OnClickListene
                 startActivity(new Intent(getActivity(), LogActivity.class));
                 break;
 
+            case R.id.view_pvt_dev:
+                startActivity(new Intent(getActivity(), PrivateDeviceListActivity.class));
+                break;
+
         }
     }
 
     private void showActionDialog() {
         if (cmdDialog == null) {
             AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
-            builder.setItems(TEST_ACTION, new DialogInterface.OnClickListener() {
-                @Override
-                public void onClick(DialogInterface dialog, int which) {
-                    if (which == 0) {
-                        startActivity(new Intent(getActivity(), ResponseTestActivity.class));
-                    } else if (which == 1) {
-                        startActivity(new Intent(getActivity(), IntervalTestActivity.class));
-                    }
-                    cmdDialog.dismiss();
+            builder.setItems(TEST_ACTION, (dialog, which) -> {
+                if (which == 0) {
+                    startActivity(new Intent(getActivity(), ResponseTestActivity.class));
+                } else if (which == 1) {
+                    startActivity(new Intent(getActivity(), IntervalTestActivity.class));
+                } else if (which == 2) {
+                    startActivity(new Intent(getActivity(), ReliableTestActivity.class));
                 }
+                cmdDialog.dismiss();
             });
             builder.setTitle("Select Test Actions");
             cmdDialog = builder.create();

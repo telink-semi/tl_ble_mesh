@@ -53,6 +53,7 @@ import com.telink.ble.mesh.model.NetworkingDevice;
 import com.telink.ble.mesh.model.NetworkingState;
 import com.telink.ble.mesh.model.NodeInfo;
 import com.telink.ble.mesh.model.PrivateDevice;
+import com.telink.ble.mesh.model.db.MeshInfoService;
 import com.telink.ble.mesh.ui.adapter.FastProvisionDeviceAdapter;
 import com.telink.ble.mesh.ui.adapter.LogInfoAdapter;
 import com.telink.ble.mesh.util.Arrays;
@@ -86,7 +87,7 @@ public class FastProvisionActivity extends BaseActivity implements EventListener
 
     private Handler delayHandler = new Handler();
 
-    private PrivateDevice[] targetDevices = PrivateDevice.values();
+    private List<PrivateDevice> targetDevices;
 
     /**
      * log info
@@ -133,6 +134,8 @@ public class FastProvisionActivity extends BaseActivity implements EventListener
         setContentView(R.layout.activity_fast_provision);
         initTitle();
 
+        targetDevices = MeshInfoService.getInstance().getAllPrivateDevices();
+
         initLog();
 
         RecyclerView rv_devices = findViewById(R.id.rv_devices);
@@ -175,7 +178,6 @@ public class FastProvisionActivity extends BaseActivity implements EventListener
         });
         bottomDialog = new BottomSheetDialog(this);
         View view = getLayoutInflater().inflate(R.layout.dialog_bottom_list, null);
-//        BottomSheetBehavior behavior = BottomSheetBehavior.from((View)dialog.getParent());
         bottomDialog.setContentView(view);
         logInfoAdapter = new LogInfoAdapter(this, logInfoList);
         rv_log = view.findViewById(R.id.rv_log_sheet);
@@ -193,7 +195,7 @@ public class FastProvisionActivity extends BaseActivity implements EventListener
         enableUI(false);
         int provisionIndex = meshInfo.getProvisionIndex();
         appendLog(String.format("start fast provision => adr index : %04X", provisionIndex));
-        SparseIntArray targetDevicePid = new SparseIntArray(targetDevices.length);
+        SparseIntArray targetDevicePid = new SparseIntArray(targetDevices.size());
 
         CompositionData compositionData;
         for (PrivateDevice privateDevice : targetDevices) {

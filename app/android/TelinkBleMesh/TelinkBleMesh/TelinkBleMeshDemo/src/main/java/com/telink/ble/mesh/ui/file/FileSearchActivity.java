@@ -122,7 +122,7 @@ public class FileSearchActivity extends AppCompatActivity {
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
                 Intent intent = new Intent();
-                intent.putExtra(FileSelectActivity.KEY_RESULT, searchResults.get(position).getAbsolutePath());
+                intent.putExtra(FileSelectActivity.EXTRA_RESULT, searchResults.get(position).getAbsolutePath());
                 setResult(RESULT_OK, intent);
                 finish();
             }

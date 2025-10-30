@@ -169,7 +169,7 @@ public class DeviceOtaActivity extends BaseActivity implements View.OnClickListe
                 break;
 
             case R.id.tv_select_file:
-                startActivityForResult(new Intent(this, FileSelectActivity.class).putExtra(FileSelectActivity.KEY_SUFFIX, ".bin"), REQUEST_CODE_GET_FILE);
+                startActivityForResult(new Intent(this, FileSelectActivity.class).putExtra(FileSelectActivity.EXTRA_SUFFIX, ".bin"), REQUEST_CODE_GET_FILE);
                 break;
         }
     }
@@ -237,7 +237,7 @@ public class DeviceOtaActivity extends BaseActivity implements View.OnClickListe
         if (resultCode != Activity.RESULT_OK || requestCode != REQUEST_CODE_GET_FILE)
             return;
 
-        String mPath = data.getStringExtra(FileSelectActivity.KEY_RESULT);
+        String mPath = data.getStringExtra(FileSelectActivity.EXTRA_RESULT);
         MeshLogger.log("select: " + mPath);
 //        File f = new File(mPath);
         readFirmware(mPath);

@@ -33,6 +33,7 @@ import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 
 /**
  * CompositionData class represents the composition data of a Bluetooth device in a mesh network.
@@ -137,6 +138,8 @@ public class CompositionData implements Serializable, Parcelable {
      * @return The CompositionData object created from the byte array.
      */
     public static CompositionData from(byte[] data) {
+        // length 10 means cid + pid + vid + crpl + features
+        if (data == null || data.length < 10) return null;
 
         int index = 0;
         CompositionData cpsData = new CompositionData();
@@ -151,28 +154,33 @@ public class CompositionData implements Serializable, Parcelable {
         cpsData.features = (data[index++] & 0xFF) | ((data[index++] & 0xFF) << 8);
 
         cpsData.elements = new ArrayList<>();
-        while (index < data.length) {
-            Element element = new Element();
-            element.location = (data[index++] & 0xFF) | ((data[index++] & 0xFF) << 8);
-            element.sigNum = (data[index++] & 0xFF);
-            element.vendorNum = (data[index++] & 0xFF);
+        try {
+            while (index < data.length) {
+                Element element = new Element();
+                element.location = (data[index++] & 0xFF) | ((data[index++] & 0xFF) << 8);
+                element.sigNum = (data[index++] & 0xFF);
+                element.vendorNum = (data[index++] & 0xFF);
 
-            element.sigModels = new ArrayList<>();
-            for (int i = 0; i < element.sigNum; i++) {
-                element.sigModels.add((data[index++] & 0xFF) | ((data[index++] & 0xFF) << 8));
+                element.sigModels = new ArrayList<>();
+                for (int i = 0; i < element.sigNum; i++) {
+                    element.sigModels.add((data[index++] & 0xFF) | ((data[index++] & 0xFF) << 8));
+                }
+
+                element.vendorModels = new ArrayList<>();
+                for (int j = 0; j < element.vendorNum; j++) {
+                    //sample 11 02 01 00 cid: 11 02 modelId: 01 00 -> 0x00010211
+                    element.vendorModels.add(((data[index++] & 0xFF)) | ((data[index++] & 0xFF) << 8) |
+                            ((data[index++] & 0xFF) << 16) | ((data[index++] & 0xFF) << 24));
+                }
+
+                cpsData.elements.add(element);
             }
 
-            element.vendorModels = new ArrayList<>();
-            for (int j = 0; j < element.vendorNum; j++) {
-                //sample 11 02 01 00 cid: 11 02 modelId: 01 00 -> 0x00010211
-                element.vendorModels.add(((data[index++] & 0xFF)) | ((data[index++] & 0xFF) << 8) |
-                        ((data[index++] & 0xFF) << 16) | ((data[index++] & 0xFF) << 24));
-            }
-
-            cpsData.elements.add(element);
+            return cpsData;
+        } catch (ArrayIndexOutOfBoundsException ae) {
+            ae.printStackTrace();
+            return null;
         }
-
-        return cpsData;
     }
 
     /**
@@ -181,7 +189,7 @@ public class CompositionData implements Serializable, Parcelable {
      * @return The byte array representation of the CompositionData object.
      */
     public byte[] toBytes() {
-        if (raw != null) return raw;
+//        if (raw != null) return raw;
         byte[] re = ByteBuffer.allocate(10).order(ByteOrder.LITTLE_ENDIAN)
                 .putShort((short) cid)
                 .putShort((short) pid)
@@ -357,6 +365,48 @@ public class CompositionData implements Serializable, Parcelable {
                 ", features=" + String.format("%04X", features) +
                 ", elements=\n" + elementInfo +
                 '}';
+    }
+
+
+    public String toFormatString() {
+        StringBuilder sb = new StringBuilder("Composition-Data:\n");
+
+        // basic
+        sb.append(String.format("cid: 0x%04X", this.cid)).append("\n");
+        sb.append(String.format("pid: 0x%04X", this.pid)).append("\n");
+        sb.append(String.format("vid: 0x%04X", this.vid)).append("\n");
+        sb.append(String.format("crpl: 0x%04X", this.crpl)).append("\n\n");
+
+        // features
+        sb.append(String.format("features: 0x%04X", this.features)).append("\n");
+        sb.append("\t").append("relay support: ").append(this.relaySupport()).append("\n")
+                .append("\t").append("proxy support: ").append(this.proxySupport()).append("\n")
+                .append("\t").append("friend support: ").append(this.friendSupport()).append("\n")
+                .append("\t").append("low power support: ").append(this.lowPowerSupport()).append("\n\n");
+
+        // elements
+        sb.append("elements: (").append(this.elements.size()).append(")").append("\n");
+        List<Element> elementList = this.elements;
+        for (int i = 0; i < elementList.size(); i++) {
+            Element ele = elementList.get(i);
+            sb.append("\t").append(String.format(Locale.getDefault(), "element %d: ", i)).append("\n");
+            MeshSigModel meshSigModel;
+            for (Integer sigModel : ele.sigModels) {
+                sb.append("\t\t").append(String.format("SIG model -- 0x%04X", sigModel));
+                meshSigModel = MeshSigModel.getById(sigModel);
+                if (meshSigModel != null) {
+                    sb.append(" -- ").append(meshSigModel.modelName);
+                }
+                sb.append("\n");
+            }
+
+            for (Integer vendorModel : ele.vendorModels) {
+                sb.append("\t\t").append(String.format("vendor model -- 0x%06X", vendorModel)).append("\n");
+            }
+        }
+
+
+        return sb.toString();
     }
 }
 

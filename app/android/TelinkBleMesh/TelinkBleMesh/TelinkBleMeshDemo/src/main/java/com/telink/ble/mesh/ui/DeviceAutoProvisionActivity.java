@@ -312,7 +312,8 @@ public class DeviceAutoProvisionActivity extends BaseActivity implements View.On
         // check if device support fast bind
         boolean defaultBound = false;
         if (privateMode && remote.getDeviceUUID() != null) {
-            PrivateDevice device = PrivateDevice.filter(remote.getDeviceUUID());
+//            PrivateDevice device = PrivateDevice.filter(remote.getDeviceUUID());
+            PrivateDevice device = MeshInfoService.getInstance().getPrivateDevice(remote.getDeviceUUID());
             if (device != null) {
                 MeshLogger.d("private device");
                 final byte[] cpsData = device.getCpsData();

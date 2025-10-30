@@ -31,6 +31,7 @@ import android.os.HandlerThread;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
+import com.telink.ble.mesh.core.MeshUtils;
 import com.telink.ble.mesh.core.message.MeshSigModel;
 import com.telink.ble.mesh.core.message.MeshStatus;
 import com.telink.ble.mesh.core.message.NotificationMessage;
@@ -48,12 +49,14 @@ import com.telink.ble.mesh.foundation.MeshService;
 import com.telink.ble.mesh.foundation.event.MeshEvent;
 import com.telink.ble.mesh.foundation.event.NetworkInfoUpdateEvent;
 import com.telink.ble.mesh.foundation.event.OnlineStatusEvent;
+import com.telink.ble.mesh.foundation.event.ReliableMessageProcessEvent;
 import com.telink.ble.mesh.foundation.event.StatusNotificationEvent;
 import com.telink.ble.mesh.model.AppSettings;
 import com.telink.ble.mesh.model.MeshInfo;
 import com.telink.ble.mesh.model.NodeInfo;
 import com.telink.ble.mesh.model.NodeStatusChangedEvent;
 import com.telink.ble.mesh.model.OnlineState;
+import com.telink.ble.mesh.model.PrivateDevice;
 import com.telink.ble.mesh.model.UnitConvert;
 import com.telink.ble.mesh.model.db.MeshInfoService;
 import com.telink.ble.mesh.model.db.ObjectBox;
@@ -76,12 +79,13 @@ public class TelinkMeshApplication extends MeshApplication {
 
     private MeshInfo meshInfo;
 
-    private NodeSortType sortType= NodeSortType.ADDRESS_ASC;
+    private NodeSortType sortType = NodeSortType.ADDRESS_ASC;
 
     private Handler mOfflineCheckHandler;
 
     // foreground activity count
     private int fgActCnt;
+
     @Override
     public void onCreate() {
         super.onCreate();
@@ -93,7 +97,10 @@ public class TelinkMeshApplication extends MeshApplication {
         AppCrashHandler.init(this);
         closePErrorDialog();
         regActLfCb();
+
+        // the eh related function is located in the app module
         MeshStatus.Container.register(Opcode.VD_EH_PAIR_STS.value, EhRspStatusMessage.class);
+
     }
 
     /**
@@ -118,6 +125,14 @@ public class TelinkMeshApplication extends MeshApplication {
         SharedPreferenceHelper.setSelectedMeshId(this, meshInfo.id);
 
         loadSortType();
+
+        checkDefaultPrivateDevices();
+    }
+
+    private void checkDefaultPrivateDevices() {
+        if (SharedPreferenceHelper.isFirstLoad(this)) {
+            MeshInfoService.getInstance().updatePrivateDevice(PrivateDevice.getDefaultDevices());
+        }
     }
 
     private void closePErrorDialog() {
@@ -377,6 +392,25 @@ public class TelinkMeshApplication extends MeshApplication {
         }
     }
 
+    @Override
+    protected void onReliableMessageProcessEvent(ReliableMessageProcessEvent event) {
+        if (ReliableMessageProcessEvent.EVENT_TYPE_MSG_PROCESS_COMPLETE.equals(event.getType())) {
+            boolean success = event.isSuccess();
+            if (success) return;
+            int dest = event.getDest();
+            if (MeshUtils.validUnicastAddress(dest)) {
+                // the message is sent to unicast address
+                // find the node, and set it to offline
+                NodeInfo node = meshInfo.getDeviceByElementAddress(dest);
+                if (node != null) {
+                    MeshLogger.log("auto offline confirmed");
+                    node.setOnlineState(OnlineState.OFFLINE);
+                    onNodeInfoStatusChanged(node);
+                }
+            }
+        }
+    }
+
     /**
      * save sequence number and iv index when mesh info updated
      */
@@ -391,7 +425,10 @@ public class TelinkMeshApplication extends MeshApplication {
     }
 
 
-    private void regActLfCb(){
+    /**
+     * register activity lifecycle callback
+     */
+    private void regActLfCb() {
 
         registerActivityLifecycleCallbacks(new ActivityLifecycleCallbacks() {
             @Override

@@ -404,6 +404,35 @@
             android:screenOrientation="portrait"
             android:windowSoftInputMode="stateAlwaysHidden"
             tools:ignore="LockedOrientationActivity" />
+        <activity
+            android:name="com.telink.ble.mesh.ui.test.ReliableTestActivity"
+            android:screenOrientation="portrait"
+            android:windowSoftInputMode="stateAlwaysHidden"
+            tools:ignore="LockedOrientationActivity" />
+        <activity
+            android:name="com.telink.ble.mesh.ui.NlcListActivity"
+            android:screenOrientation="portrait"
+            android:windowSoftInputMode="stateAlwaysHidden"
+            tools:ignore="LockedOrientationActivity" />
+        <activity
+            android:name="com.telink.ble.mesh.ui.NlcUnionSettingActivity"
+            android:screenOrientation="portrait"
+            android:windowSoftInputMode="stateAlwaysHidden"
+            tools:ignore="LockedOrientationActivity" />
+        <activity
+            android:name="com.telink.ble.mesh.ui.SensorSelectActivity"
+            android:screenOrientation="portrait"
+            android:windowSoftInputMode="stateAlwaysHidden"
+            tools:ignore="LockedOrientationActivity" />
+        <activity
+            android:name="com.telink.ble.mesh.ui.PubAdrSelectActivity"
+            android:screenOrientation="portrait"
+            android:windowSoftInputMode="stateAlwaysHidden"
+            tools:ignore="LockedOrientationActivity" />
+        <activity android:name="com.telink.ble.mesh.ui.NodeSelectActivity" />
+        <activity android:name="com.telink.ble.mesh.ui.PrivateDeviceListActivity" />
+        <activity android:name="com.telink.ble.mesh.ui.PrivateDeviceEditActivity" />
+        <activity android:name="com.telink.ble.mesh.ui.DeviceProvisionConfirmModeActivity" />
 
 
         <provider

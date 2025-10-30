@@ -149,6 +149,8 @@ public class SettingsActivity extends BaseActivity implements View.OnClickListen
                 return R.id.rb_pv_normal_sl;
             case SharedPreferenceHelper.PROVISION_MODE_NORMAL_AUTO:
                 return R.id.rb_pv_normal_auto;
+                case SharedPreferenceHelper.PROVISION_MODE_NORMAL_CONFIRM:
+                    return R.id.rb_pv_normal_confirm;
             case SharedPreferenceHelper.PROVISION_MODE_REMOTE:
                 return R.id.rb_pv_remote;
             case SharedPreferenceHelper.PROVISION_MODE_FAST:
@@ -166,6 +168,10 @@ public class SettingsActivity extends BaseActivity implements View.OnClickListen
 
             case R.id.rb_pv_normal_auto:
                 mode = SharedPreferenceHelper.PROVISION_MODE_NORMAL_AUTO;
+                break;
+
+            case R.id.rb_pv_normal_confirm:
+                mode = SharedPreferenceHelper.PROVISION_MODE_NORMAL_CONFIRM;
                 break;
 
             case R.id.rb_pv_remote:

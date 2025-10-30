@@ -113,6 +113,8 @@ public class FirmwareUpdateConfiguration {
      */
     private int proxyAddress;
 
+    private long networkInterval = 240;
+
 
     /**
      * Constructs a new FirmwareUpdateConfiguration object with the given parameters.
@@ -229,6 +231,14 @@ public class FirmwareUpdateConfiguration {
         }
     }
 
+    public long getNetworkInterval() {
+        return networkInterval;
+    }
+
+    public void setNetworkInterval(long networkInterval) {
+        this.networkInterval = networkInterval;
+    }
+
     public void dispatchLogInfo(String tag, String log, int logLevel) {
         if (this.callback != null) {
             this.callback.onLog(tag, log, logLevel);
@@ -299,6 +309,7 @@ public class FirmwareUpdateConfiguration {
                 ", distributorAddress=" + String.format("%04x", distributorAddress) +
                 ", proxyAddress=" + String.format("%04x", proxyAddress) +
                 ", extendBearerMode=" + extendBearerMode +
+                ", networkInterval=" + networkInterval +
                 '}';
 
 

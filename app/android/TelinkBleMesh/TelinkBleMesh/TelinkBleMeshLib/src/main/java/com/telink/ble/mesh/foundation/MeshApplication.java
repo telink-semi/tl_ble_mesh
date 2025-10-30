@@ -27,6 +27,7 @@ import android.app.Application;
 import com.telink.ble.mesh.foundation.event.MeshEvent;
 import com.telink.ble.mesh.foundation.event.NetworkInfoUpdateEvent;
 import com.telink.ble.mesh.foundation.event.OnlineStatusEvent;
+import com.telink.ble.mesh.foundation.event.ReliableMessageProcessEvent;
 import com.telink.ble.mesh.foundation.event.StatusNotificationEvent;
 import com.telink.ble.mesh.util.MeshLogger;
 
@@ -73,6 +74,11 @@ public abstract class MeshApplication extends Application implements EventHandle
     protected abstract void onOnlineStatusEvent(OnlineStatusEvent onlineStatusEvent);
 
     /**
+     * online status notification
+     */
+    protected abstract void onReliableMessageProcessEvent(ReliableMessageProcessEvent event);
+
+    /**
      * mesh event
      *
      * @see MeshEvent#EVENT_TYPE_MESH_EMPTY
@@ -93,6 +99,8 @@ public abstract class MeshApplication extends Application implements EventHandle
             onOnlineStatusEvent((OnlineStatusEvent) event);
         } else if (event instanceof MeshEvent) {
             onMeshEvent((MeshEvent) event);
+        } else if (event instanceof ReliableMessageProcessEvent) {
+            onReliableMessageProcessEvent((ReliableMessageProcessEvent) event);
         }
         dispatchEvent(event);
     }

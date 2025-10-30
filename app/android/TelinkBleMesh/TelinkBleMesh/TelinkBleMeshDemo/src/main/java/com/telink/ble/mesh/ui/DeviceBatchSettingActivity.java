@@ -138,21 +138,30 @@ public class DeviceBatchSettingActivity extends BaseActivity implements View.OnC
         kickDirect = deviceInfo.meshAddress == MeshService.getInstance().getDirectConnectedNodeAddress();
         showWaitingDialog("kick out processing...");
         if (!kickDirect) {
-            delayHandler.postDelayed(this::onKickOutFinish, 3 * 1000);
+            delayHandler.postDelayed(() -> onKickOutFinish(false), 3 * 1000);
         } else {
-            delayHandler.postDelayed(this::onKickOutFinish, 10 * 1000);
+            delayHandler.postDelayed(() -> onKickOutFinish(false), 10 * 1000);
         }
     }
 
-    private void onKickOutFinish() {
-        deviceSelectAdapter.notifyDataSetChanged();
+    private void onKickOutFinish(boolean success) {
+        dismissWaitingDialog();
         delayHandler.removeCallbacksAndMessages(null);
+        if (success) {
+            removeDeviceInfo();
+        } else {
+            showConfirmDialog("kick out fail, remove node info from local storage?", (dialog, which) -> removeDeviceInfo());
+        }
+    }
+
+    private void removeDeviceInfo() {
         if (kickingNode != null) {
             MeshService.getInstance().removeDevice(kickingNode.meshAddress);
             TelinkMeshApplication.getInstance().getMeshInfo().removeNode(kickingNode);
             kickingNode = null;
+            toastMsg("node removed");
         }
-        dismissWaitingDialog();
+        deviceSelectAdapter.notifyDataSetChanged();
     }
 
     public void showKickConfirmDialog(NodeInfo node) {
@@ -209,14 +218,14 @@ public class DeviceBatchSettingActivity extends BaseActivity implements View.OnC
         final String eventType = event.getType();
         if (event.getType().equals(MeshEvent.EVENT_TYPE_DISCONNECTED)) {
             if (kickDirect) {
-                onKickOutFinish();
+                onKickOutFinish(true);
             }
             runOnUiThread(() -> deviceSelectAdapter.notifyDataSetChanged());
         } else if (eventType.equals(NodeStatusChangedEvent.EVENT_TYPE_NODE_STATUS_CHANGED)) {
             runOnUiThread(() -> deviceSelectAdapter.notifyDataSetChanged());
         } else if (event.getType().equals(NodeResetStatusMessage.class.getName())) {
             if (!kickDirect) {
-                onKickOutFinish();
+                onKickOutFinish(true);
             }
         } else if (event.getType().equals(GattConnectionEvent.EVENT_TYPE_CONNECT_SUCCESS)) {
             runOnUiThread(() -> {

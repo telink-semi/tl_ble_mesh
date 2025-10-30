@@ -102,7 +102,7 @@ public class ShareImportActivity extends BaseActivity implements View.OnClickLis
     public void onClick(View v) {
         switch (v.getId()) {
             case R.id.tv_file_select:
-                startActivityForResult(new Intent(this, FileSelectActivity.class).putExtra(FileSelectActivity.KEY_SUFFIX, ".json"), REQUEST_CODE_GET_FILE);
+                startActivityForResult(new Intent(this, FileSelectActivity.class).putExtra(FileSelectActivity.EXTRA_SUFFIX, ".json"), REQUEST_CODE_GET_FILE);
                 break;
 
             case R.id.btn_open:
@@ -195,7 +195,7 @@ public class ShareImportActivity extends BaseActivity implements View.OnClickLis
         if (resultCode != Activity.RESULT_OK)
             return;
         if (requestCode == REQUEST_CODE_GET_FILE) {
-            mPath = data.getStringExtra(FileSelectActivity.KEY_RESULT);
+            mPath = data.getStringExtra(FileSelectActivity.EXTRA_RESULT);
             btn_open.setVisibility(View.VISIBLE);
             tv_file_select.setText(mPath);
 

@@ -53,8 +53,10 @@ public class ReliableMessageProcessEvent extends Event<String> implements Parcel
 
     private boolean success; // Indicates if the message processing was successful
     private int opcode; // The opcode of the message
+    private int dest; // The destination address of the message
     private int rspMax; // The maximum number of responses expected
     private int rspCount; // The number of responses received
+    private Integer[] rspArr;
     private String desc; // Description of the event
 
     /**
@@ -97,6 +99,7 @@ public class ReliableMessageProcessEvent extends Event<String> implements Parcel
         opcode = in.readInt();
         rspMax = in.readInt();
         rspCount = in.readInt();
+        rspArr = (Integer[]) in.readArray(Integer.class.getClassLoader());
         desc = in.readString();
     }
 
@@ -215,6 +218,22 @@ public class ReliableMessageProcessEvent extends Event<String> implements Parcel
         return 0;
     }
 
+    public Integer[] getRspArr() {
+        return rspArr;
+    }
+
+    public void setRspArr(Integer[] rspArr) {
+        this.rspArr = rspArr;
+    }
+
+    public int getDest() {
+        return dest;
+    }
+
+    public void setDest(int dest) {
+        this.dest = dest;
+    }
+
     /**
      * Implementation of the writeToParcel method from the Parcelable interface.
      *
@@ -227,6 +246,9 @@ public class ReliableMessageProcessEvent extends Event<String> implements Parcel
         dest.writeInt(opcode);
         dest.writeInt(rspMax);
         dest.writeInt(rspCount);
+        dest.writeArray(rspArr);
         dest.writeString(desc);
+
+
     }
 }

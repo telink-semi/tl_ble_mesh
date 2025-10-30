@@ -135,7 +135,7 @@ public class OobListActivity extends BaseActivity {
                     startActivityForResult(new Intent(OobListActivity.this, OOBEditActivity.class), REQUEST_CODE_ADD_OOB);
                 } else if (which == 1) {
                     startActivityForResult(new Intent(OobListActivity.this, FileSelectActivity.class)
-                                    .putExtra(FileSelectActivity.KEY_SUFFIX, ".txt")
+                                    .putExtra(FileSelectActivity.EXTRA_SUFFIX, ".txt")
                             , REQUEST_CODE_SELECT_DATABASE);
                 }
             });
@@ -163,7 +163,7 @@ public class OobListActivity extends BaseActivity {
         if (resultCode != Activity.RESULT_OK || data == null)
             return;
         if (requestCode == REQUEST_CODE_SELECT_DATABASE) {
-            final String path = data.getStringExtra(FileSelectActivity.KEY_RESULT);
+            final String path = data.getStringExtra(FileSelectActivity.EXTRA_RESULT);
             MeshLogger.log("select: " + path);
             showWaitingDialog("parsing OOB database...");
             new Thread(() -> {

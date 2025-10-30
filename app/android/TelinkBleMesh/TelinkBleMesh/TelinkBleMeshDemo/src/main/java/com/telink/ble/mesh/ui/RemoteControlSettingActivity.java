@@ -104,7 +104,7 @@ public class RemoteControlSettingActivity extends BaseActivity implements EventL
                 }
             }
         });
-//        TelinkMeshApplication.getInstance().addEventListener(MeshEvent.EVENT_TYPE_DISCONNECTED, this);
+        TelinkMeshApplication.getInstance().addEventListener(MeshEvent.EVENT_TYPE_DISCONNECTED, this);
         TelinkMeshApplication.getInstance().addEventListener(GattConnectionEvent.EVENT_TYPE_CONNECT_FAIL, this);
         TelinkMeshApplication.getInstance().addEventListener(GattConnectionEvent.EVENT_TYPE_CONNECT_SUCCESS, this);
         TelinkMeshApplication.getInstance().addEventListener(ModelPublicationStatusMessage.class.getName(), this);
@@ -208,12 +208,7 @@ public class RemoteControlSettingActivity extends BaseActivity implements EventL
             connSt = STATE_CONNECTED;
             refreshUI();
         } else if (event.getType().equals(ModelPublicationStatusMessage.class.getName())) {
-            runOnUiThread(new Runnable() {
-                @Override
-                public void run() {
-                    Toast.makeText(RemoteControlSettingActivity.this, "pub set complete", Toast.LENGTH_SHORT).show();
-                }
-            });
+            runOnUiThread(() -> Toast.makeText(RemoteControlSettingActivity.this, "pub set complete", Toast.LENGTH_SHORT).show());
         }
     }
 

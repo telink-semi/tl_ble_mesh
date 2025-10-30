@@ -26,6 +26,7 @@ import android.text.TextUtils;
 import android.view.View;
 import android.widget.TextView;
 
+import androidx.appcompat.widget.Toolbar;
 import androidx.fragment.app.Fragment;
 
 import com.telink.ble.mesh.demo.R;
@@ -46,6 +47,17 @@ public class BaseFragment extends Fragment {
 
     protected void dismissWaitingDialog() {
         ((BaseActivity) getActivity()).dismissWaitingDialog();
+    }
+
+    protected void enableBackNav(View parent, boolean enable) {
+        Toolbar toolbar = parent.findViewById(R.id.title_bar);
+        if (enable) {
+            toolbar.setNavigationIcon(R.drawable.ic_arrow_left);
+            toolbar.setNavigationOnClickListener(v -> getActivity().onBackPressed());
+        } else {
+            toolbar.setNavigationIcon(null);
+        }
+
     }
 
     protected void setTitle(View parent, String title) {

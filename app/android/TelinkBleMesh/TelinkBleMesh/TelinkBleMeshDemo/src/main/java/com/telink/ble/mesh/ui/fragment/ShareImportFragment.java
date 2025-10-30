@@ -37,7 +37,6 @@ import com.telink.ble.mesh.TelinkMeshApplication;
 import com.telink.ble.mesh.demo.R;
 import com.telink.ble.mesh.foundation.MeshService;
 import com.telink.ble.mesh.model.MeshInfo;
-import com.telink.ble.mesh.model.json.MeshStorageService;
 import com.telink.ble.mesh.ui.JsonPreviewActivity;
 import com.telink.ble.mesh.ui.cdtp.CdtpImportActivity;
 import com.telink.ble.mesh.ui.file.FileSelectActivity;
@@ -87,7 +86,7 @@ public class ShareImportFragment extends BaseFragment implements View.OnClickLis
     public void onClick(View v) {
         switch (v.getId()) {
             case R.id.tv_file_select:
-                startActivityForResult(new Intent(getActivity(), FileSelectActivity.class).putExtra(FileSelectActivity.KEY_SUFFIX, ".json"), REQUEST_CODE_GET_FILE);
+                startActivityForResult(new Intent(getActivity(), FileSelectActivity.class).putExtra(FileSelectActivity.EXTRA_SUFFIX, ".json"), REQUEST_CODE_GET_FILE);
                 break;
 
             case R.id.btn_open:
@@ -157,7 +156,7 @@ public class ShareImportFragment extends BaseFragment implements View.OnClickLis
         if (requestCode == REQUEST_CODE_GET_FILE) {
 
 
-            mPath = data.getStringExtra(FileSelectActivity.KEY_RESULT);
+            mPath = data.getStringExtra(FileSelectActivity.EXTRA_RESULT);
             btn_open.setVisibility(View.VISIBLE);
             tv_file_select.setText(mPath);
 

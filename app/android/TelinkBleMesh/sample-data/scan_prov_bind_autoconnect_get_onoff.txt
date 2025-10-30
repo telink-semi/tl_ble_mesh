@@ -1,0 +1,1159 @@
+2025-10-16 16:47:33.150 29083-29083/com.telink.ble.mesh.demo.rels D/OplusInputMethodManagerInternal: get inputMethodManager extension: com.android.internal.view.IInputMethodManager$Stub$Proxy@43870c2
+2025-10-16 16:47:33.192 29083-29083/com.telink.ble.mesh.demo.rels W/SIG-Mesh: DeviceProvisionActivity onCreate
+2025-10-16 16:47:33.202 29083-29083/com.telink.ble.mesh.demo.rels I/oplus.android.OplusFrameworkFactoryImpl: get feature:IOplusDynamicVsyncFeature
+2025-10-16 16:47:33.202 29083-29083/com.telink.ble.mesh.demo.rels I/oplus.android.OplusFrameworkFactoryImpl: get feature:IOplusDynamicVsyncFeature
+2025-10-16 16:47:33.202 29083-29083/com.telink.ble.mesh.demo.rels I/oplus.android.OplusFrameworkFactoryImpl: get feature:IOplusDynamicVsyncFeature
+2025-10-16 16:47:33.208 29083-29083/com.telink.ble.mesh.demo.rels D/SIG-Mesh: enableUI scanning-TRUE enable-FALSE
+2025-10-16 16:47:33.208 29083-29083/com.telink.ble.mesh.demo.rels D/MeshController: ---idle--- false
+2025-10-16 16:47:33.208 29083-29083/com.telink.ble.mesh.demo.rels W/SIG-Mesh: mode not changed : IDLE
+2025-10-16 16:47:33.211 29083-29083/com.telink.ble.mesh.demo.rels D/GATT: refresh error: gatt null
+2025-10-16 16:47:33.211 29083-29083/com.telink.ble.mesh.demo.rels D/MeshController: start scan: SCAN
+2025-10-16 16:47:33.211 29083-31702/com.telink.ble.mesh.demo.rels D/BluetoothAdapter: startLeScan(): [00001827-0000-1000-8000-00805f9b34fb]
+2025-10-16 16:47:33.211 29083-31702/com.telink.ble.mesh.demo.rels D/BluetoothAdapter: startLeScan(): called by: com.telink.ble.mesh.demo.rels
+2025-10-16 16:47:33.212 29083-31702/com.telink.ble.mesh.demo.rels D/BluetoothAdapter: isLeEnabled(): ON
+2025-10-16 16:47:33.213 29083-29083/com.telink.ble.mesh.demo.rels W/SIG-Mesh: DeviceProvisionActivity onResume
+2025-10-16 16:47:33.215 29083-29083/com.telink.ble.mesh.demo.rels D/WindowManager: Add to mViews: DecorView@bc323ad[DeviceProvisionActivity],pkg= com.telink.ble.mesh.demo.rels
+2025-10-16 16:47:33.216 29083-31665/com.telink.ble.mesh.demo.rels D/BluetoothLeScanner: onScannerRegistered() - status=0 scannerId=8 mScannerId=0
+2025-10-16 16:47:33.218 29083-29083/com.telink.ble.mesh.demo.rels D/InputEventReceiver: Input log is disabled
+2025-10-16 16:47:33.219 29083-29083/com.telink.ble.mesh.demo.rels D/VRI[MainActivity]: onFocusEvent false
+2025-10-16 16:47:33.220 29083-29083/com.telink.ble.mesh.demo.rels I/Quality: Skipped: false 2 cost 32.62271 refreshRate 11055696 processName com.telink.ble.mesh.demo.rels
+2025-10-16 16:47:33.229 29083-29083/com.telink.ble.mesh.demo.rels D/BufferQueueConsumer: [](id:719b00000002,api:0,p:-1,c:29083) connect: controlledByApp=false
+2025-10-16 16:47:33.229 29083-29083/com.telink.ble.mesh.demo.rels E/IPCThreadState: attemptIncStrongHandle(56): Not supported
+2025-10-16 16:47:33.230 29083-31685/com.telink.ble.mesh.demo.rels D/BufferQueueProducer: [VRI[DeviceProvisionActivity]#2(BLAST Consumer)2](id:719b00000002,api:1,p:29083,c:29083) connect: api=1 producerControlledByApp=true
+2025-10-16 16:47:33.232 29083-29083/com.telink.ble.mesh.demo.rels D/VRI[DeviceProvisionActivity]: registerCallbacksForSync syncBuffer=false
+2025-10-16 16:47:33.235 29083-31685/com.telink.ble.mesh.demo.rels D/VRI[DeviceProvisionActivity]: Received frameCommittedCallback lastAttemptedDrawFrameNum=1 didProduceBuffer=true syncBuffer=false
+2025-10-16 16:47:33.235 29083-31685/com.telink.ble.mesh.demo.rels W/Parcel: Expecting binder but got null!
+2025-10-16 16:47:33.236 29083-29083/com.telink.ble.mesh.demo.rels D/VRI[DeviceProvisionActivity]: draw finished.
+2025-10-16 16:47:33.239 29083-29083/com.telink.ble.mesh.demo.rels I/Quality: Skipped: false 1 cost 18.89994 refreshRate 11053989 processName com.telink.ble.mesh.demo.rels
+2025-10-16 16:47:33.249 29083-29083/com.telink.ble.mesh.demo.rels D/VRI[DeviceProvisionActivity]: registerCallbacksForSync syncBuffer=false
+2025-10-16 16:47:33.251 29083-31685/com.telink.ble.mesh.demo.rels D/VRI[DeviceProvisionActivity]: Received frameCommittedCallback lastAttemptedDrawFrameNum=2 didProduceBuffer=true syncBuffer=false
+2025-10-16 16:47:33.251 29083-29083/com.telink.ble.mesh.demo.rels D/VRI[DeviceProvisionActivity]: draw finished.
+2025-10-16 16:47:33.316 29083-31660/com.telink.ble.mesh.demo.rels I/.mesh.demo.rels: Compiler allocated 4937KB to compile void android.view.ViewRootImpl.performTraversals()
+2025-10-16 16:47:33.325 29083-29083/com.telink.ble.mesh.demo.rels D/VRI[DeviceProvisionActivity]: onFocusEvent true
+2025-10-16 16:47:33.712 29083-31693/com.telink.ble.mesh.demo.rels D/VRI[MainActivity]: dispatchAppVisibility visible:false
+2025-10-16 16:47:33.719 29083-31685/com.telink.ble.mesh.demo.rels D/BufferQueueProducer: [VRI[MainActivity]#1(BLAST Consumer)1](id:719b00000001,api:1,p:29083,c:29083) disconnect: api 1
+2025-10-16 16:47:33.723 29083-29083/com.telink.ble.mesh.demo.rels D/BufferQueueConsumer: [VRI[MainActivity]#1(BLAST Consumer)1](id:719b00000001,api:0,p:-1,c:29083) disconnect
+2025-10-16 16:47:33.726 29083-29083/com.telink.ble.mesh.demo.rels D/SIG-Mesh: main - onSaveInstanceState
+2025-10-16 16:47:33.726 29083-29083/com.telink.ble.mesh.demo.rels D/VRI[MainActivity]: setWindowStopped stopped:true
+2025-10-16 16:47:34.333 29083-29083/com.telink.ble.mesh.demo.rels D/MeshController: scan:BLCMP --mac: FF:FF:BB:CC:DD:71 --record: 02:01:06:03:03:27:18:15:16:27:18:15:F0:B8:50:2A:E6:59:35:93:14:71:DD:CC:BB:FF:FF:00:00:0B:FF:11:02:71:DD:CC:BB:FF:FF:71:5D:06:09:42:4C:43:4D:50:00:00:00:00:00:00:00:00:00:00:00:00:00:00
+2025-10-16 16:47:34.336 29083-29083/com.telink.ble.mesh.demo.rels D/MeshController: on device found: FF:FF:BB:CC:DD:71
+2025-10-16 16:47:34.337 29083-29083/com.telink.ble.mesh.demo.rels D/SIG-Mesh: event handle: com.telink.ble.mesh.EVENT_TYPE_DEVICE_FOUND
+2025-10-16 16:47:34.338 29083-29083/com.telink.ble.mesh.demo.rels D/SIG-Mesh: device mac - FF:FF:BB:CC:DD:71
+2025-10-16 16:47:34.338 29083-29083/com.telink.ble.mesh.demo.rels D/SIG-Mesh: device found -> device uuid : 15F0B8502AE65935931471DDCCBBFFFF -- oobInfo: 0 -- certSupported?false
+2025-10-16 16:47:34.379 29083-29083/com.telink.ble.mesh.demo.rels I/oplus.android.OplusFrameworkFactoryImpl: get feature:IOplusDynamicVsyncFeature
+2025-10-16 16:47:34.379 29083-29083/com.telink.ble.mesh.demo.rels I/oplus.android.OplusFrameworkFactoryImpl: get feature:IOplusDynamicVsyncFeature
+2025-10-16 16:47:34.379 29083-29083/com.telink.ble.mesh.demo.rels I/oplus.android.OplusFrameworkFactoryImpl: get feature:IOplusDynamicVsyncFeature
+2025-10-16 16:47:34.385 29083-29083/com.telink.ble.mesh.demo.rels W/.mesh.demo.rels: Accessing hidden field Landroid/view/View;->mAccessibilityDelegate:Landroid/view/View$AccessibilityDelegate; (unsupported, reflection, allowed)
+2025-10-16 16:47:34.416 29083-29083/com.telink.ble.mesh.demo.rels D/MeshController: scan:null --mac: AA:AA:AA:AA:AC:10 --record: 02:01:06:03:03:27:18:15:16:27:18:9E:B1:7D:28:60:F3:4A:3A:A4:37:10:AC:AA:AA:AA:AA:00:00:1E:FF:11:02:10:AC:AA:AA:AA:AA:10:2C:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00
+2025-10-16 16:47:34.417 29083-29083/com.telink.ble.mesh.demo.rels D/MeshController: on device found: AA:AA:AA:AA:AC:10
+2025-10-16 16:47:34.417 29083-29083/com.telink.ble.mesh.demo.rels D/SIG-Mesh: event handle: com.telink.ble.mesh.EVENT_TYPE_DEVICE_FOUND
+2025-10-16 16:47:34.418 29083-29083/com.telink.ble.mesh.demo.rels D/SIG-Mesh: device mac - AA:AA:AA:AA:AC:10
+2025-10-16 16:47:34.418 29083-29083/com.telink.ble.mesh.demo.rels D/SIG-Mesh: device found -> device uuid : 9EB17D2860F34A3AA43710ACAAAAAAAA -- oobInfo: 0 -- certSupported?false
+2025-10-16 16:47:34.450 29083-29083/com.telink.ble.mesh.demo.rels I/oplus.android.OplusFrameworkFactoryImpl: get feature:IOplusDynamicVsyncFeature
+2025-10-16 16:47:34.450 29083-29083/com.telink.ble.mesh.demo.rels I/oplus.android.OplusFrameworkFactoryImpl: get feature:IOplusDynamicVsyncFeature
+2025-10-16 16:47:34.451 29083-29083/com.telink.ble.mesh.demo.rels I/oplus.android.OplusFrameworkFactoryImpl: get feature:IOplusDynamicVsyncFeature
+2025-10-16 16:47:34.500 29083-29083/com.telink.ble.mesh.demo.rels D/MeshController: scan:BLCMP --mac: FF:FF:BB:CC:DD:71 --record: 02:01:06:03:03:27:18:15:16:27:18:15:F0:B8:50:2A:E6:59:35:93:14:71:DD:CC:BB:FF:FF:00:00:0B:FF:11:02:71:DD:CC:BB:FF:FF:71:5D:06:09:42:4C:43:4D:50:00:00:00:00:00:00:00:00:00:00:00:00:00:00
+2025-10-16 16:47:34.500 29083-29083/com.telink.ble.mesh.demo.rels D/MeshController: on device found: FF:FF:BB:CC:DD:71
+2025-10-16 16:47:34.501 29083-29083/com.telink.ble.mesh.demo.rels D/MeshController: Device already exist
+2025-10-16 16:47:34.793 29083-29083/com.telink.ble.mesh.demo.rels D/MeshController: scan:null --mac: AA:AA:AA:AA:AC:10 --record: 02:01:06:03:03:27:18:15:16:27:18:9E:B1:7D:28:60:F3:4A:3A:A4:37:10:AC:AA:AA:AA:AA:00:00:1E:FF:11:02:10:AC:AA:AA:AA:AA:10:2C:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00
+2025-10-16 16:47:34.793 29083-29083/com.telink.ble.mesh.demo.rels D/MeshController: on device found: AA:AA:AA:AA:AC:10
+2025-10-16 16:47:34.793 29083-29083/com.telink.ble.mesh.demo.rels D/MeshController: Device already exist
+2025-10-16 16:47:34.877 29083-29083/com.telink.ble.mesh.demo.rels D/MeshController: scan:BLCMP --mac: FF:FF:BB:CC:DD:71 --record: 02:01:06:03:03:27:18:15:16:27:18:15:F0:B8:50:2A:E6:59:35:93:14:71:DD:CC:BB:FF:FF:00:00:0B:FF:11:02:71:DD:CC:BB:FF:FF:71:5D:06:09:42:4C:43:4D:50:00:00:00:00:00:00:00:00:00:00:00:00:00:00
+2025-10-16 16:47:34.878 29083-29083/com.telink.ble.mesh.demo.rels D/MeshController: on device found: FF:FF:BB:CC:DD:71
+2025-10-16 16:47:34.878 29083-29083/com.telink.ble.mesh.demo.rels D/MeshController: Device already exist
+2025-10-16 16:47:35.102 29083-29083/com.telink.ble.mesh.demo.rels D/MeshController: scan:null --mac: AA:AA:AA:AA:AC:10 --record: 02:01:06:03:03:27:18:15:16:27:18:9E:B1:7D:28:60:F3:4A:3A:A4:37:10:AC:AA:AA:AA:AA:00:00:1E:FF:11:02:10:AC:AA:AA:AA:AA:10:2C:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00
+2025-10-16 16:47:35.103 29083-29083/com.telink.ble.mesh.demo.rels D/MeshController: on device found: AA:AA:AA:AA:AC:10
+2025-10-16 16:47:35.103 29083-29083/com.telink.ble.mesh.demo.rels D/MeshController: Device already exist
+2025-10-16 16:47:35.228 29083-29083/com.telink.ble.mesh.demo.rels D/MeshController: scan:BLCMP --mac: FF:FF:BB:CC:DD:71 --record: 02:01:06:03:03:27:18:15:16:27:18:15:F0:B8:50:2A:E6:59:35:93:14:71:DD:CC:BB:FF:FF:00:00:0B:FF:11:02:71:DD:CC:BB:FF:FF:71:5D:06:09:42:4C:43:4D:50:00:00:00:00:00:00:00:00:00:00:00:00:00:00
+2025-10-16 16:47:35.229 29083-29083/com.telink.ble.mesh.demo.rels D/MeshController: on device found: FF:FF:BB:CC:DD:71
+2025-10-16 16:47:35.229 29083-29083/com.telink.ble.mesh.demo.rels D/MeshController: Device already exist
+2025-10-16 16:47:35.580 29083-29083/com.telink.ble.mesh.demo.rels D/MeshController: scan:BLCMP --mac: FF:FF:BB:CC:DD:71 --record: 02:01:06:03:03:27:18:15:16:27:18:15:F0:B8:50:2A:E6:59:35:93:14:71:DD:CC:BB:FF:FF:00:00:0B:FF:11:02:71:DD:CC:BB:FF:FF:71:5D:06:09:42:4C:43:4D:50:00:00:00:00:00:00:00:00:00:00:00:00:00:00
+2025-10-16 16:47:35.581 29083-29083/com.telink.ble.mesh.demo.rels D/MeshController: on device found: FF:FF:BB:CC:DD:71
+2025-10-16 16:47:35.581 29083-29083/com.telink.ble.mesh.demo.rels D/MeshController: Device already exist
+2025-10-16 16:47:35.751 29083-29083/com.telink.ble.mesh.demo.rels D/MeshController: scan:BLCMP --mac: FF:FF:BB:CC:DD:71 --record: 02:01:06:03:03:27:18:15:16:27:18:15:F0:B8:50:2A:E6:59:35:93:14:71:DD:CC:BB:FF:FF:00:00:0B:FF:11:02:71:DD:CC:BB:FF:FF:71:5D:06:09:42:4C:43:4D:50:00:00:00:00:00:00:00:00:00:00:00:00:00:00
+2025-10-16 16:47:35.752 29083-29083/com.telink.ble.mesh.demo.rels D/MeshController: on device found: FF:FF:BB:CC:DD:71
+2025-10-16 16:47:35.752 29083-29083/com.telink.ble.mesh.demo.rels D/MeshController: Device already exist
+2025-10-16 16:47:35.787 29083-31661/com.telink.ble.mesh.demo.rels W/.mesh.demo.rels: Cleared Reference was only reachable from finalizer (only reported once)
+2025-10-16 16:47:35.853 29083-29083/com.telink.ble.mesh.demo.rels D/MeshController: scan:null --mac: AA:AA:AA:AA:AC:10 --record: 02:01:06:03:03:27:18:15:16:27:18:9E:B1:7D:28:60:F3:4A:3A:A4:37:10:AC:AA:AA:AA:AA:00:00:1E:FF:11:02:10:AC:AA:AA:AA:AA:10:2C:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00
+2025-10-16 16:47:35.853 29083-29083/com.telink.ble.mesh.demo.rels D/MeshController: on device found: AA:AA:AA:AA:AC:10
+2025-10-16 16:47:35.853 29083-29083/com.telink.ble.mesh.demo.rels D/MeshController: Device already exist
+2025-10-16 16:47:35.931 29083-29083/com.telink.ble.mesh.demo.rels D/MeshController: scan:BLCMP --mac: FF:FF:BB:CC:DD:71 --record: 02:01:06:03:03:27:18:15:16:27:18:15:F0:B8:50:2A:E6:59:35:93:14:71:DD:CC:BB:FF:FF:00:00:0B:FF:11:02:71:DD:CC:BB:FF:FF:71:5D:06:09:42:4C:43:4D:50:00:00:00:00:00:00:00:00:00:00:00:00:00:00
+2025-10-16 16:47:35.932 29083-29083/com.telink.ble.mesh.demo.rels D/MeshController: on device found: FF:FF:BB:CC:DD:71
+2025-10-16 16:47:35.932 29083-29083/com.telink.ble.mesh.demo.rels D/MeshController: Device already exist
+2025-10-16 16:47:36.116 29083-29083/com.telink.ble.mesh.demo.rels D/MeshController: scan:BLCMP --mac: FF:FF:BB:CC:DD:71 --record: 02:01:06:03:03:27:18:15:16:27:18:15:F0:B8:50:2A:E6:59:35:93:14:71:DD:CC:BB:FF:FF:00:00:0B:FF:11:02:71:DD:CC:BB:FF:FF:71:5D:06:09:42:4C:43:4D:50:00:00:00:00:00:00:00:00:00:00:00:00:00:00
+2025-10-16 16:47:36.117 29083-29083/com.telink.ble.mesh.demo.rels D/MeshController: on device found: FF:FF:BB:CC:DD:71
+2025-10-16 16:47:36.117 29083-29083/com.telink.ble.mesh.demo.rels D/MeshController: Device already exist
+2025-10-16 16:47:36.505 29083-29083/com.telink.ble.mesh.demo.rels D/MeshController: scan:BLCMP --mac: FF:FF:BB:CC:DD:71 --record: 02:01:06:03:03:27:18:15:16:27:18:15:F0:B8:50:2A:E6:59:35:93:14:71:DD:CC:BB:FF:FF:00:00:0B:FF:11:02:71:DD:CC:BB:FF:FF:71:5D:06:09:42:4C:43:4D:50:00:00:00:00:00:00:00:00:00:00:00:00:00:00
+2025-10-16 16:47:36.506 29083-29083/com.telink.ble.mesh.demo.rels D/MeshController: on device found: FF:FF:BB:CC:DD:71
+2025-10-16 16:47:36.506 29083-29083/com.telink.ble.mesh.demo.rels D/MeshController: Device already exist
+2025-10-16 16:47:36.858 29083-29083/com.telink.ble.mesh.demo.rels D/MeshController: scan:BLCMP --mac: FF:FF:BB:CC:DD:71 --record: 02:01:06:03:03:27:18:15:16:27:18:15:F0:B8:50:2A:E6:59:35:93:14:71:DD:CC:BB:FF:FF:00:00:0B:FF:11:02:71:DD:CC:BB:FF:FF:71:5D:06:09:42:4C:43:4D:50:00:00:00:00:00:00:00:00:00:00:00:00:00:00
+2025-10-16 16:47:36.859 29083-29083/com.telink.ble.mesh.demo.rels D/MeshController: on device found: FF:FF:BB:CC:DD:71
+2025-10-16 16:47:36.859 29083-29083/com.telink.ble.mesh.demo.rels D/MeshController: Device already exist
+2025-10-16 16:47:36.924 29083-29083/com.telink.ble.mesh.demo.rels D/MeshController: scan:null --mac: AA:AA:AA:AA:AC:10 --record: 02:01:06:03:03:27:18:15:16:27:18:9E:B1:7D:28:60:F3:4A:3A:A4:37:10:AC:AA:AA:AA:AA:00:00:1E:FF:11:02:10:AC:AA:AA:AA:AA:10:2C:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00
+2025-10-16 16:47:36.925 29083-29083/com.telink.ble.mesh.demo.rels D/MeshController: on device found: AA:AA:AA:AA:AC:10
+2025-10-16 16:47:36.925 29083-29083/com.telink.ble.mesh.demo.rels D/MeshController: Device already exist
+2025-10-16 16:47:37.207 29083-29083/com.telink.ble.mesh.demo.rels D/MeshController: scan:BLCMP --mac: FF:FF:BB:CC:DD:71 --record: 02:01:06:03:03:27:18:15:16:27:18:15:F0:B8:50:2A:E6:59:35:93:14:71:DD:CC:BB:FF:FF:00:00:0B:FF:11:02:71:DD:CC:BB:FF:FF:71:5D:06:09:42:4C:43:4D:50:00:00:00:00:00:00:00:00:00:00:00:00:00:00
+2025-10-16 16:47:37.208 29083-29083/com.telink.ble.mesh.demo.rels D/MeshController: on device found: FF:FF:BB:CC:DD:71
+2025-10-16 16:47:37.208 29083-29083/com.telink.ble.mesh.demo.rels D/MeshController: Device already exist
+2025-10-16 16:47:38.005 29083-29083/com.telink.ble.mesh.demo.rels D/MeshController: scan:BLCMP --mac: FF:FF:BB:CC:DD:71 --record: 02:01:06:03:03:27:18:15:16:27:18:15:F0:B8:50:2A:E6:59:35:93:14:71:DD:CC:BB:FF:FF:00:00:0B:FF:11:02:71:DD:CC:BB:FF:FF:71:5D:06:09:42:4C:43:4D:50:00:00:00:00:00:00:00:00:00:00:00:00:00:00
+2025-10-16 16:47:38.007 29083-29083/com.telink.ble.mesh.demo.rels D/MeshController: on device found: FF:FF:BB:CC:DD:71
+2025-10-16 16:47:38.007 29083-29083/com.telink.ble.mesh.demo.rels D/MeshController: Device already exist
+2025-10-16 16:47:38.085 29083-29083/com.telink.ble.mesh.demo.rels D/MeshController: scan:null --mac: AA:AA:AA:AA:AC:10 --record: 02:01:06:03:03:27:18:15:16:27:18:9E:B1:7D:28:60:F3:4A:3A:A4:37:10:AC:AA:AA:AA:AA:00:00:1E:FF:11:02:10:AC:AA:AA:AA:AA:10:2C:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00
+2025-10-16 16:47:38.087 29083-29083/com.telink.ble.mesh.demo.rels D/MeshController: on device found: AA:AA:AA:AA:AC:10
+2025-10-16 16:47:38.087 29083-29083/com.telink.ble.mesh.demo.rels D/MeshController: Device already exist
+2025-10-16 16:47:39.242 29083-29083/com.telink.ble.mesh.demo.rels D/MeshController: scan:null --mac: AA:AA:AA:AA:AC:10 --record: 02:01:06:03:03:27:18:15:16:27:18:9E:B1:7D:28:60:F3:4A:3A:A4:37:10:AC:AA:AA:AA:AA:00:00:1E:FF:11:02:10:AC:AA:AA:AA:AA:10:2C:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00
+2025-10-16 16:47:39.243 29083-29083/com.telink.ble.mesh.demo.rels D/MeshController: on device found: AA:AA:AA:AA:AC:10
+2025-10-16 16:47:39.243 29083-29083/com.telink.ble.mesh.demo.rels D/MeshController: Device already exist
+2025-10-16 16:47:39.604 29083-29083/com.telink.ble.mesh.demo.rels D/MeshController: scan:BLCMP --mac: FF:FF:BB:CC:DD:71 --record: 02:01:06:03:03:27:18:15:16:27:18:15:F0:B8:50:2A:E6:59:35:93:14:71:DD:CC:BB:FF:FF:00:00:0B:FF:11:02:71:DD:CC:BB:FF:FF:71:5D:06:09:42:4C:43:4D:50:00:00:00:00:00:00:00:00:00:00:00:00:00:00
+2025-10-16 16:47:39.605 29083-29083/com.telink.ble.mesh.demo.rels D/MeshController: on device found: FF:FF:BB:CC:DD:71
+2025-10-16 16:47:39.605 29083-29083/com.telink.ble.mesh.demo.rels D/MeshController: Device already exist
+2025-10-16 16:47:39.849 29083-29083/com.telink.ble.mesh.demo.rels D/MeshController: scan:null --mac: AA:AA:AA:AA:AC:10 --record: 02:01:06:03:03:27:18:15:16:27:18:9E:B1:7D:28:60:F3:4A:3A:A4:37:10:AC:AA:AA:AA:AA:00:00:1E:FF:11:02:10:AC:AA:AA:AA:AA:10:2C:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00
+2025-10-16 16:47:39.850 29083-29083/com.telink.ble.mesh.demo.rels D/MeshController: on device found: AA:AA:AA:AA:AC:10
+2025-10-16 16:47:39.850 29083-29083/com.telink.ble.mesh.demo.rels D/MeshController: Device already exist
+2025-10-16 16:47:40.310 29083-29083/com.telink.ble.mesh.demo.rels D/MeshController: scan:BLCMP --mac: FF:FF:BB:CC:DD:71 --record: 02:01:06:03:03:27:18:15:16:27:18:15:F0:B8:50:2A:E6:59:35:93:14:71:DD:CC:BB:FF:FF:00:00:0B:FF:11:02:71:DD:CC:BB:FF:FF:71:5D:06:09:42:4C:43:4D:50:00:00:00:00:00:00:00:00:00:00:00:00:00:00
+2025-10-16 16:47:40.311 29083-29083/com.telink.ble.mesh.demo.rels D/MeshController: on device found: FF:FF:BB:CC:DD:71
+2025-10-16 16:47:40.311 29083-29083/com.telink.ble.mesh.demo.rels D/MeshController: Device already exist
+2025-10-16 16:47:40.424 29083-29083/com.telink.ble.mesh.demo.rels D/MeshController: scan:null --mac: AA:AA:AA:AA:AC:10 --record: 02:01:06:03:03:27:18:15:16:27:18:9E:B1:7D:28:60:F3:4A:3A:A4:37:10:AC:AA:AA:AA:AA:00:00:1E:FF:11:02:10:AC:AA:AA:AA:AA:10:2C:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00
+2025-10-16 16:47:40.425 29083-29083/com.telink.ble.mesh.demo.rels D/MeshController: on device found: AA:AA:AA:AA:AC:10
+2025-10-16 16:47:40.425 29083-29083/com.telink.ble.mesh.demo.rels D/MeshController: Device already exist
+2025-10-16 16:47:40.499 29083-29083/com.telink.ble.mesh.demo.rels D/MeshController: scan:null --mac: AA:AA:AA:AA:AC:10 --record: 02:01:06:03:03:27:18:15:16:27:18:9E:B1:7D:28:60:F3:4A:3A:A4:37:10:AC:AA:AA:AA:AA:00:00:1E:FF:11:02:10:AC:AA:AA:AA:AA:10:2C:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00
+2025-10-16 16:47:40.500 29083-29083/com.telink.ble.mesh.demo.rels D/MeshController: on device found: AA:AA:AA:AA:AC:10
+2025-10-16 16:47:40.501 29083-29083/com.telink.ble.mesh.demo.rels D/MeshController: Device already exist
+2025-10-16 16:47:40.504 29083-29083/com.telink.ble.mesh.demo.rels D/MeshController: scan:BLCMP --mac: FF:FF:BB:CC:DD:71 --record: 02:01:06:03:03:27:18:15:16:27:18:15:F0:B8:50:2A:E6:59:35:93:14:71:DD:CC:BB:FF:FF:00:00:0B:FF:11:02:71:DD:CC:BB:FF:FF:71:5D:06:09:42:4C:43:4D:50:00:00:00:00:00:00:00:00:00:00:00:00:00:00
+2025-10-16 16:47:40.504 29083-29083/com.telink.ble.mesh.demo.rels D/MeshController: on device found: FF:FF:BB:CC:DD:71
+2025-10-16 16:47:40.504 29083-29083/com.telink.ble.mesh.demo.rels D/MeshController: Device already exist
+2025-10-16 16:47:40.859 29083-29083/com.telink.ble.mesh.demo.rels D/MeshController: scan:BLCMP --mac: FF:FF:BB:CC:DD:71 --record: 02:01:06:03:03:27:18:15:16:27:18:15:F0:B8:50:2A:E6:59:35:93:14:71:DD:CC:BB:FF:FF:00:00:0B:FF:11:02:71:DD:CC:BB:FF:FF:71:5D:06:09:42:4C:43:4D:50:00:00:00:00:00:00:00:00:00:00:00:00:00:00
+2025-10-16 16:47:40.860 29083-29083/com.telink.ble.mesh.demo.rels D/MeshController: on device found: FF:FF:BB:CC:DD:71
+2025-10-16 16:47:40.860 29083-29083/com.telink.ble.mesh.demo.rels D/MeshController: Device already exist
+2025-10-16 16:47:41.027 29083-29083/com.telink.ble.mesh.demo.rels D/MeshController: scan:BLCMP --mac: FF:FF:BB:CC:DD:71 --record: 02:01:06:03:03:27:18:15:16:27:18:15:F0:B8:50:2A:E6:59:35:93:14:71:DD:CC:BB:FF:FF:00:00:0B:FF:11:02:71:DD:CC:BB:FF:FF:71:5D:06:09:42:4C:43:4D:50:00:00:00:00:00:00:00:00:00:00:00:00:00:00
+2025-10-16 16:47:41.028 29083-29083/com.telink.ble.mesh.demo.rels D/MeshController: on device found: FF:FF:BB:CC:DD:71
+2025-10-16 16:47:41.028 29083-29083/com.telink.ble.mesh.demo.rels D/MeshController: Device already exist
+2025-10-16 16:47:41.183 29083-29083/com.telink.ble.mesh.demo.rels D/MeshController: scan:null --mac: AA:AA:AA:AA:AC:10 --record: 02:01:06:03:03:27:18:15:16:27:18:9E:B1:7D:28:60:F3:4A:3A:A4:37:10:AC:AA:AA:AA:AA:00:00:1E:FF:11:02:10:AC:AA:AA:AA:AA:10:2C:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00
+2025-10-16 16:47:41.185 29083-29083/com.telink.ble.mesh.demo.rels D/MeshController: on device found: AA:AA:AA:AA:AC:10
+2025-10-16 16:47:41.185 29083-29083/com.telink.ble.mesh.demo.rels D/MeshController: Device already exist
+2025-10-16 16:47:41.329 29083-29083/com.telink.ble.mesh.demo.rels D/MeshController: scan:null --mac: AA:AA:AA:AA:AC:10 --record: 02:01:06:03:03:27:18:15:16:27:18:9E:B1:7D:28:60:F3:4A:3A:A4:37:10:AC:AA:AA:AA:AA:00:00:1E:FF:11:02:10:AC:AA:AA:AA:AA:10:2C:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00
+2025-10-16 16:47:41.331 29083-29083/com.telink.ble.mesh.demo.rels D/MeshController: on device found: AA:AA:AA:AA:AC:10
+2025-10-16 16:47:41.331 29083-29083/com.telink.ble.mesh.demo.rels D/MeshController: Device already exist
+2025-10-16 16:47:41.358 29083-29083/com.telink.ble.mesh.demo.rels D/MeshController: scan:BLCMP --mac: FF:FF:BB:CC:DD:71 --record: 02:01:06:03:03:27:18:15:16:27:18:15:F0:B8:50:2A:E6:59:35:93:14:71:DD:CC:BB:FF:FF:00:00:0B:FF:11:02:71:DD:CC:BB:FF:FF:71:5D:06:09:42:4C:43:4D:50:00:00:00:00:00:00:00:00:00:00:00:00:00:00
+2025-10-16 16:47:41.359 29083-29083/com.telink.ble.mesh.demo.rels D/MeshController: on device found: FF:FF:BB:CC:DD:71
+2025-10-16 16:47:41.359 29083-29083/com.telink.ble.mesh.demo.rels D/MeshController: Device already exist
+2025-10-16 16:47:42.297 29083-29083/com.telink.ble.mesh.demo.rels D/MeshController: scan:null --mac: AA:AA:AA:AA:AC:10 --record: 02:01:06:03:03:27:18:15:16:27:18:9E:B1:7D:28:60:F3:4A:3A:A4:37:10:AC:AA:AA:AA:AA:00:00:1E:FF:11:02:10:AC:AA:AA:AA:AA:10:2C:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00
+2025-10-16 16:47:42.298 29083-29083/com.telink.ble.mesh.demo.rels D/MeshController: on device found: AA:AA:AA:AA:AC:10
+2025-10-16 16:47:42.298 29083-29083/com.telink.ble.mesh.demo.rels D/MeshController: Device already exist
+2025-10-16 16:47:42.609 29083-29083/com.telink.ble.mesh.demo.rels D/MeshController: scan:BLCMP --mac: FF:FF:BB:CC:DD:71 --record: 02:01:06:03:03:27:18:15:16:27:18:15:F0:B8:50:2A:E6:59:35:93:14:71:DD:CC:BB:FF:FF:00:00:0B:FF:11:02:71:DD:CC:BB:FF:FF:71:5D:06:09:42:4C:43:4D:50:00:00:00:00:00:00:00:00:00:00:00:00:00:00
+2025-10-16 16:47:42.610 29083-29083/com.telink.ble.mesh.demo.rels D/MeshController: on device found: FF:FF:BB:CC:DD:71
+2025-10-16 16:47:42.611 29083-29083/com.telink.ble.mesh.demo.rels D/MeshController: Device already exist
+2025-10-16 16:47:42.813 29083-29083/com.telink.ble.mesh.demo.rels D/MeshController: scan:null --mac: AA:AA:AA:AA:AC:10 --record: 02:01:06:03:03:27:18:15:16:27:18:9E:B1:7D:28:60:F3:4A:3A:A4:37:10:AC:AA:AA:AA:AA:00:00:1E:FF:11:02:10:AC:AA:AA:AA:AA:10:2C:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00
+2025-10-16 16:47:42.814 29083-29083/com.telink.ble.mesh.demo.rels D/MeshController: on device found: AA:AA:AA:AA:AC:10
+2025-10-16 16:47:42.814 29083-29083/com.telink.ble.mesh.demo.rels D/MeshController: Device already exist
+2025-10-16 16:47:43.178 29083-29083/com.telink.ble.mesh.demo.rels D/MeshController: scan:BLCMP --mac: FF:FF:BB:CC:DD:71 --record: 02:01:06:03:03:27:18:15:16:27:18:15:F0:B8:50:2A:E6:59:35:93:14:71:DD:CC:BB:FF:FF:00:00:0B:FF:11:02:71:DD:CC:BB:FF:FF:71:5D:06:09:42:4C:43:4D:50:00:00:00:00:00:00:00:00:00:00:00:00:00:00
+2025-10-16 16:47:43.179 29083-29083/com.telink.ble.mesh.demo.rels D/MeshController: on device found: FF:FF:BB:CC:DD:71
+2025-10-16 16:47:43.179 29083-29083/com.telink.ble.mesh.demo.rels D/MeshController: Device already exist
+2025-10-16 16:47:43.231 29083-31702/com.telink.ble.mesh.demo.rels D/BluetoothAdapter: stopLeScan()
+2025-10-16 16:47:43.231 29083-31702/com.telink.ble.mesh.demo.rels D/BluetoothAdapter: stopLeScan(): called by: com.telink.ble.mesh.demo.rels
+2025-10-16 16:47:43.232 29083-31702/com.telink.ble.mesh.demo.rels D/BluetoothAdapter: isLeEnabled(): ON
+2025-10-16 16:47:43.250 29083-31702/com.telink.ble.mesh.demo.rels D/MeshController: scanning timeout: SCAN
+2025-10-16 16:47:43.252 29083-31702/com.telink.ble.mesh.demo.rels D/MeshController: ---idle--- false
+2025-10-16 16:47:43.252 29083-31702/com.telink.ble.mesh.demo.rels D/SIG-Mesh: event handle: com.telink.ble.mesh.EVENT_TYPE_SCAN_TIMEOUT
+2025-10-16 16:47:43.253 29083-29083/com.telink.ble.mesh.demo.rels D/SIG-Mesh: enableUI scanning-FALSE enable-TRUE
+2025-10-16 16:47:43.253 29083-29083/com.telink.ble.mesh.demo.rels D/MeshController: ---idle--- false
+2025-10-16 16:47:43.253 29083-29083/com.telink.ble.mesh.demo.rels W/SIG-Mesh: mode not changed : IDLE
+2025-10-16 16:47:45.126 29083-29083/com.telink.ble.mesh.demo.rels D/AutofillManager: Fill dialog is enabled:false, hints=[]
+2025-10-16 16:47:45.262 29083-29083/com.telink.ble.mesh.demo.rels D/SIG-Mesh: enableUI scanning-FALSE enable-FALSE
+2025-10-16 16:47:45.262 29083-29083/com.telink.ble.mesh.demo.rels D/MeshController: ---idle--- false
+2025-10-16 16:47:45.262 29083-29083/com.telink.ble.mesh.demo.rels W/SIG-Mesh: mode not changed : IDLE
+2025-10-16 16:47:45.266 29083-29083/com.telink.ble.mesh.demo.rels D/SIG-Mesh: alloc address: 16
+2025-10-16 16:47:45.270 29083-29083/com.telink.ble.mesh.demo.rels D/SIG-Mesh: provisioning device: ProvisioningDevice{deviceUUID=15F0B8502AE65935931471DDCCBBFFFF, oobInfo=0b0, networkKey=, networkKeyIndex=0, keyRefreshFlag=0, ivUpdateFlag=0, ivIndex=0x0, unicastAddress=0x10, authValue=, autoUseNoOOB=true, provisioningState=0, deviceKey=}
+2025-10-16 16:47:45.270 29083-29083/com.telink.ble.mesh.demo.rels D/MeshController: start provision
+2025-10-16 16:47:45.270 29083-29083/com.telink.ble.mesh.demo.rels D/GATT: refresh error: gatt null
+2025-10-16 16:47:45.270 29083-29083/com.telink.ble.mesh.demo.rels D/GATT: refresh error: gatt null
+2025-10-16 16:47:45.271 29083-29083/com.telink.ble.mesh.demo.rels D/GATT:  already disconnected -- 
+2025-10-16 16:47:45.272 29083-29083/com.telink.ble.mesh.demo.rels D/BluetoothGatt: connect() - device: FF:FF:BB:CC:DD:71, auto: false, eattSupport: false
+2025-10-16 16:47:45.272 29083-29083/com.telink.ble.mesh.demo.rels D/BluetoothGatt: registerApp()
+2025-10-16 16:47:45.272 29083-29083/com.telink.ble.mesh.demo.rels D/BluetoothGatt: registerApp() - UUID=eba64503-8f48-4720-89ff-5580ba7df729
+2025-10-16 16:47:45.275 29083-31665/com.telink.ble.mesh.demo.rels D/BluetoothGatt: onClientRegistered() - status=0 clientIf=8
+2025-10-16 16:47:45.472 29083-31693/com.telink.ble.mesh.demo.rels D/BluetoothGatt: onClientConnectionState() - status=0 clientIf=8 device=FF:FF:BB:CC:DD:71
+2025-10-16 16:47:45.473 29083-31693/com.telink.ble.mesh.demo.rels D/GATT: onConnectionStateChange  status :0 state : 2
+2025-10-16 16:47:45.783 29083-31702/com.telink.ble.mesh.demo.rels D/BluetoothGatt: discoverServices() - device: FF:FF:BB:CC:DD:71
+2025-10-16 16:47:45.787 29083-31702/com.telink.ble.mesh.demo.rels D/GATT: start services discovering
+2025-10-16 16:47:46.033 29083-31665/com.telink.ble.mesh.demo.rels D/BluetoothGatt: onConnectionUpdated() - Device=FF:FF:BB:CC:DD:71 interval=6 latency=0 timeout=500 status=0
+2025-10-16 16:47:46.035 29083-31665/com.telink.ble.mesh.demo.rels D/GATT: gatt connect updated : interval=6 latency=0 timeout=500 st=0
+2025-10-16 16:47:46.539 29083-31665/com.telink.ble.mesh.demo.rels D/BluetoothGatt: onSearchComplete() = Device=FF:FF:BB:CC:DD:71 Status=0
+2025-10-16 16:47:46.541 29083-31665/com.telink.ble.mesh.demo.rels D/SIG-Mesh: services: 
+    00001800-0000-1000-8000-00805f9b34fb
+    chara: 	00002a00-0000-1000-8000-00805f9b34fb
+    chara: 	00002a01-0000-1000-8000-00805f9b34fb
+    chara: 	00002a04-0000-1000-8000-00805f9b34fb
+    0000180a-0000-1000-8000-00805f9b34fb
+    chara: 	00002a50-0000-1000-8000-00805f9b34fb
+    chara: 	00002a26-0000-1000-8000-00805f9b34fb
+    00010203-0405-0607-0809-0a0b0c0d1912
+    chara: 	00010203-0405-0607-0809-0a0b0c0d2b12
+    00001827-0000-1000-8000-00805f9b34fb
+    chara: 	00002adc-0000-1000-8000-00805f9b34fb
+    chara: 	00002adb-0000-1000-8000-00805f9b34fb
+    00007fdd-0000-1000-8000-00805f9b34fb
+    chara: 	00002ade-0000-1000-8000-00805f9b34fb
+    chara: 	00002add-0000-1000-8000-00805f9b34fb
+    00010203-0405-0607-0809-0a0b0c0d7fde
+    chara: 	00010203-0405-0607-0809-0a0b0c0d7fdf
+    00001801-0000-1000-8000-00805f9b34fb
+    chara: 	00002a05-0000-1000-8000-00805f9b34fb
+2025-10-16 16:47:46.541 29083-31665/com.telink.ble.mesh.demo.rels D/GATT: Device#refreshCache#prepare
+2025-10-16 16:47:46.541 29083-31665/com.telink.ble.mesh.demo.rels W/.mesh.demo.rels: Accessing hidden method Landroid/bluetooth/BluetoothGatt;->refresh()Z (unsupported, reflection, allowed)
+2025-10-16 16:47:46.541 29083-31665/com.telink.ble.mesh.demo.rels D/BluetoothGatt: refresh() - device: FF:FF:BB:CC:DD:71
+2025-10-16 16:47:46.549 29083-31702/com.telink.ble.mesh.demo.rels D/BluetoothGatt: discoverServices() - device: FF:FF:BB:CC:DD:71
+2025-10-16 16:47:46.628 29083-31665/com.telink.ble.mesh.demo.rels D/BluetoothGatt: onConnectionUpdated() - Device=FF:FF:BB:CC:DD:71 interval=36 latency=0 timeout=500 status=0
+2025-10-16 16:47:46.629 29083-31665/com.telink.ble.mesh.demo.rels D/GATT: gatt connect updated : interval=36 latency=0 timeout=500 st=0
+2025-10-16 16:47:47.086 29083-31665/com.telink.ble.mesh.demo.rels D/BluetoothGatt: onConnectionUpdated() - Device=FF:FF:BB:CC:DD:71 interval=6 latency=0 timeout=500 status=0
+2025-10-16 16:47:47.091 29083-31665/com.telink.ble.mesh.demo.rels D/GATT: gatt connect updated : interval=6 latency=0 timeout=500 st=0
+2025-10-16 16:47:47.556 29083-31665/com.telink.ble.mesh.demo.rels D/BluetoothGatt: onSearchComplete() = Device=FF:FF:BB:CC:DD:71 Status=0
+2025-10-16 16:47:47.559 29083-31665/com.telink.ble.mesh.demo.rels D/SIG-Mesh: services: 
+    00001800-0000-1000-8000-00805f9b34fb
+    chara: 	00002a00-0000-1000-8000-00805f9b34fb
+    chara: 	00002a01-0000-1000-8000-00805f9b34fb
+    chara: 	00002a04-0000-1000-8000-00805f9b34fb
+    0000180a-0000-1000-8000-00805f9b34fb
+    chara: 	00002a50-0000-1000-8000-00805f9b34fb
+    chara: 	00002a26-0000-1000-8000-00805f9b34fb
+    00010203-0405-0607-0809-0a0b0c0d1912
+    chara: 	00010203-0405-0607-0809-0a0b0c0d2b12
+    00001827-0000-1000-8000-00805f9b34fb
+    chara: 	00002adc-0000-1000-8000-00805f9b34fb
+    chara: 	00002adb-0000-1000-8000-00805f9b34fb
+    00007fdd-0000-1000-8000-00805f9b34fb
+    chara: 	00002ade-0000-1000-8000-00805f9b34fb
+    chara: 	00002add-0000-1000-8000-00805f9b34fb
+    00010203-0405-0607-0809-0a0b0c0d7fde
+    chara: 	00010203-0405-0607-0809-0a0b0c0d7fdf
+    00001801-0000-1000-8000-00805f9b34fb
+    chara: 	00002a05-0000-1000-8000-00805f9b34fb
+2025-10-16 16:47:47.559 29083-31665/com.telink.ble.mesh.demo.rels D/GATT: service discover complete
+2025-10-16 16:47:47.560 29083-31665/com.telink.ble.mesh.demo.rels D/BluetoothGatt: configureMTU() - device: FF:FF:BB:CC:DD:71 mtu: 517
+2025-10-16 16:47:47.576 29083-31665/com.telink.ble.mesh.demo.rels D/BluetoothGatt: onConfigureMTU() - Device=FF:FF:BB:CC:DD:71 mtu=250 status=0
+2025-10-16 16:47:47.577 29083-31665/com.telink.ble.mesh.demo.rels D/GATT: onMtuChanged: 250
+2025-10-16 16:47:47.577 29083-31665/com.telink.ble.mesh.demo.rels D/GATT: request not found
+2025-10-16 16:47:47.577 29083-31665/com.telink.ble.mesh.demo.rels D/SIG-Mesh: mtu changed : 250
+2025-10-16 16:47:47.663 29083-31665/com.telink.ble.mesh.demo.rels D/BluetoothGatt: onConnectionUpdated() - Device=FF:FF:BB:CC:DD:71 interval=36 latency=0 timeout=500 status=0
+2025-10-16 16:47:47.665 29083-31665/com.telink.ble.mesh.demo.rels D/GATT: gatt connect updated : interval=36 latency=0 timeout=500 st=0
+2025-10-16 16:47:48.069 29083-31702/com.telink.ble.mesh.demo.rels D/BluetoothGatt: setCharacteristicNotification() - uuid: 00002adc-0000-1000-8000-00805f9b34fb enable: true
+2025-10-16 16:47:48.073 29083-31702/com.telink.ble.mesh.demo.rels D/GATT: write ccc to provision service
+2025-10-16 16:47:48.076 29083-31702/com.telink.ble.mesh.demo.rels D/GATT: enable proxy notify
+2025-10-16 16:47:48.076 29083-31702/com.telink.ble.mesh.demo.rels D/GATT: write ccc to proxy service
+2025-10-16 16:47:48.160 29083-31665/com.telink.ble.mesh.demo.rels D/BluetoothGatt: setCharacteristicNotification() - uuid: 00002ade-0000-1000-8000-00805f9b34fb enable: true
+2025-10-16 16:47:48.278 29083-31702/com.telink.ble.mesh.demo.rels D/SIG-Mesh: event handle: com.telink.ble.mesh.EVENT_TYPE_PROVISION_BEGIN
+2025-10-16 16:47:48.279 29083-31702/com.telink.ble.mesh.demo.rels D/Provisioning: begin -- 15F0B8502AE65935931471DDCCBBFFFF
+2025-10-16 16:47:48.279 29083-31702/com.telink.ble.mesh.demo.rels D/Provisioning: provisioning state update: state -- 4097 desc -- Invite
+2025-10-16 16:47:48.279 29083-31702/com.telink.ble.mesh.demo.rels D/Provisioning: pdu prepared: 00
+2025-10-16 16:47:48.279 29083-31702/com.telink.ble.mesh.demo.rels D/GATT: send unsegment pkt: 03:00:00
+2025-10-16 16:47:48.431 29083-31665/com.telink.ble.mesh.demo.rels D/GATT: completed notification data: 03:01:03:00:03:00:00:00:00:00:00:00:00
+2025-10-16 16:47:48.431 29083-31665/com.telink.ble.mesh.demo.rels D/Provisioning: provisioning pdu received: 010300030000000000000000
+2025-10-16 16:47:48.433 29083-31665/com.telink.ble.mesh.demo.rels D/Provisioning: provisioning state update: state -- 4098 desc -- Capability Received: ProvisioningCapabilityPDU{eleNum=3, algorithms=3, publicKeyType=0, staticOOBType=0, outputOOBSize=0, outputOOBAction=0, inputOOBSize=0, inputOOBAction=0}
+2025-10-16 16:47:48.433 29083-31665/com.telink.ble.mesh.demo.rels D/MeshController: on device capability received
+2025-10-16 16:47:48.433 29083-31665/com.telink.ble.mesh.demo.rels D/SIG-Mesh: event handle: com.telink.ble.mesh.EVENT_TYPE_CAPABILITY_RECEIVED
+2025-10-16 16:47:48.434 29083-31665/com.telink.ble.mesh.demo.rels D/Provisioning: provisioning state update: state -- 4099 desc -- Start - use static oob?false - algo:1
+2025-10-16 16:47:48.434 29083-31665/com.telink.ble.mesh.demo.rels D/Provisioning: pdu prepared: 01:00:00:00:00
+2025-10-16 16:47:48.434 29083-31665/com.telink.ble.mesh.demo.rels D/GATT: send unsegment pkt: 03:02:01:00:00:00:00
+2025-10-16 16:47:48.550 29083-31665/com.telink.ble.mesh.demo.rels D/Provisioning: get key x: 86:83:5E:46:F9:37:24:BF:12:23:64:C3:D2:2D:29:AE:60:45:46:83:FB:FC:85:34:31:2B:01:FD:DE:A7:A8:04
+2025-10-16 16:47:48.550 29083-31665/com.telink.ble.mesh.demo.rels D/Provisioning: get key y: 55:C1:19:C3:C5:C5:74:12:B6:35:2F:A2:B5:35:A6:EA:E6:2C:CF:8B:07:E6:F4:3B:8E:92:DB:F3:81:14:69:F9
+2025-10-16 16:47:48.550 29083-31665/com.telink.ble.mesh.demo.rels D/Provisioning: provisioning state update: state -- 4100 desc -- Send Public Key
+2025-10-16 16:47:48.550 29083-31665/com.telink.ble.mesh.demo.rels D/Provisioning: pdu prepared: 86:83:5E:46:F9:37:24:BF:12:23:64:C3:D2:2D:29:AE:60:45:46:83:FB:FC:85:34:31:2B:01:FD:DE:A7:A8:04:55:C1:19:C3:C5:C5:74:12:B6:35:2F:A2:B5:35:A6:EA:E6:2C:CF:8B:07:E6:F4:3B:8E:92:DB:F3:81:14:69:F9
+2025-10-16 16:47:48.550 29083-31665/com.telink.ble.mesh.demo.rels D/GATT: send unsegment pkt: 03:03:86:83:5E:46:F9:37:24:BF:12:23:64:C3:D2:2D:29:AE:60:45:46:83:FB:FC:85:34:31:2B:01:FD:DE:A7:A8:04:55:C1:19:C3:C5:C5:74:12:B6:35:2F:A2:B5:35:A6:EA:E6:2C:CF:8B:07:E6:F4:3B:8E:92:DB:F3:81:14:69:F9
+2025-10-16 16:47:49.201 29083-31665/com.telink.ble.mesh.demo.rels D/GATT: completed notification data: 03:03:8D:9D:2E:2B:24:29:8C:6A:2C:02:44:B5:8A:31:CE:76:DF:63:93:41:E8:B5:DC:0E:76:02:8E:A0:26:FC:8A:7B:E9:EC:ED:CD:F0:29:12:28:97:48:C8:81:79:94:35:F1:3C:36:52:98:1F:32:02:A9:69:47:FD:AB:A6:E7:81:2E
+2025-10-16 16:47:49.202 29083-31665/com.telink.ble.mesh.demo.rels D/Provisioning: provisioning pdu received: 038D9D2E2B24298C6A2C0244B58A31CE76DF639341E8B5DC0E76028EA026FC8A7BE9ECEDCDF02912289748C881799435F13C3652981F3202A96947FDABA6E7812E
+2025-10-16 16:47:49.203 29083-31665/com.telink.ble.mesh.demo.rels D/Provisioning: provisioning state update: state -- 4101 desc -- Public Key received
+2025-10-16 16:47:49.203 29083-31665/com.telink.ble.mesh.demo.rels D/Provisioning: pub key received: 8D9D2E2B24298C6A2C0244B58A31CE76DF639341E8B5DC0E76028EA026FC8A7BE9ECEDCDF02912289748C881799435F13C3652981F3202A96947FDABA6E7812E
+2025-10-16 16:47:49.247 29083-31665/com.telink.ble.mesh.demo.rels D/Provisioning: get secret: 1C6FC75537F93C9C2F66F3794D276490181ACE59CB9F767605842A801DBB4800
+2025-10-16 16:47:49.254 29083-31665/com.telink.ble.mesh.demo.rels D/Provisioning: provisioner confirm - 523BF4A00B736B550470AF8191203F0923AD6B9021015A1C6D450BD45119C6E4
+2025-10-16 16:47:49.254 29083-31665/com.telink.ble.mesh.demo.rels D/Provisioning: provisioning state update: state -- 4102 desc -- Send confirm
+2025-10-16 16:47:49.254 29083-31665/com.telink.ble.mesh.demo.rels D/Provisioning: pdu prepared: 52:3B:F4:A0:0B:73:6B:55:04:70:AF:81:91:20:3F:09:23:AD:6B:90:21:01:5A:1C:6D:45:0B:D4:51:19:C6:E4
+2025-10-16 16:47:49.254 29083-31665/com.telink.ble.mesh.demo.rels D/GATT: send unsegment pkt: 03:05:52:3B:F4:A0:0B:73:6B:55:04:70:AF:81:91:20:3F:09:23:AD:6B:90:21:01:5A:1C:6D:45:0B:D4:51:19:C6:E4
+2025-10-16 16:47:49.644 29083-31665/com.telink.ble.mesh.demo.rels D/BluetoothGatt: onConnectionUpdated() - Device=FF:FF:BB:CC:DD:71 interval=18 latency=0 timeout=500 status=0
+2025-10-16 16:47:49.645 29083-31665/com.telink.ble.mesh.demo.rels D/GATT: gatt connect updated : interval=18 latency=0 timeout=500 st=0
+2025-10-16 16:47:49.918 29083-31665/com.telink.ble.mesh.demo.rels D/GATT: completed notification data: 03:05:A9:D1:58:47:5A:86:6C:0A:1F:D5:F9:27:BD:8A:1F:E9:12:10:55:78:66:C7:F9:BB:53:E1:96:CE:57:C0:2A:37
+2025-10-16 16:47:49.919 29083-31665/com.telink.ble.mesh.demo.rels D/Provisioning: provisioning pdu received: 05A9D158475A866C0A1FD5F927BD8A1FE91210557866C7F9BB53E196CE57C02A37
+2025-10-16 16:47:49.919 29083-31665/com.telink.ble.mesh.demo.rels D/Provisioning: provisioning state update: state -- 4103 desc -- Confirm received
+2025-10-16 16:47:49.921 29083-31665/com.telink.ble.mesh.demo.rels D/Provisioning: provisioning state update: state -- 4104 desc -- Send random
+2025-10-16 16:47:49.921 29083-31665/com.telink.ble.mesh.demo.rels D/Provisioning: pdu prepared: A9:3B:53:FF:72:EF:D7:4B:94:AA:AC:34:65:7E:CA:6D:1C:2C:4C:36:EA:A8:7B:3C:CD:20:E0:30:CC:9F:CE:0F
+2025-10-16 16:47:49.921 29083-31665/com.telink.ble.mesh.demo.rels D/GATT: send unsegment pkt: 03:06:A9:3B:53:FF:72:EF:D7:4B:94:AA:AC:34:65:7E:CA:6D:1C:2C:4C:36:EA:A8:7B:3C:CD:20:E0:30:CC:9F:CE:0F
+2025-10-16 16:47:50.007 29083-31665/com.telink.ble.mesh.demo.rels D/GATT: completed notification data: 03:06:F8:8C:32:81:A8:1F:5F:41:07:D5:01:C0:57:4A:D8:49:90:67:31:DD:F6:D8:92:AA:66:DC:36:CE:1E:A7:2E:29
+2025-10-16 16:47:50.008 29083-31665/com.telink.ble.mesh.demo.rels D/Provisioning: provisioning pdu received: 06F88C3281A81F5F4107D501C0574AD849906731DDF6D892AA66DC36CE1EA72E29
+2025-10-16 16:47:50.008 29083-31665/com.telink.ble.mesh.demo.rels D/Provisioning: provisioning state update: state -- 4105 desc -- Random received
+2025-10-16 16:47:50.018 29083-31665/com.telink.ble.mesh.demo.rels D/Provisioning: Confirmation values check pass
+2025-10-16 16:47:50.021 29083-31665/com.telink.ble.mesh.demo.rels D/Provisioning: device key: BB96ECCF33232F4ECD9EF5B33D267734
+2025-10-16 16:47:50.022 29083-31665/com.telink.ble.mesh.demo.rels D/Provisioning: provisioning data prepare: ProvisioningDevice{deviceUUID=15F0B8502AE65935931471DDCCBBFFFF, oobInfo=0b0, networkKey=541B78034678503E51277AAF13E7CEA7, networkKeyIndex=0, keyRefreshFlag=0, ivUpdateFlag=0, ivIndex=0x1, unicastAddress=0x10, authValue=, autoUseNoOOB=true, provisioningState=0, deviceKey=BB96ECCF33232F4ECD9EF5B33D267734}
+2025-10-16 16:47:50.022 29083-31665/com.telink.ble.mesh.demo.rels D/Provisioning: unencrypted provision data: 541B78034678503E51277AAF13E7CEA7000000000000010010
+2025-10-16 16:47:50.026 29083-31665/com.telink.ble.mesh.demo.rels D/Provisioning: encrypted provision data: EDFD250A04C0728A6A8760664BD632D834F9841E01543917B60C5CC74731405F59
+2025-10-16 16:47:50.027 29083-31665/com.telink.ble.mesh.demo.rels D/Provisioning: provisioning state update: state -- 4106 desc -- Send provisioning data
+2025-10-16 16:47:50.027 29083-31665/com.telink.ble.mesh.demo.rels D/Provisioning: pdu prepared: ED:FD:25:0A:04:C0:72:8A:6A:87:60:66:4B:D6:32:D8:34:F9:84:1E:01:54:39:17:B6:0C:5C:C7:47:31:40:5F:59
+2025-10-16 16:47:50.027 29083-31665/com.telink.ble.mesh.demo.rels D/GATT: send unsegment pkt: 03:07:ED:FD:25:0A:04:C0:72:8A:6A:87:60:66:4B:D6:32:D8:34:F9:84:1E:01:54:39:17:B6:0C:5C:C7:47:31:40:5F:59
+2025-10-16 16:47:50.145 29083-31665/com.telink.ble.mesh.demo.rels D/GATT: completed notification data: 03:08
+2025-10-16 16:47:50.145 29083-31665/com.telink.ble.mesh.demo.rels D/Provisioning: provisioning pdu received: 08
+2025-10-16 16:47:50.145 29083-31665/com.telink.ble.mesh.demo.rels D/Provisioning: provisioning state update: state -- 4107 desc -- Provision Success
+2025-10-16 16:47:50.146 29083-31665/com.telink.ble.mesh.demo.rels D/MeshController: ---idle--- false
+2025-10-16 16:47:50.146 29083-31665/com.telink.ble.mesh.demo.rels D/SIG-Mesh: event handle: com.telink.ble.mesh.EVENT_TYPE_PROVISION_SUCCESS
+2025-10-16 16:47:50.147 29083-31665/com.telink.ble.mesh.demo.rels D/MeshController: provision success
+2025-10-16 16:47:50.148 29083-31665/com.telink.ble.mesh.demo.rels D/GATT: completed notification data: 01:01:00:87:EC:A9:02:C8:F0:25:A1:00:00:00:01:37:29:48:D3:00:FE:30:78
+2025-10-16 16:47:50.152 29083-31665/com.telink.ble.mesh.demo.rels D/Networking: SecureNetworkBeacon received: SecureNetworkBeacon{beaconType=1, flags=0, networkID=87ECA902C8F025A1, ivIndex=0x00000001, authenticationValue=372948D300FE3078}
+2025-10-16 16:47:50.153 29083-31665/com.telink.ble.mesh.demo.rels D/Networking: iv index received iv: 00000001 -- updating: false -- localIv: 00000001 -- updating: false 
+2025-10-16 16:47:50.153 29083-31665/com.telink.ble.mesh.demo.rels D/GATT: completed notification data: 02:BB:C9:82:9E:3A:F5:74:9D:69:47:16:F9:64:06:63:96:EF:BE:01:41
+2025-10-16 16:47:50.154 29083-31665/com.telink.ble.mesh.demo.rels D/Networking: getAcceptedIvIndex : 00000001 ivi: 1
+2025-10-16 16:47:50.157 29083-31665/com.telink.ble.mesh.demo.rels D/Networking: proxy pdu: NetworkLayerPDU{ivi=1, nid=59, ctl=1, ttl=0, seq=0x1, src=16, dst=0, transportPDU=040101}
+2025-10-16 16:47:50.157 29083-31665/com.telink.ble.mesh.demo.rels D/Networking: put init sequence number
+2025-10-16 16:47:50.157 29083-31665/com.telink.ble.mesh.demo.rels D/Networking: proxy network pdu src: 0010 dst: 0000
+2025-10-16 16:47:50.158 29083-31665/com.telink.ble.mesh.demo.rels D/Networking: onProxyConfigurationNotify: 04:01:01
+2025-10-16 16:47:50.160 29083-29083/com.telink.ble.mesh.demo.rels D/MeshController: filter init start
+2025-10-16 16:47:50.161 29083-29083/com.telink.ble.mesh.demo.rels D/Networking: getTransmitIvIndex : 00000001
+2025-10-16 16:47:50.162 29083-29083/com.telink.ble.mesh.demo.rels D/Networking: proxy network pdu: BB:F2:08:1C:C3:4F:70:01:E9:C2:23:CD:2F:1A:34:7B:14:1B:93
+2025-10-16 16:47:50.162 29083-29083/com.telink.ble.mesh.demo.rels D/GATT: send unsegment pkt: 02:BB:F2:08:1C:C3:4F:70:01:E9:C2:23:CD:2F:1A:34:7B:14:1B:93
+2025-10-16 16:47:50.206 29083-31665/com.telink.ble.mesh.demo.rels D/GATT: completed notification data: 02:BB:AE:6E:D7:6E:8D:F7:DF:33:E0:E1:D4:84:7B:05:58:13:66:B3:F5:C2
+2025-10-16 16:47:50.207 29083-31665/com.telink.ble.mesh.demo.rels D/Networking: getAcceptedIvIndex : 00000001 ivi: 1
+2025-10-16 16:47:50.207 29083-31665/com.telink.ble.mesh.demo.rels D/Networking: proxy pdu: NetworkLayerPDU{ivi=1, nid=59, ctl=1, ttl=0, seq=0x2, src=16, dst=0, transportPDU=03000000}
+2025-10-16 16:47:50.208 29083-31665/com.telink.ble.mesh.demo.rels D/Networking: proxy network pdu src: 0010 dst: 0000
+2025-10-16 16:47:50.208 29083-31665/com.telink.ble.mesh.demo.rels D/Networking: onProxyConfigurationNotify: 03:00:00:00
+2025-10-16 16:47:50.208 29083-31665/com.telink.ble.mesh.demo.rels D/Networking: reset direct address: 0010
+2025-10-16 16:47:50.208 29083-31665/com.telink.ble.mesh.demo.rels D/Networking: getTransmitIvIndex : 00000001
+2025-10-16 16:47:50.209 29083-31665/com.telink.ble.mesh.demo.rels D/Networking: proxy network pdu: BB:98:A0:A6:A7:B2:AB:C7:60:6D:2B:CE:F3:97:16:80:91:1D:8C:42:2F:AB
+2025-10-16 16:47:50.209 29083-31665/com.telink.ble.mesh.demo.rels D/GATT: send unsegment pkt: 02:BB:98:A0:A6:A7:B2:AB:C7:60:6D:2B:CE:F3:97:16:80:91:1D:8C:42:2F:AB
+2025-10-16 16:47:50.252 29083-31665/com.telink.ble.mesh.demo.rels D/GATT: completed notification data: 02:BB:63:53:C3:E3:30:96:DD:3E:81:BD:72:A0:17:69:A9:40:76:5C:58:B7
+2025-10-16 16:47:50.253 29083-31665/com.telink.ble.mesh.demo.rels D/Networking: getAcceptedIvIndex : 00000001 ivi: 1
+2025-10-16 16:47:50.254 29083-31665/com.telink.ble.mesh.demo.rels D/Networking: proxy pdu: NetworkLayerPDU{ivi=1, nid=59, ctl=1, ttl=0, seq=0x5, src=16, dst=0, transportPDU=03000002}
+2025-10-16 16:47:50.255 29083-31665/com.telink.ble.mesh.demo.rels D/Networking: proxy network pdu src: 0010 dst: 0000
+2025-10-16 16:47:50.255 29083-31665/com.telink.ble.mesh.demo.rels D/Networking: onProxyConfigurationNotify: 03:00:00:02
+2025-10-16 16:47:50.256 29083-31665/com.telink.ble.mesh.demo.rels D/Networking: reset direct address: 0010
+2025-10-16 16:47:50.256 29083-31665/com.telink.ble.mesh.demo.rels D/MeshController: filter init complete, success? true
+2025-10-16 16:47:50.758 29083-31702/com.telink.ble.mesh.demo.rels D/Binding: binding begin: defaultBound? false
+2025-10-16 16:47:50.759 29083-31702/com.telink.ble.mesh.demo.rels D/Binding: update bind step: 1
+2025-10-16 16:47:50.766 29083-31702/com.telink.ble.mesh.demo.rels D/MeshController: send mesh message: CompositionDataGetMessage opcode: 0x0880 -- dst: 0x0010 isReliable: true retryCnt: 2 rspMax: 1
+2025-10-16 16:47:50.769 29083-31702/com.telink.ble.mesh.demo.rels D/Networking: post access pdu: 8008FF
+2025-10-16 16:47:50.770 29083-31702/com.telink.ble.mesh.demo.rels D/Networking: getTransmitIvIndex : 00000001
+2025-10-16 16:47:50.774 29083-31702/com.telink.ble.mesh.demo.rels D/Networking: upper transport pdu: 71CB322B1C1085
+2025-10-16 16:47:50.775 29083-31702/com.telink.ble.mesh.demo.rels D/Networking: send unsegmented access message
+2025-10-16 16:47:50.775 29083-31702/com.telink.ble.mesh.demo.rels D/Networking: restart reliable message timeout task, immediate
+2025-10-16 16:47:50.775 29083-31702/com.telink.ble.mesh.demo.rels D/Networking: reliable message timeout:1280
+2025-10-16 16:47:50.776 29083-31702/com.telink.ble.mesh.demo.rels D/Networking: single network pdu: BB:38:10:E1:26:88:A1:C2:88:41:99:D2:AE:05:34:69:D3:20:30:9F:5F
+2025-10-16 16:47:50.777 29083-31702/com.telink.ble.mesh.demo.rels D/Networking: networking pdu prepared: BB:38:10:E1:26:88:A1:C2:88:41:99:D2:AE:05:34:69:D3:20:30:9F:5F busy?-false
+2025-10-16 16:47:50.777 29083-31702/com.telink.ble.mesh.demo.rels D/Networking: networking pdu sending direct 
+2025-10-16 16:47:50.777 29083-31702/com.telink.ble.mesh.demo.rels D/GATT: send unsegment pkt: 00:BB:38:10:E1:26:88:A1:C2:88:41:99:D2:AE:05:34:69:D3:20:30:9F:5F
+2025-10-16 16:47:50.784 29083-31702/com.telink.ble.mesh.demo.rels D/SIG-Mesh: event handle: com.telink.sig.mesh.EVENT_TYPE_CMD_PROCESSING
+2025-10-16 16:47:50.817 29083-31668/com.telink.ble.mesh.demo.rels D/GATT: completed notification data: 00:BB:45:64:B9:B7:9D:A9:AC:3F:70:A9:76:91:64:E9:E7:C4:B9:F2:C2:D7:33:77:9E:22:B9:2E:E3:62
+2025-10-16 16:47:50.818 29083-31668/com.telink.ble.mesh.demo.rels D/Networking: getAcceptedIvIndex : 00000001 ivi: 1
+2025-10-16 16:47:50.821 29083-31668/com.telink.ble.mesh.demo.rels D/Networking: network pdu: NetworkLayerPDU{ivi=1, nid=59, ctl=0, ttl=10, seq=0x6, src=16, dst=1, transportPDU=80001806B7C810E8DF671A586AD4D781}
+2025-10-16 16:47:50.822 29083-31668/com.telink.ble.mesh.demo.rels D/Networking: parse access message
+2025-10-16 16:47:50.822 29083-31668/com.telink.ble.mesh.demo.rels D/Networking: parse segmented access message
+2025-10-16 16:47:50.824 29083-31668/com.telink.ble.mesh.demo.rels D/Networking: lastComplete? :TRUE -- seqAuth: 0x00000001000006 -- lastSeqAuth: 0x00000000000000 -- src: 0x0010 -- lastSrc: 0x0000 -- seg0: 00 -- segN: 06
+2025-10-16 16:47:50.824 29083-31668/com.telink.ble.mesh.demo.rels D/Networking: last segment complete
+2025-10-16 16:47:50.825 29083-31668/com.telink.ble.mesh.demo.rels D/Networking: save complete seqAuth src: 0x0000 -- seqAuth: 0x00000000000000
+2025-10-16 16:47:50.825 29083-31668/com.telink.ble.mesh.demo.rels D/Networking: received segment message count: 1
+2025-10-16 16:47:50.825 29083-31668/com.telink.ble.mesh.demo.rels D/Networking: get segment ack timeout: 1000
+2025-10-16 16:47:50.825 29083-31668/com.telink.ble.mesh.demo.rels D/Networking: check segment block: immediate-false ttl-10 src-16 timeout-1000
+2025-10-16 16:47:50.837 29083-31668/com.telink.ble.mesh.demo.rels D/GATT: completed notification data: 00:BB:41:B0:A1:41:9F:20:4F:87:56:E0:18:D7:7A:F3:42:7E:32:0D:42:0E:56:F5:66:99:1C:ED:4B:54
+2025-10-16 16:47:50.838 29083-31668/com.telink.ble.mesh.demo.rels D/Networking: getAcceptedIvIndex : 00000001 ivi: 1
+2025-10-16 16:47:50.840 29083-31668/com.telink.ble.mesh.demo.rels D/Networking: network pdu: NetworkLayerPDU{ivi=1, nid=59, ctl=0, ttl=10, seq=0x7, src=16, dst=1, transportPDU=8000182664498CA57926304792E699CF}
+2025-10-16 16:47:50.840 29083-31668/com.telink.ble.mesh.demo.rels D/Networking: parse access message
+2025-10-16 16:47:50.840 29083-31668/com.telink.ble.mesh.demo.rels D/Networking: parse segmented access message
+2025-10-16 16:47:50.842 29083-31668/com.telink.ble.mesh.demo.rels D/Networking: lastComplete? :FALSE -- seqAuth: 0x00000001000006 -- lastSeqAuth: 0x00000001000006 -- src: 0x0010 -- lastSrc: 0x0010 -- seg0: 01 -- segN: 06
+2025-10-16 16:47:50.842 29083-31668/com.telink.ble.mesh.demo.rels D/Networking: received segment message count: 2
+2025-10-16 16:47:50.842 29083-31668/com.telink.ble.mesh.demo.rels D/Networking: get segment ack timeout: 1000
+2025-10-16 16:47:50.842 29083-31668/com.telink.ble.mesh.demo.rels D/Networking: check segment block: immediate-false ttl-10 src-16 timeout-1000
+2025-10-16 16:47:50.884 29083-31668/com.telink.ble.mesh.demo.rels D/GATT: completed notification data: 00:BB:04:97:29:F2:84:76:59:27:0C:9C:CF:87:9B:5F:57:A8:E9:67:B3:39:34:7A:46:EF:F4:C4:4D:4F
+2025-10-16 16:47:50.885 29083-31668/com.telink.ble.mesh.demo.rels D/Networking: getAcceptedIvIndex : 00000001 ivi: 1
+2025-10-16 16:47:50.887 29083-31668/com.telink.ble.mesh.demo.rels D/Networking: network pdu: NetworkLayerPDU{ivi=1, nid=59, ctl=0, ttl=10, seq=0x8, src=16, dst=1, transportPDU=80001846B94D811658C900496A295D82}
+2025-10-16 16:47:50.888 29083-31668/com.telink.ble.mesh.demo.rels D/Networking: parse access message
+2025-10-16 16:47:50.888 29083-31668/com.telink.ble.mesh.demo.rels D/Networking: parse segmented access message
+2025-10-16 16:47:50.892 29083-31668/com.telink.ble.mesh.demo.rels D/Networking: lastComplete? :FALSE -- seqAuth: 0x00000001000006 -- lastSeqAuth: 0x00000001000006 -- src: 0x0010 -- lastSrc: 0x0010 -- seg0: 02 -- segN: 06
+2025-10-16 16:47:50.892 29083-31668/com.telink.ble.mesh.demo.rels D/Networking: received segment message count: 3
+2025-10-16 16:47:50.892 29083-31668/com.telink.ble.mesh.demo.rels D/Networking: get segment ack timeout: 1000
+2025-10-16 16:47:50.893 29083-31668/com.telink.ble.mesh.demo.rels D/Networking: check segment block: immediate-false ttl-10 src-16 timeout-1000
+2025-10-16 16:47:50.903 29083-31668/com.telink.ble.mesh.demo.rels D/GATT: completed notification data: 00:BB:87:4D:F0:E8:CF:82:DC:9C:BA:87:D8:32:9B:6B:44:7F:34:3D:68:C7:4A:55:9B:6C:54:B0:56:49
+2025-10-16 16:47:50.904 29083-31668/com.telink.ble.mesh.demo.rels D/Networking: getAcceptedIvIndex : 00000001 ivi: 1
+2025-10-16 16:47:50.904 29083-31668/com.telink.ble.mesh.demo.rels D/Networking: network pdu: NetworkLayerPDU{ivi=1, nid=59, ctl=0, ttl=10, seq=0x9, src=16, dst=1, transportPDU=80001866AED9F5C1F89C6F967C30156E}
+2025-10-16 16:47:50.904 29083-31668/com.telink.ble.mesh.demo.rels D/Networking: parse access message
+2025-10-16 16:47:50.905 29083-31668/com.telink.ble.mesh.demo.rels D/Networking: parse segmented access message
+2025-10-16 16:47:50.905 29083-31668/com.telink.ble.mesh.demo.rels D/Networking: lastComplete? :FALSE -- seqAuth: 0x00000001000006 -- lastSeqAuth: 0x00000001000006 -- src: 0x0010 -- lastSrc: 0x0010 -- seg0: 03 -- segN: 06
+2025-10-16 16:47:50.905 29083-31668/com.telink.ble.mesh.demo.rels D/Networking: received segment message count: 4
+2025-10-16 16:47:50.906 29083-31668/com.telink.ble.mesh.demo.rels D/Networking: get segment ack timeout: 1000
+2025-10-16 16:47:50.906 29083-31668/com.telink.ble.mesh.demo.rels D/Networking: check segment block: immediate-false ttl-10 src-16 timeout-1000
+2025-10-16 16:47:50.928 29083-31668/com.telink.ble.mesh.demo.rels D/GATT: completed notification data: 00:BB:FD:BF:47:AB:41:2E:C2:92:50:1D:5D:41:D0:2A:B3:8F:EC:45:77:62:A0:77:B3:F7:AF:49:99:76
+2025-10-16 16:47:50.928 29083-31668/com.telink.ble.mesh.demo.rels D/Networking: getAcceptedIvIndex : 00000001 ivi: 1
+2025-10-16 16:47:50.930 29083-31668/com.telink.ble.mesh.demo.rels D/Networking: network pdu: NetworkLayerPDU{ivi=1, nid=59, ctl=0, ttl=10, seq=0xa, src=16, dst=1, transportPDU=80001886967C6FBA2D30CA426D4FB70F}
+2025-10-16 16:47:50.930 29083-31668/com.telink.ble.mesh.demo.rels D/Networking: parse access message
+2025-10-16 16:47:50.931 29083-31668/com.telink.ble.mesh.demo.rels D/Networking: parse segmented access message
+2025-10-16 16:47:50.933 29083-31668/com.telink.ble.mesh.demo.rels D/Networking: lastComplete? :FALSE -- seqAuth: 0x00000001000006 -- lastSeqAuth: 0x00000001000006 -- src: 0x0010 -- lastSrc: 0x0010 -- seg0: 04 -- segN: 06
+2025-10-16 16:47:50.933 29083-31668/com.telink.ble.mesh.demo.rels D/Networking: received segment message count: 5
+2025-10-16 16:47:50.933 29083-31668/com.telink.ble.mesh.demo.rels D/Networking: get segment ack timeout: 1000
+2025-10-16 16:47:50.934 29083-31668/com.telink.ble.mesh.demo.rels D/Networking: check segment block: immediate-false ttl-10 src-16 timeout-1000
+2025-10-16 16:47:50.974 29083-31668/com.telink.ble.mesh.demo.rels D/GATT: completed notification data: 00:BB:AA:23:80:C1:15:86:89:D6:E6:56:38:8A:D8:44:62:EC:E3:49:A9:89:34:FE:96:D1:6D:2A:D9:03
+2025-10-16 16:47:50.975 29083-31668/com.telink.ble.mesh.demo.rels D/Networking: getAcceptedIvIndex : 00000001 ivi: 1
+2025-10-16 16:47:50.976 29083-31668/com.telink.ble.mesh.demo.rels D/Networking: network pdu: NetworkLayerPDU{ivi=1, nid=59, ctl=0, ttl=10, seq=0xb, src=16, dst=1, transportPDU=800018A6C32F26A003D72A8724D8C3D6}
+2025-10-16 16:47:50.976 29083-31668/com.telink.ble.mesh.demo.rels D/Networking: parse access message
+2025-10-16 16:47:50.976 29083-31668/com.telink.ble.mesh.demo.rels D/Networking: parse segmented access message
+2025-10-16 16:47:50.979 29083-31668/com.telink.ble.mesh.demo.rels D/Networking: lastComplete? :FALSE -- seqAuth: 0x00000001000006 -- lastSeqAuth: 0x00000001000006 -- src: 0x0010 -- lastSrc: 0x0010 -- seg0: 05 -- segN: 06
+2025-10-16 16:47:50.979 29083-31668/com.telink.ble.mesh.demo.rels D/Networking: received segment message count: 6
+2025-10-16 16:47:50.979 29083-31668/com.telink.ble.mesh.demo.rels D/Networking: get segment ack timeout: 1000
+2025-10-16 16:47:50.979 29083-31668/com.telink.ble.mesh.demo.rels D/Networking: check segment block: immediate-false ttl-10 src-16 timeout-1000
+2025-10-16 16:47:50.997 29083-31668/com.telink.ble.mesh.demo.rels D/GATT: completed notification data: 00:BB:05:DD:CA:20:3E:34:D2:9D:56:22:BC:D0:8A:81:4A:EF:CB:94:78:4C:69:E4:42:DC:1F:C4:4E:EC
+2025-10-16 16:47:50.999 29083-31668/com.telink.ble.mesh.demo.rels D/Networking: getAcceptedIvIndex : 00000001 ivi: 1
+2025-10-16 16:47:51.002 29083-31668/com.telink.ble.mesh.demo.rels D/Networking: network pdu: NetworkLayerPDU{ivi=1, nid=59, ctl=0, ttl=10, seq=0xc, src=16, dst=1, transportPDU=800018C65E7FC8E9ACBF325BF8882D68}
+2025-10-16 16:47:51.002 29083-31668/com.telink.ble.mesh.demo.rels D/Networking: parse access message
+2025-10-16 16:47:51.002 29083-31668/com.telink.ble.mesh.demo.rels D/Networking: parse segmented access message
+2025-10-16 16:47:51.004 29083-31668/com.telink.ble.mesh.demo.rels D/Networking: lastComplete? :FALSE -- seqAuth: 0x00000001000006 -- lastSeqAuth: 0x00000001000006 -- src: 0x0010 -- lastSrc: 0x0010 -- seg0: 06 -- segN: 06
+2025-10-16 16:47:51.004 29083-31668/com.telink.ble.mesh.demo.rels D/Networking: received segment message count: 7
+2025-10-16 16:47:51.004 29083-31668/com.telink.ble.mesh.demo.rels D/Networking: check segment block: immediate-true ttl-10 src-16 timeout-0
+2025-10-16 16:47:51.004 29083-31702/com.telink.ble.mesh.demo.rels D/Networking: send segment block ack:16
+2025-10-16 16:47:51.005 29083-31668/com.telink.ble.mesh.demo.rels D/Networking: decrypted upper: 0200110201004100FF000700000015010000020003000600021400140414031401140400001002100410061007100312041200130113031304131102000000000200021006130000030000100F131013
+2025-10-16 16:47:51.005 29083-31702/com.telink.ble.mesh.demo.rels D/Networking: send segment ack: SegmentAcknowledgmentMessage{seg=0, opcode=0, obo=0, seqZero=6, rfu=0, blockAck=127}
+2025-10-16 16:47:51.006 29083-31702/com.telink.ble.mesh.demo.rels D/Networking: send control message: 0000180000007F
+2025-10-16 16:47:51.006 29083-31668/com.telink.ble.mesh.demo.rels D/Networking: access pdu received at 0x0010: opcode -- 0x0002 params -- 00110201004100FF000700000015010000020003000600021400140414031401140400001002100410061007100312041200130113031304131102000000000200021006130000030000100F131013
+2025-10-16 16:47:51.006 29083-31668/com.telink.ble.mesh.demo.rels D/Networking: clear network buffer
+2025-10-16 16:47:51.007 29083-31702/com.telink.ble.mesh.demo.rels D/Networking: getTransmitIvIndex : 00000001
+2025-10-16 16:47:51.007 29083-31668/com.telink.ble.mesh.demo.rels D/Networking: Reliable Message Complete: 000880 success?: true
+2025-10-16 16:47:51.007 29083-31668/com.telink.ble.mesh.demo.rels D/SIG-Mesh: event handle: com.telink.sig.mesh.EVENT_TYPE_CMD_COMPLETE
+2025-10-16 16:47:51.007 29083-31702/com.telink.ble.mesh.demo.rels D/Networking: single network pdu: BB:64:F9:3C:87:8F:7E:D1:BC:15:1D:D8:1A:F4:D7:29:6A:50:D5:5A:7B:5A:2D:9C
+2025-10-16 16:47:51.008 29083-31702/com.telink.ble.mesh.demo.rels D/Networking: networking pdu prepared: BB:64:F9:3C:87:8F:7E:D1:BC:15:1D:D8:1A:F4:D7:29:6A:50:D5:5A:7B:5A:2D:9C busy?-false
+2025-10-16 16:47:51.008 29083-31702/com.telink.ble.mesh.demo.rels D/Networking: networking pdu sending direct 
+2025-10-16 16:47:51.008 29083-31668/com.telink.ble.mesh.demo.rels D/MeshController: mesh model message received: src -- 0x0010 | dst -- 0x0001 | opcode -- 0x0002 | params -- 00110201004100FF000700000015010000020003000600021400140414031401140400001002100410061007100312041200130113031304131102000000000200021006130000030000100F131013 | action mode -- MODE_BIND
+2025-10-16 16:47:51.008 29083-31702/com.telink.ble.mesh.demo.rels D/GATT: send unsegment pkt: 00:BB:64:F9:3C:87:8F:7E:D1:BC:15:1D:D8:1A:F4:D7:29:6A:50:D5:5A:7B:5A:2D:9C
+2025-10-16 16:47:51.010 29083-31668/com.telink.ble.mesh.demo.rels D/SIG-Mesh: cps data - 110201004100FF000700000015010000020003000600021400140414031401140400001002100410061007100312041200130113031304131102000000000200021006130000030000100F131013
+2025-10-16 16:47:51.011 29083-31668/com.telink.ble.mesh.demo.rels D/Binding: models prepared: 24
+2025-10-16 16:47:51.011 29083-31668/com.telink.ble.mesh.demo.rels D/Binding: add app key
+2025-10-16 16:47:51.011 29083-31668/com.telink.ble.mesh.demo.rels D/Binding: update bind step: 2
+2025-10-16 16:47:51.015 29083-31668/com.telink.ble.mesh.demo.rels D/MeshController: send mesh message: AppKeyAddMessage opcode: 0x0000 -- dst: 0x0010 isReliable: true retryCnt: 2 rspMax: 1
+2025-10-16 16:47:51.015 29083-31668/com.telink.ble.mesh.demo.rels D/Networking: post access pdu: 000000001707E34BA79D82B6E5478167913A04E2
+2025-10-16 16:47:51.015 29083-31668/com.telink.ble.mesh.demo.rels D/Networking: getTransmitIvIndex : 00000001
+2025-10-16 16:47:51.015 29083-31668/com.telink.ble.mesh.demo.rels D/Networking: upper transport pdu: 303D12905B1B9BA3BE358DFA343E7BEF89F665243AC78284
+2025-10-16 16:47:51.015 29083-31668/com.telink.ble.mesh.demo.rels D/Networking: create segmented access message: seqZero - 6148 segN - 1
+2025-10-16 16:47:51.016 29083-31668/com.telink.ble.mesh.demo.rels D/Networking: send segmented access message
+2025-10-16 16:47:51.016 29083-31668/com.telink.ble.mesh.demo.rels D/Networking: get segment ack timeout: 1000
+2025-10-16 16:47:51.016 29083-31668/com.telink.ble.mesh.demo.rels D/Networking: multi network pdu: BB:9D:37:C2:FF:CB:A4:06:7F:5A:D8:33:C2:B4:2D:8D:ED:81:B6:EC:E9:C5:B2:ED:33:3E:51:B8:6D
+2025-10-16 16:47:51.017 29083-31668/com.telink.ble.mesh.demo.rels D/Networking: networking pdu prepared: BB:9D:37:C2:FF:CB:A4:06:7F:5A:D8:33:C2:B4:2D:8D:ED:81:B6:EC:E9:C5:B2:ED:33:3E:51:B8:6D busy?-false
+2025-10-16 16:47:51.017 29083-31668/com.telink.ble.mesh.demo.rels D/Networking: networking pdu sending direct 
+2025-10-16 16:47:51.017 29083-31668/com.telink.ble.mesh.demo.rels D/GATT: send unsegment pkt: 00:BB:9D:37:C2:FF:CB:A4:06:7F:5A:D8:33:C2:B4:2D:8D:ED:81:B6:EC:E9:C5:B2:ED:33:3E:51:B8:6D
+2025-10-16 16:47:51.017 29083-31668/com.telink.ble.mesh.demo.rels D/Networking: multi network pdu: BB:AE:60:D5:3A:1D:22:3F:B8:74:52:64:CA:8A:4E:2A:A4:2B:2C:52:B9:16:33:03:EE:7C:D4:74:08
+2025-10-16 16:47:51.017 29083-31668/com.telink.ble.mesh.demo.rels D/Networking: networking pdu prepared: BB:AE:60:D5:3A:1D:22:3F:B8:74:52:64:CA:8A:4E:2A:A4:2B:2C:52:B9:16:33:03:EE:7C:D4:74:08 busy?-false
+2025-10-16 16:47:51.017 29083-31668/com.telink.ble.mesh.demo.rels D/Networking: networking pdu sending direct 
+2025-10-16 16:47:51.017 29083-31668/com.telink.ble.mesh.demo.rels D/GATT: send unsegment pkt: 00:BB:AE:60:D5:3A:1D:22:3F:B8:74:52:64:CA:8A:4E:2A:A4:2B:2C:52:B9:16:33:03:EE:7C:D4:74:08
+2025-10-16 16:47:51.018 29083-31668/com.telink.ble.mesh.demo.rels D/SIG-Mesh: event handle: com.telink.sig.mesh.EVENT_TYPE_CMD_PROCESSING
+2025-10-16 16:47:51.018 29083-31668/com.telink.ble.mesh.demo.rels D/MeshController: mesh message notification: com.telink.ble.mesh.core.message.config.CompositionDataStatusMessage
+2025-10-16 16:47:51.018 29083-31668/com.telink.ble.mesh.demo.rels D/SIG-Mesh: event handle: com.telink.ble.mesh.core.message.config.CompositionDataStatusMessage
+2025-10-16 16:47:51.019 29083-29083/com.telink.ble.mesh.demo.rels D/SIG-Mesh: cps status page: 0
+2025-10-16 16:47:51.023 29083-29083/com.telink.ble.mesh.demo.rels D/SIG-Mesh: cps status: CompositionData{cid=0211, pid=0001, vid=4100, crpl=00FF, features=0007, elements=
+    element 0 : 
+    location: 0
+    SIG models-21:0000 0002 0003 0006 1402 1400 1404 1403 1401 0004 1000 1002 1004 1006 1007 1203 1204 1300 1301 1303 1304 
+    Vendor models-1:00000211	
+    element 1 : 
+    location: 0
+    SIG models-2:1002 1306 
+    Vendor models-0:
+    element 2 : 
+    location: 0
+    SIG models-3:1000 130F 1310 
+    Vendor models-0:
+    }
+2025-10-16 16:47:51.064 29083-31665/com.telink.ble.mesh.demo.rels D/GATT: completed notification data: 00:BB:DE:28:F5:F2:F9:8C:9F:E4:F1:75:AF:69:BC:92:31:C2:93:B3:A4:15:87:F4:01
+2025-10-16 16:47:51.065 29083-31665/com.telink.ble.mesh.demo.rels D/Networking: getAcceptedIvIndex : 00000001 ivi: 1
+2025-10-16 16:47:51.069 29083-31665/com.telink.ble.mesh.demo.rels D/Networking: network pdu: NetworkLayerPDU{ivi=1, nid=59, ctl=1, ttl=10, seq=0xd, src=16, dst=1, transportPDU=00601000000003}
+2025-10-16 16:47:51.069 29083-31665/com.telink.ble.mesh.demo.rels D/Networking: parse control message  seg:0 -- opcode:0
+2025-10-16 16:47:51.070 29083-31665/com.telink.ble.mesh.demo.rels D/Networking: onSegmentAckMessageReceived: SegmentAcknowledgmentMessage{seg=0, opcode=0, obo=0, seqZero=6148, rfu=0, blockAck=3}
+2025-10-16 16:47:51.071 29083-31665/com.telink.ble.mesh.demo.rels D/Networking: resendSegmentedMessages: seqZero: 6148 block ack: 3 buffer size: 2
+2025-10-16 16:47:51.071 29083-31665/com.telink.ble.mesh.demo.rels D/Networking: stop segmented block waiting, complete - FALSE success - FALSE
+2025-10-16 16:47:51.072 29083-31665/com.telink.ble.mesh.demo.rels D/Networking: getTransmitIvIndex : 00000001
+2025-10-16 16:47:51.073 29083-31665/com.telink.ble.mesh.demo.rels D/Networking: stop segmented block waiting, complete - TRUE success - TRUE
+2025-10-16 16:47:51.073 29083-31665/com.telink.ble.mesh.demo.rels D/Networking: segmented message complete, success? : true
+2025-10-16 16:47:51.073 29083-31665/com.telink.ble.mesh.demo.rels D/Networking: restart reliable message timeout task, immediate
+2025-10-16 16:47:51.073 29083-31665/com.telink.ble.mesh.demo.rels D/Networking: reliable message timeout:1280
+2025-10-16 16:47:51.075 29083-31665/com.telink.ble.mesh.demo.rels D/GATT: completed notification data: 00:BB:AB:69:02:94:A1:AD:75:BA:E5:D4:F8:1E:C9:77:D2:42:57:D1:38:DA:5E:BD:71
+2025-10-16 16:47:51.075 29083-31665/com.telink.ble.mesh.demo.rels D/Networking: getAcceptedIvIndex : 00000001 ivi: 1
+2025-10-16 16:47:51.076 29083-31665/com.telink.ble.mesh.demo.rels D/Networking: network pdu: NetworkLayerPDU{ivi=1, nid=59, ctl=0, ttl=10, seq=0xe, src=16, dst=1, transportPDU=0049D299307E4ADE25141E}
+2025-10-16 16:47:51.076 29083-31665/com.telink.ble.mesh.demo.rels D/Networking: parse access message
+2025-10-16 16:47:51.076 29083-31665/com.telink.ble.mesh.demo.rels D/Networking: parse unsegmented access message
+2025-10-16 16:47:51.077 29083-31665/com.telink.ble.mesh.demo.rels D/Networking: access pdu received at 0x0010: opcode -- 0x0380 params -- 00000000
+2025-10-16 16:47:51.077 29083-31665/com.telink.ble.mesh.demo.rels D/Networking: clear network buffer
+2025-10-16 16:47:51.077 29083-31665/com.telink.ble.mesh.demo.rels D/Networking: Reliable Message Complete: 000000 success?: true
+2025-10-16 16:47:51.077 29083-31665/com.telink.ble.mesh.demo.rels D/SIG-Mesh: event handle: com.telink.sig.mesh.EVENT_TYPE_CMD_COMPLETE
+2025-10-16 16:47:51.078 29083-31665/com.telink.ble.mesh.demo.rels D/MeshController: mesh model message received: src -- 0x0010 | dst -- 0x0001 | opcode -- 0x0380 | params -- 00000000 | action mode -- MODE_BIND
+2025-10-16 16:47:51.080 29083-31665/com.telink.ble.mesh.demo.rels D/Binding: app key add success
+2025-10-16 16:47:51.080 29083-31665/com.telink.ble.mesh.demo.rels D/Binding: update bind step: 3
+2025-10-16 16:47:51.080 29083-31665/com.telink.ble.mesh.demo.rels D/Binding: bind next model: 2 at: 10
+2025-10-16 16:47:51.081 29083-31665/com.telink.ble.mesh.demo.rels D/MeshController: send mesh message: ModelAppBindMessage opcode: 0x3D80 -- dst: 0x0010 isReliable: true retryCnt: 2 rspMax: 1
+2025-10-16 16:47:51.081 29083-31665/com.telink.ble.mesh.demo.rels D/Networking: post access pdu: 803D100000000200
+2025-10-16 16:47:51.081 29083-31665/com.telink.ble.mesh.demo.rels D/Networking: getTransmitIvIndex : 00000001
+2025-10-16 16:47:51.081 29083-31665/com.telink.ble.mesh.demo.rels D/Networking: upper transport pdu: 5578127C50D86744CC54C042
+2025-10-16 16:47:51.081 29083-31665/com.telink.ble.mesh.demo.rels D/Networking: send unsegmented access message
+2025-10-16 16:47:51.081 29083-31665/com.telink.ble.mesh.demo.rels D/Networking: restart reliable message timeout task, immediate
+2025-10-16 16:47:51.082 29083-31665/com.telink.ble.mesh.demo.rels D/Networking: reliable message timeout:1280
+2025-10-16 16:47:51.082 29083-31665/com.telink.ble.mesh.demo.rels D/Networking: single network pdu: BB:71:50:8E:90:E6:D3:DC:1D:8A:31:9F:7A:99:ED:79:88:DD:C5:C7:07:0D:40:25:EC:13
+2025-10-16 16:47:51.082 29083-31665/com.telink.ble.mesh.demo.rels D/Networking: networking pdu prepared: BB:71:50:8E:90:E6:D3:DC:1D:8A:31:9F:7A:99:ED:79:88:DD:C5:C7:07:0D:40:25:EC:13 busy?-false
+2025-10-16 16:47:51.082 29083-31665/com.telink.ble.mesh.demo.rels D/Networking: networking pdu sending direct 
+2025-10-16 16:47:51.083 29083-31665/com.telink.ble.mesh.demo.rels D/GATT: send unsegment pkt: 00:BB:71:50:8E:90:E6:D3:DC:1D:8A:31:9F:7A:99:ED:79:88:DD:C5:C7:07:0D:40:25:EC:13
+2025-10-16 16:47:51.087 29083-31665/com.telink.ble.mesh.demo.rels D/SIG-Mesh: event handle: com.telink.sig.mesh.EVENT_TYPE_CMD_PROCESSING
+2025-10-16 16:47:51.087 29083-31665/com.telink.ble.mesh.demo.rels D/MeshController: mesh message notification: com.telink.ble.mesh.core.message.config.AppKeyStatusMessage
+2025-10-16 16:47:51.087 29083-31665/com.telink.ble.mesh.demo.rels D/SIG-Mesh: event handle: com.telink.ble.mesh.core.message.config.AppKeyStatusMessage
+2025-10-16 16:47:51.130 29083-31665/com.telink.ble.mesh.demo.rels D/GATT: completed notification data: 00:BB:D0:8D:04:2D:F2:F5:C1:C4:41:A3:A7:40:52:3F:16:DB:51:0A:D5:43:3D:8F:C9:35:65:82
+2025-10-16 16:47:51.132 29083-31665/com.telink.ble.mesh.demo.rels D/Networking: getAcceptedIvIndex : 00000001 ivi: 1
+2025-10-16 16:47:51.133 29083-31665/com.telink.ble.mesh.demo.rels D/Networking: network pdu: NetworkLayerPDU{ivi=1, nid=59, ctl=0, ttl=10, seq=0xf, src=16, dst=1, transportPDU=0023D0AEFE386298455E23C5A51F}
+2025-10-16 16:47:51.133 29083-31665/com.telink.ble.mesh.demo.rels D/Networking: parse access message
+2025-10-16 16:47:51.133 29083-31665/com.telink.ble.mesh.demo.rels D/Networking: parse unsegmented access message
+2025-10-16 16:47:51.135 29083-31665/com.telink.ble.mesh.demo.rels D/Networking: access pdu received at 0x0010: opcode -- 0x3E80 params -- 00100000000200
+2025-10-16 16:47:51.135 29083-31665/com.telink.ble.mesh.demo.rels D/Networking: clear network buffer
+2025-10-16 16:47:51.137 29083-31665/com.telink.ble.mesh.demo.rels D/Networking: Reliable Message Complete: 003D80 success?: true
+2025-10-16 16:47:51.137 29083-31665/com.telink.ble.mesh.demo.rels D/SIG-Mesh: event handle: com.telink.sig.mesh.EVENT_TYPE_CMD_COMPLETE
+2025-10-16 16:47:51.138 29083-31665/com.telink.ble.mesh.demo.rels D/MeshController: mesh model message received: src -- 0x0010 | dst -- 0x0001 | opcode -- 0x3E80 | params -- 00100000000200 | action mode -- MODE_BIND
+2025-10-16 16:47:51.140 29083-31665/com.telink.ble.mesh.demo.rels D/Binding: bind next model: 3 at: 10
+2025-10-16 16:47:51.140 29083-31665/com.telink.ble.mesh.demo.rels D/MeshController: send mesh message: ModelAppBindMessage opcode: 0x3D80 -- dst: 0x0010 isReliable: true retryCnt: 2 rspMax: 1
+2025-10-16 16:47:51.140 29083-31665/com.telink.ble.mesh.demo.rels D/Networking: post access pdu: 803D100000000300
+2025-10-16 16:47:51.141 29083-31665/com.telink.ble.mesh.demo.rels D/Networking: getTransmitIvIndex : 00000001
+2025-10-16 16:47:51.141 29083-31665/com.telink.ble.mesh.demo.rels D/Networking: upper transport pdu: F8960F2F9AA7BDB2F30B64FF
+2025-10-16 16:47:51.141 29083-31665/com.telink.ble.mesh.demo.rels D/Networking: send unsegmented access message
+2025-10-16 16:47:51.141 29083-31665/com.telink.ble.mesh.demo.rels D/Networking: restart reliable message timeout task, immediate
+2025-10-16 16:47:51.141 29083-31665/com.telink.ble.mesh.demo.rels D/Networking: reliable message timeout:1280
+2025-10-16 16:47:51.142 29083-31665/com.telink.ble.mesh.demo.rels D/Networking: single network pdu: BB:0D:E8:BC:23:7C:60:CE:C4:43:DC:64:2A:F5:1C:B1:F8:07:6D:4B:12:6A:EA:5C:80:DB
+2025-10-16 16:47:51.142 29083-31665/com.telink.ble.mesh.demo.rels D/Networking: networking pdu prepared: BB:0D:E8:BC:23:7C:60:CE:C4:43:DC:64:2A:F5:1C:B1:F8:07:6D:4B:12:6A:EA:5C:80:DB busy?-false
+2025-10-16 16:47:51.142 29083-31665/com.telink.ble.mesh.demo.rels D/Networking: networking pdu sending direct 
+2025-10-16 16:47:51.142 29083-31665/com.telink.ble.mesh.demo.rels D/GATT: send unsegment pkt: 00:BB:0D:E8:BC:23:7C:60:CE:C4:43:DC:64:2A:F5:1C:B1:F8:07:6D:4B:12:6A:EA:5C:80:DB
+2025-10-16 16:47:51.146 29083-31665/com.telink.ble.mesh.demo.rels D/SIG-Mesh: event handle: com.telink.sig.mesh.EVENT_TYPE_CMD_PROCESSING
+2025-10-16 16:47:51.147 29083-31665/com.telink.ble.mesh.demo.rels D/MeshController: mesh message notification: com.telink.ble.mesh.core.message.config.ModelAppStatusMessage
+2025-10-16 16:47:51.147 29083-31665/com.telink.ble.mesh.demo.rels D/SIG-Mesh: event handle: com.telink.ble.mesh.core.message.config.ModelAppStatusMessage
+2025-10-16 16:47:51.175 29083-31665/com.telink.ble.mesh.demo.rels D/GATT: completed notification data: 00:BB:45:3D:21:A9:5D:08:3E:50:17:E5:2B:BE:1A:54:56:3D:2B:99:B3:BC:85:13:14:B6:EE:80
+2025-10-16 16:47:51.176 29083-31665/com.telink.ble.mesh.demo.rels D/Networking: getAcceptedIvIndex : 00000001 ivi: 1
+2025-10-16 16:47:51.178 29083-31665/com.telink.ble.mesh.demo.rels D/Networking: network pdu: NetworkLayerPDU{ivi=1, nid=59, ctl=0, ttl=10, seq=0x10, src=16, dst=1, transportPDU=00662BE899485CE69DF5A2DC1090}
+2025-10-16 16:47:51.178 29083-31665/com.telink.ble.mesh.demo.rels D/Networking: parse access message
+2025-10-16 16:47:51.178 29083-31665/com.telink.ble.mesh.demo.rels D/Networking: parse unsegmented access message
+2025-10-16 16:47:51.180 29083-31665/com.telink.ble.mesh.demo.rels D/Networking: access pdu received at 0x0010: opcode -- 0x3E80 params -- 00100000000300
+2025-10-16 16:47:51.180 29083-31665/com.telink.ble.mesh.demo.rels D/Networking: clear network buffer
+2025-10-16 16:47:51.181 29083-31665/com.telink.ble.mesh.demo.rels D/Networking: Reliable Message Complete: 003D80 success?: true
+2025-10-16 16:47:51.181 29083-31665/com.telink.ble.mesh.demo.rels D/SIG-Mesh: event handle: com.telink.sig.mesh.EVENT_TYPE_CMD_COMPLETE
+2025-10-16 16:47:51.183 29083-31665/com.telink.ble.mesh.demo.rels D/MeshController: mesh model message received: src -- 0x0010 | dst -- 0x0001 | opcode -- 0x3E80 | params -- 00100000000300 | action mode -- MODE_BIND
+2025-10-16 16:47:51.183 29083-31665/com.telink.ble.mesh.demo.rels D/Binding: bind next model: 1402 at: 10
+2025-10-16 16:47:51.184 29083-31665/com.telink.ble.mesh.demo.rels D/MeshController: send mesh message: ModelAppBindMessage opcode: 0x3D80 -- dst: 0x0010 isReliable: true retryCnt: 2 rspMax: 1
+2025-10-16 16:47:51.184 29083-31665/com.telink.ble.mesh.demo.rels D/Networking: post access pdu: 803D100000000214
+2025-10-16 16:47:51.185 29083-31665/com.telink.ble.mesh.demo.rels D/Networking: getTransmitIvIndex : 00000001
+2025-10-16 16:47:51.185 29083-31665/com.telink.ble.mesh.demo.rels D/Networking: upper transport pdu: A74E1FACAC6BE4F674F98023
+2025-10-16 16:47:51.186 29083-31665/com.telink.ble.mesh.demo.rels D/Networking: send unsegmented access message
+2025-10-16 16:47:51.186 29083-31665/com.telink.ble.mesh.demo.rels D/Networking: restart reliable message timeout task, immediate
+2025-10-16 16:47:51.186 29083-31665/com.telink.ble.mesh.demo.rels D/Networking: reliable message timeout:1280
+2025-10-16 16:47:51.187 29083-31665/com.telink.ble.mesh.demo.rels D/Networking: single network pdu: BB:1B:36:B7:3B:BC:BB:7F:56:A0:FE:BA:26:EC:0C:62:8E:2F:21:52:37:9B:D2:45:4D:5B
+2025-10-16 16:47:51.187 29083-31665/com.telink.ble.mesh.demo.rels D/Networking: networking pdu prepared: BB:1B:36:B7:3B:BC:BB:7F:56:A0:FE:BA:26:EC:0C:62:8E:2F:21:52:37:9B:D2:45:4D:5B busy?-false
+2025-10-16 16:47:51.187 29083-31665/com.telink.ble.mesh.demo.rels D/Networking: networking pdu sending direct 
+2025-10-16 16:47:51.187 29083-31665/com.telink.ble.mesh.demo.rels D/GATT: send unsegment pkt: 00:BB:1B:36:B7:3B:BC:BB:7F:56:A0:FE:BA:26:EC:0C:62:8E:2F:21:52:37:9B:D2:45:4D:5B
+2025-10-16 16:47:51.193 29083-31665/com.telink.ble.mesh.demo.rels D/SIG-Mesh: event handle: com.telink.sig.mesh.EVENT_TYPE_CMD_PROCESSING
+2025-10-16 16:47:51.193 29083-31665/com.telink.ble.mesh.demo.rels D/MeshController: mesh message notification: com.telink.ble.mesh.core.message.config.ModelAppStatusMessage
+2025-10-16 16:47:51.194 29083-31665/com.telink.ble.mesh.demo.rels D/SIG-Mesh: event handle: com.telink.ble.mesh.core.message.config.ModelAppStatusMessage
+2025-10-16 16:47:51.243 29083-31668/com.telink.ble.mesh.demo.rels D/GATT: completed notification data: 00:BB:C3:22:1B:18:AF:21:B5:38:36:FA:F0:B4:17:AD:B2:81:5A:7C:33:14:65:D8:90:68:0D:61
+2025-10-16 16:47:51.247 29083-31668/com.telink.ble.mesh.demo.rels D/Networking: getAcceptedIvIndex : 00000001 ivi: 1
+2025-10-16 16:47:51.249 29083-31668/com.telink.ble.mesh.demo.rels D/Networking: network pdu: NetworkLayerPDU{ivi=1, nid=59, ctl=0, ttl=10, seq=0x11, src=16, dst=1, transportPDU=008E09235823E981A135F8520EDB}
+2025-10-16 16:47:51.249 29083-31668/com.telink.ble.mesh.demo.rels D/Networking: parse access message
+2025-10-16 16:47:51.249 29083-31668/com.telink.ble.mesh.demo.rels D/Networking: parse unsegmented access message
+2025-10-16 16:47:51.252 29083-31668/com.telink.ble.mesh.demo.rels D/Networking: access pdu received at 0x0010: opcode -- 0x3E80 params -- 00100000000214
+2025-10-16 16:47:51.252 29083-31668/com.telink.ble.mesh.demo.rels D/Networking: clear network buffer
+2025-10-16 16:47:51.253 29083-31668/com.telink.ble.mesh.demo.rels D/Networking: Reliable Message Complete: 003D80 success?: true
+2025-10-16 16:47:51.253 29083-31668/com.telink.ble.mesh.demo.rels D/SIG-Mesh: event handle: com.telink.sig.mesh.EVENT_TYPE_CMD_COMPLETE
+2025-10-16 16:47:51.255 29083-31668/com.telink.ble.mesh.demo.rels D/MeshController: mesh model message received: src -- 0x0010 | dst -- 0x0001 | opcode -- 0x3E80 | params -- 00100000000214 | action mode -- MODE_BIND
+2025-10-16 16:47:51.257 29083-31668/com.telink.ble.mesh.demo.rels D/Binding: bind next model: 1400 at: 10
+2025-10-16 16:47:51.257 29083-31668/com.telink.ble.mesh.demo.rels D/MeshController: send mesh message: ModelAppBindMessage opcode: 0x3D80 -- dst: 0x0010 isReliable: true retryCnt: 2 rspMax: 1
+2025-10-16 16:47:51.257 29083-31668/com.telink.ble.mesh.demo.rels D/Networking: post access pdu: 803D100000000014
+2025-10-16 16:47:51.258 29083-31668/com.telink.ble.mesh.demo.rels D/Networking: getTransmitIvIndex : 00000001
+2025-10-16 16:47:51.258 29083-31668/com.telink.ble.mesh.demo.rels D/Networking: upper transport pdu: A2BB49E508E3560BFB73A1A5
+2025-10-16 16:47:51.258 29083-31668/com.telink.ble.mesh.demo.rels D/Networking: send unsegmented access message
+2025-10-16 16:47:51.259 29083-31668/com.telink.ble.mesh.demo.rels D/Networking: restart reliable message timeout task, immediate
+2025-10-16 16:47:51.259 29083-31668/com.telink.ble.mesh.demo.rels D/Networking: reliable message timeout:1280
+2025-10-16 16:47:51.260 29083-31668/com.telink.ble.mesh.demo.rels D/Networking: single network pdu: BB:61:C6:D7:AB:1C:EE:A3:05:C8:8E:B9:A5:6B:28:6B:3B:76:3F:55:0C:F5:30:85:43:68
+2025-10-16 16:47:51.260 29083-31668/com.telink.ble.mesh.demo.rels D/Networking: networking pdu prepared: BB:61:C6:D7:AB:1C:EE:A3:05:C8:8E:B9:A5:6B:28:6B:3B:76:3F:55:0C:F5:30:85:43:68 busy?-false
+2025-10-16 16:47:51.260 29083-31668/com.telink.ble.mesh.demo.rels D/Networking: networking pdu sending direct 
+2025-10-16 16:47:51.260 29083-31668/com.telink.ble.mesh.demo.rels D/GATT: send unsegment pkt: 00:BB:61:C6:D7:AB:1C:EE:A3:05:C8:8E:B9:A5:6B:28:6B:3B:76:3F:55:0C:F5:30:85:43:68
+2025-10-16 16:47:51.264 29083-31668/com.telink.ble.mesh.demo.rels D/SIG-Mesh: event handle: com.telink.sig.mesh.EVENT_TYPE_CMD_PROCESSING
+2025-10-16 16:47:51.264 29083-31668/com.telink.ble.mesh.demo.rels D/MeshController: mesh message notification: com.telink.ble.mesh.core.message.config.ModelAppStatusMessage
+2025-10-16 16:47:51.264 29083-31668/com.telink.ble.mesh.demo.rels D/SIG-Mesh: event handle: com.telink.ble.mesh.core.message.config.ModelAppStatusMessage
+2025-10-16 16:47:51.335 29083-31668/com.telink.ble.mesh.demo.rels D/GATT: completed notification data: 00:BB:BA:98:4F:69:4A:22:C1:A7:6F:56:59:16:50:CB:5F:59:3D:94:DE:76:B8:17:9D:C4:27:DD
+2025-10-16 16:47:51.337 29083-31668/com.telink.ble.mesh.demo.rels D/Networking: getAcceptedIvIndex : 00000001 ivi: 1
+2025-10-16 16:47:51.340 29083-31668/com.telink.ble.mesh.demo.rels D/Networking: network pdu: NetworkLayerPDU{ivi=1, nid=59, ctl=0, ttl=10, seq=0x12, src=16, dst=1, transportPDU=005BA8DB3E9AF6B452D8D48F2EE9}
+2025-10-16 16:47:51.341 29083-31668/com.telink.ble.mesh.demo.rels D/Networking: parse access message
+2025-10-16 16:47:51.341 29083-31668/com.telink.ble.mesh.demo.rels D/Networking: parse unsegmented access message
+2025-10-16 16:47:51.343 29083-31668/com.telink.ble.mesh.demo.rels D/Networking: access pdu received at 0x0010: opcode -- 0x3E80 params -- 00100000000014
+2025-10-16 16:47:51.343 29083-31668/com.telink.ble.mesh.demo.rels D/Networking: clear network buffer
+2025-10-16 16:47:51.346 29083-31668/com.telink.ble.mesh.demo.rels D/Networking: Reliable Message Complete: 003D80 success?: true
+2025-10-16 16:47:51.347 29083-31668/com.telink.ble.mesh.demo.rels D/SIG-Mesh: event handle: com.telink.sig.mesh.EVENT_TYPE_CMD_COMPLETE
+2025-10-16 16:47:51.350 29083-31668/com.telink.ble.mesh.demo.rels D/MeshController: mesh model message received: src -- 0x0010 | dst -- 0x0001 | opcode -- 0x3E80 | params -- 00100000000014 | action mode -- MODE_BIND
+2025-10-16 16:47:51.351 29083-31668/com.telink.ble.mesh.demo.rels D/Binding: bind next model: 1404 at: 10
+2025-10-16 16:47:51.351 29083-31668/com.telink.ble.mesh.demo.rels D/MeshController: send mesh message: ModelAppBindMessage opcode: 0x3D80 -- dst: 0x0010 isReliable: true retryCnt: 2 rspMax: 1
+2025-10-16 16:47:51.351 29083-31668/com.telink.ble.mesh.demo.rels D/Networking: post access pdu: 803D100000000414
+2025-10-16 16:47:51.352 29083-31668/com.telink.ble.mesh.demo.rels D/Networking: getTransmitIvIndex : 00000001
+2025-10-16 16:47:51.352 29083-31668/com.telink.ble.mesh.demo.rels D/Networking: upper transport pdu: 3028F337B9824ACEF1B30C1F
+2025-10-16 16:47:51.352 29083-31668/com.telink.ble.mesh.demo.rels D/Networking: send unsegmented access message
+2025-10-16 16:47:51.352 29083-31668/com.telink.ble.mesh.demo.rels D/Networking: restart reliable message timeout task, immediate
+2025-10-16 16:47:51.352 29083-31668/com.telink.ble.mesh.demo.rels D/Networking: reliable message timeout:1280
+2025-10-16 16:47:51.353 29083-31668/com.telink.ble.mesh.demo.rels D/Networking: single network pdu: BB:4D:E8:40:17:B8:CD:FE:F1:8F:F1:1F:3B:4C:45:83:C6:04:9C:8F:37:C1:82:8F:1B:63
+2025-10-16 16:47:51.353 29083-31668/com.telink.ble.mesh.demo.rels D/Networking: networking pdu prepared: BB:4D:E8:40:17:B8:CD:FE:F1:8F:F1:1F:3B:4C:45:83:C6:04:9C:8F:37:C1:82:8F:1B:63 busy?-false
+2025-10-16 16:47:51.353 29083-31668/com.telink.ble.mesh.demo.rels D/Networking: networking pdu sending direct 
+2025-10-16 16:47:51.353 29083-31668/com.telink.ble.mesh.demo.rels D/GATT: send unsegment pkt: 00:BB:4D:E8:40:17:B8:CD:FE:F1:8F:F1:1F:3B:4C:45:83:C6:04:9C:8F:37:C1:82:8F:1B:63
+2025-10-16 16:47:51.362 29083-31668/com.telink.ble.mesh.demo.rels D/SIG-Mesh: event handle: com.telink.sig.mesh.EVENT_TYPE_CMD_PROCESSING
+2025-10-16 16:47:51.363 29083-31668/com.telink.ble.mesh.demo.rels D/MeshController: mesh message notification: com.telink.ble.mesh.core.message.config.ModelAppStatusMessage
+2025-10-16 16:47:51.363 29083-31668/com.telink.ble.mesh.demo.rels D/SIG-Mesh: event handle: com.telink.ble.mesh.core.message.config.ModelAppStatusMessage
+2025-10-16 16:47:51.424 29083-31668/com.telink.ble.mesh.demo.rels D/GATT: completed notification data: 00:BB:41:DA:65:F1:BA:8C:95:A5:51:05:39:E9:5B:F5:24:2B:E4:79:78:10:1A:C2:6C:22:8E:42
+2025-10-16 16:47:51.425 29083-31668/com.telink.ble.mesh.demo.rels D/Networking: getAcceptedIvIndex : 00000001 ivi: 1
+2025-10-16 16:47:51.428 29083-31668/com.telink.ble.mesh.demo.rels D/Networking: network pdu: NetworkLayerPDU{ivi=1, nid=59, ctl=0, ttl=10, seq=0x13, src=16, dst=1, transportPDU=00F1E009805E8739D819FCE59D33}
+2025-10-16 16:47:51.428 29083-31668/com.telink.ble.mesh.demo.rels D/Networking: parse access message
+2025-10-16 16:47:51.428 29083-31668/com.telink.ble.mesh.demo.rels D/Networking: parse unsegmented access message
+2025-10-16 16:47:51.431 29083-31668/com.telink.ble.mesh.demo.rels D/Networking: access pdu received at 0x0010: opcode -- 0x3E80 params -- 00100000000414
+2025-10-16 16:47:51.431 29083-31668/com.telink.ble.mesh.demo.rels D/Networking: clear network buffer
+2025-10-16 16:47:51.433 29083-31668/com.telink.ble.mesh.demo.rels D/Networking: Reliable Message Complete: 003D80 success?: true
+2025-10-16 16:47:51.434 29083-31668/com.telink.ble.mesh.demo.rels D/SIG-Mesh: event handle: com.telink.sig.mesh.EVENT_TYPE_CMD_COMPLETE
+2025-10-16 16:47:51.435 29083-31668/com.telink.ble.mesh.demo.rels D/MeshController: mesh model message received: src -- 0x0010 | dst -- 0x0001 | opcode -- 0x3E80 | params -- 00100000000414 | action mode -- MODE_BIND
+2025-10-16 16:47:51.435 29083-31668/com.telink.ble.mesh.demo.rels D/Binding: bind next model: 1403 at: 10
+2025-10-16 16:47:51.436 29083-31668/com.telink.ble.mesh.demo.rels D/MeshController: send mesh message: ModelAppBindMessage opcode: 0x3D80 -- dst: 0x0010 isReliable: true retryCnt: 2 rspMax: 1
+2025-10-16 16:47:51.436 29083-31668/com.telink.ble.mesh.demo.rels D/Networking: post access pdu: 803D100000000314
+2025-10-16 16:47:51.436 29083-31668/com.telink.ble.mesh.demo.rels D/Networking: getTransmitIvIndex : 00000001
+2025-10-16 16:47:51.437 29083-31668/com.telink.ble.mesh.demo.rels D/Networking: upper transport pdu: 53BA168F4BE5DE3F0D01B792
+2025-10-16 16:47:51.437 29083-31668/com.telink.ble.mesh.demo.rels D/Networking: send unsegmented access message
+2025-10-16 16:47:51.437 29083-31668/com.telink.ble.mesh.demo.rels D/Networking: restart reliable message timeout task, immediate
+2025-10-16 16:47:51.437 29083-31668/com.telink.ble.mesh.demo.rels D/Networking: reliable message timeout:1280
+2025-10-16 16:47:51.438 29083-31668/com.telink.ble.mesh.demo.rels D/Networking: single network pdu: BB:BF:4A:6B:95:BF:7E:F6:4D:B2:A1:DB:3F:E2:6C:DB:AE:7C:17:CF:8F:1C:92:FA:57:19
+2025-10-16 16:47:51.438 29083-31668/com.telink.ble.mesh.demo.rels D/Networking: networking pdu prepared: BB:BF:4A:6B:95:BF:7E:F6:4D:B2:A1:DB:3F:E2:6C:DB:AE:7C:17:CF:8F:1C:92:FA:57:19 busy?-false
+2025-10-16 16:47:51.438 29083-31668/com.telink.ble.mesh.demo.rels D/Networking: networking pdu sending direct 
+2025-10-16 16:47:51.438 29083-31668/com.telink.ble.mesh.demo.rels D/GATT: send unsegment pkt: 00:BB:BF:4A:6B:95:BF:7E:F6:4D:B2:A1:DB:3F:E2:6C:DB:AE:7C:17:CF:8F:1C:92:FA:57:19
+2025-10-16 16:47:51.442 29083-31668/com.telink.ble.mesh.demo.rels D/SIG-Mesh: event handle: com.telink.sig.mesh.EVENT_TYPE_CMD_PROCESSING
+2025-10-16 16:47:51.442 29083-31668/com.telink.ble.mesh.demo.rels D/MeshController: mesh message notification: com.telink.ble.mesh.core.message.config.ModelAppStatusMessage
+2025-10-16 16:47:51.442 29083-31668/com.telink.ble.mesh.demo.rels D/SIG-Mesh: event handle: com.telink.ble.mesh.core.message.config.ModelAppStatusMessage
+2025-10-16 16:47:51.584 29083-31668/com.telink.ble.mesh.demo.rels D/GATT: completed notification data: 00:BB:72:1F:89:D9:9D:A2:84:6B:A3:1E:27:AD:A6:6C:29:59:75:DE:47:29:04:8F:6D:39:7E:BA
+2025-10-16 16:47:51.585 29083-31668/com.telink.ble.mesh.demo.rels D/Networking: getAcceptedIvIndex : 00000001 ivi: 1
+2025-10-16 16:47:51.589 29083-31668/com.telink.ble.mesh.demo.rels D/Networking: network pdu: NetworkLayerPDU{ivi=1, nid=59, ctl=0, ttl=10, seq=0x14, src=16, dst=1, transportPDU=00851D57B591EE49404C279BCBF4}
+2025-10-16 16:47:51.589 29083-31668/com.telink.ble.mesh.demo.rels D/Networking: parse access message
+2025-10-16 16:47:51.589 29083-31668/com.telink.ble.mesh.demo.rels D/Networking: parse unsegmented access message
+2025-10-16 16:47:51.590 29083-31668/com.telink.ble.mesh.demo.rels D/Networking: access pdu received at 0x0010: opcode -- 0x3E80 params -- 00100000000314
+2025-10-16 16:47:51.590 29083-31668/com.telink.ble.mesh.demo.rels D/Networking: clear network buffer
+2025-10-16 16:47:51.591 29083-31668/com.telink.ble.mesh.demo.rels D/Networking: Reliable Message Complete: 003D80 success?: true
+2025-10-16 16:47:51.591 29083-31668/com.telink.ble.mesh.demo.rels D/SIG-Mesh: event handle: com.telink.sig.mesh.EVENT_TYPE_CMD_COMPLETE
+2025-10-16 16:47:51.592 29083-31668/com.telink.ble.mesh.demo.rels D/MeshController: mesh model message received: src -- 0x0010 | dst -- 0x0001 | opcode -- 0x3E80 | params -- 00100000000314 | action mode -- MODE_BIND
+2025-10-16 16:47:51.592 29083-31668/com.telink.ble.mesh.demo.rels D/Binding: bind next model: 1401 at: 10
+2025-10-16 16:47:51.593 29083-31668/com.telink.ble.mesh.demo.rels D/MeshController: send mesh message: ModelAppBindMessage opcode: 0x3D80 -- dst: 0x0010 isReliable: true retryCnt: 2 rspMax: 1
+2025-10-16 16:47:51.593 29083-31668/com.telink.ble.mesh.demo.rels D/Networking: post access pdu: 803D100000000114
+2025-10-16 16:47:51.593 29083-31668/com.telink.ble.mesh.demo.rels D/Networking: getTransmitIvIndex : 00000001
+2025-10-16 16:47:51.593 29083-31668/com.telink.ble.mesh.demo.rels D/Networking: upper transport pdu: 8D0B75D9CB59877DEF5701AF
+2025-10-16 16:47:51.593 29083-31668/com.telink.ble.mesh.demo.rels D/Networking: send unsegmented access message
+2025-10-16 16:47:51.593 29083-31668/com.telink.ble.mesh.demo.rels D/Networking: restart reliable message timeout task, immediate
+2025-10-16 16:47:51.594 29083-31668/com.telink.ble.mesh.demo.rels D/Networking: reliable message timeout:1280
+2025-10-16 16:47:51.594 29083-31668/com.telink.ble.mesh.demo.rels D/Networking: single network pdu: BB:BC:54:C9:4B:AC:9A:12:AB:69:0B:11:8A:6F:0B:3D:2A:A1:E9:22:E4:9B:D8:AF:68:89
+2025-10-16 16:47:51.595 29083-31668/com.telink.ble.mesh.demo.rels D/Networking: networking pdu prepared: BB:BC:54:C9:4B:AC:9A:12:AB:69:0B:11:8A:6F:0B:3D:2A:A1:E9:22:E4:9B:D8:AF:68:89 busy?-false
+2025-10-16 16:47:51.595 29083-31668/com.telink.ble.mesh.demo.rels D/Networking: networking pdu sending direct 
+2025-10-16 16:47:51.595 29083-31668/com.telink.ble.mesh.demo.rels D/GATT: send unsegment pkt: 00:BB:BC:54:C9:4B:AC:9A:12:AB:69:0B:11:8A:6F:0B:3D:2A:A1:E9:22:E4:9B:D8:AF:68:89
+2025-10-16 16:47:51.598 29083-31668/com.telink.ble.mesh.demo.rels D/SIG-Mesh: event handle: com.telink.sig.mesh.EVENT_TYPE_CMD_PROCESSING
+2025-10-16 16:47:51.599 29083-31668/com.telink.ble.mesh.demo.rels D/MeshController: mesh message notification: com.telink.ble.mesh.core.message.config.ModelAppStatusMessage
+2025-10-16 16:47:51.599 29083-31668/com.telink.ble.mesh.demo.rels D/SIG-Mesh: event handle: com.telink.ble.mesh.core.message.config.ModelAppStatusMessage
+2025-10-16 16:47:51.648 29083-31668/com.telink.ble.mesh.demo.rels D/GATT: completed notification data: 00:BB:5A:BA:56:D9:7A:94:98:73:DA:C3:96:F0:51:7E:5A:D2:05:FB:40:A3:E8:26:25:BD:BE:8C
+2025-10-16 16:47:51.649 29083-31668/com.telink.ble.mesh.demo.rels D/Networking: getAcceptedIvIndex : 00000001 ivi: 1
+2025-10-16 16:47:51.653 29083-31668/com.telink.ble.mesh.demo.rels D/Networking: network pdu: NetworkLayerPDU{ivi=1, nid=59, ctl=0, ttl=10, seq=0x15, src=16, dst=1, transportPDU=00A6B46806C1F23CA2831B5FCF24}
+2025-10-16 16:47:51.653 29083-31668/com.telink.ble.mesh.demo.rels D/Networking: parse access message
+2025-10-16 16:47:51.653 29083-31668/com.telink.ble.mesh.demo.rels D/Networking: parse unsegmented access message
+2025-10-16 16:47:51.654 29083-31668/com.telink.ble.mesh.demo.rels D/Networking: access pdu received at 0x0010: opcode -- 0x3E80 params -- 00100000000114
+2025-10-16 16:47:51.655 29083-31668/com.telink.ble.mesh.demo.rels D/Networking: clear network buffer
+2025-10-16 16:47:51.656 29083-31668/com.telink.ble.mesh.demo.rels D/Networking: Reliable Message Complete: 003D80 success?: true
+2025-10-16 16:47:51.657 29083-31668/com.telink.ble.mesh.demo.rels D/SIG-Mesh: event handle: com.telink.sig.mesh.EVENT_TYPE_CMD_COMPLETE
+2025-10-16 16:47:51.660 29083-31668/com.telink.ble.mesh.demo.rels D/MeshController: mesh model message received: src -- 0x0010 | dst -- 0x0001 | opcode -- 0x3E80 | params -- 00100000000114 | action mode -- MODE_BIND
+2025-10-16 16:47:51.660 29083-31668/com.telink.ble.mesh.demo.rels D/Binding: bind next model: 1000 at: 10
+2025-10-16 16:47:51.661 29083-31668/com.telink.ble.mesh.demo.rels D/MeshController: send mesh message: ModelAppBindMessage opcode: 0x3D80 -- dst: 0x0010 isReliable: true retryCnt: 2 rspMax: 1
+2025-10-16 16:47:51.661 29083-31668/com.telink.ble.mesh.demo.rels D/Networking: post access pdu: 803D100000000010
+2025-10-16 16:47:51.662 29083-31668/com.telink.ble.mesh.demo.rels D/Networking: getTransmitIvIndex : 00000001
+2025-10-16 16:47:51.663 29083-31668/com.telink.ble.mesh.demo.rels D/Networking: upper transport pdu: A3C4C649275BC4A0F9628EA4
+2025-10-16 16:47:51.663 29083-31668/com.telink.ble.mesh.demo.rels D/Networking: send unsegmented access message
+2025-10-16 16:47:51.663 29083-31668/com.telink.ble.mesh.demo.rels D/Networking: restart reliable message timeout task, immediate
+2025-10-16 16:47:51.663 29083-31668/com.telink.ble.mesh.demo.rels D/Networking: reliable message timeout:1280
+2025-10-16 16:47:51.664 29083-31668/com.telink.ble.mesh.demo.rels D/Networking: single network pdu: BB:33:7D:D5:AB:A5:25:9D:1B:BD:03:4C:D3:8F:49:F3:58:94:DF:EC:EC:D0:FC:33:0A:EB
+2025-10-16 16:47:51.664 29083-31668/com.telink.ble.mesh.demo.rels D/Networking: networking pdu prepared: BB:33:7D:D5:AB:A5:25:9D:1B:BD:03:4C:D3:8F:49:F3:58:94:DF:EC:EC:D0:FC:33:0A:EB busy?-false
+2025-10-16 16:47:51.664 29083-31668/com.telink.ble.mesh.demo.rels D/Networking: networking pdu sending direct 
+2025-10-16 16:47:51.664 29083-31668/com.telink.ble.mesh.demo.rels D/GATT: send unsegment pkt: 00:BB:33:7D:D5:AB:A5:25:9D:1B:BD:03:4C:D3:8F:49:F3:58:94:DF:EC:EC:D0:FC:33:0A:EB
+2025-10-16 16:47:51.668 29083-31668/com.telink.ble.mesh.demo.rels D/SIG-Mesh: event handle: com.telink.sig.mesh.EVENT_TYPE_CMD_PROCESSING
+2025-10-16 16:47:51.668 29083-31668/com.telink.ble.mesh.demo.rels D/MeshController: mesh message notification: com.telink.ble.mesh.core.message.config.ModelAppStatusMessage
+2025-10-16 16:47:51.668 29083-31668/com.telink.ble.mesh.demo.rels D/SIG-Mesh: event handle: com.telink.ble.mesh.core.message.config.ModelAppStatusMessage
+2025-10-16 16:47:51.716 29083-31665/com.telink.ble.mesh.demo.rels D/GATT: completed notification data: 00:BB:1B:B9:64:C3:83:02:06:16:4C:F4:DC:78:7A:20:66:3B:7F:07:54:4D:09:F9:1F:0C:4F:37
+2025-10-16 16:47:51.717 29083-31665/com.telink.ble.mesh.demo.rels D/Networking: getAcceptedIvIndex : 00000001 ivi: 1
+2025-10-16 16:47:51.719 29083-31665/com.telink.ble.mesh.demo.rels D/Networking: network pdu: NetworkLayerPDU{ivi=1, nid=59, ctl=0, ttl=10, seq=0x16, src=16, dst=1, transportPDU=004DDAD0DAFDD81CDC4EB744B6E0}
+2025-10-16 16:47:51.719 29083-31665/com.telink.ble.mesh.demo.rels D/Networking: parse access message
+2025-10-16 16:47:51.719 29083-31665/com.telink.ble.mesh.demo.rels D/Networking: parse unsegmented access message
+2025-10-16 16:47:51.721 29083-31665/com.telink.ble.mesh.demo.rels D/Networking: access pdu received at 0x0010: opcode -- 0x3E80 params -- 00100000000010
+2025-10-16 16:47:51.721 29083-31665/com.telink.ble.mesh.demo.rels D/Networking: clear network buffer
+2025-10-16 16:47:51.721 29083-31665/com.telink.ble.mesh.demo.rels D/Networking: Reliable Message Complete: 003D80 success?: true
+2025-10-16 16:47:51.722 29083-31665/com.telink.ble.mesh.demo.rels D/SIG-Mesh: event handle: com.telink.sig.mesh.EVENT_TYPE_CMD_COMPLETE
+2025-10-16 16:47:51.724 29083-31665/com.telink.ble.mesh.demo.rels D/MeshController: mesh model message received: src -- 0x0010 | dst -- 0x0001 | opcode -- 0x3E80 | params -- 00100000000010 | action mode -- MODE_BIND
+2025-10-16 16:47:51.724 29083-31665/com.telink.ble.mesh.demo.rels D/Binding: bind next model: 1002 at: 10
+2025-10-16 16:47:51.724 29083-31665/com.telink.ble.mesh.demo.rels D/MeshController: send mesh message: ModelAppBindMessage opcode: 0x3D80 -- dst: 0x0010 isReliable: true retryCnt: 2 rspMax: 1
+2025-10-16 16:47:51.724 29083-31665/com.telink.ble.mesh.demo.rels D/Networking: post access pdu: 803D100000000210
+2025-10-16 16:47:51.725 29083-31665/com.telink.ble.mesh.demo.rels D/Networking: getTransmitIvIndex : 00000001
+2025-10-16 16:47:51.725 29083-31665/com.telink.ble.mesh.demo.rels D/Networking: upper transport pdu: 55088118DE6253044058E8BE
+2025-10-16 16:47:51.725 29083-31665/com.telink.ble.mesh.demo.rels D/Networking: send unsegmented access message
+2025-10-16 16:47:51.725 29083-31665/com.telink.ble.mesh.demo.rels D/Networking: restart reliable message timeout task, immediate
+2025-10-16 16:47:51.725 29083-31665/com.telink.ble.mesh.demo.rels D/Networking: reliable message timeout:1280
+2025-10-16 16:47:51.726 29083-31665/com.telink.ble.mesh.demo.rels D/Networking: single network pdu: BB:B4:81:66:93:55:15:2C:1F:98:AA:45:60:C5:8E:EA:FD:DD:56:06:48:E2:06:44:5A:29
+2025-10-16 16:47:51.726 29083-31665/com.telink.ble.mesh.demo.rels D/Networking: networking pdu prepared: BB:B4:81:66:93:55:15:2C:1F:98:AA:45:60:C5:8E:EA:FD:DD:56:06:48:E2:06:44:5A:29 busy?-false
+2025-10-16 16:47:51.726 29083-31665/com.telink.ble.mesh.demo.rels D/Networking: networking pdu sending direct 
+2025-10-16 16:47:51.727 29083-31665/com.telink.ble.mesh.demo.rels D/GATT: send unsegment pkt: 00:BB:B4:81:66:93:55:15:2C:1F:98:AA:45:60:C5:8E:EA:FD:DD:56:06:48:E2:06:44:5A:29
+2025-10-16 16:47:51.733 29083-31665/com.telink.ble.mesh.demo.rels D/SIG-Mesh: event handle: com.telink.sig.mesh.EVENT_TYPE_CMD_PROCESSING
+2025-10-16 16:47:51.733 29083-31665/com.telink.ble.mesh.demo.rels D/MeshController: mesh message notification: com.telink.ble.mesh.core.message.config.ModelAppStatusMessage
+2025-10-16 16:47:51.733 29083-31665/com.telink.ble.mesh.demo.rels D/SIG-Mesh: event handle: com.telink.ble.mesh.core.message.config.ModelAppStatusMessage
+2025-10-16 16:47:51.761 29083-31668/com.telink.ble.mesh.demo.rels D/GATT: completed notification data: 00:BB:35:87:41:59:0E:55:26:77:8F:E1:A9:BE:5D:C0:0E:1C:1B:92:56:8C:66:7B:65:9F:B9:0C
+2025-10-16 16:47:51.762 29083-31668/com.telink.ble.mesh.demo.rels D/Networking: getAcceptedIvIndex : 00000001 ivi: 1
+2025-10-16 16:47:51.766 29083-31668/com.telink.ble.mesh.demo.rels D/Networking: network pdu: NetworkLayerPDU{ivi=1, nid=59, ctl=0, ttl=10, seq=0x17, src=16, dst=1, transportPDU=00397AF749602629F9389ED27D83}
+2025-10-16 16:47:51.767 29083-31668/com.telink.ble.mesh.demo.rels D/Networking: parse access message
+2025-10-16 16:47:51.767 29083-31668/com.telink.ble.mesh.demo.rels D/Networking: parse unsegmented access message
+2025-10-16 16:47:51.768 29083-31668/com.telink.ble.mesh.demo.rels D/Networking: access pdu received at 0x0010: opcode -- 0x3E80 params -- 00100000000210
+2025-10-16 16:47:51.769 29083-31668/com.telink.ble.mesh.demo.rels D/Networking: clear network buffer
+2025-10-16 16:47:51.769 29083-31668/com.telink.ble.mesh.demo.rels D/Networking: Reliable Message Complete: 003D80 success?: true
+2025-10-16 16:47:51.769 29083-31668/com.telink.ble.mesh.demo.rels D/SIG-Mesh: event handle: com.telink.sig.mesh.EVENT_TYPE_CMD_COMPLETE
+2025-10-16 16:47:51.771 29083-31668/com.telink.ble.mesh.demo.rels D/MeshController: mesh model message received: src -- 0x0010 | dst -- 0x0001 | opcode -- 0x3E80 | params -- 00100000000210 | action mode -- MODE_BIND
+2025-10-16 16:47:51.771 29083-31668/com.telink.ble.mesh.demo.rels D/Binding: bind next model: 1004 at: 10
+2025-10-16 16:47:51.771 29083-31668/com.telink.ble.mesh.demo.rels D/MeshController: send mesh message: ModelAppBindMessage opcode: 0x3D80 -- dst: 0x0010 isReliable: true retryCnt: 2 rspMax: 1
+2025-10-16 16:47:51.772 29083-31668/com.telink.ble.mesh.demo.rels D/Networking: post access pdu: 803D100000000410
+2025-10-16 16:47:51.772 29083-31668/com.telink.ble.mesh.demo.rels D/Networking: getTransmitIvIndex : 00000001
+2025-10-16 16:47:51.772 29083-31668/com.telink.ble.mesh.demo.rels D/Networking: upper transport pdu: F7AF62189BCD6D71547D8755
+2025-10-16 16:47:51.772 29083-31668/com.telink.ble.mesh.demo.rels D/Networking: send unsegmented access message
+2025-10-16 16:47:51.772 29083-31668/com.telink.ble.mesh.demo.rels D/Networking: restart reliable message timeout task, immediate
+2025-10-16 16:47:51.772 29083-31668/com.telink.ble.mesh.demo.rels D/Networking: reliable message timeout:1280
+2025-10-16 16:47:51.773 29083-31668/com.telink.ble.mesh.demo.rels D/Networking: single network pdu: BB:B7:A9:EC:52:8D:D2:0A:3A:64:29:7F:00:36:3A:91:6A:49:EA:64:56:54:21:7F:1F:9E
+2025-10-16 16:47:51.773 29083-31668/com.telink.ble.mesh.demo.rels D/Networking: networking pdu prepared: BB:B7:A9:EC:52:8D:D2:0A:3A:64:29:7F:00:36:3A:91:6A:49:EA:64:56:54:21:7F:1F:9E busy?-false
+2025-10-16 16:47:51.773 29083-31668/com.telink.ble.mesh.demo.rels D/Networking: networking pdu sending direct 
+2025-10-16 16:47:51.773 29083-31668/com.telink.ble.mesh.demo.rels D/GATT: send unsegment pkt: 00:BB:B7:A9:EC:52:8D:D2:0A:3A:64:29:7F:00:36:3A:91:6A:49:EA:64:56:54:21:7F:1F:9E
+2025-10-16 16:47:51.779 29083-31668/com.telink.ble.mesh.demo.rels D/SIG-Mesh: event handle: com.telink.sig.mesh.EVENT_TYPE_CMD_PROCESSING
+2025-10-16 16:47:51.779 29083-31668/com.telink.ble.mesh.demo.rels D/MeshController: mesh message notification: com.telink.ble.mesh.core.message.config.ModelAppStatusMessage
+2025-10-16 16:47:51.780 29083-31668/com.telink.ble.mesh.demo.rels D/SIG-Mesh: event handle: com.telink.ble.mesh.core.message.config.ModelAppStatusMessage
+2025-10-16 16:47:51.828 29083-31665/com.telink.ble.mesh.demo.rels D/GATT: completed notification data: 00:BB:25:42:8F:E3:D2:99:32:B0:C2:E6:00:EB:63:56:81:C2:5C:2A:24:01:E6:BA:4B:F6:C7:78
+2025-10-16 16:47:51.829 29083-31665/com.telink.ble.mesh.demo.rels D/Networking: getAcceptedIvIndex : 00000001 ivi: 1
+2025-10-16 16:47:51.833 29083-31665/com.telink.ble.mesh.demo.rels D/Networking: network pdu: NetworkLayerPDU{ivi=1, nid=59, ctl=0, ttl=10, seq=0x18, src=16, dst=1, transportPDU=00A16F760F6612A9BDCAA382D0F8}
+2025-10-16 16:47:51.833 29083-31665/com.telink.ble.mesh.demo.rels D/Networking: parse access message
+2025-10-16 16:47:51.833 29083-31665/com.telink.ble.mesh.demo.rels D/Networking: parse unsegmented access message
+2025-10-16 16:47:51.835 29083-31665/com.telink.ble.mesh.demo.rels D/Networking: access pdu received at 0x0010: opcode -- 0x3E80 params -- 00100000000410
+2025-10-16 16:47:51.836 29083-31665/com.telink.ble.mesh.demo.rels D/Networking: clear network buffer
+2025-10-16 16:47:51.836 29083-31665/com.telink.ble.mesh.demo.rels D/Networking: Reliable Message Complete: 003D80 success?: true
+2025-10-16 16:47:51.837 29083-31665/com.telink.ble.mesh.demo.rels D/SIG-Mesh: event handle: com.telink.sig.mesh.EVENT_TYPE_CMD_COMPLETE
+2025-10-16 16:47:51.838 29083-31665/com.telink.ble.mesh.demo.rels D/MeshController: mesh model message received: src -- 0x0010 | dst -- 0x0001 | opcode -- 0x3E80 | params -- 00100000000410 | action mode -- MODE_BIND
+2025-10-16 16:47:51.838 29083-31665/com.telink.ble.mesh.demo.rels D/Binding: bind next model: 1006 at: 10
+2025-10-16 16:47:51.839 29083-31665/com.telink.ble.mesh.demo.rels D/MeshController: send mesh message: ModelAppBindMessage opcode: 0x3D80 -- dst: 0x0010 isReliable: true retryCnt: 2 rspMax: 1
+2025-10-16 16:47:51.839 29083-31665/com.telink.ble.mesh.demo.rels D/Networking: post access pdu: 803D100000000610
+2025-10-16 16:47:51.839 29083-31665/com.telink.ble.mesh.demo.rels D/Networking: getTransmitIvIndex : 00000001
+2025-10-16 16:47:51.840 29083-31665/com.telink.ble.mesh.demo.rels D/Networking: upper transport pdu: 06D272B79A9DF8AC35FF732E
+2025-10-16 16:47:51.840 29083-31665/com.telink.ble.mesh.demo.rels D/Networking: send unsegmented access message
+2025-10-16 16:47:51.840 29083-31665/com.telink.ble.mesh.demo.rels D/Networking: restart reliable message timeout task, immediate
+2025-10-16 16:47:51.840 29083-31665/com.telink.ble.mesh.demo.rels D/Networking: reliable message timeout:1280
+2025-10-16 16:47:51.842 29083-31665/com.telink.ble.mesh.demo.rels D/Networking: single network pdu: BB:0C:6B:EE:99:32:48:D7:1C:A2:D0:CB:29:C4:1C:E2:2D:20:99:EB:4C:AB:45:28:27:E0
+2025-10-16 16:47:51.842 29083-31665/com.telink.ble.mesh.demo.rels D/Networking: networking pdu prepared: BB:0C:6B:EE:99:32:48:D7:1C:A2:D0:CB:29:C4:1C:E2:2D:20:99:EB:4C:AB:45:28:27:E0 busy?-false
+2025-10-16 16:47:51.842 29083-31665/com.telink.ble.mesh.demo.rels D/Networking: networking pdu sending direct 
+2025-10-16 16:47:51.843 29083-31665/com.telink.ble.mesh.demo.rels D/GATT: send unsegment pkt: 00:BB:0C:6B:EE:99:32:48:D7:1C:A2:D0:CB:29:C4:1C:E2:2D:20:99:EB:4C:AB:45:28:27:E0
+2025-10-16 16:47:51.847 29083-31665/com.telink.ble.mesh.demo.rels D/SIG-Mesh: event handle: com.telink.sig.mesh.EVENT_TYPE_CMD_PROCESSING
+2025-10-16 16:47:51.847 29083-31665/com.telink.ble.mesh.demo.rels D/MeshController: mesh message notification: com.telink.ble.mesh.core.message.config.ModelAppStatusMessage
+2025-10-16 16:47:51.847 29083-31665/com.telink.ble.mesh.demo.rels D/SIG-Mesh: event handle: com.telink.ble.mesh.core.message.config.ModelAppStatusMessage
+2025-10-16 16:47:51.896 29083-31665/com.telink.ble.mesh.demo.rels D/GATT: completed notification data: 00:BB:89:84:07:3B:01:0F:A8:62:E0:EA:E9:7A:96:5D:6C:B2:5F:4E:0C:7F:FA:45:28:E7:7B:B6
+2025-10-16 16:47:51.897 29083-31665/com.telink.ble.mesh.demo.rels D/Networking: getAcceptedIvIndex : 00000001 ivi: 1
+2025-10-16 16:47:51.899 29083-31665/com.telink.ble.mesh.demo.rels D/Networking: network pdu: NetworkLayerPDU{ivi=1, nid=59, ctl=0, ttl=10, seq=0x19, src=16, dst=1, transportPDU=00C2F6A62FFB36AF15A76FC4F53D}
+2025-10-16 16:47:51.900 29083-31665/com.telink.ble.mesh.demo.rels D/Networking: parse access message
+2025-10-16 16:47:51.900 29083-31665/com.telink.ble.mesh.demo.rels D/Networking: parse unsegmented access message
+2025-10-16 16:47:51.901 29083-31665/com.telink.ble.mesh.demo.rels D/Networking: access pdu received at 0x0010: opcode -- 0x3E80 params -- 00100000000610
+2025-10-16 16:47:51.902 29083-31665/com.telink.ble.mesh.demo.rels D/Networking: clear network buffer
+2025-10-16 16:47:51.902 29083-31665/com.telink.ble.mesh.demo.rels D/Networking: Reliable Message Complete: 003D80 success?: true
+2025-10-16 16:47:51.902 29083-31665/com.telink.ble.mesh.demo.rels D/SIG-Mesh: event handle: com.telink.sig.mesh.EVENT_TYPE_CMD_COMPLETE
+2025-10-16 16:47:51.903 29083-31665/com.telink.ble.mesh.demo.rels D/MeshController: mesh model message received: src -- 0x0010 | dst -- 0x0001 | opcode -- 0x3E80 | params -- 00100000000610 | action mode -- MODE_BIND
+2025-10-16 16:47:51.903 29083-31665/com.telink.ble.mesh.demo.rels D/Binding: bind next model: 1007 at: 10
+2025-10-16 16:47:51.904 29083-31665/com.telink.ble.mesh.demo.rels D/MeshController: send mesh message: ModelAppBindMessage opcode: 0x3D80 -- dst: 0x0010 isReliable: true retryCnt: 2 rspMax: 1
+2025-10-16 16:47:51.904 29083-31665/com.telink.ble.mesh.demo.rels D/Networking: post access pdu: 803D100000000710
+2025-10-16 16:47:51.904 29083-31665/com.telink.ble.mesh.demo.rels D/Networking: getTransmitIvIndex : 00000001
+2025-10-16 16:47:51.905 29083-31665/com.telink.ble.mesh.demo.rels D/Networking: upper transport pdu: 8324232F6295F1DB7704BEFC
+2025-10-16 16:47:51.905 29083-31665/com.telink.ble.mesh.demo.rels D/Networking: send unsegmented access message
+2025-10-16 16:47:51.905 29083-31665/com.telink.ble.mesh.demo.rels D/Networking: restart reliable message timeout task, immediate
+2025-10-16 16:47:51.905 29083-31665/com.telink.ble.mesh.demo.rels D/Networking: reliable message timeout:1280
+2025-10-16 16:47:51.906 29083-31665/com.telink.ble.mesh.demo.rels D/Networking: single network pdu: BB:37:34:10:76:98:A2:4A:B4:C5:54:DE:CE:E9:57:C0:4F:20:B5:DC:5A:12:77:B1:25:C2
+2025-10-16 16:47:51.906 29083-31665/com.telink.ble.mesh.demo.rels D/Networking: networking pdu prepared: BB:37:34:10:76:98:A2:4A:B4:C5:54:DE:CE:E9:57:C0:4F:20:B5:DC:5A:12:77:B1:25:C2 busy?-false
+2025-10-16 16:47:51.906 29083-31665/com.telink.ble.mesh.demo.rels D/Networking: networking pdu sending direct 
+2025-10-16 16:47:51.906 29083-31665/com.telink.ble.mesh.demo.rels D/GATT: send unsegment pkt: 00:BB:37:34:10:76:98:A2:4A:B4:C5:54:DE:CE:E9:57:C0:4F:20:B5:DC:5A:12:77:B1:25:C2
+2025-10-16 16:47:51.910 29083-31665/com.telink.ble.mesh.demo.rels D/SIG-Mesh: event handle: com.telink.sig.mesh.EVENT_TYPE_CMD_PROCESSING
+2025-10-16 16:47:51.910 29083-31665/com.telink.ble.mesh.demo.rels D/MeshController: mesh message notification: com.telink.ble.mesh.core.message.config.ModelAppStatusMessage
+2025-10-16 16:47:51.910 29083-31665/com.telink.ble.mesh.demo.rels D/SIG-Mesh: event handle: com.telink.ble.mesh.core.message.config.ModelAppStatusMessage
+2025-10-16 16:47:51.941 29083-31665/com.telink.ble.mesh.demo.rels D/GATT: completed notification data: 00:BB:31:D9:22:4D:02:61:9A:8F:8F:2D:89:BC:25:BE:5E:03:34:E2:FC:D3:F6:23:CE:BE:D8:A9
+2025-10-16 16:47:51.943 29083-31665/com.telink.ble.mesh.demo.rels D/Networking: getAcceptedIvIndex : 00000001 ivi: 1
+2025-10-16 16:47:51.945 29083-31665/com.telink.ble.mesh.demo.rels D/Networking: network pdu: NetworkLayerPDU{ivi=1, nid=59, ctl=0, ttl=10, seq=0x1a, src=16, dst=1, transportPDU=008623CCA67B2176D6313907AB2C}
+2025-10-16 16:47:51.945 29083-31665/com.telink.ble.mesh.demo.rels D/Networking: parse access message
+2025-10-16 16:47:51.945 29083-31665/com.telink.ble.mesh.demo.rels D/Networking: parse unsegmented access message
+2025-10-16 16:47:51.947 29083-31665/com.telink.ble.mesh.demo.rels D/Networking: access pdu received at 0x0010: opcode -- 0x3E80 params -- 00100000000710
+2025-10-16 16:47:51.947 29083-31665/com.telink.ble.mesh.demo.rels D/Networking: clear network buffer
+2025-10-16 16:47:51.947 29083-31665/com.telink.ble.mesh.demo.rels D/Networking: Reliable Message Complete: 003D80 success?: true
+2025-10-16 16:47:51.948 29083-31665/com.telink.ble.mesh.demo.rels D/SIG-Mesh: event handle: com.telink.sig.mesh.EVENT_TYPE_CMD_COMPLETE
+2025-10-16 16:47:51.949 29083-31665/com.telink.ble.mesh.demo.rels D/MeshController: mesh model message received: src -- 0x0010 | dst -- 0x0001 | opcode -- 0x3E80 | params -- 00100000000710 | action mode -- MODE_BIND
+2025-10-16 16:47:51.949 29083-31665/com.telink.ble.mesh.demo.rels D/Binding: bind next model: 1203 at: 10
+2025-10-16 16:47:51.950 29083-31665/com.telink.ble.mesh.demo.rels D/MeshController: send mesh message: ModelAppBindMessage opcode: 0x3D80 -- dst: 0x0010 isReliable: true retryCnt: 2 rspMax: 1
+2025-10-16 16:47:51.950 29083-31665/com.telink.ble.mesh.demo.rels D/Networking: post access pdu: 803D100000000312
+2025-10-16 16:47:51.951 29083-31665/com.telink.ble.mesh.demo.rels D/Networking: getTransmitIvIndex : 00000001
+2025-10-16 16:47:51.951 29083-31665/com.telink.ble.mesh.demo.rels D/Networking: upper transport pdu: BC3A5373638651EDE04F83FE
+2025-10-16 16:47:51.951 29083-31665/com.telink.ble.mesh.demo.rels D/Networking: send unsegmented access message
+2025-10-16 16:47:51.951 29083-31665/com.telink.ble.mesh.demo.rels D/Networking: restart reliable message timeout task, immediate
+2025-10-16 16:47:51.951 29083-31665/com.telink.ble.mesh.demo.rels D/Networking: reliable message timeout:1280
+2025-10-16 16:47:51.952 29083-31665/com.telink.ble.mesh.demo.rels D/Networking: single network pdu: BB:AC:3D:5F:68:E8:21:24:CC:E0:0F:A4:6E:06:F7:43:6F:7C:D8:56:E8:0D:31:BE:65:15
+2025-10-16 16:47:51.952 29083-31665/com.telink.ble.mesh.demo.rels D/Networking: networking pdu prepared: BB:AC:3D:5F:68:E8:21:24:CC:E0:0F:A4:6E:06:F7:43:6F:7C:D8:56:E8:0D:31:BE:65:15 busy?-false
+2025-10-16 16:47:51.952 29083-31665/com.telink.ble.mesh.demo.rels D/Networking: networking pdu sending direct 
+2025-10-16 16:47:51.952 29083-31665/com.telink.ble.mesh.demo.rels D/GATT: send unsegment pkt: 00:BB:AC:3D:5F:68:E8:21:24:CC:E0:0F:A4:6E:06:F7:43:6F:7C:D8:56:E8:0D:31:BE:65:15
+2025-10-16 16:47:51.956 29083-31665/com.telink.ble.mesh.demo.rels D/SIG-Mesh: event handle: com.telink.sig.mesh.EVENT_TYPE_CMD_PROCESSING
+2025-10-16 16:47:51.956 29083-31665/com.telink.ble.mesh.demo.rels D/MeshController: mesh message notification: com.telink.ble.mesh.core.message.config.ModelAppStatusMessage
+2025-10-16 16:47:51.956 29083-31665/com.telink.ble.mesh.demo.rels D/SIG-Mesh: event handle: com.telink.ble.mesh.core.message.config.ModelAppStatusMessage
+2025-10-16 16:47:51.984 29083-31665/com.telink.ble.mesh.demo.rels D/GATT: completed notification data: 00:BB:AE:EB:7B:06:28:FC:E9:A9:E6:4F:61:60:2A:9A:C6:FC:80:98:E5:70:9D:6C:34:BB:00:C1
+2025-10-16 16:47:51.986 29083-31665/com.telink.ble.mesh.demo.rels D/Networking: getAcceptedIvIndex : 00000001 ivi: 1
+2025-10-16 16:47:51.987 29083-31665/com.telink.ble.mesh.demo.rels D/Networking: network pdu: NetworkLayerPDU{ivi=1, nid=59, ctl=0, ttl=10, seq=0x1b, src=16, dst=1, transportPDU=008EAAB9A5148575769604A15460}
+2025-10-16 16:47:51.987 29083-31665/com.telink.ble.mesh.demo.rels D/Networking: parse access message
+2025-10-16 16:47:51.987 29083-31665/com.telink.ble.mesh.demo.rels D/Networking: parse unsegmented access message
+2025-10-16 16:47:51.988 29083-31665/com.telink.ble.mesh.demo.rels D/Networking: access pdu received at 0x0010: opcode -- 0x3E80 params -- 00100000000312
+2025-10-16 16:47:51.988 29083-31665/com.telink.ble.mesh.demo.rels D/Networking: clear network buffer
+2025-10-16 16:47:51.989 29083-31665/com.telink.ble.mesh.demo.rels D/Networking: Reliable Message Complete: 003D80 success?: true
+2025-10-16 16:47:51.989 29083-31665/com.telink.ble.mesh.demo.rels D/SIG-Mesh: event handle: com.telink.sig.mesh.EVENT_TYPE_CMD_COMPLETE
+2025-10-16 16:47:51.990 29083-31665/com.telink.ble.mesh.demo.rels D/MeshController: mesh model message received: src -- 0x0010 | dst -- 0x0001 | opcode -- 0x3E80 | params -- 00100000000312 | action mode -- MODE_BIND
+2025-10-16 16:47:51.991 29083-31665/com.telink.ble.mesh.demo.rels D/Binding: bind next model: 1204 at: 10
+2025-10-16 16:47:51.991 29083-31665/com.telink.ble.mesh.demo.rels D/MeshController: send mesh message: ModelAppBindMessage opcode: 0x3D80 -- dst: 0x0010 isReliable: true retryCnt: 2 rspMax: 1
+2025-10-16 16:47:51.992 29083-31665/com.telink.ble.mesh.demo.rels D/Networking: post access pdu: 803D100000000412
+2025-10-16 16:47:51.992 29083-31665/com.telink.ble.mesh.demo.rels D/Networking: getTransmitIvIndex : 00000001
+2025-10-16 16:47:51.993 29083-31665/com.telink.ble.mesh.demo.rels D/Networking: upper transport pdu: A845F6BE8395595C26790F69
+2025-10-16 16:47:51.993 29083-31665/com.telink.ble.mesh.demo.rels D/Networking: send unsegmented access message
+2025-10-16 16:47:51.993 29083-31665/com.telink.ble.mesh.demo.rels D/Networking: restart reliable message timeout task, immediate
+2025-10-16 16:47:51.993 29083-31665/com.telink.ble.mesh.demo.rels D/Networking: reliable message timeout:1280
+2025-10-16 16:47:51.994 29083-31665/com.telink.ble.mesh.demo.rels D/Networking: single network pdu: BB:17:B6:A9:E8:55:9C:F7:79:16:54:C0:06:C9:88:9A:59:5D:6D:2B:41:3D:06:FB:FB:9C
+2025-10-16 16:47:51.994 29083-31665/com.telink.ble.mesh.demo.rels D/Networking: networking pdu prepared: BB:17:B6:A9:E8:55:9C:F7:79:16:54:C0:06:C9:88:9A:59:5D:6D:2B:41:3D:06:FB:FB:9C busy?-false
+2025-10-16 16:47:51.994 29083-31665/com.telink.ble.mesh.demo.rels D/Networking: networking pdu sending direct 
+2025-10-16 16:47:51.995 29083-31665/com.telink.ble.mesh.demo.rels D/GATT: send unsegment pkt: 00:BB:17:B6:A9:E8:55:9C:F7:79:16:54:C0:06:C9:88:9A:59:5D:6D:2B:41:3D:06:FB:FB:9C
+2025-10-16 16:47:52.001 29083-31665/com.telink.ble.mesh.demo.rels D/SIG-Mesh: event handle: com.telink.sig.mesh.EVENT_TYPE_CMD_PROCESSING
+2025-10-16 16:47:52.002 29083-31665/com.telink.ble.mesh.demo.rels D/MeshController: mesh message notification: com.telink.ble.mesh.core.message.config.ModelAppStatusMessage
+2025-10-16 16:47:52.002 29083-31665/com.telink.ble.mesh.demo.rels D/SIG-Mesh: event handle: com.telink.ble.mesh.core.message.config.ModelAppStatusMessage
+2025-10-16 16:47:52.100 29083-31665/com.telink.ble.mesh.demo.rels D/GATT: completed notification data: 00:BB:8C:D9:86:9B:EE:CA:59:EA:FB:13:35:D5:FD:EE:B8:6B:3A:6D:E5:F2:08:05:4F:FA:6D:BB
+2025-10-16 16:47:52.102 29083-31665/com.telink.ble.mesh.demo.rels D/Networking: getAcceptedIvIndex : 00000001 ivi: 1
+2025-10-16 16:47:52.103 29083-31665/com.telink.ble.mesh.demo.rels D/Networking: network pdu: NetworkLayerPDU{ivi=1, nid=59, ctl=0, ttl=10, seq=0x1c, src=16, dst=1, transportPDU=0060ABA6212F7A221EFF80578A14}
+2025-10-16 16:47:52.103 29083-31665/com.telink.ble.mesh.demo.rels D/Networking: parse access message
+2025-10-16 16:47:52.103 29083-31665/com.telink.ble.mesh.demo.rels D/Networking: parse unsegmented access message
+2025-10-16 16:47:52.104 29083-31665/com.telink.ble.mesh.demo.rels D/Networking: access pdu received at 0x0010: opcode -- 0x3E80 params -- 00100000000412
+2025-10-16 16:47:52.105 29083-31665/com.telink.ble.mesh.demo.rels D/Networking: clear network buffer
+2025-10-16 16:47:52.105 29083-31665/com.telink.ble.mesh.demo.rels D/Networking: Reliable Message Complete: 003D80 success?: true
+2025-10-16 16:47:52.105 29083-31665/com.telink.ble.mesh.demo.rels D/SIG-Mesh: event handle: com.telink.sig.mesh.EVENT_TYPE_CMD_COMPLETE
+2025-10-16 16:47:52.107 29083-31665/com.telink.ble.mesh.demo.rels D/MeshController: mesh model message received: src -- 0x0010 | dst -- 0x0001 | opcode -- 0x3E80 | params -- 00100000000412 | action mode -- MODE_BIND
+2025-10-16 16:47:52.107 29083-31665/com.telink.ble.mesh.demo.rels D/Binding: bind next model: 1300 at: 10
+2025-10-16 16:47:52.108 29083-31665/com.telink.ble.mesh.demo.rels D/MeshController: send mesh message: ModelAppBindMessage opcode: 0x3D80 -- dst: 0x0010 isReliable: true retryCnt: 2 rspMax: 1
+2025-10-16 16:47:52.108 29083-31665/com.telink.ble.mesh.demo.rels D/Networking: post access pdu: 803D100000000013
+2025-10-16 16:47:52.108 29083-31665/com.telink.ble.mesh.demo.rels D/Networking: getTransmitIvIndex : 00000001
+2025-10-16 16:47:52.109 29083-31665/com.telink.ble.mesh.demo.rels D/Networking: upper transport pdu: E484D97D8E948C4C9638F3F2
+2025-10-16 16:47:52.109 29083-31665/com.telink.ble.mesh.demo.rels D/Networking: send unsegmented access message
+2025-10-16 16:47:52.109 29083-31665/com.telink.ble.mesh.demo.rels D/Networking: restart reliable message timeout task, immediate
+2025-10-16 16:47:52.109 29083-31665/com.telink.ble.mesh.demo.rels D/Networking: reliable message timeout:1280
+2025-10-16 16:47:52.110 29083-31665/com.telink.ble.mesh.demo.rels D/Networking: single network pdu: BB:F1:66:01:38:73:96:4D:52:33:0B:67:6D:D4:02:8D:66:98:D4:C8:42:DC:23:E1:98:12
+2025-10-16 16:47:52.110 29083-31665/com.telink.ble.mesh.demo.rels D/Networking: networking pdu prepared: BB:F1:66:01:38:73:96:4D:52:33:0B:67:6D:D4:02:8D:66:98:D4:C8:42:DC:23:E1:98:12 busy?-false
+2025-10-16 16:47:52.110 29083-31665/com.telink.ble.mesh.demo.rels D/Networking: networking pdu sending direct 
+2025-10-16 16:47:52.110 29083-31665/com.telink.ble.mesh.demo.rels D/GATT: send unsegment pkt: 00:BB:F1:66:01:38:73:96:4D:52:33:0B:67:6D:D4:02:8D:66:98:D4:C8:42:DC:23:E1:98:12
+2025-10-16 16:47:52.116 29083-31665/com.telink.ble.mesh.demo.rels D/SIG-Mesh: event handle: com.telink.sig.mesh.EVENT_TYPE_CMD_PROCESSING
+2025-10-16 16:47:52.116 29083-31665/com.telink.ble.mesh.demo.rels D/MeshController: mesh message notification: com.telink.ble.mesh.core.message.config.ModelAppStatusMessage
+2025-10-16 16:47:52.116 29083-31665/com.telink.ble.mesh.demo.rels D/SIG-Mesh: event handle: com.telink.ble.mesh.core.message.config.ModelAppStatusMessage
+2025-10-16 16:47:52.165 29083-31665/com.telink.ble.mesh.demo.rels D/GATT: completed notification data: 00:BB:5D:21:BB:F3:8E:61:38:D0:2A:CF:CF:1D:A1:0C:ED:DD:D8:43:1C:60:B8:8D:B2:75:88:86
+2025-10-16 16:47:52.166 29083-31665/com.telink.ble.mesh.demo.rels D/Networking: getAcceptedIvIndex : 00000001 ivi: 1
+2025-10-16 16:47:52.168 29083-31665/com.telink.ble.mesh.demo.rels D/Networking: network pdu: NetworkLayerPDU{ivi=1, nid=59, ctl=0, ttl=10, seq=0x1d, src=16, dst=1, transportPDU=00308C54A24DA87A7C96CEA5881F}
+2025-10-16 16:47:52.168 29083-31665/com.telink.ble.mesh.demo.rels D/Networking: parse access message
+2025-10-16 16:47:52.168 29083-31665/com.telink.ble.mesh.demo.rels D/Networking: parse unsegmented access message
+2025-10-16 16:47:52.170 29083-31665/com.telink.ble.mesh.demo.rels D/Networking: access pdu received at 0x0010: opcode -- 0x3E80 params -- 00100000000013
+2025-10-16 16:47:52.170 29083-31665/com.telink.ble.mesh.demo.rels D/Networking: clear network buffer
+2025-10-16 16:47:52.171 29083-31665/com.telink.ble.mesh.demo.rels D/Networking: Reliable Message Complete: 003D80 success?: true
+2025-10-16 16:47:52.172 29083-31665/com.telink.ble.mesh.demo.rels D/SIG-Mesh: event handle: com.telink.sig.mesh.EVENT_TYPE_CMD_COMPLETE
+2025-10-16 16:47:52.173 29083-31665/com.telink.ble.mesh.demo.rels D/MeshController: mesh model message received: src -- 0x0010 | dst -- 0x0001 | opcode -- 0x3E80 | params -- 00100000000013 | action mode -- MODE_BIND
+2025-10-16 16:47:52.173 29083-31665/com.telink.ble.mesh.demo.rels D/Binding: bind next model: 1301 at: 10
+2025-10-16 16:47:52.174 29083-31665/com.telink.ble.mesh.demo.rels D/MeshController: send mesh message: ModelAppBindMessage opcode: 0x3D80 -- dst: 0x0010 isReliable: true retryCnt: 2 rspMax: 1
+2025-10-16 16:47:52.175 29083-31665/com.telink.ble.mesh.demo.rels D/Networking: post access pdu: 803D100000000113
+2025-10-16 16:47:52.175 29083-31665/com.telink.ble.mesh.demo.rels D/Networking: getTransmitIvIndex : 00000001
+2025-10-16 16:47:52.175 29083-31665/com.telink.ble.mesh.demo.rels D/Networking: upper transport pdu: E5FF4267610270BD984C5930
+2025-10-16 16:47:52.175 29083-31665/com.telink.ble.mesh.demo.rels D/Networking: send unsegmented access message
+2025-10-16 16:47:52.175 29083-31665/com.telink.ble.mesh.demo.rels D/Networking: restart reliable message timeout task, immediate
+2025-10-16 16:47:52.175 29083-31665/com.telink.ble.mesh.demo.rels D/Networking: reliable message timeout:1280
+2025-10-16 16:47:52.176 29083-31665/com.telink.ble.mesh.demo.rels D/Networking: single network pdu: BB:40:C8:EE:FA:91:78:12:9F:A0:AC:E0:C7:3F:2F:EF:5F:40:BD:50:AF:5E:69:5E:0E:79
+2025-10-16 16:47:52.176 29083-31665/com.telink.ble.mesh.demo.rels D/Networking: networking pdu prepared: BB:40:C8:EE:FA:91:78:12:9F:A0:AC:E0:C7:3F:2F:EF:5F:40:BD:50:AF:5E:69:5E:0E:79 busy?-false
+2025-10-16 16:47:52.176 29083-31665/com.telink.ble.mesh.demo.rels D/Networking: networking pdu sending direct 
+2025-10-16 16:47:52.176 29083-31665/com.telink.ble.mesh.demo.rels D/GATT: send unsegment pkt: 00:BB:40:C8:EE:FA:91:78:12:9F:A0:AC:E0:C7:3F:2F:EF:5F:40:BD:50:AF:5E:69:5E:0E:79
+2025-10-16 16:47:52.180 29083-31665/com.telink.ble.mesh.demo.rels D/SIG-Mesh: event handle: com.telink.sig.mesh.EVENT_TYPE_CMD_PROCESSING
+2025-10-16 16:47:52.180 29083-31665/com.telink.ble.mesh.demo.rels D/MeshController: mesh message notification: com.telink.ble.mesh.core.message.config.ModelAppStatusMessage
+2025-10-16 16:47:52.180 29083-31665/com.telink.ble.mesh.demo.rels D/SIG-Mesh: event handle: com.telink.ble.mesh.core.message.config.ModelAppStatusMessage
+2025-10-16 16:47:52.232 29083-31665/com.telink.ble.mesh.demo.rels D/GATT: completed notification data: 00:BB:FD:B3:C8:E4:26:D8:EB:27:F5:E5:B8:0E:1E:75:F3:8E:DF:5C:37:4A:4F:CB:02:71:22:7B
+2025-10-16 16:47:52.233 29083-31665/com.telink.ble.mesh.demo.rels D/Networking: getAcceptedIvIndex : 00000001 ivi: 1
+2025-10-16 16:47:52.235 29083-31665/com.telink.ble.mesh.demo.rels D/Networking: network pdu: NetworkLayerPDU{ivi=1, nid=59, ctl=0, ttl=10, seq=0x1e, src=16, dst=1, transportPDU=007B5FA73BCD5E454ED7479DF397}
+2025-10-16 16:47:52.235 29083-31665/com.telink.ble.mesh.demo.rels D/Networking: parse access message
+2025-10-16 16:47:52.235 29083-31665/com.telink.ble.mesh.demo.rels D/Networking: parse unsegmented access message
+2025-10-16 16:47:52.237 29083-31665/com.telink.ble.mesh.demo.rels D/Networking: access pdu received at 0x0010: opcode -- 0x3E80 params -- 00100000000113
+2025-10-16 16:47:52.238 29083-31665/com.telink.ble.mesh.demo.rels D/Networking: clear network buffer
+2025-10-16 16:47:52.238 29083-31665/com.telink.ble.mesh.demo.rels D/Networking: Reliable Message Complete: 003D80 success?: true
+2025-10-16 16:47:52.239 29083-31665/com.telink.ble.mesh.demo.rels D/SIG-Mesh: event handle: com.telink.sig.mesh.EVENT_TYPE_CMD_COMPLETE
+2025-10-16 16:47:52.240 29083-31665/com.telink.ble.mesh.demo.rels D/MeshController: mesh model message received: src -- 0x0010 | dst -- 0x0001 | opcode -- 0x3E80 | params -- 00100000000113 | action mode -- MODE_BIND
+2025-10-16 16:47:52.240 29083-31665/com.telink.ble.mesh.demo.rels D/Binding: bind next model: 1303 at: 10
+2025-10-16 16:47:52.240 29083-31665/com.telink.ble.mesh.demo.rels D/MeshController: send mesh message: ModelAppBindMessage opcode: 0x3D80 -- dst: 0x0010 isReliable: true retryCnt: 2 rspMax: 1
+2025-10-16 16:47:52.241 29083-31665/com.telink.ble.mesh.demo.rels D/Networking: post access pdu: 803D100000000313
+2025-10-16 16:47:52.241 29083-31665/com.telink.ble.mesh.demo.rels D/Networking: getTransmitIvIndex : 00000001
+2025-10-16 16:47:52.242 29083-31665/com.telink.ble.mesh.demo.rels D/Networking: upper transport pdu: BFC9A8AC4AF6259ADB5B574A
+2025-10-16 16:47:52.242 29083-31665/com.telink.ble.mesh.demo.rels D/Networking: send unsegmented access message
+2025-10-16 16:47:52.242 29083-31665/com.telink.ble.mesh.demo.rels D/Networking: restart reliable message timeout task, immediate
+2025-10-16 16:47:52.242 29083-31665/com.telink.ble.mesh.demo.rels D/Networking: reliable message timeout:1280
+2025-10-16 16:47:52.243 29083-31665/com.telink.ble.mesh.demo.rels D/Networking: single network pdu: BB:61:62:23:EB:15:10:8A:6A:46:9B:FA:7A:D5:AF:3F:F1:7C:90:B5:81:09:5F:46:7B:BC
+2025-10-16 16:47:52.243 29083-31665/com.telink.ble.mesh.demo.rels D/Networking: networking pdu prepared: BB:61:62:23:EB:15:10:8A:6A:46:9B:FA:7A:D5:AF:3F:F1:7C:90:B5:81:09:5F:46:7B:BC busy?-false
+2025-10-16 16:47:52.243 29083-31665/com.telink.ble.mesh.demo.rels D/Networking: networking pdu sending direct 
+2025-10-16 16:47:52.243 29083-31665/com.telink.ble.mesh.demo.rels D/GATT: send unsegment pkt: 00:BB:61:62:23:EB:15:10:8A:6A:46:9B:FA:7A:D5:AF:3F:F1:7C:90:B5:81:09:5F:46:7B:BC
+2025-10-16 16:47:52.247 29083-31665/com.telink.ble.mesh.demo.rels D/SIG-Mesh: event handle: com.telink.sig.mesh.EVENT_TYPE_CMD_PROCESSING
+2025-10-16 16:47:52.247 29083-31665/com.telink.ble.mesh.demo.rels D/MeshController: mesh message notification: com.telink.ble.mesh.core.message.config.ModelAppStatusMessage
+2025-10-16 16:47:52.247 29083-31665/com.telink.ble.mesh.demo.rels D/SIG-Mesh: event handle: com.telink.ble.mesh.core.message.config.ModelAppStatusMessage
+2025-10-16 16:47:52.278 29083-31665/com.telink.ble.mesh.demo.rels D/GATT: completed notification data: 00:BB:CD:71:72:C7:45:3B:67:39:A5:87:DB:83:F7:78:A6:5A:5B:AD:9A:23:2A:15:25:83:B4:E7
+2025-10-16 16:47:52.278 29083-31665/com.telink.ble.mesh.demo.rels D/Networking: getAcceptedIvIndex : 00000001 ivi: 1
+2025-10-16 16:47:52.281 29083-31665/com.telink.ble.mesh.demo.rels D/Networking: network pdu: NetworkLayerPDU{ivi=1, nid=59, ctl=0, ttl=10, seq=0x1f, src=16, dst=1, transportPDU=001B850F169B8E4DC2B415F56EF6}
+2025-10-16 16:47:52.281 29083-31665/com.telink.ble.mesh.demo.rels D/Networking: parse access message
+2025-10-16 16:47:52.281 29083-31665/com.telink.ble.mesh.demo.rels D/Networking: parse unsegmented access message
+2025-10-16 16:47:52.284 29083-31665/com.telink.ble.mesh.demo.rels D/Networking: access pdu received at 0x0010: opcode -- 0x3E80 params -- 00100000000313
+2025-10-16 16:47:52.284 29083-31665/com.telink.ble.mesh.demo.rels D/Networking: clear network buffer
+2025-10-16 16:47:52.284 29083-31665/com.telink.ble.mesh.demo.rels D/Networking: Reliable Message Complete: 003D80 success?: true
+2025-10-16 16:47:52.285 29083-31665/com.telink.ble.mesh.demo.rels D/SIG-Mesh: event handle: com.telink.sig.mesh.EVENT_TYPE_CMD_COMPLETE
+2025-10-16 16:47:52.285 29083-31665/com.telink.ble.mesh.demo.rels D/MeshController: mesh model message received: src -- 0x0010 | dst -- 0x0001 | opcode -- 0x3E80 | params -- 00100000000313 | action mode -- MODE_BIND
+2025-10-16 16:47:52.286 29083-31665/com.telink.ble.mesh.demo.rels D/Binding: bind next model: 1304 at: 10
+2025-10-16 16:47:52.287 29083-31665/com.telink.ble.mesh.demo.rels D/MeshController: send mesh message: ModelAppBindMessage opcode: 0x3D80 -- dst: 0x0010 isReliable: true retryCnt: 2 rspMax: 1
+2025-10-16 16:47:52.287 29083-31665/com.telink.ble.mesh.demo.rels D/Networking: post access pdu: 803D100000000413
+2025-10-16 16:47:52.287 29083-31665/com.telink.ble.mesh.demo.rels D/Networking: getTransmitIvIndex : 00000001
+2025-10-16 16:47:52.287 29083-31665/com.telink.ble.mesh.demo.rels D/Networking: upper transport pdu: D4AEA38237996BBC9FD0A87D
+2025-10-16 16:47:52.288 29083-31665/com.telink.ble.mesh.demo.rels D/Networking: send unsegmented access message
+2025-10-16 16:47:52.288 29083-31665/com.telink.ble.mesh.demo.rels D/Networking: restart reliable message timeout task, immediate
+2025-10-16 16:47:52.288 29083-31665/com.telink.ble.mesh.demo.rels D/Networking: reliable message timeout:1280
+2025-10-16 16:47:52.289 29083-31665/com.telink.ble.mesh.demo.rels D/Networking: single network pdu: BB:94:FC:84:03:D4:04:BB:7C:A4:FD:77:CF:98:3B:6B:AA:D7:35:43:82:41:A7:0D:6C:84
+2025-10-16 16:47:52.289 29083-31665/com.telink.ble.mesh.demo.rels D/Networking: networking pdu prepared: BB:94:FC:84:03:D4:04:BB:7C:A4:FD:77:CF:98:3B:6B:AA:D7:35:43:82:41:A7:0D:6C:84 busy?-false
+2025-10-16 16:47:52.289 29083-31665/com.telink.ble.mesh.demo.rels D/Networking: networking pdu sending direct 
+2025-10-16 16:47:52.289 29083-31665/com.telink.ble.mesh.demo.rels D/GATT: send unsegment pkt: 00:BB:94:FC:84:03:D4:04:BB:7C:A4:FD:77:CF:98:3B:6B:AA:D7:35:43:82:41:A7:0D:6C:84
+2025-10-16 16:47:52.293 29083-31665/com.telink.ble.mesh.demo.rels D/SIG-Mesh: event handle: com.telink.sig.mesh.EVENT_TYPE_CMD_PROCESSING
+2025-10-16 16:47:52.293 29083-31665/com.telink.ble.mesh.demo.rels D/MeshController: mesh message notification: com.telink.ble.mesh.core.message.config.ModelAppStatusMessage
+2025-10-16 16:47:52.293 29083-31665/com.telink.ble.mesh.demo.rels D/SIG-Mesh: event handle: com.telink.ble.mesh.core.message.config.ModelAppStatusMessage
+2025-10-16 16:47:52.324 29083-31665/com.telink.ble.mesh.demo.rels D/GATT: completed notification data: 00:BB:0A:A2:86:AC:45:FF:CE:E6:87:B8:61:F1:A0:D8:F4:05:9E:CF:91:07:D4:1E:4B:F8:17:0A
+2025-10-16 16:47:52.325 29083-31665/com.telink.ble.mesh.demo.rels D/Networking: getAcceptedIvIndex : 00000001 ivi: 1
+2025-10-16 16:47:52.327 29083-31665/com.telink.ble.mesh.demo.rels D/Networking: network pdu: NetworkLayerPDU{ivi=1, nid=59, ctl=0, ttl=10, seq=0x20, src=16, dst=1, transportPDU=00DE07A9F063171D99C4B39B1FFF}
+2025-10-16 16:47:52.327 29083-31665/com.telink.ble.mesh.demo.rels D/Networking: parse access message
+2025-10-16 16:47:52.327 29083-31665/com.telink.ble.mesh.demo.rels D/Networking: parse unsegmented access message
+2025-10-16 16:47:52.328 29083-31665/com.telink.ble.mesh.demo.rels D/Networking: access pdu received at 0x0010: opcode -- 0x3E80 params -- 00100000000413
+2025-10-16 16:47:52.329 29083-31665/com.telink.ble.mesh.demo.rels D/Networking: clear network buffer
+2025-10-16 16:47:52.329 29083-31665/com.telink.ble.mesh.demo.rels D/Networking: Reliable Message Complete: 003D80 success?: true
+2025-10-16 16:47:52.329 29083-31665/com.telink.ble.mesh.demo.rels D/SIG-Mesh: event handle: com.telink.sig.mesh.EVENT_TYPE_CMD_COMPLETE
+2025-10-16 16:47:52.331 29083-31665/com.telink.ble.mesh.demo.rels D/MeshController: mesh model message received: src -- 0x0010 | dst -- 0x0001 | opcode -- 0x3E80 | params -- 00100000000413 | action mode -- MODE_BIND
+2025-10-16 16:47:52.331 29083-31665/com.telink.ble.mesh.demo.rels D/Binding: bind next model: 211 at: 10
+2025-10-16 16:47:52.332 29083-31665/com.telink.ble.mesh.demo.rels D/MeshController: send mesh message: ModelAppBindMessage opcode: 0x3D80 -- dst: 0x0010 isReliable: true retryCnt: 2 rspMax: 1
+2025-10-16 16:47:52.333 29083-31665/com.telink.ble.mesh.demo.rels D/Networking: post access pdu: 803D1000000011020000
+2025-10-16 16:47:52.333 29083-31665/com.telink.ble.mesh.demo.rels D/Networking: getTransmitIvIndex : 00000001
+2025-10-16 16:47:52.334 29083-31665/com.telink.ble.mesh.demo.rels D/Networking: upper transport pdu: 7F2B5DF1C486EAD6F70B9A768B48
+2025-10-16 16:47:52.334 29083-31665/com.telink.ble.mesh.demo.rels D/Networking: send unsegmented access message
+2025-10-16 16:47:52.334 29083-31665/com.telink.ble.mesh.demo.rels D/Networking: restart reliable message timeout task, immediate
+2025-10-16 16:47:52.335 29083-31665/com.telink.ble.mesh.demo.rels D/Networking: reliable message timeout:1280
+2025-10-16 16:47:52.336 29083-31665/com.telink.ble.mesh.demo.rels D/Networking: single network pdu: BB:07:7D:37:11:59:0B:CB:39:2D:87:AF:A4:58:B4:F9:22:66:E0:32:66:E3:08:84:75:BA:54:45
+2025-10-16 16:47:52.336 29083-31665/com.telink.ble.mesh.demo.rels D/Networking: networking pdu prepared: BB:07:7D:37:11:59:0B:CB:39:2D:87:AF:A4:58:B4:F9:22:66:E0:32:66:E3:08:84:75:BA:54:45 busy?-false
+2025-10-16 16:47:52.336 29083-31665/com.telink.ble.mesh.demo.rels D/Networking: networking pdu sending direct 
+2025-10-16 16:47:52.336 29083-31665/com.telink.ble.mesh.demo.rels D/GATT: send unsegment pkt: 00:BB:07:7D:37:11:59:0B:CB:39:2D:87:AF:A4:58:B4:F9:22:66:E0:32:66:E3:08:84:75:BA:54:45
+2025-10-16 16:47:52.340 29083-31665/com.telink.ble.mesh.demo.rels D/SIG-Mesh: event handle: com.telink.sig.mesh.EVENT_TYPE_CMD_PROCESSING
+2025-10-16 16:47:52.340 29083-31665/com.telink.ble.mesh.demo.rels D/MeshController: mesh message notification: com.telink.ble.mesh.core.message.config.ModelAppStatusMessage
+2025-10-16 16:47:52.340 29083-31665/com.telink.ble.mesh.demo.rels D/SIG-Mesh: event handle: com.telink.ble.mesh.core.message.config.ModelAppStatusMessage
+2025-10-16 16:47:52.390 29083-31668/com.telink.ble.mesh.demo.rels D/GATT: completed notification data: 00:BB:C6:F6:C5:AC:70:1C:35:B1:F8:D1:D6:A2:DE:CA:10:08:46:78:CD:29:04:ED:5F:3F:0A:B8:75:BC
+2025-10-16 16:47:52.391 29083-31668/com.telink.ble.mesh.demo.rels D/Networking: getAcceptedIvIndex : 00000001 ivi: 1
+2025-10-16 16:47:52.393 29083-31668/com.telink.ble.mesh.demo.rels D/Networking: network pdu: NetworkLayerPDU{ivi=1, nid=59, ctl=0, ttl=10, seq=0x21, src=16, dst=1, transportPDU=00DFBC6E534A3923E139355A0C7DE802}
+2025-10-16 16:47:52.393 29083-31668/com.telink.ble.mesh.demo.rels D/Networking: parse access message
+2025-10-16 16:47:52.396 29083-31668/com.telink.ble.mesh.demo.rels D/Networking: parse unsegmented access message
+2025-10-16 16:47:52.399 29083-31668/com.telink.ble.mesh.demo.rels D/Networking: access pdu received at 0x0010: opcode -- 0x3E80 params -- 001000000011020000
+2025-10-16 16:47:52.399 29083-31668/com.telink.ble.mesh.demo.rels D/Networking: clear network buffer
+2025-10-16 16:47:52.400 29083-31668/com.telink.ble.mesh.demo.rels D/Networking: Reliable Message Complete: 003D80 success?: true
+2025-10-16 16:47:52.401 29083-31668/com.telink.ble.mesh.demo.rels D/SIG-Mesh: event handle: com.telink.sig.mesh.EVENT_TYPE_CMD_COMPLETE
+2025-10-16 16:47:52.402 29083-31668/com.telink.ble.mesh.demo.rels D/MeshController: mesh model message received: src -- 0x0010 | dst -- 0x0001 | opcode -- 0x3E80 | params -- 001000000011020000 | action mode -- MODE_BIND
+2025-10-16 16:47:52.402 29083-31668/com.telink.ble.mesh.demo.rels D/Binding: bind next model: 1002 at: 11
+2025-10-16 16:47:52.403 29083-31668/com.telink.ble.mesh.demo.rels D/MeshController: send mesh message: ModelAppBindMessage opcode: 0x3D80 -- dst: 0x0010 isReliable: true retryCnt: 2 rspMax: 1
+2025-10-16 16:47:52.404 29083-31668/com.telink.ble.mesh.demo.rels D/Networking: post access pdu: 803D110000000210
+2025-10-16 16:47:52.404 29083-31668/com.telink.ble.mesh.demo.rels D/Networking: getTransmitIvIndex : 00000001
+2025-10-16 16:47:52.405 29083-31668/com.telink.ble.mesh.demo.rels D/Networking: upper transport pdu: 7A056FBBF8C95835E0B8D4BA
+2025-10-16 16:47:52.405 29083-31668/com.telink.ble.mesh.demo.rels D/Networking: send unsegmented access message
+2025-10-16 16:47:52.405 29083-31668/com.telink.ble.mesh.demo.rels D/Networking: restart reliable message timeout task, immediate
+2025-10-16 16:47:52.405 29083-31668/com.telink.ble.mesh.demo.rels D/Networking: reliable message timeout:1280
+2025-10-16 16:47:52.408 29083-31668/com.telink.ble.mesh.demo.rels D/Networking: single network pdu: BB:04:D1:9E:9C:53:63:79:87:FE:23:FF:17:7A:94:2C:E4:2A:ED:52:22:9F:CD:E3:A0:C1
+2025-10-16 16:47:52.408 29083-31668/com.telink.ble.mesh.demo.rels D/Networking: networking pdu prepared: BB:04:D1:9E:9C:53:63:79:87:FE:23:FF:17:7A:94:2C:E4:2A:ED:52:22:9F:CD:E3:A0:C1 busy?-false
+2025-10-16 16:47:52.409 29083-31668/com.telink.ble.mesh.demo.rels D/Networking: networking pdu sending direct 
+2025-10-16 16:47:52.409 29083-31668/com.telink.ble.mesh.demo.rels D/GATT: send unsegment pkt: 00:BB:04:D1:9E:9C:53:63:79:87:FE:23:FF:17:7A:94:2C:E4:2A:ED:52:22:9F:CD:E3:A0:C1
+2025-10-16 16:47:52.414 29083-31668/com.telink.ble.mesh.demo.rels D/SIG-Mesh: event handle: com.telink.sig.mesh.EVENT_TYPE_CMD_PROCESSING
+2025-10-16 16:47:52.414 29083-31668/com.telink.ble.mesh.demo.rels D/MeshController: mesh message notification: com.telink.ble.mesh.core.message.config.ModelAppStatusMessage
+2025-10-16 16:47:52.414 29083-31668/com.telink.ble.mesh.demo.rels D/SIG-Mesh: event handle: com.telink.ble.mesh.core.message.config.ModelAppStatusMessage
+2025-10-16 16:47:52.458 29083-31668/com.telink.ble.mesh.demo.rels D/GATT: completed notification data: 00:BB:CB:A0:71:A9:09:C3:F6:6A:7D:F2:BD:14:9E:6A:C8:A8:92:3E:45:8F:2C:14:28:0C:B6:F9
+2025-10-16 16:47:52.459 29083-31668/com.telink.ble.mesh.demo.rels D/Networking: getAcceptedIvIndex : 00000001 ivi: 1
+2025-10-16 16:47:52.462 29083-31668/com.telink.ble.mesh.demo.rels D/Networking: network pdu: NetworkLayerPDU{ivi=1, nid=59, ctl=0, ttl=10, seq=0x22, src=16, dst=1, transportPDU=0063B6BF954F0E1FD988B0F86284}
+2025-10-16 16:47:52.462 29083-31668/com.telink.ble.mesh.demo.rels D/Networking: parse access message
+2025-10-16 16:47:52.462 29083-31668/com.telink.ble.mesh.demo.rels D/Networking: parse unsegmented access message
+2025-10-16 16:47:52.464 29083-31668/com.telink.ble.mesh.demo.rels D/Networking: access pdu received at 0x0010: opcode -- 0x3E80 params -- 00110000000210
+2025-10-16 16:47:52.464 29083-31668/com.telink.ble.mesh.demo.rels D/Networking: clear network buffer
+2025-10-16 16:47:52.464 29083-31668/com.telink.ble.mesh.demo.rels D/Networking: Reliable Message Complete: 003D80 success?: true
+2025-10-16 16:47:52.465 29083-31668/com.telink.ble.mesh.demo.rels D/SIG-Mesh: event handle: com.telink.sig.mesh.EVENT_TYPE_CMD_COMPLETE
+2025-10-16 16:47:52.467 29083-31668/com.telink.ble.mesh.demo.rels D/MeshController: mesh model message received: src -- 0x0010 | dst -- 0x0001 | opcode -- 0x3E80 | params -- 00110000000210 | action mode -- MODE_BIND
+2025-10-16 16:47:52.467 29083-31668/com.telink.ble.mesh.demo.rels D/Binding: bind next model: 1306 at: 11
+2025-10-16 16:47:52.467 29083-31668/com.telink.ble.mesh.demo.rels D/MeshController: send mesh message: ModelAppBindMessage opcode: 0x3D80 -- dst: 0x0010 isReliable: true retryCnt: 2 rspMax: 1
+2025-10-16 16:47:52.468 29083-31668/com.telink.ble.mesh.demo.rels D/Networking: post access pdu: 803D110000000613
+2025-10-16 16:47:52.468 29083-31668/com.telink.ble.mesh.demo.rels D/Networking: getTransmitIvIndex : 00000001
+2025-10-16 16:47:52.468 29083-31668/com.telink.ble.mesh.demo.rels D/Networking: upper transport pdu: 2B2278977A08A4DA2DE23EAC
+2025-10-16 16:47:52.468 29083-31668/com.telink.ble.mesh.demo.rels D/Networking: send unsegmented access message
+2025-10-16 16:47:52.468 29083-31668/com.telink.ble.mesh.demo.rels D/Networking: restart reliable message timeout task, immediate
+2025-10-16 16:47:52.468 29083-31668/com.telink.ble.mesh.demo.rels D/Networking: reliable message timeout:1280
+2025-10-16 16:47:52.469 29083-31668/com.telink.ble.mesh.demo.rels D/Networking: single network pdu: BB:8D:2B:5A:C9:60:FF:66:F1:4E:13:B5:F7:A1:35:79:AC:BA:2B:6C:A8:AA:0B:BD:E9:83
+2025-10-16 16:47:52.469 29083-31668/com.telink.ble.mesh.demo.rels D/Networking: networking pdu prepared: BB:8D:2B:5A:C9:60:FF:66:F1:4E:13:B5:F7:A1:35:79:AC:BA:2B:6C:A8:AA:0B:BD:E9:83 busy?-false
+2025-10-16 16:47:52.469 29083-31668/com.telink.ble.mesh.demo.rels D/Networking: networking pdu sending direct 
+2025-10-16 16:47:52.469 29083-31668/com.telink.ble.mesh.demo.rels D/GATT: send unsegment pkt: 00:BB:8D:2B:5A:C9:60:FF:66:F1:4E:13:B5:F7:A1:35:79:AC:BA:2B:6C:A8:AA:0B:BD:E9:83
+2025-10-16 16:47:52.474 29083-31668/com.telink.ble.mesh.demo.rels D/SIG-Mesh: event handle: com.telink.sig.mesh.EVENT_TYPE_CMD_PROCESSING
+2025-10-16 16:47:52.474 29083-31668/com.telink.ble.mesh.demo.rels D/MeshController: mesh message notification: com.telink.ble.mesh.core.message.config.ModelAppStatusMessage
+2025-10-16 16:47:52.474 29083-31668/com.telink.ble.mesh.demo.rels D/SIG-Mesh: event handle: com.telink.ble.mesh.core.message.config.ModelAppStatusMessage
+2025-10-16 16:47:52.526 29083-31668/com.telink.ble.mesh.demo.rels D/GATT: completed notification data: 00:BB:0A:7A:38:AC:A3:60:D1:10:88:8D:B8:D8:59:57:A3:3F:4A:50:B3:FE:EB:40:1E:59:7A:AF
+2025-10-16 16:47:52.529 29083-31668/com.telink.ble.mesh.demo.rels D/Networking: getAcceptedIvIndex : 00000001 ivi: 1
+2025-10-16 16:47:52.532 29083-31668/com.telink.ble.mesh.demo.rels D/Networking: network pdu: NetworkLayerPDU{ivi=1, nid=59, ctl=0, ttl=10, seq=0x23, src=16, dst=1, transportPDU=00D4DBCDE355025D72F9EA7B90A7}
+2025-10-16 16:47:52.532 29083-31668/com.telink.ble.mesh.demo.rels D/Networking: parse access message
+2025-10-16 16:47:52.532 29083-31668/com.telink.ble.mesh.demo.rels D/Networking: parse unsegmented access message
+2025-10-16 16:47:52.534 29083-31668/com.telink.ble.mesh.demo.rels D/Networking: access pdu received at 0x0010: opcode -- 0x3E80 params -- 00110000000613
+2025-10-16 16:47:52.534 29083-31668/com.telink.ble.mesh.demo.rels D/Networking: clear network buffer
+2025-10-16 16:47:52.535 29083-31668/com.telink.ble.mesh.demo.rels D/Networking: Reliable Message Complete: 003D80 success?: true
+2025-10-16 16:47:52.535 29083-31668/com.telink.ble.mesh.demo.rels D/SIG-Mesh: event handle: com.telink.sig.mesh.EVENT_TYPE_CMD_COMPLETE
+2025-10-16 16:47:52.536 29083-31668/com.telink.ble.mesh.demo.rels D/MeshController: mesh model message received: src -- 0x0010 | dst -- 0x0001 | opcode -- 0x3E80 | params -- 00110000000613 | action mode -- MODE_BIND
+2025-10-16 16:47:52.536 29083-31668/com.telink.ble.mesh.demo.rels D/Binding: bind next model: 1000 at: 12
+2025-10-16 16:47:52.537 29083-31668/com.telink.ble.mesh.demo.rels D/MeshController: send mesh message: ModelAppBindMessage opcode: 0x3D80 -- dst: 0x0010 isReliable: true retryCnt: 2 rspMax: 1
+2025-10-16 16:47:52.538 29083-31668/com.telink.ble.mesh.demo.rels D/Networking: post access pdu: 803D120000000010
+2025-10-16 16:47:52.538 29083-31668/com.telink.ble.mesh.demo.rels D/Networking: getTransmitIvIndex : 00000001
+2025-10-16 16:47:52.539 29083-31668/com.telink.ble.mesh.demo.rels D/Networking: upper transport pdu: 9C5932E9E49808D93648094E
+2025-10-16 16:47:52.539 29083-31668/com.telink.ble.mesh.demo.rels D/Networking: send unsegmented access message
+2025-10-16 16:47:52.539 29083-31668/com.telink.ble.mesh.demo.rels D/Networking: restart reliable message timeout task, immediate
+2025-10-16 16:47:52.539 29083-31668/com.telink.ble.mesh.demo.rels D/Networking: reliable message timeout:1280
+2025-10-16 16:47:52.540 29083-31668/com.telink.ble.mesh.demo.rels D/Networking: single network pdu: BB:B2:EC:7D:02:D9:68:C7:86:13:2A:97:0C:DB:45:9F:5F:46:2F:72:8C:21:92:F9:BF:8E
+2025-10-16 16:47:52.540 29083-31668/com.telink.ble.mesh.demo.rels D/Networking: networking pdu prepared: BB:B2:EC:7D:02:D9:68:C7:86:13:2A:97:0C:DB:45:9F:5F:46:2F:72:8C:21:92:F9:BF:8E busy?-false
+2025-10-16 16:47:52.540 29083-31668/com.telink.ble.mesh.demo.rels D/Networking: networking pdu sending direct 
+2025-10-16 16:47:52.540 29083-31668/com.telink.ble.mesh.demo.rels D/GATT: send unsegment pkt: 00:BB:B2:EC:7D:02:D9:68:C7:86:13:2A:97:0C:DB:45:9F:5F:46:2F:72:8C:21:92:F9:BF:8E
+2025-10-16 16:47:52.546 29083-31668/com.telink.ble.mesh.demo.rels D/SIG-Mesh: event handle: com.telink.sig.mesh.EVENT_TYPE_CMD_PROCESSING
+2025-10-16 16:47:52.546 29083-31668/com.telink.ble.mesh.demo.rels D/MeshController: mesh message notification: com.telink.ble.mesh.core.message.config.ModelAppStatusMessage
+2025-10-16 16:47:52.546 29083-31668/com.telink.ble.mesh.demo.rels D/SIG-Mesh: event handle: com.telink.ble.mesh.core.message.config.ModelAppStatusMessage
+2025-10-16 16:47:52.616 29083-31668/com.telink.ble.mesh.demo.rels D/GATT: completed notification data: 00:BB:B4:C6:B8:F0:EF:98:61:86:9C:3A:D1:B2:CF:ED:69:E4:A0:77:C1:16:60:66:C0:FE:7A:CB
+2025-10-16 16:47:52.618 29083-31668/com.telink.ble.mesh.demo.rels D/Networking: getAcceptedIvIndex : 00000001 ivi: 1
+2025-10-16 16:47:52.619 29083-31668/com.telink.ble.mesh.demo.rels D/Networking: network pdu: NetworkLayerPDU{ivi=1, nid=59, ctl=0, ttl=10, seq=0x24, src=16, dst=1, transportPDU=000B639F6F86D5AD27B71EFE2B27}
+2025-10-16 16:47:52.619 29083-31668/com.telink.ble.mesh.demo.rels D/Networking: parse access message
+2025-10-16 16:47:52.619 29083-31668/com.telink.ble.mesh.demo.rels D/Networking: parse unsegmented access message
+2025-10-16 16:47:52.619 29083-31668/com.telink.ble.mesh.demo.rels D/Networking: access pdu received at 0x0010: opcode -- 0x3E80 params -- 00120000000010
+2025-10-16 16:47:52.619 29083-31668/com.telink.ble.mesh.demo.rels D/Networking: clear network buffer
+2025-10-16 16:47:52.620 29083-31668/com.telink.ble.mesh.demo.rels D/Networking: Reliable Message Complete: 003D80 success?: true
+2025-10-16 16:47:52.620 29083-31668/com.telink.ble.mesh.demo.rels D/SIG-Mesh: event handle: com.telink.sig.mesh.EVENT_TYPE_CMD_COMPLETE
+2025-10-16 16:47:52.621 29083-31668/com.telink.ble.mesh.demo.rels D/MeshController: mesh model message received: src -- 0x0010 | dst -- 0x0001 | opcode -- 0x3E80 | params -- 00120000000010 | action mode -- MODE_BIND
+2025-10-16 16:47:52.621 29083-31668/com.telink.ble.mesh.demo.rels D/Binding: bind next model: 130f at: 12
+2025-10-16 16:47:52.621 29083-31668/com.telink.ble.mesh.demo.rels D/MeshController: send mesh message: ModelAppBindMessage opcode: 0x3D80 -- dst: 0x0010 isReliable: true retryCnt: 2 rspMax: 1
+2025-10-16 16:47:52.621 29083-31668/com.telink.ble.mesh.demo.rels D/Networking: post access pdu: 803D120000000F13
+2025-10-16 16:47:52.622 29083-31668/com.telink.ble.mesh.demo.rels D/Networking: getTransmitIvIndex : 00000001
+2025-10-16 16:47:52.622 29083-31668/com.telink.ble.mesh.demo.rels D/Networking: upper transport pdu: 09400AC59138E202C3CD726D
+2025-10-16 16:47:52.622 29083-31668/com.telink.ble.mesh.demo.rels D/Networking: send unsegmented access message
+2025-10-16 16:47:52.622 29083-31668/com.telink.ble.mesh.demo.rels D/Networking: restart reliable message timeout task, immediate
+2025-10-16 16:47:52.622 29083-31668/com.telink.ble.mesh.demo.rels D/Networking: reliable message timeout:1280
+2025-10-16 16:47:52.623 29083-31668/com.telink.ble.mesh.demo.rels D/Networking: single network pdu: BB:E6:8F:A0:35:C1:B9:65:4D:DC:07:CA:83:4A:C3:51:2E:B6:F6:55:97:76:DF:E5:58:5E
+2025-10-16 16:47:52.623 29083-31668/com.telink.ble.mesh.demo.rels D/Networking: networking pdu prepared: BB:E6:8F:A0:35:C1:B9:65:4D:DC:07:CA:83:4A:C3:51:2E:B6:F6:55:97:76:DF:E5:58:5E busy?-false
+2025-10-16 16:47:52.623 29083-31668/com.telink.ble.mesh.demo.rels D/Networking: networking pdu sending direct 
+2025-10-16 16:47:52.623 29083-31668/com.telink.ble.mesh.demo.rels D/GATT: send unsegment pkt: 00:BB:E6:8F:A0:35:C1:B9:65:4D:DC:07:CA:83:4A:C3:51:2E:B6:F6:55:97:76:DF:E5:58:5E
+2025-10-16 16:47:52.625 29083-31668/com.telink.ble.mesh.demo.rels D/SIG-Mesh: event handle: com.telink.sig.mesh.EVENT_TYPE_CMD_PROCESSING
+2025-10-16 16:47:52.625 29083-31668/com.telink.ble.mesh.demo.rels D/MeshController: mesh message notification: com.telink.ble.mesh.core.message.config.ModelAppStatusMessage
+2025-10-16 16:47:52.625 29083-31668/com.telink.ble.mesh.demo.rels D/SIG-Mesh: event handle: com.telink.ble.mesh.core.message.config.ModelAppStatusMessage
+2025-10-16 16:47:52.660 29083-31668/com.telink.ble.mesh.demo.rels D/GATT: completed notification data: 00:BB:93:24:B3:87:D5:C0:B2:3E:3A:17:55:3D:69:2D:32:A2:7E:F1:4B:05:E7:AB:D4:3F:9C:C1
+2025-10-16 16:47:52.660 29083-31668/com.telink.ble.mesh.demo.rels D/Networking: getAcceptedIvIndex : 00000001 ivi: 1
+2025-10-16 16:47:52.662 29083-31668/com.telink.ble.mesh.demo.rels D/Networking: network pdu: NetworkLayerPDU{ivi=1, nid=59, ctl=0, ttl=10, seq=0x25, src=16, dst=1, transportPDU=005637BCA01AAD91D1519E78BC92}
+2025-10-16 16:47:52.662 29083-31668/com.telink.ble.mesh.demo.rels D/Networking: parse access message
+2025-10-16 16:47:52.662 29083-31668/com.telink.ble.mesh.demo.rels D/Networking: parse unsegmented access message
+2025-10-16 16:47:52.664 29083-31668/com.telink.ble.mesh.demo.rels D/Networking: access pdu received at 0x0010: opcode -- 0x3E80 params -- 00120000000F13
+2025-10-16 16:47:52.664 29083-31668/com.telink.ble.mesh.demo.rels D/Networking: clear network buffer
+2025-10-16 16:47:52.666 29083-31668/com.telink.ble.mesh.demo.rels D/Networking: Reliable Message Complete: 003D80 success?: true
+2025-10-16 16:47:52.666 29083-31668/com.telink.ble.mesh.demo.rels D/SIG-Mesh: event handle: com.telink.sig.mesh.EVENT_TYPE_CMD_COMPLETE
+2025-10-16 16:47:52.669 29083-31668/com.telink.ble.mesh.demo.rels D/MeshController: mesh model message received: src -- 0x0010 | dst -- 0x0001 | opcode -- 0x3E80 | params -- 00120000000F13 | action mode -- MODE_BIND
+2025-10-16 16:47:52.669 29083-31668/com.telink.ble.mesh.demo.rels D/Binding: bind next model: 1310 at: 12
+2025-10-16 16:47:52.670 29083-31668/com.telink.ble.mesh.demo.rels D/MeshController: send mesh message: ModelAppBindMessage opcode: 0x3D80 -- dst: 0x0010 isReliable: true retryCnt: 2 rspMax: 1
+2025-10-16 16:47:52.670 29083-31668/com.telink.ble.mesh.demo.rels D/Networking: post access pdu: 803D120000001013
+2025-10-16 16:47:52.672 29083-31668/com.telink.ble.mesh.demo.rels D/Networking: getTransmitIvIndex : 00000001
+2025-10-16 16:47:52.672 29083-31668/com.telink.ble.mesh.demo.rels D/Networking: upper transport pdu: DF32E7F23342B8A218D1B008
+2025-10-16 16:47:52.672 29083-31668/com.telink.ble.mesh.demo.rels D/Networking: send unsegmented access message
+2025-10-16 16:47:52.672 29083-31668/com.telink.ble.mesh.demo.rels D/Networking: restart reliable message timeout task, immediate
+2025-10-16 16:47:52.673 29083-31668/com.telink.ble.mesh.demo.rels D/Networking: reliable message timeout:1280
+2025-10-16 16:47:52.673 29083-31668/com.telink.ble.mesh.demo.rels D/Networking: single network pdu: BB:A9:91:43:C5:9A:6D:5E:D7:80:F9:A0:4D:D9:B7:BE:8F:6F:44:4E:7D:E2:30:7C:F2:10
+2025-10-16 16:47:52.673 29083-31668/com.telink.ble.mesh.demo.rels D/Networking: networking pdu prepared: BB:A9:91:43:C5:9A:6D:5E:D7:80:F9:A0:4D:D9:B7:BE:8F:6F:44:4E:7D:E2:30:7C:F2:10 busy?-false
+2025-10-16 16:47:52.674 29083-31668/com.telink.ble.mesh.demo.rels D/Networking: networking pdu sending direct 
+2025-10-16 16:47:52.674 29083-31668/com.telink.ble.mesh.demo.rels D/GATT: send unsegment pkt: 00:BB:A9:91:43:C5:9A:6D:5E:D7:80:F9:A0:4D:D9:B7:BE:8F:6F:44:4E:7D:E2:30:7C:F2:10
+2025-10-16 16:47:52.678 29083-31668/com.telink.ble.mesh.demo.rels D/SIG-Mesh: event handle: com.telink.sig.mesh.EVENT_TYPE_CMD_PROCESSING
+2025-10-16 16:47:52.679 29083-31668/com.telink.ble.mesh.demo.rels D/MeshController: mesh message notification: com.telink.ble.mesh.core.message.config.ModelAppStatusMessage
+2025-10-16 16:47:52.679 29083-31668/com.telink.ble.mesh.demo.rels D/SIG-Mesh: event handle: com.telink.ble.mesh.core.message.config.ModelAppStatusMessage
+2025-10-16 16:47:52.727 29083-31668/com.telink.ble.mesh.demo.rels D/GATT: completed notification data: 00:BB:D7:FB:17:FC:5E:9F:E5:8F:65:7F:77:15:35:F5:33:2B:D5:84:4E:BC:FA:4A:4D:9A:A0:19
+2025-10-16 16:47:52.727 29083-31668/com.telink.ble.mesh.demo.rels D/Networking: getAcceptedIvIndex : 00000001 ivi: 1
+2025-10-16 16:47:52.728 29083-31668/com.telink.ble.mesh.demo.rels D/Networking: network pdu: NetworkLayerPDU{ivi=1, nid=59, ctl=0, ttl=10, seq=0x26, src=16, dst=1, transportPDU=00CAF4B947818BD86C08A46CB99D}
+2025-10-16 16:47:52.728 29083-31668/com.telink.ble.mesh.demo.rels D/Networking: parse access message
+2025-10-16 16:47:52.728 29083-31668/com.telink.ble.mesh.demo.rels D/Networking: parse unsegmented access message
+2025-10-16 16:47:52.729 29083-31668/com.telink.ble.mesh.demo.rels D/Networking: access pdu received at 0x0010: opcode -- 0x3E80 params -- 00120000001013
+2025-10-16 16:47:52.729 29083-31668/com.telink.ble.mesh.demo.rels D/Networking: clear network buffer
+2025-10-16 16:47:52.729 29083-31668/com.telink.ble.mesh.demo.rels D/Networking: Reliable Message Complete: 003D80 success?: true
+2025-10-16 16:47:52.729 29083-31668/com.telink.ble.mesh.demo.rels D/SIG-Mesh: event handle: com.telink.sig.mesh.EVENT_TYPE_CMD_COMPLETE
+2025-10-16 16:47:52.730 29083-31668/com.telink.ble.mesh.demo.rels D/MeshController: mesh model message received: src -- 0x0010 | dst -- 0x0001 | opcode -- 0x3E80 | params -- 00120000001013 | action mode -- MODE_BIND
+2025-10-16 16:47:52.730 29083-31668/com.telink.ble.mesh.demo.rels D/MeshController: access state changed: 1 -- binding success
+2025-10-16 16:47:52.730 29083-31668/com.telink.ble.mesh.demo.rels D/MeshController: ---idle--- false
+2025-10-16 16:47:52.731 29083-31668/com.telink.ble.mesh.demo.rels D/SIG-Mesh: event handle: com.telink.ble.mesh.EVENT_TYPE_BIND_SUCCESS
+2025-10-16 16:47:52.731 29083-31668/com.telink.ble.mesh.demo.rels D/MeshController: mesh message notification: com.telink.ble.mesh.core.message.config.ModelAppStatusMessage
+2025-10-16 16:47:52.731 29083-31668/com.telink.ble.mesh.demo.rels D/SIG-Mesh: event handle: com.telink.ble.mesh.core.message.config.ModelAppStatusMessage
+2025-10-16 16:47:52.732 29083-29083/com.telink.ble.mesh.demo.rels D/SIG-Mesh: updateNodeInfo - 10
+2025-10-16 16:47:52.736 29083-29083/com.telink.ble.mesh.demo.rels D/SIG-Mesh: enableUI scanning-FALSE enable-FALSE
+2025-10-16 16:47:52.736 29083-29083/com.telink.ble.mesh.demo.rels D/MeshController: ---idle--- false
+2025-10-16 16:47:52.737 29083-29083/com.telink.ble.mesh.demo.rels W/SIG-Mesh: mode not changed : IDLE
+2025-10-16 16:47:52.738 29083-29083/com.telink.ble.mesh.demo.rels D/SIG-Mesh: no waiting device found
+2025-10-16 16:47:52.739 29083-29083/com.telink.ble.mesh.demo.rels D/SIG-Mesh: enableUI scanning-FALSE enable-TRUE
+2025-10-16 16:47:52.739 29083-29083/com.telink.ble.mesh.demo.rels D/MeshController: ---idle--- false
+2025-10-16 16:47:52.739 29083-29083/com.telink.ble.mesh.demo.rels W/SIG-Mesh: mode not changed : IDLE
+2025-10-16 16:47:52.756 29083-29083/com.telink.ble.mesh.demo.rels I/Quality: Skipped: false 1 cost 12.198534 refreshRate 11058673 processName com.telink.ble.mesh.demo.rels
+2025-10-16 16:47:52.777 29083-29083/com.telink.ble.mesh.demo.rels I/Quality: Skipped: false 1 cost 11.790159 refreshRate 11058293 processName com.telink.ble.mesh.demo.rels
+2025-10-16 16:47:58.340 29083-29083/com.telink.ble.mesh.demo.rels D/Activity: com.telink.ble.mesh.ui.DeviceProvisionActivity@fcb6b27onBackPressed!
+2025-10-16 16:47:58.352 29083-29083/com.telink.ble.mesh.demo.rels W/SIG-Mesh: DeviceProvisionActivity finish
+2025-10-16 16:47:58.352 29083-29083/com.telink.ble.mesh.demo.rels D/MeshController: ---idle--- false
+2025-10-16 16:47:58.352 29083-29083/com.telink.ble.mesh.demo.rels W/SIG-Mesh: mode not changed : IDLE
+2025-10-16 16:47:58.354 29083-29083/com.telink.ble.mesh.demo.rels I/Quality: Skipped: false 1 cost 17.594893 refreshRate 11045571 processName com.telink.ble.mesh.demo.rels
+2025-10-16 16:47:58.361 29083-31668/com.telink.ble.mesh.demo.rels D/VRI[MainActivity]: dispatchAppVisibility visible:true
+2025-10-16 16:47:58.378 29083-29083/com.telink.ble.mesh.demo.rels D/VRI[MainActivity]: setWindowStopped stopped:false
+2025-10-16 16:47:58.381 29083-29083/com.telink.ble.mesh.demo.rels W/SIG-Mesh: MainActivity onResume
+2025-10-16 16:47:58.381 29083-29083/com.telink.ble.mesh.demo.rels D/SIG-Mesh: main auto connect
+2025-10-16 16:47:58.381 29083-29083/com.telink.ble.mesh.demo.rels D/MeshController: auto connect
+2025-10-16 16:47:58.381 29083-29083/com.telink.ble.mesh.demo.rels D/SIG-Mesh: event handle: com.telink.ble.mesh.EVENT_TYPE_AUTO_CONNECT_LOGIN
+2025-10-16 16:47:58.382 29083-29083/com.telink.ble.mesh.demo.rels D/SIG-Mesh: network fragment - onResume
+2025-10-16 16:47:58.384 29083-29083/com.telink.ble.mesh.demo.rels D/VRI[DeviceProvisionActivity]: onFocusEvent false
+2025-10-16 16:47:58.400 29083-29083/com.telink.ble.mesh.demo.rels D/BufferQueueConsumer: [](id:719b00000003,api:0,p:-1,c:29083) connect: controlledByApp=false
+2025-10-16 16:47:58.400 29083-29083/com.telink.ble.mesh.demo.rels E/IPCThreadState: attemptIncStrongHandle(77): Not supported
+2025-10-16 16:47:58.402 29083-31685/com.telink.ble.mesh.demo.rels D/BufferQueueProducer: [VRI[MainActivity]#3(BLAST Consumer)3](id:719b00000003,api:1,p:29083,c:29083) connect: api=1 producerControlledByApp=true
+2025-10-16 16:47:58.413 29083-29083/com.telink.ble.mesh.demo.rels D/SIG-Mesh: set primary color : 16
+2025-10-16 16:47:58.418 29083-29083/com.telink.ble.mesh.demo.rels D/VRI[MainActivity]: registerCallbacksForSync syncBuffer=false
+2025-10-16 16:47:58.425 29083-31685/com.telink.ble.mesh.demo.rels D/VRI[MainActivity]: Received frameCommittedCallback lastAttemptedDrawFrameNum=1 didProduceBuffer=true syncBuffer=false
+2025-10-16 16:47:58.425 29083-29083/com.telink.ble.mesh.demo.rels D/VRI[MainActivity]: draw finished.
+2025-10-16 16:47:58.427 29083-29083/com.telink.ble.mesh.demo.rels D/MeshController: send mesh message: OnOffGetMessage opcode: 0x0182 -- dst: 0xFFFF isReliable: true retryCnt: 2 rspMax: 0
+2025-10-16 16:47:58.427 29083-29083/com.telink.ble.mesh.demo.rels D/Networking: post access pdu: 8201
+2025-10-16 16:47:58.427 29083-29083/com.telink.ble.mesh.demo.rels D/Networking: getTransmitIvIndex : 00000001
+2025-10-16 16:47:58.428 29083-29083/com.telink.ble.mesh.demo.rels D/Networking: upper transport pdu: 0F15A2E0D0DB
+2025-10-16 16:47:58.428 29083-29083/com.telink.ble.mesh.demo.rels D/Networking: send unsegmented access message
+2025-10-16 16:47:58.428 29083-29083/com.telink.ble.mesh.demo.rels D/Networking: restart reliable message timeout task, immediate
+2025-10-16 16:47:58.428 29083-29083/com.telink.ble.mesh.demo.rels D/Networking: reliable message timeout:1280
+2025-10-16 16:47:58.428 29083-29083/com.telink.ble.mesh.demo.rels D/Networking: single network pdu: BB:87:67:5C:9B:4F:51:2C:A6:9C:3D:66:DA:20:9B:3C:3C:07:57:4A
+2025-10-16 16:47:58.428 29083-29083/com.telink.ble.mesh.demo.rels D/Networking: networking pdu prepared: BB:87:67:5C:9B:4F:51:2C:A6:9C:3D:66:DA:20:9B:3C:3C:07:57:4A busy?-false
+2025-10-16 16:47:58.428 29083-29083/com.telink.ble.mesh.demo.rels D/Networking: networking pdu poll: BB:87:67:5C:9B:4F:51:2C:A6:9C:3D:66:DA:20:9B:3C:3C:07:57:4A
+2025-10-16 16:47:58.428 29083-29083/com.telink.ble.mesh.demo.rels D/GATT: send unsegment pkt: 00:BB:87:67:5C:9B:4F:51:2C:A6:9C:3D:66:DA:20:9B:3C:3C:07:57:4A
+2025-10-16 16:47:58.431 29083-29083/com.telink.ble.mesh.demo.rels D/SIG-Mesh: event handle: com.telink.sig.mesh.EVENT_TYPE_CMD_PROCESSING
+2025-10-16 16:47:58.438 29083-29083/com.telink.ble.mesh.demo.rels D/SIG-Mesh: set primary color : 16
+2025-10-16 16:47:58.485 29083-31668/com.telink.ble.mesh.demo.rels D/GATT: completed notification data: 00:BB:BE:A8:A1:8F:72:BA:7F:0F:80:18:72:45:3C:1B:E3:08:50:77:D5:73
+2025-10-16 16:47:58.486 29083-31668/com.telink.ble.mesh.demo.rels D/Networking: getAcceptedIvIndex : 00000001 ivi: 1
+2025-10-16 16:47:58.487 29083-31668/com.telink.ble.mesh.demo.rels D/Networking: network pdu: NetworkLayerPDU{ivi=1, nid=59, ctl=0, ttl=10, seq=0x27, src=16, dst=1, transportPDU=4E447A8F61556B59}
+2025-10-16 16:47:58.487 29083-31668/com.telink.ble.mesh.demo.rels D/Networking: put init sequence number
+2025-10-16 16:47:58.487 29083-31668/com.telink.ble.mesh.demo.rels D/Networking: parse access message
+2025-10-16 16:47:58.487 29083-31668/com.telink.ble.mesh.demo.rels D/Networking: parse unsegmented access message
+2025-10-16 16:47:58.488 29083-29083/com.telink.ble.mesh.demo.rels D/VRI[MainActivity]: onFocusEvent true
+2025-10-16 16:47:58.488 29083-31668/com.telink.ble.mesh.demo.rels D/Networking: access pdu received at 0x0010: opcode -- 0x0482 params -- 01
+2025-10-16 16:47:58.488 29083-31668/com.telink.ble.mesh.demo.rels D/Networking: clear network buffer
+2025-10-16 16:47:58.488 29083-31668/com.telink.ble.mesh.demo.rels D/Networking: Reliable Message Complete: 000182 success?: true
+2025-10-16 16:47:58.489 29083-31668/com.telink.ble.mesh.demo.rels D/SIG-Mesh: event handle: com.telink.sig.mesh.EVENT_TYPE_CMD_COMPLETE
+2025-10-16 16:47:58.489 29083-31668/com.telink.ble.mesh.demo.rels D/MeshController: mesh model message received: src -- 0x0010 | dst -- 0x0001 | opcode -- 0x0482 | params -- 01 | action mode -- AUTO_CONNECT
+2025-10-16 16:47:58.490 29083-31668/com.telink.ble.mesh.demo.rels D/MeshController: mesh message notification: com.telink.ble.mesh.core.message.generic.OnOffStatusMessage
+2025-10-16 16:47:58.490 29083-31668/com.telink.ble.mesh.demo.rels D/SIG-Mesh: event handle: com.telink.ble.mesh.core.message.generic.OnOffStatusMessage
+2025-10-16 16:47:58.512 29083-29083/com.telink.ble.mesh.demo.rels D/SIG-Mesh: set primary color : 16
+2025-10-16 16:47:58.921 29083-31665/com.telink.ble.mesh.demo.rels D/VRI[DeviceProvisionActivity]: dispatchAppVisibility visible:false
+2025-10-16 16:47:58.928 29083-31685/com.telink.ble.mesh.demo.rels D/BufferQueueProducer: [VRI[DeviceProvisionActivity]#2(BLAST Consumer)2](id:719b00000002,api:1,p:29083,c:29083) disconnect: api 1
+2025-10-16 16:47:58.945 29083-29083/com.telink.ble.mesh.demo.rels D/BufferQueueConsumer: [VRI[DeviceProvisionActivity]#2(BLAST Consumer)2](id:719b00000002,api:0,p:-1,c:29083) disconnect
+2025-10-16 16:47:58.948 29083-29083/com.telink.ble.mesh.demo.rels D/VRI[DeviceProvisionActivity]: setWindowStopped stopped:true
+2025-10-16 16:47:58.951 29083-29083/com.telink.ble.mesh.demo.rels W/SIG-Mesh: DeviceProvisionActivity onDestroy
+2025-10-16 16:47:58.952 29083-29083/com.telink.ble.mesh.demo.rels D/OplusScrollToTopManager: unregisterGuidePopupDismissReceiverInSystemUI
+2025-10-16 16:47:58.952 29083-29083/com.telink.ble.mesh.demo.rels D/OplusScrollToTopManager: Receiver not registered: android.view.OplusScrollToTopManager$1@eb2b1a1
+2025-10-16 16:47:58.952 29083-29083/com.telink.ble.mesh.demo.rels D/OplusScrollToTopManager: unregisterSystemUIBroadcastReceiver 
+2025-10-16 16:47:58.953 29083-29083/com.telink.ble.mesh.demo.rels D/OplusScrollToTopManager: java.lang.IllegalArgumentException: Receiver not registered: android.view.OplusScrollToTopManager$2@7badfc6
+2025-10-16 16:47:59.937 29083-29083/com.telink.ble.mesh.demo.rels D/MeshController: send mesh message: TimeSetMessage opcode: 0x005D -- dst: 0xFFFF isReliable: false retryCnt: 2 rspMax: 1
+2025-10-16 16:47:59.939 29083-29083/com.telink.ble.mesh.demo.rels D/Networking: post access pdu: 5DBF6D8330000000000060
+2025-10-16 16:47:59.939 29083-29083/com.telink.ble.mesh.demo.rels D/Networking: getTransmitIvIndex : 00000001
+2025-10-16 16:47:59.940 29083-29083/com.telink.ble.mesh.demo.rels D/Networking: upper transport pdu: D0204D4318A1AC0EAEA15F1BC708A8
+2025-10-16 16:47:59.940 29083-29083/com.telink.ble.mesh.demo.rels D/Networking: send unsegmented access message
+2025-10-16 16:47:59.941 29083-29083/com.telink.ble.mesh.demo.rels D/Networking: single network pdu: BB:3C:93:1B:1A:E9:53:D4:9A:D5:5A:FF:04:DA:EF:6F:88:0B:04:83:3C:C7:1F:25:51:B4:D1:F6:FF
+2025-10-16 16:47:59.941 29083-29083/com.telink.ble.mesh.demo.rels D/Networking: networking pdu prepared: BB:3C:93:1B:1A:E9:53:D4:9A:D5:5A:FF:04:DA:EF:6F:88:0B:04:83:3C:C7:1F:25:51:B4:D1:F6:FF busy?-false
+2025-10-16 16:47:59.942 29083-29083/com.telink.ble.mesh.demo.rels D/Networking: networking pdu poll: BB:3C:93:1B:1A:E9:53:D4:9A:D5:5A:FF:04:DA:EF:6F:88:0B:04:83:3C:C7:1F:25:51:B4:D1:F6:FF
+2025-10-16 16:47:59.942 29083-29083/com.telink.ble.mesh.demo.rels D/GATT: send unsegment pkt: 00:BB:3C:93:1B:1A:E9:53:D4:9A:D5:5A:FF:04:DA:EF:6F:88:0B:04:83:3C:C7:1F:25:51:B4:D1:F6:FF
+2025-10-16 16:48:00.191 29083-31702/com.telink.ble.mesh.demo.rels D/Networking: networking pdu poll: null

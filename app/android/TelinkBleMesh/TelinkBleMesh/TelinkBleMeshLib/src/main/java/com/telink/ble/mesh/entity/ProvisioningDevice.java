@@ -138,6 +138,7 @@ public class ProvisioningDevice implements Parcelable {
 
     protected ProvisioningCapabilityPDU deviceCapability = null; // The device capability
 
+    protected byte attentionDuration = 0;
 
     /**
      * Constructor for ProvisioningDevice.
@@ -152,6 +153,10 @@ public class ProvisioningDevice implements Parcelable {
         this.unicastAddress = unicastAddress;
     }
 
+    public ProvisioningDevice(BluetoothDevice bluetoothDevice, byte[] deviceUUID) {
+        this.bluetoothDevice = bluetoothDevice;
+        this.deviceUUID = deviceUUID;
+    }
     /**
      * Constructor for ProvisioningDevice.
      *
@@ -353,6 +358,14 @@ public class ProvisioningDevice implements Parcelable {
 
     public void setAutoStart(boolean autoStart) {
         this.autoStart = autoStart;
+    }
+
+    public byte getAttentionDuration() {
+        return attentionDuration;
+    }
+
+    public void setAttentionDuration(byte attentionDuration) {
+        this.attentionDuration = attentionDuration;
     }
 
     @Override

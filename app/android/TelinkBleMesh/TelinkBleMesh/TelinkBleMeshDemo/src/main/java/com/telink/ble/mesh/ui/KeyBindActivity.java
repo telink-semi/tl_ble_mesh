@@ -44,6 +44,8 @@ import com.telink.ble.mesh.model.NodeInfo;
 import com.telink.ble.mesh.model.db.MeshInfoService;
 import com.telink.ble.mesh.util.Arrays;
 
+import java.util.Objects;
+
 /**
  * single device bind key, for device which bind fail
  * Created by kee on 2018/6/5.
@@ -176,12 +178,12 @@ public class KeyBindActivity extends BaseActivity implements View.OnClickListene
             onBindFail();
         } else if (event.getType().equals(MeshEvent.EVENT_TYPE_DISCONNECTED)) {
             if (kickDirect) {
-                onKickOutFinish();
+                onKickOutFinish(true);
                 finish();
             }
         } else if (event.getType().equals(NodeResetStatusMessage.class.getName())) {
             if (!kickDirect) {
-                onKickOutFinish();
+                onKickOutFinish(true);
             }
         }
     }
@@ -192,18 +194,28 @@ public class KeyBindActivity extends BaseActivity implements View.OnClickListene
         kickDirect = targetDevice.meshAddress == (MeshService.getInstance().getDirectConnectedNodeAddress());
         showWaitingDialog("kick out processing");
         if (!cmdSent || !kickDirect) {
-            handler.postDelayed(this::onKickOutFinish, 3 * 1000);
+            handler.postDelayed(()->onKickOutFinish(false), 3 * 1000);
         }
     }
 
-    private void onKickOutFinish() {
+    private void onKickOutFinish(boolean success) {
+        dismissWaitingDialog();
         handler.removeCallbacksAndMessages(null);
+        if (success) {
+            removeDeviceInfo();
+        } else {
+            showConfirmDialog("kick out fail, remove node info from local storage?", (dialog, which) -> removeDeviceInfo());
+        }
+    }
+
+    private void removeDeviceInfo() {
         MeshService.getInstance().removeDevice(targetDevice.meshAddress);
         TelinkMeshApplication.getInstance().getMeshInfo().removeNode(targetDevice);
-//        TelinkMeshApplication.getInstance().getMeshInfo().saveOrUpdate(getApplicationContext());
-        dismissWaitingDialog();
+        toastMsg("node removed");
         finish();
     }
+
+
 
     private void onBindSuccess(BindingEvent event) {
         complete = true;

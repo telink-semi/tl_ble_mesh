@@ -6,7 +6,7 @@
 
  ## 测试环境
  + Telink SIG mesh 设备
- + Android 手机 (4.3+)
+ + Android 手机 (5.0+)
  
 ------------------------------------
 
@@ -56,28 +56,37 @@
     + `GattOtaEvent.EVENT_TYPE_OTA_FAIL` (OTA失败)
 2. 调用 `MeshService#startGattOta`
 
-### 扩展信息
+<!-- ### 扩展信息 -->
 
-##### 默认绑定
-默认绑定是Telink私有的绑定动作， 意在将所有的model绑定动作更快完成。
+### 默认绑定
+默认绑定是Telink私有的绑定动作， 意在将所有的model绑定动作更快完成。需要设备端打开对应宏开关。
 + 设置 `BindingDevice#defaultBound` 为 true 以使能默认绑定. 
-##### 快速配网
+  
+### 快速配网
 快速认证是Telink私有的配网动作， 意在对周围的多个节点进行快速配网认证。
-###### 前提: 
+代码可参考FastProvisionActivity
+#### 前提: 
 1. 设备支持快速配网
 2. 已知设备的composition-data
-###### 流程:
+#### 流程:
 1. 监听以下事件 :
-    + `FastProvisioningEvent.EVENT_TYPE_FAST_PROVISIONING_ADDRESS_SET` (配置地址信息完成)
-    + `FastProvisioningEvent.EVENT_TYPE_FAST_PROVISIONING_FAIL` (快速配网失败)
+    + `FastProvisioningEvent.EVENT_TYPE_FAST_PROVISIONING_CONNECTING` (正在连接网络)
+    + `FastProvisioningEvent.EVENT_TYPE_FAST_PROVISIONING_RESET_NWK` (正在重置网络)
+    + `FastProvisioningEvent.EVENT_TYPE_FAST_PROVISIONING_GET_ADDRESS` (获取未配网设备地址)
+    + `FastProvisioningEvent.EVENT_TYPE_FAST_PROVISIONING_GET_ADDRESS_RSP` (收到get address回复)
+    + `FastProvisioningEvent.EVENT_TYPE_FAST_PROVISIONING_SET_ADDRESS` (设置地址)
+    + `FastProvisioningEvent.EVENT_TYPE_FAST_PROVISIONING_SET_ADDRESS_SUCCESS` (设置地址成功)
+    + `FastProvisioningEvent.EVENT_TYPE_FAST_PROVISIONING_SET_ADDRESS` (设置地址)
+    + `FastProvisioningEvent.EVENT_TYPE_FAST_PROVISIONING_SET_DATA` (设置provision data)
     + `FastProvisioningEvent.EVENT_TYPE_FAST_PROVISIONING_SUCCESS` (快速配网成功)
+    + `FastProvisioningEvent.EVENT_TYPE_FAST_PROVISIONING_FAIL` (快速配网失败)
 2. 调用 `MeshService.#startFastProvision` 
 
-##### Remote 配网
-###### 前提: 
+### Remote 配网
+#### 前提: 
 1. 设备支持remote-provision; 
 2. 需直连上已配网完成的proxy节点
-###### 流程:
+#### 流程:
 1. 监听以下事件 :
     + `ScanReportStatusMessage` (扫描到remote设备)
     + `RemoteProvisioningEvent.EVENT_TYPE_REMOTE_PROVISIONING_SUCCESS` (remote配网成功)
@@ -86,36 +95,47 @@
 2. 发送 `ScanStartMessage` mesh 消息, 在接收到 `ScanReportStatusMessage` 过滤并缓存remote设备信息
 3. 调用 `MeshService#startRemoteProvisioning`
 
-##### Mesh OTA (mesh 固件升级)
-###### 前提:
+### Mesh OTA || Firmware Update(mesh 固件升级)
+#### 前提:
 1. 设备支持mesh-OTA;
 2. 升级用的bin;
-##### 流程:
-1. 监听以下事件 :
-    + `FirmwareInfoStatusMessage` (设备版本状态信息上报)
-    + `MeshUpdatingEvent.EVENT_TYPE_UPDATING_PREPARED` (mesh ota准备完成 -- 发送block数据前上报)
-    + `MeshUpdatingEvent.EVENT_TYPE_UPDATING_SUCCESS` (mesh ota 成功)
-    + `MeshUpdatingEvent.EVENT_TYPE_UPDATING_FAIL` (mesh ota 失败)
-    + `MeshUpdatingEvent.EVENT_TYPE_UPDATING_PROGRESS` (mesh ota 进度更新)
-    + `MeshUpdatingEvent.EVENT_TYPE_DEVICE_SUCCESS` (单设备升级成功)
-    + `MeshUpdatingEvent.EVENT_TYPE_DEVICE_FAIL` (单设备升级失败)
-2. 调用 `MeshService#startMeshOta`
+#### 流程:
+mesh OTA 过程状态变化使用回调的形式上报。
+1. 创建 FirmwareUpdateConfiguration 实例，可设置以下参数：
+   + `List<MeshUpdatingDevice> updatingDevices` 待升级的设备列表
+   + `byte[] firmwareData` 升级的固件data
+   + `byte[] metadata` 升级的固件中的metadata， 从固件中读取， 用于FirmwareMetadataCheckMessage中
+   + `int appKeyIndex` 发送mesh消息使用的appkey
+   + `int groupAddress` 订阅的分组地址
+   + `long blobId` 固件blob ID
+   + `byte[] firmwareId` 固件firmware ID，用于区分不同的固件
+   + `int firmwareIndex` 固件索引
+   + `DistributorType distributorType` 用于分发的设备，可选为手机或者直连设备
+   + `UpdatePolicy updatePolicy` 升级策略：VerifyOnly仅校验，VerifyAndApply在校验完成后发送apply命令
+   + `long networkInterval` 网络命令间隔
+   + `FUCallback callback` 回调
+        - onLog 日志信息
+        - onStateUpdated mesh OTA状态变化时调用
+        - onDeviceStateUpdate 设备状态变化时调用
+        - onTransferProgress transfer进度更新时调用
+2. 调用 `MeshService#startMeshOta` 
 
 
-#### 补充说明
+### 补充说明
 <span id="detail_config"></span>
-##### MeshConfiguration 网络配置信息 : 
-+ networkKey : 网络密钥
+#### MeshConfiguration 网络配置信息 : 
++ networkKey : 网络密钥，用于网络层加解密
 + netKeyIndex : 网络密钥索引
 + appKeyMap : 应用层密钥和索引图表
 + ivIndex : iv-index
 + sequenceNumber : 消息序列号
-+ localAddress : 本地地址， 应为合法的单播地址 (0x0001 - 0x7FFF)
++ localAddress : 本地地址(即手机地址)， 应为合法的单播地址 (0x0001 - 0x7FFF)，发送消息时作为src
 + proxyFilterWhiteList : 设置代理节点的filter白名单， 应包含手机地址（即localAddress）和广播地址（0xFFFF）。
 + deviceKeyMap : 设备密钥和设备地址图表
+
  
 <span id="detail_mesh_message"></span>
-##### MeshMessage mesh消息:
+#### MeshMessage mesh消息:
 + opcode : 应用层消息操作码
 <span id="detail_mesh_message_params"></span>
 + params : 应用层消息参数
@@ -135,7 +155,7 @@
 
 <span id="detail_event_handler"></span>
 ##### EventHandler:
-+ NetworkInfoUpdateEvent : 当 iv-index or sequence-number 更新时上报， app应缓存该值， 且在下次设置网络信息时带入对应的信息
++ NetworkInfoUpdateEvent : 当 iv-index or sequence-number 更新时上报， app应缓存该值， 且在下次设置网络信息(即调用MeshService#setupMeshNetwork)时带入对应的信息
 + OnlineStatusEvent : 当收到 online-status(telink private status) 时上报
 
 + StatusNotificationEvent : 当收到mesh状态消息时上报; 
@@ -150,3 +170,8 @@
     + FastProvisioningEvent
     + RemoteProvisioningEvent
     + MeshUpdatingEvent
+
+### 关于 sequence number 的补充说明：
+` 参考mesh sepc(MshPRT_v1.1)文档 3.4.4.5 和 3.4.6.4  内容， 该值作为网络层的消息序列码， 在每次发送消息时会递增。 设备端收到network pdu时， 如果从pdu中解析出的sequence number不大于缓存中的值，则会不处理该network pdu。
+所以务必保证每次setupMeshNetwork时， 传入的sequence number是最新值（即从NetworkInfoUpdateEvent中获取的）。 `
+否则，会在执行 proxyFilterInit 时出错， 并提示 filter init timeout。

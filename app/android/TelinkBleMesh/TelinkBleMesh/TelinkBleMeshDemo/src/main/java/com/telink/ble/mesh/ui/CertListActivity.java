@@ -72,8 +72,8 @@ public class CertListActivity extends BaseActivity {
         toolbar.inflateMenu(R.menu.cert_list);
         toolbar.setOnMenuItemClickListener(item -> {
             if (item.getItemId() == R.id.item_cert_add) {
-                startActivityForResult(new Intent(CertListActivity.this, FileSelectActivity.class).putExtra(FileSelectActivity.KEY_SUFFIX, "der")
-                                .putExtra(FileSelectActivity.KEY_TITLE, "select cert(.der)")
+                startActivityForResult(new Intent(CertListActivity.this, FileSelectActivity.class).putExtra(FileSelectActivity.EXTRA_SUFFIX, "der")
+                                .putExtra(FileSelectActivity.EXTRA_TITLE, "select cert(.der)")
                         , REQUEST_CODE_SELECT_CERT);
             } else if (item.getItemId() == R.id.item_cert_clear) {
                 showClearDialog();
@@ -141,7 +141,7 @@ public class CertListActivity extends BaseActivity {
         if (resultCode != Activity.RESULT_OK || data == null)
             return;
         if (requestCode == REQUEST_CODE_SELECT_CERT) {
-            final String path = data.getStringExtra(FileSelectActivity.KEY_RESULT);
+            final String path = data.getStringExtra(FileSelectActivity.EXTRA_RESULT);
             MeshLogger.log("select: " + path);
             X509Certificate parseResult = parseCert(path);
             if (parseResult != null) {
