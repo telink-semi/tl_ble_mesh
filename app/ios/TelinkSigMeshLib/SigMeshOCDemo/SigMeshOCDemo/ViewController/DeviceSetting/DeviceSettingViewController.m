@@ -62,7 +62,6 @@
 @property (weak, nonatomic) IBOutlet UILabel *macLabel;
 @property (weak, nonatomic) IBOutlet UITableView *tableView;
 @property (weak, nonatomic) IBOutlet UIButton *kickOutButton;
-@property (nonatomic, assign) BOOL hasClickKickOut;
 @property (nonatomic, strong) SigMessageHandle *messageHandle;
 @property (nonatomic, strong) NSMutableArray <NSString *>*iconArray;
 @property (nonatomic, strong) NSMutableArray <NSString *>*titleArray;
@@ -77,7 +76,6 @@
     //add a alert for kickOut device.
     __weak typeof(self) weakSelf = self;
     [self showAlertSureAndCancelWithTitle:kDefaultAlertTitle message:@"Confirm to remove device?" sure:^(UIAlertAction *action) {
-        weakSelf.hasClickKickOut = YES;
         [ShowTipsHandle.share show:Tip_KickOutDevice];
 
         if (weakSelf.model.hasPublishFunction && weakSelf.model.hasOpenPublish) {
@@ -85,7 +83,7 @@
         }
 
         if (SigBearer.share.isOpen) {
-            [weakSelf kickoutAction];
+            [weakSelf kickOutAction];
         } else {
             [SigDataSource.share deleteNodeFromMeshNetworkWithDeviceAddress:weakSelf.model.address];
 #ifdef kIsTelinkCloudSigMeshLib
@@ -98,8 +96,8 @@
     } cancel:nil];
 }
 
-- (void)kickoutAction{
-    TelinkLogDebug(@"send kickout.");
+- (void)kickOutAction{
+    TelinkLogDebug(@"send kickOut.");
     __weak typeof(self) weakSelf = self;
     if (SigMeshLib.share.isBusyNow) {
         TelinkLogInfo(@"send request for kick out, but busy now.");
@@ -125,17 +123,7 @@
                 [weakSelf pop];
             });
         }];
-        dispatch_async(dispatch_get_main_queue(), ^{
-            [NSObject cancelPreviousPerformRequestsWithTarget:self selector:@selector(resetNodeTimeout) object:nil];
-            [self performSelector:@selector(resetNodeTimeout) withObject:nil afterDelay:5.0];
-        });
     }
-}
-
-- (void)resetNodeTimeout {
-    [SigDataSource.share deleteNodeFromMeshNetworkWithDeviceAddress:self.model.address];
-    [NSObject cancelPreviousPerformRequestsWithTarget:self];
-    [self pop];
 }
 
 - (void)pop{
@@ -166,6 +154,7 @@
     self.tableView.tableFooterView = [[UIView alloc] initWithFrame:CGRectZero];
     [self.tableView registerNib:[UINib nibWithNibName:NSStringFromClass(SettingTitleItemCell.class) bundle:nil] forCellReuseIdentifier:NSStringFromClass(SettingTitleItemCell.class)];
     [self.tableView registerNib:[UINib nibWithNibName:NSStringFromClass(EntryCell.class) bundle:nil] forCellReuseIdentifier:NSStringFromClass(EntryCell.class)];
+    self.tableView.estimatedRowHeight = 74;
     self.kickOutButton.backgroundColor = UIColor.telinkButtonRed;
     self.titleArray = [NSMutableArray array];
     self.iconArray = [NSMutableArray array];
@@ -285,6 +274,9 @@
     SettingTitleItemCell *cell = (SettingTitleItemCell *)[tableView dequeueReusableCellWithIdentifier:NSStringFromClass(SettingTitleItemCell.class) forIndexPath:indexPath];
     cell.nameLabel.text = title;
     cell.iconImageView.image = [UIImage imageNamed:self.iconArray[indexPath.row]];
+    if (indexPath.row == 0) {
+        cell.nameLabel.text = [NSString stringWithFormat:@"Name: %@", self.model.name];
+    }
     return cell;
 }
 
@@ -331,9 +323,10 @@
 
 - (void)clickRenameButton {
     __weak typeof(self) weakSelf = self;
-    UIAlertController *alertVc = [UIAlertController alertControllerWithTitle:kDefaultAlertTitle message:@"Please input new node name!" preferredStyle: UIAlertControllerStyleAlert];
+    UIAlertController *alertVc = [UIAlertController alertControllerWithTitle:@"Change Node Name" message:@"please input" preferredStyle: UIAlertControllerStyleAlert];
     [alertVc addTextFieldWithConfigurationHandler:^(UITextField * _Nonnull textField) {
-        textField.placeholder = @"new name";
+        textField.placeholder = @"please input name";
+        textField.text = self.model.name;
     }];
     UIAlertAction *action1 = [UIAlertAction actionWithTitle:kDefaultAlertOK style:UIAlertActionStyleDestructive handler:^(UIAlertAction * _Nonnull action) {
         NSString *nodeName = [[alertVc textFields] objectAtIndex:0].text;
@@ -343,13 +336,10 @@
             [weakSelf showTips:@"Node name can not be empty!"];
             return;
         }
-        if (nodeName.length > 10) {
-            [weakSelf showTips:@"The maximum length of the node name is 10!"];
-            return;
-        }
         weakSelf.model.name = nodeName;
         [SigDataSource.share saveLocationData];
-        [weakSelf showTips:@"Rename success!"];
+        [weakSelf.navigationController.view makeToast:@"Change node name success!"];
+        [weakSelf.tableView reloadData];
     }];
     UIAlertAction *action2 = [UIAlertAction actionWithTitle:kDefaultAlertCancel style:UIAlertActionStyleCancel handler:nil];
     [alertVc addAction:action2];

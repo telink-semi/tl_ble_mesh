@@ -32,6 +32,7 @@
 #import "RemoteAddVC.h"
 #import "AddDeviceByCloudVC.h"
 #import "CMDViewController.h"
+#import "PassiveSwitchDetailVC.h"
 
 @interface HomeViewController()<UICollectionViewDelegate,UICollectionViewDataSource,SigBearerDataDelegate,SigDataSourceDelegate,SigMessageDelegate,SigBluetoothDelegate>
 @property (strong, nonatomic) NSMutableArray <SigNodeModel *>*source;
@@ -309,7 +310,7 @@
 -(void)collectionView:(UICollectionView *)collectionView didSelectItemAtIndexPath:(NSIndexPath *)indexPath{
     SigNodeModel *model = self.source[indexPath.item];
 
-    if (model.isSensor || model.isLPN || model.isRemote) {
+    if (model.isSensor || model.isLPN || model.isRemote || model.isEnOceanDevice) {
         return;
     }
 
@@ -606,7 +607,18 @@
         NSIndexPath *indexPath = [self.collectionView indexPathForItemAtPoint:[sender locationInView:self.collectionView]];
         if (indexPath != nil) {
             SigNodeModel *model = self.source[indexPath.item];
-            if (model.isKeyBindSuccess) {
+            if (model.isEnOceanDevice) {
+                EnOceanInfo *info = [[EnOceanInfo alloc] init];
+                [info setDictionaryToEnOceanInfo:[model getDictionaryOfSigNodeModel]];
+                if (info) {
+                    PassiveSwitchDetailVC *tempCon = [[PassiveSwitchDetailVC alloc] initWithNibName:@"PassiveSwitchDetailVC" bundle:[NSBundle mainBundle]];
+                    tempCon.oldEnOceanInfo = info;
+                    tempCon.nodeModel = model;
+                    [self.navigationController pushViewController:tempCon animated:YES];
+                } else {
+                    [self showTips:@"No passive switch information!"];
+                }
+            } else if (model.isKeyBindSuccess) {
                 SingleDeviceViewController *vc = (SingleDeviceViewController *)[UIStoryboard initVC:ViewControllerIdentifiers_SingleDeviceViewControllerID storyboard:@"DeviceSetting"];
                 vc.model = model;
                 [self.navigationController pushViewController:vc animated:YES];

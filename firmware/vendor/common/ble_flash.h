@@ -168,19 +168,6 @@
 
 
 
-/**
- * @brief		This function is used to enable the external crystal capacitor
- * @param[in]	en - enable the external crystal capacitor
- * @return      none
- */
-static inline void blc_app_setExternalCrystalCapEnable(u8  en)
-{
-	blt_miscParam.ext_cap_en = en;
-	analog_write(0x8a, analog_read(0x8a) | 0x80);//disable internal cap
-}
-
-
-
 
 /**
  * @brief		This function can automatically recognize the flash size,
@@ -219,6 +206,12 @@ void blc_app_loadCustomizedParameters_deepRetn(void);
  */
 void blc_initMacAddress(int flash_addr, u8 *mac_public, u8 *mac_random_static);
 
+/**
+ * @brief       This function is used to set the use of four lines when reading and writing flash.
+ * @param[in]   flash_mid   - the mid of flash.
+ * @return      1: success, 0: error, 2: mid is not supported.
+ */
+unsigned char blc_flash_set_4line_read_write(unsigned int flash_mid);
 
 
 
@@ -239,20 +232,17 @@ extern unsigned int flash_sector_simple_sdp_att;
  */
 static inline void blc_app_loadCustomizedParameters(void)
 {
-	 if(!blt_miscParam.ext_cap_en)
-	 {
-		 //customize freq_offset adjust cap value, if not customized, default ana_81 is 0xd0
-		 //for 512K Flash, flash_sector_calibration equals to 0x7F000(B91/B92) or 0x76000(other CORE_TYPE)
-		 //for 1M  Flash, flash_sector_calibration equals to 0xFE000
-		 //for 2M  Flash, flash_sector_calibration equals to 0x1FE000
-		 //for 4M  Flash, flash_sector_calibration equals to 0x3FE000
-		 if(flash_sector_calibration){
-			 u8 cap_frqoft;
-			 flash_read_page(flash_sector_calibration + CALIB_OFFSET_CAP_INFO, 1, &cap_frqoft);
+	 //customize freq_offset adjust cap value, if not customized, default ana_81 is 0xd0
+	 //for 512K Flash, flash_sector_calibration equals to 0x7F000(B91/B92) or 0x76000(other CORE_TYPE)
+	 //for 1M  Flash, flash_sector_calibration equals to 0xFE000
+	 //for 2M  Flash, flash_sector_calibration equals to 0x1FE000
+	 //for 4M  Flash, flash_sector_calibration equals to 0x3FE000
+	 if(flash_sector_calibration){
+		 u8 cap_frqoft;
+		 flash_read_page(flash_sector_calibration + CALIB_OFFSET_CAP_INFO, 1, &cap_frqoft);
 
-			 if( cap_frqoft != 0xff ){
-				 analog_write(0x8A, (analog_read(0x8A) & 0xc0)|(cap_frqoft & 0x3f));
-			 }
+		 if( cap_frqoft != 0xff ){
+			 rf_update_internal_cap(cap_frqoft);
 		 }
 	 }
 }

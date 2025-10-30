@@ -24,8 +24,8 @@
 #pragma  once
 
 typedef struct {
-	unsigned char opcode;
-	unsigned char data[0];
+    unsigned char opcode;
+    unsigned char data[0];
 } attr_pkt_t;
 
 #include "stack/ble/host/ble_host.h"
@@ -33,8 +33,8 @@ typedef struct {
 #include "atts.h"
 #include "attc.h"
 
-#define gap_server_para_t		gap_ms_para_t
-#define blt_gap_getServerPara	blc_gap_getMasterSlavePara
+#define gap_server_para_t       gap_ms_para_t
+#define blt_gap_getServerPara   blc_gap_getMasterSlavePara
 
 
 

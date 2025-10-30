@@ -40,6 +40,8 @@
 @property (strong, nonatomic) NSMutableArray <SigRemoteScanRspModel *>*failSource;
 @property (strong, nonatomic) NSMutableArray <SigRemoteScanRspModel *>*scanReportSource;//缓存扫描到本轮不准备添加的设备
 @property (assign, nonatomic) UInt8 maxItemsCount;
+@property (assign, nonatomic) int maxRSSI;
+@property (strong, nonatomic) CBPeripheral *maxRSSIUnProvisionPeripheral;//用于筛选RSSI信号最强的未组网设备进行Provision，作为RP的直连节点。
 @end
 
 @implementation RemoteAddVC
@@ -304,10 +306,12 @@
 }
 
 #pragma mark - Event
-- (void)startAddDevice{
+- (void)startAddDevice {
     [self setUserEnable:NO];
     [self.remoteSource removeAllObjects];
-
+    self.maxRSSI = -127;
+    self.maxRSSIUnProvisionPeripheral = nil;
+    
     if (SigBearer.share.isOpen) {
         //remote add
         [self startRemoteProvisionScan];
@@ -319,11 +323,21 @@
             [SDKLibCommand scanUnprovisionedDevicesWithResult:^(CBPeripheral * _Nonnull peripheral, NSDictionary<NSString *,id> * _Nonnull advertisementData, NSNumber * _Nonnull RSSI, BOOL unprovisioned) {
                 TelinkLogInfo(@"==========peripheral=%@,advertisementData=%@,RSSI=%@,unprovisioned=%d",peripheral,advertisementData,RSSI,unprovisioned);
                 if (unprovisioned) {
-                    [SDKLibCommand stopScan];
-                    [weakSelf addOneNodeInGATT:peripheral];
-                    dispatch_async(dispatch_get_main_queue(), ^{
-                        [NSObject cancelPreviousPerformRequestsWithTarget:weakSelf selector:@selector(scanTimeout) object:nil];
-                    });
+                    //从扫描到一个设备后延时1秒，筛选1秒内RSSI信号最好的设备
+                    if (weakSelf.maxRSSI == -127) {
+                        dispatch_async(dispatch_get_main_queue(), ^{
+                            [NSObject cancelPreviousPerformRequestsWithTarget:weakSelf selector:@selector(scanTimeout) object:nil];
+                            [NSObject cancelPreviousPerformRequestsWithTarget:weakSelf selector:@selector(handleGATTMaxRSSIUnProvisionPeripheral) object:nil];
+                            [weakSelf performSelector:@selector(handleGATTMaxRSSIUnProvisionPeripheral) withObject:nil afterDelay:1.0];
+                        });
+                    }
+                    if (RSSI.intValue != 127 && RSSI.intValue >= weakSelf.maxRSSI) {
+                        weakSelf.maxRSSI = RSSI.intValue;
+                        weakSelf.maxRSSIUnProvisionPeripheral = peripheral;
+                    }
+                    if (RSSI.intValue == 127 && weakSelf.maxRSSI == -127) {
+                        weakSelf.maxRSSIUnProvisionPeripheral = peripheral;
+                    }
                 }
             }];
             dispatch_async(dispatch_get_main_queue(), ^{
@@ -336,10 +350,16 @@
 
 - (void)scanTimeout {
     [SDKLibCommand stopScan];
-    NSString *errstr = @"RP-GATT: scan timeout.";
-    TelinkLogError(@"%@",errstr);
-    NSError *err = [NSError errorWithDomain:errstr code:-1 userInfo:nil];
+    NSString *errorString = @"RP-GATT: scan timeout.";
+    TelinkLogError(@"%@",errorString);
+    NSError *err = [NSError errorWithDomain:errorString code:-1 userInfo:nil];
     [self showRemoteProvisionError:err];
+}
+
+- (void)handleGATTMaxRSSIUnProvisionPeripheral {
+    TelinkLogInfo(@"maxRSSI=%d, maxRSSIUnProvisionPeripheral=%@", self.maxRSSI, self.maxRSSIUnProvisionPeripheral);
+    [SDKLibCommand stopScan];
+    [self addOneNodeInGATT:self.maxRSSIUnProvisionPeripheral];
 }
 
 - (IBAction)clickGoBack:(UIButton *)sender {

@@ -36,11 +36,7 @@
 #define SIMU_BAUD_1M        1000000
 
 #define BAUD_USE    SIMU_BAUD_1M
-#if __TLSR_RISCV_EN__
-#define SIMU_UART_IRQ_EN    (1&&!blotaSvr.ota_start_tick)
-#else
-#define SIMU_UART_IRQ_EN    (1&&!blcOta.ota_start_flag)
-#endif
+#define SIMU_UART_IRQ_EN    (1 && !is_tlk_gatt_ota_busy())
 
 #define _PRINT_FUN_RAMCODE_        //_attribute_ram_code_
 

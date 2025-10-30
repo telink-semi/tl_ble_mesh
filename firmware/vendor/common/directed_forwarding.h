@@ -160,7 +160,7 @@ enum{
 #define GET_LANE_GUARD_INTERVAL_MS(guard_interval)		(guard_interval?LANE_GUARD_INTERVAL_10S:LANE_GUARD_INTERVAL_2S)
 
 // directed forwarding message
-typedef struct{
+typedef struct __attribute__((packed)) {
 	u8 directed_forwarding;
 	u8 directed_relay;
 	u8 directed_proxy;
@@ -168,25 +168,25 @@ typedef struct{
 	u8 directed_friend;
 }directed_control_t;
 
-typedef struct{
+typedef struct __attribute__((packed)) {
 	u8  metric_type:3;	
 	u8  path_lifetime:2;
 	u8  rfu:3;
 }path_metric_t;
 
-typedef struct{
+typedef struct __attribute__((packed)) {
 	s8 default_rssi_threshold;
 	s8 rssi_margin;
 }rssi_threshold_t;
 
-typedef struct{
+typedef struct __attribute__((packed)) {
 	u16 node_paths;
 	u16 relay_paths;
 	u16 proxy_paths;
 	u16 friend_paths;
 }directed_paths_t;
 
-typedef struct{
+typedef struct __attribute__((packed)) {
 	u16 path_monitoring_interval;
 	u16 path_discovery_retry_interval;
 	u8 path_discovery_interval:1;
@@ -194,7 +194,7 @@ typedef struct{
 	u8 prohibited:6;
 }discovery_timing_t;
 
-typedef struct{
+typedef struct __attribute__((packed)) {
 	directed_control_t directed_control;
 	path_metric_t path_metric;
 	u8 max_concurrent_init;
@@ -204,7 +204,7 @@ typedef struct{
 	u8 multicast_echo_interval;
 }mesh_directed_subnet_state_t;
 
-typedef struct{
+typedef struct __attribute__((packed)) {
 	mesh_directed_subnet_state_t subnet_state[NET_KEY_MAX];
 	mesh_transmit_t transmit;
 	mesh_transmit_t relay_transmit;
@@ -216,41 +216,41 @@ typedef struct{
 	mesh_transmit_t	control_relay_transmit;
 }mesh_directed_forward_t;
 
-typedef struct{
+typedef struct __attribute__((packed)) {
 	u16 netkey_index;
 	directed_control_t directed_control;	
 }directed_control_set_t;
 
-typedef struct{
+typedef struct __attribute__((packed)) {
 	u8 status;
 	u16 netkey_index;
 	directed_control_t directed_control;
 }directed_control_sts_t;
 
-typedef struct{
+typedef struct __attribute__((packed)) {
 	u16 netkey_index;
 	path_metric_t path_metric;
 }path_metric_set_t;
 
-typedef struct{
+typedef struct __attribute__((packed)) {
 	u8 status;
 	u16 netkey_index;
 	path_metric_t path_metric;
 }path_metric_sts_t;
 
-typedef struct{
+typedef struct __attribute__((packed)) {
 	u16 netkey_index;
 	u8  max_concurrent_init;
 }dsc_tbl_capa_set_t;
 
-typedef struct{
+typedef struct __attribute__((packed)) {
 	u8 status;
 	u16 netkey_index;
 	u8  max_concurrent_init;
 	u8  max_dsc_tbl_entries_cnt;
 }dsc_tbl_capa_sts_t;
 
-typedef struct{
+typedef struct __attribute__((packed)) {
 	u16 netkey_index:12;
 	u16 prohibited:2;
 	u16 unicast_destination_flag:1;
@@ -258,20 +258,20 @@ typedef struct{
 	u8  par[10]; 
 }forwarding_tbl_add_t;
 
-typedef struct{
+typedef struct __attribute__((packed)) {
 	u16 netkey_index;
 	u16 path_origin;
 	u16 destination;
 }forwarding_tbl_delete_t;
 
-typedef struct{
+typedef struct __attribute__((packed)) {
 	u8  status;
 	u16 netkey_index;
 	u16 path_origin;
 	u16 destination;
 }forwarding_tbl_status_t;
 
-typedef struct{
+typedef struct __attribute__((packed)) {
 	u16 netkey_index;
 	u16 path_origin;
 	u16 destination;
@@ -280,7 +280,7 @@ typedef struct{
 	u8 	par[MAX_DEPENDENT_NUM*sizeof(addr_range_t)*2]; // 2: for dependent origin and target
 }forwarding_tbl_dependengts_add_t;
 
-typedef struct{
+typedef struct __attribute__((packed)) {
 	u16 netkey_index;
 	u16 path_origin;
 	u16 destination;
@@ -289,7 +289,7 @@ typedef struct{
 	u16 addr[1];
 }forwarding_tbl_dependengts_delete_t;
  
-typedef struct{
+typedef struct __attribute__((packed)) {
 	u16 netkey_index:12;
 	u16 path_origin_mask:1;
 	u16 path_target_mask:1;
@@ -301,7 +301,7 @@ typedef struct{
 	u16 up_id; // optional
 }forwarding_tbl_dependents_get_t;
 
-typedef struct{
+typedef struct __attribute__((packed)) {
 	u8 status;
 	u16 netkey_index:12;
 	u16 path_origin_mask:1;
@@ -317,7 +317,7 @@ typedef struct{
 	u8  range_list[4*MAX_DEPENDENT_NUM*sizeof(addr_range_t)];
 }forwarding_tbl_dependents_get_sts_t;
 
-typedef struct{
+typedef struct __attribute__((packed)) {
 	u8 status;
 	u16 netkey_index;
 	u16 update_id;
@@ -339,14 +339,14 @@ enum{
 	DEPENDENT_LIST_SIZE_ERR,	
 };
 	
-typedef struct{
+typedef struct __attribute__((packed)) {
 	u16 netkey_index:12;
 	u16 filter_mask:4;
 	u16 start_index;
 	u8 par[6]; // origin + target + tbl update id
 }forwarding_tbl_entries_get_t;
 
-typedef struct{
+typedef struct __attribute__((packed)) {
 	u16 fixed_path_flag:1;
 	u16 unicast_destination_flag:1;
 	u16 backward_path_validated_flag:1;
@@ -357,7 +357,7 @@ typedef struct{
 	u16 prohibited:7;
 }forwarding_table_entry_head_t;
 
-typedef struct{	
+typedef struct __attribute__((packed)) {	
 	forwarding_table_entry_head_t entry_head;
 	union {
 		u16 src_addr;
@@ -373,7 +373,7 @@ typedef struct{
 	u16 bearer_toward_path_target; 
 }fixed_path_st_t;
 
-typedef struct{	
+typedef struct __attribute__((packed)) {	
 	forwarding_table_entry_head_t entry_head;
 	u8 lane_counter;
 	u16 path_lifetime;
@@ -393,7 +393,7 @@ typedef struct{
 }non_fixed_path_st_t;
 
 #define MAX_ENTRY_STS_LEN		100
-typedef struct{
+typedef struct __attribute__((packed)) {
 	u8 status;
 	u16 netkey_index:12;
 	u16 filter_mask:4;
@@ -401,74 +401,74 @@ typedef struct{
 	u8 par[MAX_ENTRY_STS_LEN]; //
 }forwarding_tbl_entries_st_t;
 
-typedef struct{
+typedef struct __attribute__((packed)) {
 	u16 netkey_index;
 	u8 wanted_lanes;
 }wanted_lanes_set_t;
 
-typedef struct{
+typedef struct __attribute__((packed)) {
 	u8 status;
 	u16 netkey_index;
 	u8 wanted_lanes;
 }wanted_lanes_sts_t;
 
-typedef struct{
+typedef struct __attribute__((packed)) {
 	u32 netkey_index:16;
 	u32 two_way_path:1;
 	u32 Prohibited:7;
 }two_way_path_set_t;
 
-typedef struct{
+typedef struct __attribute__((packed)) {
 	u8 status;
 	u32 netkey_index:16;
 	u32 two_way_path:1;
 	u32 Prohibited:7;
 }two_way_path_sts_t;
 
-typedef struct{
+typedef struct __attribute__((packed)) {
 	u16 ele_addr;
 	u32 model_id;
 }directed_pub_policy_get_t;
 
-typedef struct{
+typedef struct __attribute__((packed)) {
 	u8 directed_pub_policy;
 	u16 ele_addr;
 	u32 model_id;
 }directed_pub_policy_set_t;
 
-typedef struct{
+typedef struct __attribute__((packed)) {
 	u8 status;
 	u8 directed_pub_policy;
 	u16 ele_addr;
 	u32 model_id;
 }directed_pub_policy_st_t;
 
-typedef struct{
+typedef struct __attribute__((packed)) {
 	u16 netkey_index;
 	u8 unicast_echo_interval;
 	u8 multicast_echo_interval;
 }path_echo_interval_set_t;
 
-typedef struct{
+typedef struct __attribute__((packed)) {
 	u8 status;
 	u16 netkey_index;
 	u8 unicast_echo_interval;
 	u8 multicast_echo_interval;
 }path_echo_interval_sts_t;
 
-typedef struct{
+typedef struct __attribute__((packed)) {
 	u16 monitoring_interval;
 	u16 discovery_retry_interval;
 	u16 discovery_interval;
 	u16 discovery_guard_interval;
 }path_discovery_timing_t;
 
-typedef struct{
+typedef struct __attribute__((packed)) {
 	u16 addr;
 	u8 	snd_ele_cnt;
 }path_addr_t;
 
-typedef struct{	// one entry of the forwarding table
+typedef struct __attribute__((packed)) {	// one entry of the forwarding table
 	u8  fixed_path:1;
 	u8  backward_path_validated:1;
 	u8  path_not_ready:1;
@@ -483,7 +483,7 @@ typedef struct{	// one entry of the forwarding table
 	u16  bearer_toward_path_target;
 }path_entry_com_t;
 
-typedef struct{
+typedef struct __attribute__((packed)) {
 	u8 path_need:1;
 	u8 path_monitoring:1;
 	u32 lifetime_ms;
@@ -493,24 +493,24 @@ typedef struct{
 	u8  lane_counter;
 }non_fixed_entry_state_t;
 
-typedef struct{
+typedef struct __attribute__((packed)) {
 	non_fixed_entry_state_t state;
 	path_entry_com_t entry;
 }non_fixed_entry_t;
 
 #if MD_DF_CFG_SERVER_EN
-typedef struct{
+typedef struct __attribute__((packed)) {
 	non_fixed_entry_t path[MAX_NON_FIXED_PATH];
 //	u16 update_id; // use model_sig_g_df_sbr_cfg.df_cfg.fixed_fwd_tbl[netkey_offset].update_id instead
 }non_fixed_fwd_tbl_t;
 
-typedef struct{	
+typedef struct __attribute__((packed)) {	
 	path_entry_com_t path[MAX_FIXED_PATH];
 	u16 update_id;
 }fixed_fwd_tbl_t;
 #endif
 
-typedef struct{
+typedef struct __attribute__((packed)) {
 	u8 path_need;
 	u8 path_pending;
 	u32 discovery_timer;
@@ -524,7 +524,7 @@ typedef struct{
 	u8 lane_counter;
 }discovery_state_t;
 
-typedef struct{
+typedef struct __attribute__((packed)) {
 	path_addr_t path_origin;
 	path_addr_t dependent_origin;
 	u8 forwarding_number;
@@ -539,18 +539,18 @@ typedef struct{
 	u8 bearer_toward_path_origin;
 }discovery_entry_t;
 
-typedef struct{
+typedef struct __attribute__((packed)) {
 	discovery_entry_t entry;
 	discovery_state_t state;
 }discovery_entry_par_t;
 
 #if MD_DF_CFG_SERVER_EN
-typedef struct{
+typedef struct __attribute__((packed)) {
 	u8 forwarding_number;
 	discovery_entry_par_t dsc_entry_par[MAX_DSC_TBL];
 }discovery_table_t;
 
-typedef struct{
+typedef struct __attribute__((packed)) {
 	mesh_directed_forward_t directed_forward;
 	fixed_fwd_tbl_t fixed_fwd_tbl[NET_KEY_MAX];
 }model_df_cfg_t;
@@ -568,8 +568,8 @@ u8 get_directed_proxy_dependent_ele_cnt(int conn_idx, u16 netkey_offset, u16 add
 u8 get_directed_friend_dependent_ele_cnt(u16 netkey_offset, u16 addr);
 int is_proxy_use_directed(int conn_idx, u16 netkey_offset);
 void directed_proxy_dependent_node_delete(int conn_idx);
-void mesh_directed_forwarding_bind_state_update();
-void mesh_directed_forwarding_default_val_init();
+void mesh_directed_forwarding_bind_state_update(void);
+void mesh_directed_forwarding_default_val_init(void);
 int mesh_directed_proxy_capa_report(u16 conn_handle, int netkey_offset);
 int mesh_directed_proxy_capa_report_upon_connection(u16 conn_handle);
 path_entry_com_t *get_forwarding_entry(u16 netkey_offset, u16 path_origin, u16 destination);
@@ -619,7 +619,7 @@ int cfg_cmd_directed_ctl_network_transmit_set(u16 node_adr, u8 transmit);
 int cfg_cmd_directed_ctl_relay_retransmit_get(u16 node_adr);
 int cfg_cmd_directed_ctl_relay_retransmit_set(u16 node_adr, u8 transmit);
 
-#if (MD_DF_CFG_SERVER_EN && !WIN32)
+#if (MD_DF_CFG_SERVER_EN && !defined(WIN32))
 int mesh_cmd_sig_cfg_directed_control_get(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par);
 int mesh_cmd_sig_cfg_directed_control_set(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par);
 #else
@@ -627,7 +627,7 @@ int mesh_cmd_sig_cfg_directed_control_set(u8 *par, int par_len, mesh_cb_fun_par_
 #define mesh_cmd_sig_cfg_directed_control_set							(0)	
 #endif
  
- #if (MD_DF_CFG_SERVER_EN&&!FEATURE_LOWPOWER_EN&&!WIN32)
+#if (MD_DF_CFG_SERVER_EN && !FEATURE_LOWPOWER_EN && !defined(WIN32))
 int mesh_cmd_sig_cfg_path_metric_get(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par);
 int mesh_cmd_sig_cfg_path_metric_set(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par);
 int mesh_cmd_sig_cfg_dsc_tbl_capa_get(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par);

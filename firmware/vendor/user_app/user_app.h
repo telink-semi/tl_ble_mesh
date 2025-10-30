@@ -40,7 +40,7 @@
 
 
 // --------- function  ----------------
-void cb_user_factory_reset_additional();
+void cb_user_factory_reset_additional(void);
 void cb_user_proc_led_onoff_driver(int on);
 
 

@@ -39,7 +39,7 @@ mesh_cmd_bear_t B_test_cmd = {
     /*.type =     */MESH_ADV_TYPE_MESSAGE,
 };
 
-void mesh_message6()
+void mesh_message6(void)
 {
     mesh_cmd_bear_t *p_bear = (mesh_cmd_bear_t *)&B_test_cmd;
     if(mesh_adv_tx_cmd_sno < 0x3129ab){
@@ -145,7 +145,7 @@ static const u8 B_test_ctl_par_org[] = {
     //0x31,0x32,0x33,0x34,0x35,0x36,0x37,0x38,
 };
 
-void mesh_message_fri_msg_ctl_seg()
+void mesh_message_fri_msg_ctl_seg(void)
 {
     static u8 B_test_ctl_par[sizeof(B_test_ctl_par_org)] = {0};
     
@@ -168,7 +168,7 @@ void mesh_message_fri_msg_ctl_seg()
 #endif
 
 #if 0
-void keyboard_handle_mesh()
+void keyboard_handle_mesh(void)
 {
     u16 adr_dst = ADR_LPN1;
     adr_dst = adr_dst;
@@ -194,7 +194,7 @@ void keyboard_handle_mesh()
 
 
 #if FRI_SAMPLE_EN
-void friend_ship_sample_message_test()
+void friend_ship_sample_message_test(void)
 {
     mesh_lpn_par.LPNAdr= ADR_LPN1;
     mesh_lpn_par.FriAdr = ADR_FND1;
@@ -249,7 +249,7 @@ void friend_cmd_send_sample_message(u8 op)
 #endif
 #endif
 
-void test_cmd_tdebug()
+void test_cmd_tdebug(void)
 {
 	static volatile u8 A_key = 0,A_key_seg = 1,A_key_virtual = 0;
 	static volatile u16 A_key_adr = 0x0001;//0xffff;
@@ -279,7 +279,7 @@ void test_cmd_tdebug()
 #if 0
 void power_on_io_proc(u8 i)
 {
-#if !WIN32
+#ifndef WIN32
 #define GPIO_DEBUG 	GPIO_PB4
 	gpio_set_func(GPIO_DEBUG,AS_GPIO);
 	gpio_set_output_en(GPIO_DEBUG,1);
@@ -324,8 +324,8 @@ void mesh_iv_update_test_initiate(u8 key_code)
 
 #if DEBUG_PUBLISH_REDUCE_COLLISION_TEST_EN
 #define PUB_TEST_DEBUG_LOG_EN				1	
-#error 111111111
-typedef struct{
+
+typedef struct __attribute__((packed)) {
 	u8 onoff;
 	u8 tid;
 	u8 transit_t;
@@ -335,7 +335,7 @@ typedef struct{
 }mesh_cmd_g_onoff_set_test_t;
 
 #define GW_RSP_ACK_NUM	60
-typedef struct{
+typedef struct __attribute__((packed)) {
 	u16 adr_dst;
 	u32 gw_rx_system_time_s;
 	u32 rx_code_num; 	// rx poll number of node
@@ -400,7 +400,7 @@ int access_cmd_onoff_with_pub_test_result(u16 adr_dst, u8 rsp_max, u8 onoff, int
 		par.system_time_s = system_time_s;
 			if((mesh_node_test_log[i].rx_code_num % 5) == 1){
 			#if PUB_TEST_DEBUG_LOG_EN
-			LOG_USER_MSG_INFO(0, 0, "node adr:0x%04x, rx status sno:%3d, rx status cnt:%3d, success1: %3d, gw tx ack sno:%3d, system_time_s: %3d, pub period:%2d, node rx gw ack cnt:%3d, success2: %3d", adr_dst, mesh_node_test_log[i].rx_code_num, mesh_node_test_log[i].rx_node_num, (mesh_node_test_log[i].rx_node_num*100)/mesh_node_test_log[i].rx_code_num, mesh_node_test_log[i].tx_noack_num, system_time_s, cycle_time, node_rsp_rx_ack_num, total_success);
+			LOG_MSG_LIB(TL_LOG_NODE_BASIC, 0, 0, "node adr:0x%04x, rx status sno:%3d, rx status cnt:%3d, success1: %3d, gw tx ack sno:%3d, system_time_s: %3d, pub period:%2d, node rx gw ack cnt:%3d, success2: %3d", adr_dst, mesh_node_test_log[i].rx_code_num, mesh_node_test_log[i].rx_node_num, (mesh_node_test_log[i].rx_node_num*100)/mesh_node_test_log[i].rx_code_num, mesh_node_test_log[i].tx_noack_num, system_time_s, cycle_time, node_rsp_rx_ack_num, total_success);
 			#endif
 			
 			return SendOpParaDebug(adr_dst, rsp_max, ack ? G_ONOFF_SET : G_ONOFF_SET_NOACK, (u8 *)&par, par_len);

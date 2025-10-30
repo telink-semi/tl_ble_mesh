@@ -35,6 +35,6 @@
  * @return      1:iv index invalid. 0:iv index valid.
  * @note        
  */
-int is_iv_index_invalid();
-void mesh_iv_update_report_between_gatt();
-
+int is_iv_index_invalid(void);
+void mesh_iv_update_report_between_gatt(void);
+int soft_timer_rcv_beacon_timeout(void);

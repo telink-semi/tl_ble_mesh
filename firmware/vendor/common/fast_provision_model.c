@@ -38,7 +38,7 @@ fast_prov_par_t fast_prov;
 #endif
 
 void mesh_gatt_adv_beacon_enable(u8 enable){
-	#if !WIN32
+	#ifndef WIN32
 	beacon_send.en = enable;
 	gatt_adv_send_flag = enable;
 	#endif
@@ -66,7 +66,7 @@ int mesh_reset_network(u8 provision_enable)
 		mesh_gatt_adv_beacon_enable(1);	
 	}
 //att table
-	#if !WIN32
+	#ifndef WIN32
 	my_att_init (provision_mag.gatt_mode);
 	#endif
 
@@ -89,7 +89,7 @@ int mesh_reset_network(u8 provision_enable)
 	return 0;
 }
 
-void mesh_revert_network()
+void mesh_revert_network(void)
 {
 	node_need_store_misc = 1;
 	
@@ -116,7 +116,7 @@ void mesh_revert_network()
 		mesh_flash_retrieve();	
 		mesh_provision_para_init(node_ident_random);
 		//att table
-		#if !WIN32
+		#ifndef WIN32
 		my_att_init (provision_mag.gatt_mode);
 		#endif
 	}
@@ -124,7 +124,7 @@ void mesh_revert_network()
 	#if (GATEWAY_ENABLE&&FAST_PROVISION_ENABLE)
 	gateway_upload_keybind_event(MESH_KEYBIND_EVE_SUC);
 	#endif
-	#if WIN32
+	#ifdef WIN32
 	App_key_bind_end_callback(MESH_APP_KEY_BIND_EVENT_SUC); 
 	#endif
 	mesh_gatt_adv_beacon_enable(1);
@@ -172,7 +172,7 @@ u8 mesh_fast_prov_get_ele_cnt_callback(u16 pid)
  * @param[in]  pid - the specified device type to be provision, 0xffff means all.
  * @return     none.
  */
-#if !WIN32
+#ifndef WIN32
 void start_fast_provision_state_machine(u16 pid)
 {
 	if(FAST_PROV_IDLE == mesh_fast_prov_sts_get()){
@@ -184,7 +184,7 @@ void start_fast_provision_state_machine(u16 pid)
 }
 #endif
 
-void mesh_get_fast_prov_net_info()
+void mesh_get_fast_prov_net_info(void)
 {
 	// set network info
 	fast_prov.net_info.pro_data.flags = 0;
@@ -230,7 +230,7 @@ u8 fast_prov_r_idx = 0;
 u8 fast_prov_retry_cnt  = 0;
 fast_prov_mac_st fast_prov_mac_buf[CACHE_MAC_MAX_NUM];
 
-void mesh_fast_prov_reliable_finish_handle()
+void mesh_fast_prov_reliable_finish_handle(void)
 {
 #if (FAST_PROVISION_ENABLE)
 	switch(fast_prov.cur_sts){
@@ -311,7 +311,7 @@ void mesh_fast_prov_rsp_handle(mesh_rc_rsp_t *rsp)
 }
 
 #if (FAST_PROVISION_ENABLE)
-void mesh_fast_prov_mac_buf_init()
+void mesh_fast_prov_mac_buf_init(void)
 {
 	fast_prov_w_idx = 0;
 	fast_prov_r_idx = 0;
@@ -360,12 +360,12 @@ u8 *mesh_fast_prov_get_mac_from_buf()
 
 
 #if FAST_PROVISION_ENABLE
-void mesh_device_key_set_default(){
+void mesh_device_key_set_default(void){
 	memset(mesh_key.dev_key, 0x00, sizeof(mesh_key.dev_key));
 	memcpy(mesh_key.dev_key, tbl_mac, sizeof(tbl_mac));
 }
 
-void mesh_fast_prov_val_init()
+void mesh_fast_prov_val_init(void)
 {
 	memset(&fast_prov, 0x00, sizeof(fast_prov));
 	if(is_provision_success()){
@@ -394,7 +394,7 @@ int mesh_fast_prov_sts_set(u8 sts_set)
 	return 1;
 }
 
-int mesh_fast_prov_sts_get()
+int mesh_fast_prov_sts_get(void)
 {
 	return fast_prov.cur_sts;
 }
@@ -406,7 +406,7 @@ int mesh_fast_prov_rcv_op(u16 rcv_op)
 	return 0;
 }
 
-void mesh_fast_provision_timeout()
+void mesh_fast_provision_timeout(void)
 {
 	if(fast_prov.start_tick && clock_time_exceed(fast_prov.start_tick,FAST_PROVISION_TIMEOUT)){
 		LOG_MSG_INFO(TL_LOG_NODE_BASIC, 0, 0,"FAST_PROV_TIME_OUT");
@@ -421,9 +421,9 @@ void mesh_fast_provision_timeout()
 	}
 }
 
-void mesh_fast_prov_proc()
+void mesh_fast_prov_proc(void)
 {
-	if(is_busy_tx_segment_or_reliable_flow()){
+	if(is_busy_tx_segment_or_reliable_flow() || my_fifo_get(&mesh_adv_cmd_fifo)){
 		return ;
 	}
 
@@ -604,7 +604,7 @@ int cb_vd_mesh_get_addr(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par)
 	memcpy(&mac_get, par, par_len);
 	if((mac_get.pid == MESH_PID_SEL) || (mac_get.pid == 0xffff)){
 		static u8 default_addr_random = 0;
-		if((par_len >= sizeof(mac_addr_get_t)) && (!default_addr_random)){//for default ele_adr_primary conflict
+		if(((u32)par_len >= sizeof(mac_addr_get_t)) && (!default_addr_random)){//for default ele_adr_primary conflict
 			default_addr_random = 1;
 			u16 tmp_ele_addr = mac_get.ele_addr+256+(u16)clock_time()%(0x8000-256-mac_get.ele_addr);
 			tmp_ele_addr &= 0x7fff;
@@ -633,7 +633,8 @@ int cb_vd_mesh_set_addr(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par)
 			memset(&fast_prov.net_info.pro_data, 0x00, sizeof(provison_net_info_str));
 			fast_prov.net_info.pro_data.unicast_address = addr;
 		}
-		fast_prov.get_mac_en = 0;		
+		fast_prov.get_mac_en = 0;
+        fast_prov.provisioner_addr = cb_par->adr_src;
 	}
 
 	return err;
@@ -641,24 +642,29 @@ int cb_vd_mesh_set_addr(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par)
 
 int cb_vd_mesh_set_provision_data(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par)
 {
-	if(fast_prov.not_need_prov){
+	if(fast_prov.not_need_prov || (fast_prov.provisioner_addr != cb_par->adr_src)){
 		return -1;
 	}
-	mesh_fast_prov_rcv_op(cb_par->op);
-//par: provision data + app_key add
-	memcpy(&fast_prov.net_info.pro_data, par, OFFSETOF(provison_net_info_str, unicast_address));	// unicast address had been set in cb_vd_mesh_set_addr().
-	memcpy(&fast_prov.net_info.appkey_set,par+sizeof(provison_net_info_str),sizeof(mesh_appkey_set_t));
 
+    if(mesh_fast_prov_sts_get() == FAST_PROV_SET_ADDR){
+        mesh_fast_prov_rcv_op(cb_par->op);
+        //par: provision data + app_key add
+        memcpy(&fast_prov.net_info.pro_data, par, OFFSETOF(provison_net_info_str, unicast_address));	// unicast address had been set in cb_vd_mesh_set_addr().
+        memcpy(&fast_prov.net_info.appkey_set,par+sizeof(provison_net_info_str),sizeof(mesh_appkey_set_t));
+    }
+    
 	return 0;
 }
 
 int cb_vd_mesh_provision_confirm(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par)
 {
 	int err = -1;
-	if(fast_prov.not_need_prov){
+	if(fast_prov.not_need_prov || (fast_prov.provisioner_addr != cb_par->adr_src)){
 		return err;
 	}
+    
 	mesh_fast_prov_rcv_op(cb_par->op);
+    
 	if(fast_prov.cur_sts == FAST_PROV_SET_ADDR){
 		err = mesh_tx_cmd_rsp(cb_par->op_rsp, 0, 0, ele_adr_primary, cb_par->adr_src, 0, 0);
 	}
@@ -668,6 +674,10 @@ int cb_vd_mesh_provision_confirm(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par
 
 int cb_vd_mesh_provision_complete(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par)
 {
+    if(fast_prov.provisioner_addr != cb_par->adr_src){
+        return -1;
+    }
+    
 	mesh_fast_prov_rcv_op(cb_par->op);
 	fast_prov.delay = par[0] + (par[1]<<8);
 

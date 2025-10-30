@@ -97,7 +97,10 @@ int battery_get_detect_enable (void)
 
 
 
-_attribute_ram_code_ void adc_vbat_detect_init(void)
+#if (PM_DEEPSLEEP_RETENTION_ENABLE)
+_attribute_ram_code_
+#endif
+void adc_vbat_detect_init(void)
 {
 #if (MCU_CORE_TYPE == MCU_CORE_8278)
 	// DFIFO Mode
@@ -226,7 +229,10 @@ _attribute_ram_code_ void adc_vbat_detect_init(void)
 }
 
 #if (VBAT_LEAKAGE_PROTECT_EN)
-_attribute_ram_code_ int app_battery_power_check(u16 threshold_deep_vol_mv, u16 threshold_suspend_vol_mv)
+#if (PM_DEEPSLEEP_RETENTION_ENABLE) // save 536byte (include adc_vbat_detect_init_()) when no retention sleep.
+_attribute_ram_code_
+#endif
+int app_battery_power_check(u16 threshold_deep_vol_mv, u16 threshold_suspend_vol_mv)
 {
 	u16 temp;
 	int i,j;
@@ -445,7 +451,11 @@ _attribute_ram_code_ int app_battery_power_check(u16 threshold_deep_vol_mv, u16 
 
 }
 #else
-_attribute_ram_code_ int app_battery_power_check(u16 alram_vol_mv, int loop_flag)
+
+#if (PM_DEEPSLEEP_RETENTION_ENABLE) // save 536byte (include adc_vbat_detect_init_()) when no retention sleep.
+_attribute_ram_code_
+#endif
+int app_battery_power_check(u16 alram_vol_mv, int loop_flag)
 {
     int ret_slept_flag = 0;
 	u16 temp;
@@ -598,7 +608,7 @@ _attribute_ram_code_ int app_battery_power_check(u16 alram_vol_mv, int loop_flag
         ret_slept_flag = 1;
 	    #endif
 	}else{
-	    // DEEP_ANA_REG0 can not be cleared here, because it will be used in light pwm init.
+	    // MESH_DEEP_ANA_REG can not be cleared here, because it will be used in light pwm init.
 	}
 
 

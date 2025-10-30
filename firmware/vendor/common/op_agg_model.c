@@ -38,7 +38,7 @@ int is_op_agg_model(u32 model_id)
 	return 0;
 }
 
-int is_in_op_agg_mode()
+int is_in_op_agg_mode(void)
 {
 #if MD_OP_AGG_EN
 	// have made sure not be tx seg busy before tx aggregator in mesh_op_agg_status_item_format_add_(), and resource of tx segment flow will used.

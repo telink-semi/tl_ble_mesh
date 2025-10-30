@@ -26,7 +26,7 @@
 
 extern u8 switch_provision_ok;
 
-void proc_ui();
+void proc_ui(void);
 
 /**
  * @brief      keyboard task handler
@@ -48,7 +48,7 @@ void  app_set_kb_wakeup (u8 e, u8 *p, int n);
 
 void deep_wakeup_proc(void);
 
-void mesh_switch_init();
+void mesh_switch_init(void);
 
 
 #endif /* APP_UI_H_ */

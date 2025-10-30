@@ -49,7 +49,7 @@ static u16 timing_info_report_src_addr;
 static u16 timing_info_report_des_addr;
 
 
-typedef struct {
+typedef struct __attribute__((packed)) {
 	u16 busy;
 	u16 period_count;
 	u8 retry_delay_count;
@@ -70,20 +70,20 @@ model_vd_ali_time_t model_vd_ali_time = {
 		},
 };
 
-typedef struct {
+typedef struct __attribute__((packed)) {
 	u8 tid;
 	u16 attr_type;
 } ali_msg_header_t;
 
 // set time.
-typedef struct {
+typedef struct __attribute__((packed)) {
 	u8 tid;
 	u16 attr_type;
 	u32 time;
 } ali_msg_time_set_t;
 
 // get time.
-typedef struct {
+typedef struct __attribute__((packed)) {
 	u8 tid;
 	u16 attr_type;
 } ali_msg_time_get_t;
@@ -92,7 +92,7 @@ typedef struct {
 typedef ali_msg_time_set_t ali_msg_time_info_t;
 
 // set sntp download.
-typedef struct {
+typedef struct __attribute__((packed)) {
 	u8 tid;
 	u16 attr_type;
 	u16 period_time;
@@ -107,7 +107,7 @@ typedef ali_msg_time_get_t ali_msg_sntp_para_get_t;
 typedef ali_msg_sntp_para_set_t ali_msg_sntp_para_info_t;
 
 // set timezone download.
-typedef struct {
+typedef struct __attribute__((packed)) {
 	u8 tid;
 	u16 attr_type;
 	s8 timezone;
@@ -126,20 +126,20 @@ typedef ali_msg_time_get_t ali_msg_upd_time_req_t;
 typedef ali_msg_time_set_t ali_msg_upd_time_t;
 
 // get timing info(s). download.
-typedef struct {
+typedef struct __attribute__((packed)) {
 	u8 tid;
 	u16 attr_type;
 	u8 index[1];
 } ali_msg_timing_get_t;
 
-typedef struct {
+typedef struct __attribute__((packed)) {
 	u8 index;
 	u32 time;
 	timing_op_group_t op_groups[1];
 } ali_msg_timing_set_para_t;
 
 // set timing info(s) download.
-typedef struct {
+typedef struct __attribute__((packed)) {
 	u8 tid;
 	u16 attr_type;
 	ali_msg_timing_set_para_t para[1];
@@ -148,7 +148,7 @@ typedef struct {
 // timing info(s). upload
 typedef ali_msg_timing_set_t ali_msg_timing_info_t;
 
-typedef struct {
+typedef struct __attribute__((packed)) {
 	u8 index;
 	u16 time;
 	u8 schedule;
@@ -156,7 +156,7 @@ typedef struct {
 } ali_msg_cycle_timing_set_para_t;
 
 // set cycle timing. download.
-typedef struct {
+typedef struct __attribute__((packed)) {
 	u8 tid;
 	u16 attr_type;
 	ali_msg_cycle_timing_set_para_t para[1];
@@ -169,7 +169,7 @@ typedef ali_msg_cycle_timing_set_t ali_msg_cycle_timing_info_t;
 typedef ali_msg_timing_get_t ali_msg_timing_del_t;
 
 // Timing completion. upload.
-typedef struct {
+typedef struct __attribute__((packed)) {
 	u8 tid;
 	u16 attr_type;
 	u8 event;
@@ -177,7 +177,7 @@ typedef struct {
 } ali_msg_timing_completion_t;
 
 // err report.
-typedef struct {
+typedef struct __attribute__((packed)) {
 	u8 tid;
 	u16 attr_type1;
 	u16 attr_type2;
@@ -231,7 +231,7 @@ int is_leap_year(int year)
 	return (year) % 4 == 0 && ((year) % 100 != 0 || (year) % 400 == 0);
 }
 
-typedef struct {
+typedef struct __attribute__((packed)) {
 	u16 year;
 	u8 month;
 	u8 day;

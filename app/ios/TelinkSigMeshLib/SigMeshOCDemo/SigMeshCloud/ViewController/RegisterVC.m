@@ -178,9 +178,9 @@
                 int code = [dic[@"code"] intValue];
                 if (code == 200) {
                     TelinkLogInfo(@"register successful!");
-                    [weakSelf showAlertTitle:@"Register successful" message:[NSString stringWithFormat:@"You can log in with mailAddress:%@ or name:%@", emailString, name] sure:^(UIAlertAction *action) {
+                    [weakSelf showAlertSureAndCancelWithTitle:@"Register successful" message:[NSString stringWithFormat:@"You can log in with mailAddress:%@ or name:%@", emailString, name] sure:^(UIAlertAction *action) {
                         [weakSelf dismissViewControllerAnimated:YES completion:nil];
-                    }];
+                    } cancel:nil];
                 } else {
                     TelinkLogInfo(@"register result = %@", dic);
                     [weakSelf showTips:[NSString stringWithFormat:@"register errorCode = %d, message = %@", code, dic[@"message"]]];

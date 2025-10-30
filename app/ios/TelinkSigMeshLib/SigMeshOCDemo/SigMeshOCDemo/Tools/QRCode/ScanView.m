@@ -87,7 +87,6 @@ NSString * const ScanQRCodeMessageKey = @"ScanQRCodeMessageKey";
     [self stop];
 }
 
-
 #pragma mark - operate
 /**
  *  开始视频会话
@@ -95,9 +94,7 @@ NSString * const ScanQRCodeMessageKey = @"ScanQRCodeMessageKey";
 - (void)start
 {
     if (self.isCameraAvailable && self.isRearCameraAvailable) {
-        dispatch_async(dispatch_get_main_queue(), ^{
-            [self.session startRunning];
-        });
+        [self.session performSelectorInBackground:@selector(startRunning) withObject:nil];
     }
 }
 
@@ -333,6 +330,7 @@ NSString * const ScanQRCodeMessageKey = @"ScanQRCodeMessageKey";
 
 - (void)captureOutput:(AVCaptureOutput *)captureOutput didOutputMetadataObjects:(NSArray *)metadataObjects fromConnection:(AVCaptureConnection *)connection {
     if (metadataObjects.count > 0) {
+        //返回一次数据就不再扫描
         [self stop];
 
         AVMetadataMachineReadableCodeObject * metadataObject = metadataObjects[0];
@@ -344,7 +342,7 @@ NSString * const ScanQRCodeMessageKey = @"ScanQRCodeMessageKey";
 //        TelinkLogDebug(@"metadataObject->%@", metadataObject.stringValue);
         if (self.scanDataBlock && metadataObject.stringValue) {
             self.scanDataBlock(metadataObject.stringValue);
-
+            //返回一次数据就不再扫描
 //            [self removeFromSuperview];
         } else {
             [[NSNotificationCenter defaultCenter] postNotificationName:SuccessScanQRCodeNotification object:self userInfo: @{ ScanQRCodeMessageKey: metadataObject.stringValue }];

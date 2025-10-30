@@ -49,7 +49,13 @@ NS_ASSUME_NONNULL_BEGIN
 
 + (UIColor *)dynamicColorWithLight:(UIColor *)light dark:(UIColor *)dark;
 
++ (UIColor *)telinkBackground;
+
++ (UIColor *)telinkTitleBlue;
+
 + (UIColor *)telinkBlue;
+
++ (UIColor *)telinkLightGray;
 
 + (UIColor *)telinkButtonBlue;
 
@@ -66,6 +72,8 @@ NS_ASSUME_NONNULL_BEGIN
 + (UIColor *)telinkBorderColor;
 
 + (UIColor *)telinkTitleGray;
+
++ (UIColor*)telinkTabBarBackgroundColor;
 
 @end
 

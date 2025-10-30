@@ -72,7 +72,7 @@ int nmw_ota_st_report(u16 op, u8 errno)
 	return ret;
 }
 
-int nmw_ota_seg_report()
+int nmw_ota_seg_report(void)
 {
 	rec_seg_map_t seg_map;	
 	nmw_ota_state.seg_timeout_tick = clock_time()|1;

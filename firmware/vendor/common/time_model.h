@@ -56,7 +56,7 @@ enum{
 	TIME_ROLE_MAX,
 };
 
-typedef struct{
+typedef struct __attribute__((packed)) {
 	u32 TAI_sec;     // 32bit is enough for 2000 ~ 2099 year
 	u8 TAI_sec_rsv;
 	u8 sub_sec;
@@ -66,7 +66,7 @@ typedef struct{
 	u8 zone_offset;
 }time_status_t;
 
-typedef struct{
+typedef struct __attribute__((packed)) {
 	time_status_t time;
 	u8 zone_offset_new;
 	u8 TAI_zone_change[5];
@@ -76,24 +76,24 @@ typedef struct{
 	u8 role;
 }mesh_time_t;
 
-typedef struct{
+typedef struct __attribute__((packed)) {
 	u8 zone_offset_new;
 	u8 TAI_zone_change[5];
 }mesh_time_zone_set_t;
 
-typedef struct{
+typedef struct __attribute__((packed)) {
 	u8 zone_offset_current;
 	u8 zone_offset_new;
 	u8 TAI_zone_change[5];
 }mesh_time_zone_status_t;
 
-typedef struct{
+typedef struct __attribute__((packed)) {
 	u16 delta_new		:15;
 	u16 rsv				:1;
 	u8 TAI_delta_change[5];
 }mesh_time_TAI_UTC_delta_set_t;
 
-typedef struct{
+typedef struct __attribute__((packed)) {
 	u16 delta_current	:15;
 	u16 rsv1			:1;
 	u16 delta_new		:15;
@@ -118,7 +118,7 @@ extern u32          mesh_time_tick;
 //#define OFFSET_1970_2000_EAST8  (946684800 - 8*3600)
 #define TIME_ZONE_0     (0x40)
 
-typedef struct{
+typedef struct __attribute__((packed)) {
     u16 year;
     u8 month;
     u8 day;
@@ -141,10 +141,10 @@ static inline u8 get_time_zone_offset(s32 zone_min) // Positive numbers are east
 
 int get_UTC(const u32 second, mesh_UTC_t *UTC);
 u32 get_TAI_sec( mesh_UTC_t *UTC );
-u32 get_local_TAI();
+u32 get_local_TAI(void);
 u8 get_days_one_month(u32 year, u8 month);
-u8 get_days_current_month();
-void mesh_time_proc();
+u8 get_days_current_month(void);
+void mesh_time_proc(void);
 int mesh_time_set(time_status_t *p_set);
 int mesh_time_st_publish(u8 idx);
 int mesh_time_role_st_publish(u8 idx);

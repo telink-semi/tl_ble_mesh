@@ -338,7 +338,7 @@ void save_map_len_check()
 }
 
 
-void tlv_init()
+void tlv_init(void)
 {
 	// find the empty cnt in the record flash part 
 	u32 first_empty;

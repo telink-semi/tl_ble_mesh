@@ -50,7 +50,7 @@
 
 //------------------vendor op end-------------------
 
-typedef struct{
+typedef struct __attribute__((packed)) {
 	u16 lightness;
 	u16 x;
 	u16 y;
@@ -59,47 +59,47 @@ typedef struct{
 	u8 delay;		// unit 5ms
 }mesh_cmd_light_xyl_set_t;
 
-typedef struct{
+typedef struct __attribute__((packed)) {
 	u16 lightness;
 	u16 x;
 	u16 y;
 	u8 remain_t;
 }mesh_cmd_light_xyl_st_t;
 
-typedef struct{
+typedef struct __attribute__((packed)) {
 	u16 x;
 	u8 tid;
 	u8 transit_t;
 	u8 delay;		// unit 5ms
 }mesh_cmd_light_x_set_t;
 
-typedef struct{
+typedef struct __attribute__((packed)) {
 	u16 y;
 	u8 tid;
 	u8 transit_t;
 	u8 delay;		// unit 5ms
 }mesh_cmd_light_y_set_t;
 
-typedef struct{
+typedef struct __attribute__((packed)) {
 	u16 lightness;
 	u16 x;
 	u16 y;
 }mesh_cmd_light_xyl_def_set_t;
 
-typedef struct{
+typedef struct __attribute__((packed)) {
 	u16 lightness;
 	u16 x;
 	u16 y;
 }mesh_cmd_light_xyl_def_st_t;
 
-typedef struct{
+typedef struct __attribute__((packed)) {
 	u16 x_min;
 	u16 x_max;
 	u16 y_min;
 	u16 y_max;
 }mesh_cmd_light_xyl_range_set_t;
 
-typedef struct{
+typedef struct __attribute__((packed)) {
 	u8 st;
 	u16 x_min;
 	u16 x_max;

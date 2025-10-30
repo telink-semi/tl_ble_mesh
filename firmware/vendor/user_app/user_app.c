@@ -23,7 +23,7 @@
  *
  *******************************************************************************************************/
 #include "tl_common.h"
-#if !WIN32
+#ifndef WIN32
 #include "proj_lib/mesh_crypto/mesh_md5.h"
 #include "vendor/common/myprintf.h"
 #endif 
@@ -59,7 +59,7 @@
 #endif
 
 
-void cb_user_factory_reset_additional()
+void cb_user_factory_reset_additional(void)
 {
     // TODO
 }

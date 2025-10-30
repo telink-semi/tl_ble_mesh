@@ -118,25 +118,25 @@ int tn_ecp_normalize_jac( tn_ecp_point *pt );
 int tn_ecp_mul(tn_ecp_point *R, const tn_mpi *m, const tn_ecp_point *P);
 int tn_ecp_muladd( tn_ecp_point *R, const tn_mpi *m, const tn_ecp_point *P, const tn_mpi *n, const tn_ecp_point *Q );
 
-extern void tn_ecp_gen_keypair (tn_mpi *d, tn_ecp_point *Q);
-extern void tn_p256_keypair (unsigned char *s, unsigned char *x, unsigned char *y);
-extern void tn_p256_dhkey (unsigned char *r, unsigned char *s, unsigned char * x, unsigned char *y);
-extern void tn_p256_keypair_mac (unsigned char *s, unsigned char *x, unsigned char *y,u8 *mac,u8 len );
+void tn_ecp_gen_keypair (tn_mpi *d, tn_ecp_point *Q);
+void tn_p256_keypair (unsigned char *s, unsigned char *x, unsigned char *y);
+void tn_p256_dhkey (unsigned char *r, unsigned char *s, unsigned char * x, unsigned char *y);
+void tn_p256_keypair_mac (unsigned char *s, unsigned char *x, unsigned char *y,u8 *mac,u8 len );
 
-extern void tn_aes_128(unsigned char *key, unsigned char *plaintext, unsigned char *result);
-extern void tn_aes_cmac ( unsigned char *key, unsigned char *input, int length,
+void tn_aes_128(unsigned char *key, unsigned char *plaintext, unsigned char *result);
+void tn_aes_cmac ( unsigned char *key, unsigned char *input, int length,
                   unsigned char *mac );
-extern int tn_crypto_f4 (unsigned char *r, unsigned char u[32], unsigned char v[32], unsigned char x[16], unsigned char z);
-extern unsigned int tn_crypto_g2 (unsigned char u[32], unsigned char v[32], unsigned char x[16], unsigned char y[16]);
-extern int tn_crypto_f5 (unsigned char *mac, unsigned char *ltk, unsigned char w[32], unsigned char n1[16], unsigned char n2[16],
+int tn_crypto_f4 (unsigned char *r, unsigned char u[32], unsigned char v[32], unsigned char x[16], unsigned char z);
+unsigned int tn_crypto_g2 (unsigned char u[32], unsigned char v[32], unsigned char x[16], unsigned char y[16]);
+int tn_crypto_f5 (unsigned char *mac, unsigned char *ltk, unsigned char w[32], unsigned char n1[16], unsigned char n2[16],
 				  unsigned char a1[7], unsigned char a2[7]);
-extern int tn_crypto_f6 (unsigned char *e, unsigned char w[16], unsigned char n1[16], unsigned char n2[16],
+int tn_crypto_f6 (unsigned char *e, unsigned char w[16], unsigned char n1[16], unsigned char n2[16],
 				  unsigned char r[16], unsigned char iocap[3], unsigned char a1[7], unsigned char a2[7]);
-extern int tn_crypto_h6 (unsigned char *r, unsigned char key[16], unsigned char id[4]);
+int tn_crypto_h6 (unsigned char *r, unsigned char key[16], unsigned char id[4]);
 
-extern int test_crypto_func ();
-extern int test_dhkey ();
-extern int test_const_sk_calc();
-extern void tn_p256_keypair_sk(unsigned char *s,unsigned char *x,unsigned char *y);
+int test_crypto_func (void);
+int test_dhkey (void);
+int test_const_sk_calc(void);
+void tn_p256_keypair_sk(unsigned char *s,unsigned char *x,unsigned char *y);
 
 #endif 

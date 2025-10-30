@@ -229,4 +229,59 @@ struct TCProtocolFeature {
     };
 };
 
+/// 6.7.3 Configuration register
+/// - seeAlso: PTM-215B-User-Manual.pdf  (page.40)
+typedef struct {
+    union{
+        UInt8 value;
+        struct{
+            /// The Configuration register is used to select the length of optional data, to disable the
+            /// transmission of commissioning telegrams, to select resolvable private address mode, to
+            /// disable NFC read-out of the security key and to indicate an update of the security key, the
+            /// manufacturer ID or the source ID.
+            UInt8 UPDATE_SOURCE_ID  :1;//value的低第1个bit
+            UInt8 UPDATE_MAN_ID  :1;//value的低第2个bit
+            UInt8 UPDATE_SECURITY_KEY  :1;//value的低第3个bit
+            UInt8 PRIVATE_SECURITY_KEY  :1;//value的低第4个bit
+            UInt8 RPA_ADDRESS_MODE  :1;//value的低第5个bit
+            UInt8 DISABLE_LRN_TELEGRAM  :1;//value的低第6个bit
+            UInt8 OPTIONAL_DATA_SIZE :2;//value的高2个bit
+        };
+    };
+}ConfigurationStruct;
+
+/// 6.7.9 Variant register
+/// - seeAlso: PTM-215B-User-Manual.pdf  (page.44)
+typedef struct {
+    union{
+        UInt8 value;
+        struct{
+            /// The Variant register is 1 byte wide and allows selection of the custom radio transmission
+            /// modes as described in chapter 3.3. Additionally, it allows reducing the transmission interval
+            /// from 20 ms to 10 ms and to increase the bit rate from 1 Mbit to 2 Mbit.
+            TransmissionModeType TransmissionMode  :3;//value的低3个bit
+            UInt8 Interval  :1;//value的低4个bit
+            UInt8 DataRate  :1;//value的低5个bit
+            UInt8 RFU  :3;//value的高3个bit
+        };
+    };
+}VariantStruct;
+
+
+struct EnOceanKeyStruct {
+    union{
+        UInt8 value;
+        struct{
+            //when bit 0 is true: if "onoff == 0", key 0 for OFF, key 1 for ON; if "onoff == 1" key 0 for ON, key 1 for OFF;
+            //when bit 1 is true: if "onoff == 0", key 2 for OFF, key 3 for ON; if "onoff == 1" key 2 for ON, key 3 for OFF;
+            UInt8 KeyPairEnable      :2;//value的低2个bit
+            UInt8 rsv1      :2;//value的低位中间2个bit
+            //key number offset. 0 means set key0-3, 1 means set key4-7, 2 means set key8-11...
+            UInt8 KeyOffset      :2;//value的低位中间2个bit
+            UInt8 rsv2      :2;//value的高位2个bit
+        };
+    };
+};
+
+
 #endif /* SigStruct_h */

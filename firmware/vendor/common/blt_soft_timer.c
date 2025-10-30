@@ -173,7 +173,7 @@ int is_soft_timer_exist(blt_timer_callback_t func)
 	return 0;
 }
 
-u8 blt_soft_timer_cur_num()
+u8 blt_soft_timer_cur_num(void)
 {
 	return blt_timer.currentNum;
 }

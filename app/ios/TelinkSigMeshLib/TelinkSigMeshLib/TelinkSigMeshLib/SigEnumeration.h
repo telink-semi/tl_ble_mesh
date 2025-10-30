@@ -201,6 +201,14 @@ typedef enum : UInt8 {
     AddDeviceModelStateScanned,
     AddDeviceModelStateConnecting,
     AddDeviceModelStateProvisioning,
+    
+    // state for fast provision
+    AddDeviceModelStateDeviceFound,
+    AddDeviceModelStateSetAddressRequest,
+    AddDeviceModelStateSetAddressResponse,
+    AddDeviceModelStateSettingProvisionData,
+    AddDeviceModelStateProvisionSuccess,
+    
 } AddDeviceModelState;//添加的设备的状态
 
 /// Table 5.18: Algorithms field values.
@@ -2139,6 +2147,7 @@ typedef enum : UInt8 {
     CHIP_TYPE_8278 = 1,
     CHIP_TYPE_8269 = 2,
     CHIP_TYPE_9518 = 3,
+    CHIP_TYPE_3218 = 4,
 } CHIP_TYPE;
 typedef enum : UInt8 {
     MajorProductType_light     = 0,
@@ -2565,6 +2574,88 @@ typedef enum : UInt8 {
     SigSortType_sortByNameAscending = 2,
     SigSortType_sortByNameDescending = 3,
 } SigSortType;
+
+typedef enum : UInt8 {
+    EnOceanButtonItemType_OnOff,
+    EnOceanButtonItemType_Light,
+    EnOceanButtonItemType_CT,
+    EnOceanButtonItemType_SceneRecall,
+} EnOceanButtonItemType;
+
+typedef enum : UInt8 {
+    EnOceanActionLayoutType_12_34 = 0,
+    EnOceanActionLayoutType_12_3_4 = 1,
+    EnOceanActionLayoutType_1_2_34 = 2,
+    EnOceanActionLayoutType_1_2_3_4 = 3,
+} EnOceanActionLayoutType;
+
+typedef enum : UInt8 {
+    VendorOpCode_get = 0xC1,//vendor get
+    VendorOpCode_setWithAck = 0xC2,//vendor set
+    VendorOpCode_setNoAck = 0xC3,//vendor set no ack
+    VendorOpCode_response = 0xC4,//vendor response
+} VendorOpCode;
+
+typedef enum : UInt8 {
+    VendorSubOpCode_pairMacAddressAndKey = 4,//pair
+    VendorSubOpCode_pairDelete = 5,//pair delete
+    VendorSubOpCode_publishSet = 6,//publish
+} VendorSubOpCode;
+
+typedef enum : UInt8 {
+    EnOceanPairStatus_success = 0,
+    EnOceanPairStatus_messingPkt = 1,
+    EnOceanPairStatus_AuthFailed = 2,
+    EnOceanPairStatus_unicastAddressOccupied = 3,
+    EnOceanPairStatus_insufficientResources = 4,
+    EnOceanPairStatus_notEnoughInfo = 5,
+    EnOceanPairStatus_publishInvalidAddress = 6,
+    EnOceanPairStatus_publishInsufficientResources = 7,
+} EnOceanPairStatus;
+
+typedef enum : UInt8 {
+    /// set one button by a single command
+    EnOceanPublishSetType_generic = 0,
+    /// set two buttons by a single command
+    EnOceanPublishSetType_onOffTwoButtons = 1,
+    /// set two buttons by a single command
+    EnOceanPublishSetType_DeltaLightnessTwoButtons = 2,
+    /// set four buttons by a single command
+    EnOceanPublishSetType_onOffFourButtons = 3,
+    /// set four buttons by a single command
+    EnOceanPublishSetType_DeltaLightnessFourButtons = 4,
+} EnOceanPublishSetType;
+
+
+/// 6.7.9.1 Transmission Mode selection
+/// - seeAlso: PTM-215B-User-Manual.pdf  (page.44)
+typedef enum : UInt8 {
+    /// Commissioning and data telegrams in standard Advertising Mode (Default configuration)
+    TransmissionModeType_000 = 0b000,
+    /// Commissioning telegrams in standard Advertising Mode
+    /// Data telegrams on 3 user-defined radio channels
+    TransmissionModeType_001 = 0b100,
+    /// Commissioning telegrams in standard Advertising Mode
+    /// Data telegrams on 2 user-defined radio channels
+    TransmissionModeType_010 = 0b010,
+    /// Commissioning telegrams in standard Advertising Mode
+    /// Data telegrams on 1 user-defined radio channel
+    TransmissionModeType_011 = 0b110,
+    /// Commissioning and Data telegrams on 3 user-defined radio channels
+    TransmissionModeType_100 = 0b001,
+    /// Commissioning and Data telegrams on 2 user-defined radio channels
+    TransmissionModeType_101 = 0b101,
+    /// Commissioning and Data telegrams on 1 user-defined radio channel
+    TransmissionModeType_110 = 0b011,
+    /// RFU (Do not use)
+    TransmissionModeType_111 = 0b111,
+} TransmissionModeType;
+
+typedef enum : UInt8 {
+    MiFareCommandCode_READ = 0x30,
+    MiFareCommandCode_WRITE = 0xA2,
+    MiFareCommandCode_PWD_AUTH = 0x1B,
+} MiFareCommandCode;
 
 #endif /* SigEnumeration_h */
 /// 0x83 0x08 Firmware Update Information Get

@@ -61,6 +61,9 @@
     } else if (node.isRemote) {
         //遥控器remote特殊处理
         iconName = @"ic_rmt";
+    } else if (node.isEnOceanDevice) {
+        //无源开关EnOcean特殊处理
+        iconName = @"icon_EnOcean";
     }
     return [UIImage imageNamed:iconName];
 }

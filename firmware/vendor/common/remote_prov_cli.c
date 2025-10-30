@@ -35,7 +35,7 @@
 #include "proj_lib/sig_mesh/app_mesh.h"
 #include "proj_lib/mesh_crypto/sha256_telink.h"
 #include "proj_lib/mesh_crypto/le_crypto.h"
-#if WIN32 // remote prov client proc part ,only concern about the gatt provision part 
+#ifdef WIN32 // remote prov client proc part ,only concern about the gatt provision part 
 #include "../../../reference/tl_bulk/lib_file/host_fifo.h"
 #include "../../../reference/tl_bulk/lib_file/gatt_provision.h"
 #include "../../../reference/tl_bulk/Sig_mesh_json_info.h"
@@ -96,7 +96,7 @@ void mesh_rp_proc_en(u8 en)
     rp_client.rp_flag = en;
 }
 
-u8 get_mesh_rp_proc_en()
+u8 get_mesh_rp_proc_en(void)
 {
     return rp_client.rp_flag;
 }
@@ -164,7 +164,7 @@ int mesh_cmd_sig_rp_cli_send_pdu_direct(u8 *p_pdu,u16 len)
 {
     return mesh_cmd_sig_rp_cli_send_prov_pdu(rp_client.node_adr,p_pdu,len);
 }
-void mesh_rp_client_para_reset()
+void mesh_rp_client_para_reset(void)
 {
 	mesh_seg_filter_adr_set(0);
     memset(&rp_client,0,sizeof(rp_client));
@@ -185,7 +185,7 @@ u8 mesh_prov_is_segment(u8 data_len)
 	}
 }
 
-u8 mesh_prov_dkri_is_valid()
+u8 mesh_prov_dkri_is_valid(void)
 {
 	if(rp_mag.dkri_cli & REMOTE_PROV_DKRI_EN_FLAG){
 		return 1;
@@ -207,7 +207,7 @@ void mesh_prov_set_adr_dev_candi(u16 adr,u8 *p_dev)
 }
 
 
-void mesh_rp_pdu_retry_clear()
+void mesh_rp_pdu_retry_clear(void)
 {
     rp_mag_cli_str *p_rp = &rp_client;
     p_rp->retry_flag =0;
@@ -235,7 +235,7 @@ int send_rp_extend_scan_start(u16 adr,u8* p_adtype,u8 cnt)
 	return SendOpParaDebug(adr, 0, REMOTE_PROV_EXTEND_SCAN_START, (u8 *)&scan_start, 1+cnt);
 }
 
-u8  is_rp_working()
+u8  is_rp_working(void)
 {
 	rp_mag_cli_str *p_rp = &rp_client;
 	if(p_rp->prov_sts>=RP_PROV_INVITE_CMD_ACK && p_rp->prov_sts<RP_PROV_COMPLETE_RSP){
@@ -253,8 +253,8 @@ void mesh_seg_filter_adr_set(u16 adr)
 
 
 
-#if WIN32
-void mesh_rp_pdu_retry_send()
+#ifdef WIN32
+void mesh_rp_pdu_retry_send(void)
 {
     rp_mag_cli_str *p_rp = &rp_client;
     if(p_rp->retry_flag){
@@ -536,7 +536,7 @@ void gw_rp_time_clear()
 	gw_rp_tick = 0;
 }
 
-void gw_rp_timeout_proc()
+void gw_rp_timeout_proc(void)
 {
 	if(gw_rp_tick && clock_time_exceed(gw_rp_tick,MAX_GW_RP_TIMEOUT_S*1000*1000)){
 		gw_rp_tick = 0;
@@ -565,7 +565,7 @@ void mesh_prov_dev_candi_store_proc(u16 cmd_src)
 	}
 }
 
-void gw_rp_send_invite()
+void gw_rp_send_invite(void)
 {
 	mesh_pro_data_t *p_send = (mesh_pro_data_t *)(para_pro);
 	set_pro_invite(p_send,0);

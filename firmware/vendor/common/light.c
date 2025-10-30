@@ -35,7 +35,7 @@
 #if HOMEKIT_EN
 #include "vendor/common/led_cfg.h"
 #endif
-#if WIN32
+#ifdef WIN32
 #include <stdlib.h>
 #endif
 
@@ -206,7 +206,7 @@ s16 get_on_power_up_last(sw_level_save_t *p_save)
 	return (p_save->onoff ? p_save->last : LEVEL_OFF);
 }
 
-#if (!WIN32)
+#ifndef WIN32
 #if 1 // KEEP_ONOFF_STATE_AFTER_OTA // always on, because lpn need to set in gatt adv mode after ota reboot.
 #define OTA_REBOOT_CHECK_FLAG			(KEEP_ONOFF_STATE_AFTER_OTA ? FLD_OTA_REBOOT_FLAG : 0)
 
@@ -216,9 +216,9 @@ s16 get_on_power_up_last(sw_level_save_t *p_save)
  * @return      none
  * @note        
  */
-void set_keep_onoff_state_after_ota()
+void set_keep_onoff_state_after_ota(void)
 {
-	analog_write(DEEP_ANA_REG0, analog_read(DEEP_ANA_REG0) | FLD_OTA_REBOOT_FLAG);
+	analog_write(MESH_DEEP_ANA_REG, analog_read(MESH_DEEP_ANA_REG) | FLD_OTA_REBOOT_FLAG);
 }
 
 
@@ -227,9 +227,9 @@ void set_keep_onoff_state_after_ota()
  * @return      none
  * @note        
  */
-void clr_keep_onoff_state_after_ota()
+void clr_keep_onoff_state_after_ota(void)
 {
-	analog_write(DEEP_ANA_REG0, analog_read(DEEP_ANA_REG0) & (~ FLD_OTA_REBOOT_FLAG));
+	analog_write(MESH_DEEP_ANA_REG, analog_read(MESH_DEEP_ANA_REG) & (~ FLD_OTA_REBOOT_FLAG));
 }
 
 
@@ -238,9 +238,9 @@ void clr_keep_onoff_state_after_ota()
  * @return      none
  * @note        
  */
-int is_state_after_ota()
+int is_state_after_ota(void)
 {
-	return (analog_read(DEEP_ANA_REG0) & FLD_OTA_REBOOT_FLAG);
+	return (analog_read(MESH_DEEP_ANA_REG) & FLD_OTA_REBOOT_FLAG);
 }
 #endif
 #endif
@@ -251,7 +251,7 @@ int is_state_after_ota()
  * @return      none
  * @note        
  */
-void mesh_global_var_init_light_sw()
+void mesh_global_var_init_light_sw(void)
 {
 	foreach_arr(i,light_res_sw){
 		foreach_arr(k,light_res_sw[i].trans){
@@ -317,17 +317,17 @@ void mesh_global_var_init_light_sw()
  * @return      none
  * @note        
  */
-void light_res_sw_load()
+void light_res_sw_load(void)
 {
 	foreach_arr(i,light_res_sw){
 		foreach_arr(k,light_res_sw[i].trans){
 			sw_level_save_t *p_save = &light_res_sw_save[i].level[k];
 			st_transition_t *p_trans = &light_res_sw[i].trans[k];
 			s16 level_poweron = 0;
-			#if(WIN32)
+			#ifdef WIN32
 			if(ONPOWER_UP_STORE == ONPOWER_UP_VAL(i)){
 			#else
-			if((ONPOWER_UP_STORE == ONPOWER_UP_VAL(i)) || ((ST_TRANS_LIGHTNESS == k) && (analog_read(DEEP_ANA_REG0)&(OTA_REBOOT_CHECK_FLAG|FLD_LOW_BATT_FLG)))){
+			if((ONPOWER_UP_STORE == ONPOWER_UP_VAL(i)) || ((ST_TRANS_LIGHTNESS == k) && (analog_read(MESH_DEEP_ANA_REG)&(OTA_REBOOT_CHECK_FLAG|FLD_LOW_BATT_FLG)))){
 			#endif
 				level_poweron = get_on_power_up_last(p_save);
 			}
@@ -432,7 +432,7 @@ void light_transition_onoff_manual(u8 onoff, u8 transit_t, u8 light_idx)
  * @return      0:not exist; 1:exist
  * @note        
  */
-u8 edch_is_exist()
+u8 edch_is_exist(void)
 {
 #if PROV_AUTH_LEAK_RECREATE_KEY_EN
 #else
@@ -457,7 +457,7 @@ u8 edch_is_exist()
  * @return      none
  * @note        
  */
-void light_pwm_init()
+void light_pwm_init(void)
 {
 #if ((!IS_VC_PROJECT)&&(!__PROJECT_SPIRIT_LPN__))
     #if (MCU_CORE_TYPE == MCU_CORE_8267 || MCU_CORE_TYPE == MCU_CORE_8269)
@@ -479,19 +479,22 @@ void light_pwm_init()
 			pwm_set_clk((unsigned char) (sys_clk.pclk*1000*1000/PWM_PCLK_SPEED-1));
 			pwm_set_tcmp(p_hw->id,(p_hw->invert ? (PWM_MAX_TICK - level_def) : level_def));
 	 		pwm_set_tmax(p_hw->id,PWM_MAX_TICK);
-			pwm_start_id(p_hw->id);
-	        gpio_function_en(p_hw->gpio);
+            
+            #if(MCU_CORE_TYPE == MCU_CORE_TL321X)
+            pwm_set_pin(p_hw->gpio, p_hw->func);
+            #else
 			pwm_set_pin(p_hw->gpio);
+            #endif
 		#else
 	        pwm_set(p_hw->id, PWM_MAX_TICK, p_hw->invert ? (PWM_MAX_TICK - level_def) : level_def);
 	        // light_dim_refresh(i);
-	        pwm_start_id(p_hw->id);
 	        #if((MCU_CORE_TYPE==MCU_CORE_8258) || (MCU_CORE_TYPE==MCU_CORE_8278))
 	        gpio_set_func(p_hw->gpio, p_hw->func);
 	        #else
 	        gpio_set_func(p_hw->gpio, AS_PWM);
 	        #endif
 		#endif	
+            pwm_start_id(p_hw->id);
         }
         
         int onoff_present = light_g_onoff_present_get(i);
@@ -504,7 +507,7 @@ void light_pwm_init()
             light_transition_onoff_manual(G_OFF, 0, i);
             if(onoff_present && CB_USER_LIGHT_INIT_ON_CONDITION()){
 				#if !MI_SWITCH_LPN_EN
-				light_transition_onoff_manual(G_ON, (analog_read(DEEP_ANA_REG0)&(OTA_REBOOT_CHECK_FLAG|FLD_LOW_BATT_LOOP_FLG))?0:edch_is_exist()?g_def_trans_time_val(i):0, i);
+				light_transition_onoff_manual(G_ON, (analog_read(MESH_DEEP_ANA_REG)&(OTA_REBOOT_CHECK_FLAG|FLD_LOW_BATT_LOOP_FLG))?0:edch_is_exist()?g_def_trans_time_val(i):0, i);
 				#endif
 			}
         }
@@ -532,7 +535,7 @@ void light_par_save(int quick)
  * @return      none
  * @note        
  */
-void light_par_save_proc()
+void light_par_save_proc(void)
 {
 	// save proc
 	if(tick_light_save && clock_time_exceed(tick_light_save, 3*1000*1000)){
@@ -549,7 +552,7 @@ void light_par_save_proc()
  * @return      none
  * @note        
  */
-void scene_status_change_check_all()
+void scene_status_change_check_all(void)
 {
     #if MD_SERVER_EN
 	foreach_arr(i,light_res_sw){
@@ -657,7 +660,7 @@ u16 get_pwm_smooth(u16 lightness, u32 step)
  */
 void light_dim_set_hw(int idx, int idx2, u16 val)
 {
-    if((idx < ARRAY_SIZE(light_res_hw)) && (idx2 < ARRAY_SIZE(light_res_hw[0]))){
+    if((idx < (int)ARRAY_SIZE(light_res_hw)) && (idx2 < (int)ARRAY_SIZE(light_res_hw[0]))){
 		const light_res_hw_t *p_hw = &light_res_hw[idx][idx2];
 		#if (FEATURE_LOWPOWER_EN || SPIRIT_PRIVATE_LPN_EN)
 		led_onoff_gpio(p_hw->gpio, 0 != val);
@@ -1584,7 +1587,7 @@ void light_transition_log(int st_trans_type, s16 present_level)
  * @return      0:gradient compete; 1:gradient  not compete
  * @note        
  */
-int light_transition_proc()
+int light_transition_proc(void)
 {
 	int transiting_flag = 0;
     int all_trans_ok = 1;   // include no transition
@@ -1688,15 +1691,15 @@ void light_transition_proc_stop(int light_idx, int st_trans_type) // only used f
  * @return      none
  * @note        
  */
-void light_dim_refresh_all()
+void light_dim_refresh_all(void)
 {
     foreach(i, LIGHT_CNT){
         light_dim_refresh(i);
     }
 }
 #else
-void light_pwm_init(){}
-void set_keep_onoff_state_after_ota(){}
+void light_pwm_init(void){}
+void set_keep_onoff_state_after_ota(void){}
 #endif
 
 /**
@@ -1842,7 +1845,7 @@ void cfg_led_event (u32 e)
  * @return      none
  * @note        
  */
-void cfg_led_event_stop ()
+void cfg_led_event_stop (void)
 {
 	led_event_pending = led_count = 0;
 }
@@ -1852,7 +1855,7 @@ void cfg_led_event_stop ()
  * @return      0:not busy; 1:busy
  * @note        
  */
-int is_led_busy()
+int is_led_busy(void)
 {
     return (!(!led_count && !led_event_pending));
 }
@@ -2169,7 +2172,7 @@ _USER_CAN_REDEFINE_ void show_ota_result(int result)
  * @return      none
  * @note        
  */
-_USER_CAN_REDEFINE_ void show_factory_reset()
+_USER_CAN_REDEFINE_ void show_factory_reset(void)
 {
 	light_ev_with_sleep(6, 500*1000);	//1Hz shine for  6 second
 }

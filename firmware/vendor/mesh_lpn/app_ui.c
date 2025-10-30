@@ -29,7 +29,7 @@
 #include "app_ui.h"
 #include "proj_lib/sig_mesh/app_mesh.h"
 
-void proc_ui()
+void proc_ui(void)
 {
 #if (UI_KEYBOARD_ENABLE)
 	lpn_proc_keyboard(0, 0, 0);

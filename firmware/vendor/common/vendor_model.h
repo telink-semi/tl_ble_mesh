@@ -145,7 +145,7 @@ extern u8 max_time_10ms;
 #endif
 
 //------op parameters
-typedef struct{
+typedef struct __attribute__((packed)) {
 	u8 code;
 	u8 rsv[7];
 }vd_rc_key_report_t;
@@ -173,33 +173,33 @@ static inline int is_vd_onoff_op(u32 sub_op)
 	return	(VD_GROUP_G_OFF == sub_op || VD_GROUP_G_ON == sub_op);
 }
 
-typedef struct{
+typedef struct __attribute__((packed)) {
 	u8 sub_op;
 	u8 par[1];
 }vd_group_g_set_t;
 
-typedef struct{
+typedef struct __attribute__((packed)) {
 	u8 sub_op;
 }vd_group_g_st_t;
 
-typedef struct{
+typedef struct __attribute__((packed)) {
 	u8 sub_op;
 	u8 tid;
 }vd_light_onoff_set_t;
 
-typedef struct{
+typedef struct __attribute__((packed)) {
 	u8 sub_op;
 #if	DEBUG_CFG_CMD_GROUP_AK_EN
 	u8 brx_num;
 #endif
 }vd_light_onoff_st_t;
 
-typedef struct{
+typedef struct __attribute__((packed)) {
 	u8 sub_op;
 	u8 mode;
 }vd_lpn_gatt_ota_mode_set_t;
 
-typedef struct{
+typedef struct __attribute__((packed)) {
 	u8 sub_op;
 	u8 mode;
 }vd_lpn_gatt_ota_mode_status_t;
@@ -211,23 +211,23 @@ enum{
 };
 
 #if VENDOR_SUB_OP_USER_DEMO_EN
-typedef struct{
+typedef struct __attribute__((packed)) {
 	u8 sub_op;
 	u8 sno;
 }vd_group_sub_op_demo_user_set_t;
 
-typedef struct{
+typedef struct __attribute__((packed)) {
 	u8 sub_op;
 	u8 sno;
 }vd_group_sub_op_demo_user_st_t;
 #endif
 
 #if VENDOR_OP_USER_DEMO_EN
-typedef struct{
+typedef struct __attribute__((packed)) {
 	u8 sno;
 }vd_user_demo_set_t;
 
-typedef struct{
+typedef struct __attribute__((packed)) {
 	u8 sno;
 }vd_user_demo_st_t;
 #endif
@@ -241,7 +241,7 @@ typedef int (* cb_vd_group_g_sub_set)(u8 *par, int par_len, mesh_cb_fun_par_t *c
 typedef int (* cb_vd_group_g_sub_tx_st)(u8 light_idx, u8 sub_op, u16 ele_adr, u16 dst_adr, u8 *uuid, model_common_t *pub_md);
 typedef int (* cb_vd_group_g_sub_rx_status)(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par);
 
-typedef struct{
+typedef struct __attribute__((packed)) {
     u32 sub_op;
     cb_vd_group_g_sub_set cb_set;
     cb_vd_group_g_sub_tx_st cb_tx_st;
@@ -306,24 +306,24 @@ static inline int is_vendor_extend_op(u16 op)
 #define PARAMETER_ERROR				0x83
 #define DEVICE_STS_ERR				0x84
 
-typedef struct{
+typedef struct __attribute__((packed)) {
 	u8 tid;
 	u16 op;
 	u32 time;
 }time_cmd_str;
 
-typedef struct{
+typedef struct __attribute__((packed)) {
 	u8 tid;
 	u16 op;
 	u8 sts;
 }time_cmd_rsp_str;
 
-typedef struct{
+typedef struct __attribute__((packed)) {
 	u8 tid;
 	u16 attr_type;
 }vd_msg_attr_get_t;
 
-typedef struct{
+typedef struct __attribute__((packed)) {
 	u16 attr_type;
 	union{
 		u8 attr_par[ATTR_PAR_MAX_LEN];
@@ -331,13 +331,13 @@ typedef struct{
 	};
 }vd_msg_attr_t;
 
-typedef struct{
+typedef struct __attribute__((packed)) {
 	u8 tid;
 	u16 attr_type;
 	u8 attr_par[ATTR_PAR_MAX_LEN];
 }vd_msg_attr_set_t;
 
-typedef struct{
+typedef struct __attribute__((packed)) {
 	u8 tid;
 	u16 attr_type;
 	union{
@@ -346,19 +346,19 @@ typedef struct{
 	};
 }vd_msg_attr_sts_t;
 
-typedef struct{
+typedef struct __attribute__((packed)) {
 	u8 op;
 	u8 tid;
 	u16 attr_type;
 	u8 attr_par[ATTR_PAR_MAX_LEN];
 }vd_msg_attr_indica_t;
 
-typedef struct{
+typedef struct __attribute__((packed)) {
 	u8 tid;
 	u16 attr_type;
 }vd_msg_attr_confirm_t;
 
-typedef struct{
+typedef struct __attribute__((packed)) {
     u32 tick;
 	u32 interval_tick;
 	u8 busy;
@@ -385,7 +385,7 @@ extern mesh_sleep_pre_t	mesh_sleep_time;
 
 
 //------------------vendor op end-------------------
-void mesh_tx_indication_proc();
+void mesh_tx_indication_proc(void);
 
 int vd_cmd_key_report(u16 adr_dst, u8 key_code);
 int vd_cmd_onoff(u16 adr_dst, u8 rsp_max, u8 onoff, int ack);
@@ -406,9 +406,9 @@ int cb_vd_lpn_sensor_get(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par);
 int cb_vd_lpn_sensor_sts(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par);
 int cb_vd_lpn_sensor_st_publish(u8 idx);
 int vd_lp_sensor_st_send(u8 idx);
-void mesh_vd_lpn_pub_set();
-void sensor_proc_loop();
-void i2c_io_init();
+void mesh_vd_lpn_pub_set(void);
+void sensor_proc_loop(void);
+void i2c_io_init(void);
 
 
 #endif

@@ -34,13 +34,6 @@ int is_buf_zero(void *data, unsigned int len);
 
 int is_buf_all_one(void *data, unsigned int len);
 
-/**
- * @brief		This function is used to determine whether the array is all 0s.
- * @param[in]	data	- the buffer data.
- * @param[in]	len		- the length of data.
- * @return		1: all 0, 0: not all 0.
- */
-int ismemzero4(unsigned int a[], unsigned int wordLen);
 
 
 int ismemf4(void *data, unsigned int len);

@@ -235,7 +235,7 @@ typedef struct{
 	s16 max;
 }light_range_s16_t;
 
-typedef struct{
+typedef struct __attribute__((packed)) {
     s16 last;           // CT was save in level
 	s16 def;			// default, all value transfer into s16, and CT not related to range
 	s16 min;			// all value transfer into s16, and CT not related to range
@@ -244,7 +244,7 @@ typedef struct{
 	u8 rsv;
 }sw_level_save_t;
 
-typedef struct{
+typedef struct __attribute__((packed)) {
 	s32 step_1p32768;   // (1 / 32768 level unit)
 	u32 remain_t_ms;	// unit ms: max 26bit: 38400*1000ms
 	u16 delay_ms;		// unit ms
@@ -253,7 +253,7 @@ typedef struct{
     s16 target;
 }st_transition_t;
 
-typedef struct{
+typedef struct __attribute__((packed)) {
 	sw_level_save_t level[ST_TRANS_MAX];
 #if (MD_LIGHT_CONTROL_EN && MD_SERVER_EN)
 	u8 lc_onoff_target;
@@ -348,10 +348,10 @@ extern u8 *light_pub_model_priority;
 extern u8 ct_flag;
 void set_ct_mode(u8 mode);
 
-void light_pwm_init();
+void light_pwm_init(void);
 void app_led_en (int id, int en);
 void pwm_set_lum (int id, u16 y, int pol);
-void mesh_global_var_init_light_sw();
+void mesh_global_var_init_light_sw(void);
 s16 light_get_next_level(int idx, int st_trans_type);
 s16 get_light_g_level_by_onoff(int idx, int on, int st_trans_type, int force_last);
 void light_res_sw_g_level_last_set(int idx, int st_trans_type);
@@ -366,11 +366,11 @@ int light_onoff_idx_with_trans(u8 *set_trans, int idx);
 void light_g_level_set_idx_with_trans(u8 *set_trans, int idx, int st_trans_type, int hsl_set_cmd_flag);
 void light_res_sw_g_level_target_set(int idx, s16 level, int st_trans_type);
 void light_onoff_all(u8 on);
-int light_transition_proc();
+int light_transition_proc(void);
 void light_transition_proc_stop(int light_idx, int st_trans_type);
 void light_par_save(int quick);
-void light_par_save_proc();
-void scene_status_change_check_all();
+void light_par_save_proc(void);
+void scene_status_change_check_all(void);
 void set_on_power_up_onoff(int idx, int st_trans_type, u8 onoff);
 
 int light_onoff_get(u8 *rsp, int idx);
@@ -398,7 +398,7 @@ u8 temp_to_temp100(u16 temp);
 
 u8 light_lum_get(int idx, int target_flag);
 u8 light_ct_lum_get(int idx, int target_flag);
-void light_res_sw_load();
+void light_res_sw_load(void);
 int set_light_linear_flag(int idx,u16 linear);
 int clear_light_linear_flag(int idx);
 u16 get_light_linear_val(int idx);
@@ -439,22 +439,19 @@ u8 light_remain_time_get(st_transition_t *p_trans);
 #endif
 
 void light_dim_refresh(int idx);
-void light_dim_refresh_all();
+void light_dim_refresh_all(void);
 void proc_led(void);
 void cfg_led_event (u32 e);
-int is_led_busy();
-void cfg_led_event_stop ();
+int is_led_busy(void);
+void cfg_led_event_stop (void);
 void led_onoff_gpio(u32 gpio, u8 on);
 void rf_link_light_event_callback (u8 status);
 void light_ev_with_sleep(u32 count, u32 half_cycle_us);
-void show_factory_reset();
-void reset_rx_onoff_cnt();
-void increase_rx_onoff_cnt();
-u16 get_rx_cnts();
+void show_factory_reset(void);
 void light_transition_onoff_manual(u8 onoff, u8 transit_t, u8 light_idx);
-void set_keep_onoff_state_after_ota();
-void clr_keep_onoff_state_after_ota();
-int is_state_after_ota();
+void set_keep_onoff_state_after_ota(void);
+void clr_keep_onoff_state_after_ota(void);
+int is_state_after_ota(void);
 
 extern u16 g_op_access_layer_rx;
 

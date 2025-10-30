@@ -28,6 +28,7 @@ typedef void(^ProgressReceiversListBlock)(SigFirmwareDistributionReceiversList *
 typedef void(^FinishBlock)(NSArray <NSNumber *>*successAddresses,NSArray <NSNumber *>*failAddresses);
 typedef void(^CompleteBlock)(BOOL isSuccess);
 typedef void(^PeripheralStateChangeBlock)(CBPeripheral *peripheral);
+typedef void(^ReplenishPacketBlock)(NSInteger totalPacketCount, NSInteger currentPacketIndex, NSInteger allBlockCount, NSInteger currentBlockIndex, NSInteger chunksCountOfCurrentBlock, NSInteger currentChunkIndex, UInt16 destinationAddress);
 
 typedef enum : UInt8 {
     SigFirmwareUpdateProgressIdle                                         = 0,
@@ -46,12 +47,12 @@ typedef enum : UInt8 {
     SigFirmwareUpdateProgressInitiatorToDistributorBLOBBlockGet           = 13,
     SigFirmwareUpdateProgressFirmwareDistributionStart                    = 14,
     SigFirmwareUpdateProgressFirmwareUpdateStart                          = 15,
-    SigFirmwareUpdateProgressDistributorToUpdatingNodesBLOBTransferGet    = 16,
-    SigFirmwareUpdateProgressDistributorToUpdatingNodesBLOBInformationGet = 17,
-    SigFirmwareUpdateProgressDistributorToUpdatingNodesBLOBTransferStart  = 18,
-    SigFirmwareUpdateProgressDistributorToUpdatingNodesBLOBBlockStart     = 19,
-    SigFirmwareUpdateProgressDistributorToUpdatingNodesBLOBChunkTransfer  = 20,
-    SigFirmwareUpdateProgressDistributorToUpdatingNodesBLOBBlockGet       = 21,
+    SigFirmwareUpdateProgressDistributorToUpdatingNodeBLOBTransferGet    = 16,
+    SigFirmwareUpdateProgressDistributorToUpdatingNodeBLOBInformationGet = 17,
+    SigFirmwareUpdateProgressDistributorToUpdatingNodeBLOBTransferStart  = 18,
+    SigFirmwareUpdateProgressDistributorToUpdatingNodeBLOBBlockStart     = 19,
+    SigFirmwareUpdateProgressDistributorToUpdatingNodeBLOBChunkTransfer  = 20,
+    SigFirmwareUpdateProgressDistributorToUpdatingNodeBLOBBlockGet       = 21,
     SigFirmwareUpdateProgressFirmwareDistributionReceiversGet             = 22,
     SigFirmwareUpdateProgressFirmwareDistributionApply                    = 23,
     SigFirmwareUpdateProgressFirmwareUpdateGet                            = 24,
@@ -94,6 +95,8 @@ typedef enum : UInt8 {
 @property (nonatomic, strong) NSMutableDictionary *additionalInformationDictionary;
 /// Check FirmwareMetadata success handle.
 @property (nonatomic, copy) void(^firmwareUpdateFirmwareMetadataCheckSuccessHandle)(NSDictionary *dict);
+/// Replenish Packet Handle.
+@property (nonatomic, copy) ReplenishPacketBlock replenishPacketCallback;
 
 + (instancetype)new __attribute__((unavailable("please initialize by use .share or .share()")));
 - (instancetype)init __attribute__((unavailable("please initialize by use .share or .share()")));

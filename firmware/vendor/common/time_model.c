@@ -79,7 +79,7 @@ int is_valid_TAI_second(u32 second)
     return (second && second < TAI_SECOND_MAX);
 }
 
-static inline u8 get_week(mesh_UTC_t *UTC){
+u8 get_week(mesh_UTC_t *UTC){
     u32 y = UTC->year;
     u32 m = UTC->month;
     u32 d = UTC->day;
@@ -297,7 +297,7 @@ int mesh_time_set(time_status_t *p_set)
     return -1;
 }
 
-u32 get_local_TAI()
+u32 get_local_TAI(void)
 {
 	if((0 == g_TAI_sec)){ //  && (get_time_zone_offset_min(mesh_time.time.zone_offset) < 0)
 		return 0; // invalid time, if offset with time zone, it will be a 2136/02/06.
@@ -308,7 +308,7 @@ u32 get_local_TAI()
 
 #define MESH_TIME_CHECK_INTERVAL    (1 * CLOCK_SYS_CLOCK_1S)
 
-void mesh_time_proc()
+void mesh_time_proc(void)
 {
     if(!g_TAI_sec){
         return ;
@@ -318,7 +318,7 @@ void mesh_time_proc()
     u32 t_delta = (u32)(clock_tmp - mesh_time_tick);    // should be different from system_time_tick_
     if(t_delta >= MESH_TIME_CHECK_INTERVAL){
         u32 interval_cnt = t_delta / MESH_TIME_CHECK_INTERVAL;
-        foreach(i,interval_cnt){
+        foreach_uint(i,interval_cnt){
             g_TAI_sec++;
             
             #if (MD_SCHEDULE_EN)
@@ -555,7 +555,7 @@ int access_cmd_time_set(u16 adr, u32 rsp_max, time_status_t *p_set)
 tx_cmd_time_set_local_sample(): just for showing how to creat a time parameters.
 in fact, we can get TAI_sec and zone_offset directly by some API of APP or PC.
 */
-void tx_cmd_time_set_local_sample()
+void tx_cmd_time_set_local_sample(void)
 {
     // beijing: 2019/1/1  09:00:00 (time zone: east 8)
     s8 zone_hour = 8;   // Positive numbers are eastwards

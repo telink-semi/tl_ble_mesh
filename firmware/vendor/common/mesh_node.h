@@ -28,20 +28,20 @@
 #include "nl_api/nl_model_schedules.h"
 #endif
 
-#if WIN32
+#ifdef WIN32
 #pragma pack(1)
 #endif
 
-typedef struct{
+typedef struct __attribute__((packed)) {
 	u16 md_id; 
 }model_sig_id_t;
 
-typedef struct{
+typedef struct __attribute__((packed)) {
 	u16 cid;
 	u16 md_id; 
 }model_vendor_id_t;
 
-typedef struct{
+typedef struct __attribute__((packed)) {
 	u32 id;
 	u8 sig_model; // bool
 }mesh_model_id_t;
@@ -151,14 +151,14 @@ enum{
 #define APPKEY_E		{0xe0,0xe1,0xe2,0xe3,0xe4,0xe5,0xe6,0xe7, 0xe8,0xe9,0xea,0xeb,0xec,0xed,0xee,0xef}
 #define APPKEY_F		{0xf0,0xf1,0xf2,0xf3,0xf4,0xf5,0xf6,0xf7, 0xf8,0xf9,0xfa,0xfb,0xfc,0xfd,0xfe,0xff}
 
-typedef struct{
+typedef struct __attribute__((packed)) {
 	u8 valid;
 	u16 appkey_idx;
 	u8 rsv[13];
 	u8 appkey[16];
 }VC_appkey_idx_list_t;
 
-typedef struct{
+typedef struct __attribute__((packed)) {
 	u8 valid;
 	u16 netkey_idx;
 	u8 rsv[13];
@@ -310,7 +310,7 @@ enum{
 	#endif
 
 #if VIRTUAL_ADDR_ENABLE
-typedef struct{
+typedef struct __attribute__((packed)) {
 	u16 addr;
 	u8 uuid[16];
 }virtual_addr_t;
@@ -318,7 +318,7 @@ typedef struct{
 
 #define MODE_VIRTUAL_ADDR_STAND_ALONE_SIZE	(0x7f00) // use an unvalid group id to be compatible with legacy mode.
 
-typedef struct{
+typedef struct __attribute__((packed)) {
 	u16 mode; // legacy mode or virtual address stand alone mode.
 	u8 rsv1[6];
 	u16 sub_addr[SUB_LIST_MAX];
@@ -335,74 +335,84 @@ STATIC_ASSERT(sizeof(sub_list_save_buf_t) == SUB_LIST_SAVE_BUFF_SIZE);
 	#if(0 == TESTCASE_FLAG_ENABLE)
 		#if (GATEWAY_ENABLE&&__PROJECT_MESH_PRO__)
 #define SUB_LIST_MAX                    (2)
+        #elif (__PROJECT_MESH_SWITCH__)
+            #if BLE_MULTIPLE_CONNECTION_ENABLE  // if user want is developing a new product, it can also be enable for 825x switch project to save 2k RAM.
+#define SUB_LIST_MAX                    (2)     // to reduce retention RAM usage
+#define VIRTUAL_ADDR_ENABLE				(0)     // disable virtual address to save ram about 2k byte for demo SDK switch project
+            #else
+#define SUB_LIST_MAX                    (8)     // keep 8 for compatibility
+            #endif
 		#else
 #define SUB_LIST_MAX                    (8) 
 		#endif
 	#else	
 #define SUB_LIST_MAX                    (8)
 	#endif
+
+	#ifndef VIRTUAL_ADDR_ENABLE
 #define VIRTUAL_ADDR_ENABLE				(SUB_LIST_MAX<=8)// disable virtual address to save ram
+    #endif
 #endif
 #define FIX_SIZE(sig_model)             (sig_model?2:0)
 
 // net key
-typedef struct{
+typedef struct __attribute__((packed)) {
 	u16 idx;
 	u8 key[16];
 }mesh_netkey_set_t;
 
-typedef struct{
+typedef struct __attribute__((packed)) {
 	u8 st;
 	u16 idx;
 }mesh_netkey_status_t;
 
-typedef struct{
+typedef struct __attribute__((packed)) {
 	u8 key_idx_enc[(NET_KEY_MAX+1)/2][3];
 }mesh_netkey_list_t;
 
 
 // app key
-typedef struct{
+typedef struct __attribute__((packed)) {
 	u8 net_app_idx[3];		// can not set 24bit var IN vc
 	u8 appkey[16];
 }mesh_appkey_set_t;
 
-typedef struct{
+typedef struct __attribute__((packed)) {
 	u8 st;
 	u8 net_app_idx[3];
 }mesh_appkey_status_t;
 
 #define AK_IDX_ENC_MAX		((APP_KEY_MAX+1)/2)
 
-typedef struct{
+typedef struct __attribute__((packed)) {
 	u16 netkey_idx;
 }mesh_appkey_get_t;
 
-typedef struct{
+typedef struct __attribute__((packed)) {
 	u8 st;
 	u16 netkey_idx;
 	u8 appkey_idx_enc[AK_IDX_ENC_MAX][3];
 }mesh_appkey_list_t;
 
-typedef struct{
+typedef struct __attribute__((packed)) {
 	u16 ele_adr;
 	u32 model_id;
 }mesh_md_app_get_t;
 
-typedef struct{
+typedef struct __attribute__((packed)) {
 	u8 st;
 	u16 ele_adr;
 	u32 model_id;
 	u8 appkey_idx_enc[AK_IDX_ENC_MAX][3];
 }mesh_sig_md_app_list_t;
 
-typedef struct{
+typedef struct __attribute__((packed)) {
 	u16 ele_adr;
 	u16 index;
 	u32 model_id;
 }mesh_app_bind_t;
 
-typedef struct{
+typedef struct __attribute__((packed)) {
 	u8 st;
 	mesh_app_bind_t bind;
 }mesh_app_bind_status_t;
@@ -418,37 +428,37 @@ enum{
 	KEY_REFRESH_STATE_MAX	= KEY_REFRESH_PHASE2,
 };
 
-typedef struct{
+typedef struct __attribute__((packed)) {
 	u16 nk_idx;
 }mesh_key_refresh_phase_get_t;
 
-typedef struct{
+typedef struct __attribute__((packed)) {
 	u16 nk_idx;
 	u8 transition;
 }mesh_key_refresh_phase_set_t;
 
-typedef struct{
+typedef struct __attribute__((packed)) {
 	u8 st;
 	u16 nk_idx;
 	u8 phase;
 }mesh_key_refresh_phase_status_t;
 
-typedef struct{
+typedef struct __attribute__((packed)) {
 	u16 nk_idx;
 }mesh_node_identity_get_t;
 
-typedef struct{
+typedef struct __attribute__((packed)) {
 	u16 nk_idx;
 	u8 identity;
 }mesh_node_identity_set_t;
 
-typedef struct{
+typedef struct __attribute__((packed)) {
 	u8 st;
 	u16 nk_idx;
 	u8 identity;
 }mesh_node_identity_status_t;
 
-typedef struct{
+typedef struct __attribute__((packed)) {
 	u16 lpn_adr;
 	u32 timeout; // only use 24-bit
 }mesh_lpn_poll_timeout_status_t;
@@ -468,12 +478,12 @@ enum{				// unit 100ms
     RES_10MIN	= 600*10,
 };
 
-typedef struct{
+typedef struct __attribute__((packed)) {
 	u8 steps    :6;
 	u8 res      :2;	
 }mesh_pub_period_t;
 
-typedef struct{
+typedef struct __attribute__((packed)) {
     union{
         u8 val;
         struct{
@@ -483,17 +493,17 @@ typedef struct{
 	};
 }trans_time_t;
 
-typedef struct{
+typedef struct __attribute__((packed)) {
     union{
         u8 val;
         struct{
-			u8 count      :3;
-			u8 invl_steps :5;
+			u8 count      :3;   // packet count = n + 1, so 0: means 1 packet. 1: means 2 packets...
+			u8 invl_steps :5;   // interval = ((n+1) * 10 + (0~10))ms, so 0: means 10~20ms. 1: means 20~30ms...
 		};
 	};
 }mesh_transmit_t;
 
-typedef struct{
+typedef struct __attribute__((packed)) {
 	u8 sar_seg_invl_step:4;
 	u8 sar_uni_retrans_cnt:4;
 	u8 sar_uni_retrans_cnt_no_ack:4;
@@ -504,7 +514,7 @@ typedef struct{
 	u8 rfu:4;
 }sar_transmitter_t;
 
-typedef struct{
+typedef struct __attribute__((packed)) {
 	u8 sar_seg_thres:5;
 	u8 sar_ack_delay_inc:3;	
 #if 0 // pts revert the para
@@ -518,7 +528,7 @@ typedef struct{
 	u8 rfu:6;
 }sar_receiver_t;
 
-typedef struct{
+typedef struct __attribute__((packed)) {
 	u8 par_type;
 	struct{
 		u8 step:1;  // unit: 0:10ms 1:100ms
@@ -527,12 +537,12 @@ typedef struct{
 	u16 start_tick;
 }bear_delay_t;
 
-typedef struct{
+typedef struct __attribute__((packed)) {
 	u8 relay;
 	mesh_transmit_t transmit;
 }mesh_cfg_model_relay_set_t;
 
-typedef struct{
+typedef struct __attribute__((packed)) {
 	u16 appkey_idx      :12;
 	u16 credential_flag :1;
 	u16 rfu             :3;
@@ -541,24 +551,24 @@ typedef struct{
 	mesh_transmit_t transmit;
 }mesh_model_pub_par_t;
 
-typedef struct{
+typedef struct __attribute__((packed)) {
 	u16 ele_adr;
 	u16 pub_adr;
 	mesh_model_pub_par_t pub_par;
 	u32 model_id;
 }mesh_cfg_model_pub_set_t;
 
-typedef struct{
+typedef struct __attribute__((packed)) {
 	u16 ele_adr;
 	u32 model_id;
 }mesh_cfg_model_pub_get_t;
 
-typedef struct{
+typedef struct __attribute__((packed)) {
 	u8 status;
 	mesh_cfg_model_pub_set_t set;
 }mesh_cfg_model_pub_st_t;
 
-typedef struct{
+typedef struct __attribute__((packed)) {
 	u16 ele_adr;
 	u8 pub_uuid[16];             // lab UUID(virtual addr)
 	mesh_model_pub_par_t pub_par;
@@ -566,46 +576,46 @@ typedef struct{
 }mesh_cfg_model_pub_virtual_set_t;
 
 // subscription
-typedef struct{
+typedef struct __attribute__((packed)) {
 	u16 ele_adr;
 	u16 sub_adr;    // only group adr (not include 0xffff, virtual adr)
 	u32 model_id;
 }mesh_cfg_model_sub_set_t;  // add, del, over write
 
-typedef struct{
+typedef struct __attribute__((packed)) {
 	u16 ele_adr;
 	u8 sub_uuid[16];             // lab UUID(virtual addr)
 	u32 model_id;
 }mesh_cfg_model_sub_virtual_set_t;  // add, del, over write
 
-typedef struct{
+typedef struct __attribute__((packed)) {
 	u16 ele_adr;
 	u32 model_id;
 }mesh_cfg_model_sub_del_all_t;
 
-typedef struct{
+typedef struct __attribute__((packed)) {
 	u8 status;
 	mesh_cfg_model_sub_set_t set;
 }mesh_cfg_model_sub_status_t;
 
-typedef struct{
+typedef struct __attribute__((packed)) {
 	u16 ele_adr;
 	u16 model_id;
 }mesh_cfg_model_sub_get_sig_t;
 
-typedef struct{
+typedef struct __attribute__((packed)) {
 	u16 ele_adr;
 	u32 model_id;
 }mesh_cfg_model_sub_get_vendor_t;
 
-typedef struct{
+typedef struct __attribute__((packed)) {
 	u8 status;
 	u16 ele_adr;
 	u16 model_id;
 	u16 sub_adr[SUB_LIST_MAX];
 }mesh_cfg_model_sub_list_sig_t;
 
-typedef struct{
+typedef struct __attribute__((packed)) {
 	u8 status;
 	u16 ele_adr;
 	u32 model_id;
@@ -650,7 +660,7 @@ enum{
 	ST_G_LEVEL_SET_PUB_TRANS = 2,
 };
 
-typedef struct{
+typedef struct __attribute__((packed)) {
 	union{
 		u8 transit_t;
 		struct{
@@ -675,51 +685,51 @@ static inline int is_transition_need(u8 transit_t, u8 delay)
 //   |
 // __| (off)
 // --------------------------- dim2dark_delay_ms end
-typedef struct{
+typedef struct __attribute__((packed)) {
 	u32 dim2dark_delay_ms;
 	s16 target_val;		// include onoff and level
 	s16 present_val;
 	s16 level_move;     //
 	u8 transit_t;
-	u8 delay;
+	u8 delay;           // unit 5ms
 	u16 op;
 }mesh_set_trans_t;
 
-typedef struct{
+typedef struct __attribute__((packed)) {
 	u8 onoff;
 	u8 tid;
 	u8 transit_t;
 	u8 delay;		// unit 5ms
 }mesh_cmd_g_onoff_set_t;
 
-typedef struct{
+typedef struct __attribute__((packed)) {
 	u8 present_onoff;
 	u8 target_onoff;
 	u8 remain_t;
 }mesh_cmd_g_onoff_st_t;
 
-typedef struct{
+typedef struct __attribute__((packed)) {
 	s16 level;
 	u8 tid;
 	u8 transit_t;
 	u8 delay;		// unit 5ms
 }mesh_cmd_g_level_set_t;
 
-typedef struct{
+typedef struct __attribute__((packed)) {
 	s32 level;
 	u8 tid;
 	u8 transit_t;
 	u8 delay;		// unit 5ms
 }mesh_cmd_g_level_delta_t;
 
-typedef struct{
+typedef struct __attribute__((packed)) {
 	s16 level;
 	u8 tid;
 	u8 transit_t;
 	u8 delay;		// unit 5ms
 }mesh_cmd_g_level_move_t; // be same as mesh_cmd_g_level_set_t.
 
-typedef struct{
+typedef struct __attribute__((packed)) {
 	s16 present_level;
 	s16 target_level;
 	u8 remain_t;
@@ -732,20 +742,20 @@ enum{
     G_ON_POWERUP_MAX,
 };
 
-typedef struct{
+typedef struct __attribute__((packed)) {
 	u16 power;
 	u8 tid;
 	u8 transit_t;
 	u8 delay;
 }mesh_cmd_g_power_set_t;
 
-typedef struct{
+typedef struct __attribute__((packed)) {
 	u16 present_power;
 	u16 target_power;
 	u8 remain_t;
 }mesh_cmd_g_power_st_t;
 
-typedef struct{
+typedef struct __attribute__((packed)) {
 	u16 power;
 }mesh_cmd_g_power_def_set_t;
 
@@ -755,12 +765,12 @@ enum{
     RANGE_CANNOT_SET_MAX,
 };
 
-typedef struct{
+typedef struct __attribute__((packed)) {
 	u16 min;
 	u16 max;
 }mesh_cmd_g_power_range_set_t;
 
-typedef struct{
+typedef struct __attribute__((packed)) {
     u8 status;
 	u16 min;
 	u16 max;
@@ -845,34 +855,34 @@ enum{
 	EXTEND_MD_LONG_FORMAT = 1,
 };
 
-typedef struct{
+typedef struct __attribute__((packed)) {
 	u8 nums;
 	u8 numv;
 }cps_page1_ele_head_t;
 
-typedef struct{
+typedef struct __attribute__((packed)) {
 	u8 group_id_present:1;
 	u8 format:1;
 	u8 extend_cnt:6;
 	u8 group_id;
 }cps_page1_md_item_t;
 
-typedef struct{
+typedef struct __attribute__((packed)) {
 	s8 ele_offset;
 	u8 md_idx;
 }cps_page1_extend_md_item_t;
 
-typedef struct{
+typedef struct __attribute__((packed)) {
 	u16 main_md;
 	u16 extend_md[MAX_EXTEND_MD_NUM]; // u16, only sig models have extended model now.
 }extend_model_map_t;
 
-typedef struct{
+typedef struct __attribute__((packed)) {
 	u16 md_id1;
 	u16 md_id2;
 }corresponding_model_map_t;
 
-typedef struct{
+typedef struct __attribute__((packed)) {
 	u16 md_id;
 	u8  group_id;
 }corresponding_model_t;
@@ -922,7 +932,7 @@ enum{
     LPN_ST_MAX,
 };
 
-typedef struct{
+typedef struct __attribute__((packed)) {
 	u16 relay       :1;
 	u16 proxy       :1;
 	u16 frid      	:1;
@@ -930,7 +940,7 @@ typedef struct{
 	u16 rfu         :12;
 }mesh_page_feature_t;
 
-typedef struct{
+typedef struct __attribute__((packed)) {
 	u16 cid;
 	u16 pid;
 	u16 vid;
@@ -938,7 +948,7 @@ typedef struct{
 	mesh_page_feature_t feature;
 }mesh_page0_head_t;
 
-typedef struct{
+typedef struct __attribute__((packed)) {
 	u16 loc;
 	u8 nums;
 	u8 numv;
@@ -946,32 +956,32 @@ typedef struct{
 	//u32 md_vendor[];
 }mesh_element_head_t;
 
-typedef struct{
+typedef struct __attribute__((packed)) {
 	mesh_page0_head_t head;
 	mesh_element_head_t ele;
 	// other ele
 }mesh_page0_t;
 
 #define RX_TID_CNT      6
-typedef struct{
+typedef struct __attribute__((packed)) {
     u32 tick_100ms;
     u16 adr;
     u8 tid;
     u8 rsv;
 }mesh_tid_rx_t;
 
-typedef struct{
+typedef struct __attribute__((packed)) {
     mesh_tid_rx_t rx[RX_TID_CNT];
     u8 tx[ELE_CNT];
 }mesh_tid_t;
 
-#if (WIN32 || (NET_KEY_MAX > 2 || APP_KEY_MAX > 2) || __TLSR_RISCV_EN__) // (TLV_ENABLE) // can not change BIND_KEY_MAX, due to "model_common_t *" in library.
+#if (defined(WIN32) || (NET_KEY_MAX > 2 || APP_KEY_MAX > 2) || __TLSR_RISCV_EN__) // (TLV_ENABLE) // can not change BIND_KEY_MAX, due to "model_common_t *" in library.
 #define BIND_KEY_MAX		(APP_KEY_MAX * NET_KEY_MAX)
 #else
 #define BIND_KEY_MAX		(APP_KEY_MAX)   // confirm later, because of compatibility of flash save
 #endif
 
-typedef struct{
+typedef struct  __attribute__((packed)) {
     u16 idx		:12;
     u16 rsv		:3;
     u16 bind_ok	:1;
@@ -979,12 +989,13 @@ typedef struct{
 
 typedef int (*cb_pub_st_t) (u8 model_idx);
 
-typedef struct{
+typedef struct  __attribute__((packed)) {
     u16 ele_adr;    // use as primary address for model_sig_cfg_s_t
     u8 no_pub   :1;	// means not support publish function
     u8 no_sub   :1; // means not support subscription function; must before pub and sub par
     u8 pub_trans_flag :1; // transition process was ongoing flag.
     u8 pub_2nd_state  :1; // eg: lightness and lightness linear.
+    u8 rsv_bit  :4; // reserved for future
     u8 rsv2;
     bind_key_t bind_key[BIND_KEY_MAX];
 	u8 pub_uuid[16];
@@ -1003,7 +1014,7 @@ typedef struct{
 #endif
 }model_common_t;
 
-typedef struct{
+typedef struct __attribute__((packed)) {
     model_common_t com;             // must first
 }model_client_common_t;
 
@@ -1011,14 +1022,14 @@ typedef struct{
 
 #define HEALTH_TEST_LEN		0x08
 
-typedef struct{
+typedef struct __attribute__((packed)) {
 	u8 test_id;
 	u16 company_id;
 	u8 fault_array[HEALTH_TEST_LEN];
 	u8 cur_fault_idx;
 }mesh_health_current_sts_t;
 
-typedef struct{
+typedef struct __attribute__((packed)) {
 	u8 test_id;
 	u16 company_id;
 	u8 fault_array[HEALTH_TEST_LEN];
@@ -1026,11 +1037,11 @@ typedef struct{
 }mesh_health_fault_sts_t;
 
 
-typedef struct{
+typedef struct __attribute__((packed)) {
 	u8 fast_period_log;
 }mesh_health_period_status_t;
 
-typedef struct{
+typedef struct __attribute__((packed)) {
 	mesh_health_current_sts_t cur_sts;
 	mesh_health_fault_sts_t   fault_sts;
 	mesh_health_period_status_t period_sts;
@@ -1039,13 +1050,13 @@ typedef struct{
 	u16 dst_adr;
 }mesh_health_mag_sts_t;
 
-typedef struct{
+typedef struct __attribute__((packed)) {
 	model_common_t com;
 	mesh_health_mag_sts_t health_mag;
 }model_health_common_t;
 
 //--------------------SIG SERVER MODEL
-typedef struct{
+typedef struct __attribute__((packed)) {
 	u16 dst_adr;
 	u16 cnt_val;
 	u8 	cnt_log;
@@ -1055,7 +1066,7 @@ typedef struct{
 	u16 netkeyidx;
 }mesh_heartbeat_pub_str;
 
-typedef struct{
+typedef struct __attribute__((packed)) {
 	u16 adr;
 	u16 dst;
 	u8 	per_log;
@@ -1069,7 +1080,7 @@ typedef struct{
 }mesh_heartbeat_sub_str;
 
 //--------------------SIG SERVER MODEL
-typedef struct{
+typedef struct __attribute__((packed)) {
     model_common_t com;             // must first
     u8 rfu1[8];
 	u8 sec_nw_beacon;
@@ -1087,11 +1098,11 @@ typedef struct{
 	mesh_heartbeat_sub_str hb_sub;
 }model_sig_cfg_s_t;
 
-typedef struct{
+typedef struct __attribute__((packed)) {
     model_common_t com;             // must first
 }model_g_light_s_t;
 
-typedef struct{
+typedef struct __attribute__((packed)) {
 #if MD_SERVER_EN
 	model_g_light_s_t srv[LIGHT_CNT];			// server
     #if MD_VENDOR_2ND_EN
@@ -1109,7 +1120,7 @@ typedef struct{
 #endif
 }model_vd_light_t;
 
-typedef struct{
+typedef struct __attribute__((packed)) {
 #if MD_SERVER_EN
 	model_g_light_s_t onoff_srv[LIGHT_CNT * (1 + (0 != LIGHT_CONTROL_SERVER_LOCATE_EXCLUSIVE_ELEMENT_EN))];	// server
     #if MD_LEVEL_EN
@@ -1124,7 +1135,7 @@ typedef struct{
 #endif
 }model_g_onoff_level_t;
 
-typedef struct{
+typedef struct __attribute__((packed)) {
 	u64 valid_flag_or_idx	: 4;	// flag: when save;  index: in message
 	u64 year		: 7;
 	u64 month		: 12;
@@ -1144,7 +1155,7 @@ typedef struct{
 
 #define SIZE_SCHEDULER  (OFFSETOF(scheduler_t,rand_hour))
 
-typedef struct{
+typedef struct __attribute__((packed)) {
 #if MD_SERVER_EN
     #if MD_TIME_EN
 	model_g_light_s_t time_srv[1];			        // server
@@ -1170,7 +1181,7 @@ typedef struct{
 
 #define g_schd_list     (model_sig_time_schedule.schd_list)
 
-typedef struct{
+typedef struct __attribute__((packed)) {
 #if MD_LIGHTNESS_EN
     #if MD_SERVER_EN
 	model_g_light_s_t srv[LIGHT_CNT];			// server
@@ -1182,7 +1193,7 @@ typedef struct{
 #endif
 }model_lightness_t;
 
-typedef struct{
+typedef struct __attribute__((packed)) {
 #if MD_SERVER_EN
 	model_g_light_s_t srv[LIGHT_CNT];			// server
 	model_g_light_s_t setup[LIGHT_CNT];			// server
@@ -1193,7 +1204,7 @@ typedef struct{
 #endif
 }model_light_ctl_t;
 
-typedef struct{
+typedef struct __attribute__((packed)) {
 #if MD_SERVER_EN
 	model_g_light_s_t srv[LIGHT_CNT];			// server
 	model_g_light_s_t setup[LIGHT_CNT];			// server
@@ -1205,7 +1216,7 @@ typedef struct{
 #endif
 }model_light_hsl_t;
 
-typedef struct{
+typedef struct __attribute__((packed)) {
 #if MD_SERVER_EN
 	model_g_light_s_t srv[LIGHT_CNT];			// server
 	model_g_light_s_t setup[LIGHT_CNT];			// server
@@ -1215,13 +1226,13 @@ typedef struct{
 #endif
 }model_light_xyl_t;
 
-typedef struct{
+typedef struct __attribute__((packed)) {
 	u16 len;        // exclude len
 	u16 id;
 	u8 val[4];      // max 3
 }lc_prop_head_t;
 
-typedef struct{
+typedef struct __attribute__((packed)) {
 	u16 len;        // exclude len
 	u16 id;
 	void *p_val;
@@ -1230,13 +1241,13 @@ typedef struct{
 	u32 val_init;   // max 3 byte
 }lc_prop_info_t;
 
-typedef struct{
+typedef struct __attribute__((packed)) {
 	u32 val     :24;    // unit: ms
 }lc_prop_u24_t;     // property time            // Note: sizeof(bit-field 24) is 7 for eclipse, but 8 for VC.
 #define LEN_LC_PROP_TIME            (3+2)   // sizeof(bit-field) error // sizeof(id + val)
 #define LEN_LC_PROP_LIGHTNESS       (2+2)   // sizeof(id + val)
 
-typedef struct{
+typedef struct __attribute__((packed)) {
 	u32 val     :24;    
 }lc_prop_luxlevel_t;
 #define LEN_LC_PROP_LUXLEVEL        (3+2)   // sizeof(24bit) error for VC
@@ -1245,7 +1256,7 @@ typedef struct{
 
 #define LEN_LC_PROP_MAX		(sizeof(lc_prop_head_t)-OFFSETOF(lc_prop_head_t,id)) // include sizeof(len) and sizeof(value)
 
-typedef struct{
+typedef struct __attribute__((packed)) {
 	lc_prop_luxlevel_t LuxLevelOn;       // confirm 2 or 3 byte later
 	lc_prop_luxlevel_t LuxLevelProlong;
 	lc_prop_luxlevel_t LuxLevelStandby;
@@ -1266,7 +1277,7 @@ typedef struct{
 	lc_prop_u24_t TimeStandbyManual;
 }light_lc_property_t;
 
-typedef struct{
+typedef struct __attribute__((packed)) {
 #if MD_SERVER_EN
 	model_g_light_s_t srv[LIGHT_CNT];			// server
 	model_g_light_s_t setup[LIGHT_CNT];			// server
@@ -1283,7 +1294,7 @@ typedef struct{
 #endif
 }model_light_lc_t;
 
-typedef struct{
+typedef struct __attribute__((packed)) {
 #if MD_SERVER_EN
     #if MD_POWER_ONOFF_EN
 	model_g_light_s_t pw_onoff_srv[LIGHT_CNT];			// server
@@ -1309,7 +1320,7 @@ typedef struct{
 
 #define g_def_trans_time_val(idx)	(model_sig_g_power_onoff.trans_time[idx].val)
 
-typedef struct{
+typedef struct __attribute__((packed)) {
 #if MD_SERVER_EN
 	model_g_light_s_t srv[LIGHT_CNT];			// server
 	model_g_light_s_t setup[LIGHT_CNT];			// server
@@ -1321,7 +1332,7 @@ typedef struct{
 
 #define SCENE_CNT_MAX			(16)
 
-typedef struct{
+typedef struct __attribute__((packed)) {
 	u16 id;
 	s16 lightness_s16;
 #if LIGHT_TYPE_CT_EN
@@ -1353,7 +1364,7 @@ typedef struct{
 #endif
 }scene_data_t;
 
-typedef struct{
+typedef struct __attribute__((packed)) {
 #if MD_SERVER_EN
 	model_g_light_s_t srv[LIGHT_CNT];			// server
 	model_g_light_s_t setup[LIGHT_CNT];			// server
@@ -1368,20 +1379,20 @@ typedef struct{
 
 
 
-typedef struct{
+typedef struct __attribute__((packed)) {
 	u32 battery_level:8;
 	u32 discharge_time:24;
 	u32 charge_time:24;
 	u32 battery_flag:8;
 }mesh_cmd_battery_st_t;
 
-typedef struct{
+typedef struct __attribute__((packed)) {
 	u32 global_latitude;
 	u32 global_longitude;
 	u16 global_altitude;
 }mesh_cmd_location_global_st_t;
 
-typedef struct{
+typedef struct __attribute__((packed)) {
 	u16 local_north;
 	u16 local_east;
 	u16 local_altitude;
@@ -1389,12 +1400,12 @@ typedef struct{
 	u16	uncertainty;
 }mesh_cmd_location_local_st_t; 
 
-typedef struct{
+typedef struct __attribute__((packed)) {
 	mesh_cmd_location_global_st_t location_global;
 	mesh_cmd_location_local_st_t  location_local;
 }mesh_generic_location_t;
 
-typedef struct{
+typedef struct __attribute__((packed)) {
 #if 1 // MD_SERVER_EN, gateway also need ota.
 	model_g_light_s_t fw_update_srv;		// server
 	model_g_light_s_t blob_trans_srv;		// server
@@ -1415,14 +1426,14 @@ typedef struct{
 #define MESH_PROPERTY_STR_SIZE_MAX      (8)
 #define MESH_PROPERTY_CNT_MAX           (1)
 
-typedef struct{
+typedef struct __attribute__((packed)) {
     u8 len_val;
     u16 id;
     u8 access;
     u8 val[MESH_PROPERTY_STR_SIZE_MAX];
 }mesh_property_t;
 
-typedef struct{
+typedef struct __attribute__((packed)) {
 #if MD_SERVER_EN
 	model_g_light_s_t admin_srv[LIGHT_CNT];	    // serve
 	model_g_light_s_t mfg_srv[LIGHT_CNT];	    // serve
@@ -1438,33 +1449,33 @@ typedef struct{
 #endif
 }model_property_t;
 
-typedef struct{
+typedef struct __attribute__((packed)) {
 	model_health_common_t srv;
 	model_client_common_t clnt;
 }model_health_t;
 //--------------------VENDOR SERVER MODEL
 
 //----------------------------------- key
-typedef struct{
+typedef struct __attribute__((packed)) {
     u8 ek_f[16];    // friend
     u8 pk_f[16];
     u8 nid_f;		// friend
 }friend_key_t;
 
-typedef struct{
+typedef struct __attribute__((packed)){
     u8 key[16]; // must at first, because mesh_tx_access_key_get()
     u8 aid;
     u16 index;
     u8 valid;
 }mesh_app_key_t;
 
-typedef struct{
+typedef struct __attribute__((packed)) {
     u8 ek_d[16];    // directed
     u8 pk_d[16];
     u8 nid_d;		// directed
 }directed_key_t;
 
-typedef struct{
+typedef struct __attribute__((packed)) {
     u8 key[16];		// network key
     u8 ek_m[16];    // master: encryption key
     u8 pk_m[16];	//             Privacy Key
@@ -1502,7 +1513,7 @@ typedef struct{
 
 #define DEC_BOTH_TWO_DEV_KEY        (2)    
 
-typedef struct{
+typedef struct __attribute__((packed)) {
 	u8 dev_key[16];	// device key, use as app key
 	mesh_net_key_t net_key[NET_KEY_MAX][2];	// one is normal, another is key refresh
 	u8 netkey_sel_dec;	// slecte network key index in array. valid netkey_idx in mesh_sec_msg_dec_apl() 
@@ -1512,7 +1523,7 @@ typedef struct{
 	u8 new_netkey_dec;
 }mesh_key_t;
 
-typedef struct{
+typedef struct __attribute__((packed)){
     u8 valid;
     u16 index;
     u8 node_identity;
@@ -1522,7 +1533,7 @@ typedef struct{
 	mesh_app_key_t app_key[APP_KEY_MAX];
 }mesh_net_key_save_t;
 
-#if WIN32
+#ifdef WIN32
 #define KEY_SAVE_ENCODE_ENABLE  0
 #else
 #define KEY_SAVE_ENCODE_ENABLE  1
@@ -1530,7 +1541,7 @@ typedef struct{
 
 #define KEY_SAVE_ENCODE_FLAG    (0x3A)
 
-typedef struct{
+typedef struct __attribute__((packed)){
 	u8 dev_key[16];	// device key, use as app key
 	mesh_net_key_save_t net_key[NET_KEY_MAX];
 	u8 rfu0[14];
@@ -1539,7 +1550,7 @@ typedef struct{
 }mesh_key_save_t;
 
 // misc: sno
-typedef struct{
+typedef struct __attribute__((packed)) {
     u32 sno;
     u8 ct_flag;
     u8 rfu1[2];
@@ -1554,7 +1565,7 @@ typedef struct{
 	u8 user[8];
 }misc_save_t;
 
-typedef struct{
+typedef struct __attribute__((packed)) {
     u8 iv_index[4];	// big endianness
     u8 iv_update_trigger_flag;     // trigger by self or other
     u32 sno;
@@ -1571,7 +1582,7 @@ enum{
     IV_UPDATE_STEP2 = 2,		// change to normal from update status // also need to keep 96 hours
 };
 
-typedef struct{
+typedef struct __attribute__((packed)) {
 	// iv index: if use "u32" means little endianness; "u8 [4]" means big endianness;
     u32 iv_cur;	// current iv index,  // little endianness in RAM. but big endianness when save to flash to keep compatibility.
     u32 iv_tx;	// little endianness
@@ -1590,7 +1601,7 @@ extern _align_4_ mesh_key_t mesh_key;
 extern _align_4_ mesh_iv_idx_st_t iv_idx_st;
 
 // provision par
-typedef struct{
+typedef struct __attribute__((packed)) {
 	u8 nk[16];
 	u16 node_adr;
 }mesh_prov_par_t;
@@ -1600,14 +1611,14 @@ typedef struct{
 #if MESH_MODEL_MISC_SAVE_EN
 // model with device key
 // privacy_beacon
-typedef struct{
+typedef struct __attribute__((packed)) {
 	u8 beacon_sts;
 	u8 random_inv_step;
 	u8 proxy_sts;
 	u8 identity_sts;	// not applicable now, instead by priv_identity
 }mesh_privacy_beacon_save_t;
 
-typedef struct{
+typedef struct __attribute__((packed)) {
 #if 1 // MD_PRIVACY_BEA
 	mesh_privacy_beacon_save_t privacy_bc;
 #endif
@@ -1624,19 +1635,19 @@ typedef struct{
 }mesh_model_misc_save_t;
 
 extern mesh_model_misc_save_t g_mesh_model_misc_save;
-void mesh_model_misc_save();
+void mesh_model_misc_save(void);
 
-static inline void mesh_privacy_beacon_save()
+static inline void mesh_privacy_beacon_save(void)
 {
 	mesh_model_misc_save();
 }
 
-static inline void mesh_model_sar_save()
+static inline void mesh_model_sar_save(void)
 {
 	mesh_model_misc_save();
 }
 
-static inline void mesh_model_on_demand_save()
+static inline void mesh_model_on_demand_save(void)
 {
 	mesh_model_misc_save();
 }
@@ -1644,15 +1655,22 @@ static inline void mesh_model_on_demand_save()
 
 // common save
 #define FLASH_CHECK_SIZE_MAX	(64)
-#define SIZE_SAVE_FLAG		(4)
+#define SIZE_SAVE_FLAG		    (4)
 
-typedef struct{
+#if 0
+#define FLASH_MAP_VER_0         0
+#define FLASH_MAP_VER_1         1 // move FLASH_ADR_RESET_CNT, FLASH_ADR_MISC, and FLASH_ADR_SW_LEVEL after 0x70000. please refer to FLASH_MAP_AUTO_EXCHANGE_SOME_SECTORS_EN
+#endif
+
+typedef struct __attribute__((packed)) {
 	u8 flag;
-	u8 crc_en:1;
+	u8 crc_en:  1;
+//	u8 map_ver: 2;  // no need, just use crc_en to check is enough.
+	u8 rfu:     7;  // reserved for future use
 	u16 crc;
 }mesh_save_head_t;
 
-typedef struct{
+typedef struct __attribute__((packed)) {
     u32 adr_base;
     u8 *p_save_par;
     u32 *p_adr;
@@ -1661,7 +1679,7 @@ typedef struct{
 
 #define MODEL_MAX_ONE_SECTOR	(6)
 
-typedef struct{
+typedef struct __attribute__((packed)) {
     bool4 sig_model;
     u32 md_id[MODEL_MAX_ONE_SECTOR];
     u32 adr_base;
@@ -1681,22 +1699,35 @@ static inline u32 GET_PAR_LEN_BY_TRANS(int len, int trans_flag){
 
 extern u32 del_node_tick;
 
-typedef struct{
+typedef struct __attribute__((packed)) {
 	u16 conn_handle;	
 	u8 att_handle;
 	u8 proxy_type;
 	u8 data[1];
 }mesh_notify_head_t;
 
+// --- 
+/**
+ * this struct should not be used in library.
+ * member of this struct should not be modified after setting value, and just for reading.
+ */
+typedef struct{
+    u16 src_addr;
+    u16 dst_addr;
+	u8 src_bearer_type; // bear_index_t
+}mesh_global_rx_par_t;
+
+extern mesh_global_rx_par_t g_mesh_global_rx_par;
+
 //--------------- declaration
-int mesh_is_proxy_ready();
+int mesh_is_proxy_ready(void);
 int app_event_handler_adv(u8 *p_payload, int src_type, u8 need_proxy_and_trans_par_val);
 void mesh_gatt_bear_handle(u8 *bear);
 void mesh_nw_pdu_from_gatt_handle(u8 *p_bear);
-int mesh_adv_cmd_set(u8 *p_adv, u8 *p_bear);
+int mesh_adv_cmd_set(u8 adv_handle, u8 *p_adv, u8 *p_bear);
 void sleep_us_clear_dog(u32 us);
-void mesh_loop_proc_prior();
-void mesh_node_init();
+void mesh_loop_proc_prior(void);
+void mesh_node_init(void);
 int mesh_nid_check(u8 nid);
 void mesh_friend_key_refresh(mesh_net_key_t *new_key);
 void mesh_friend_key_RevokingOld(mesh_net_key_t *new_key);
@@ -1713,7 +1744,7 @@ mesh_net_key_t * mesh_get_netkey_by_idx(u16 key_idx);
 mesh_net_key_t * is_mesh_net_key_exist(u16 key_idx);
 int is_netkey_index_prohibited(u16 key_idx);
 int get_mesh_net_key_offset(u16 key_idx);
-int is_net_key_save();
+int is_net_key_save(void);
 void model_pub_st_cb_re_init_lc_srv(cb_pub_st_t cb);
 void model_pub_st_cb_re_init_sensor_setup(cb_pub_st_t cb);
 u8 get_ele_cnt_by_traversal_cps(mesh_page0_t * p_page0, u32 len_page0);
@@ -1721,31 +1752,31 @@ u8 get_ele_offset_by_model(mesh_page0_t * p_page0, u32 len_page0, u16 node_adr, 
 u16 get_primary_adr(u16 ele_adr);
 u16 get_primary_adr_with_check(u16 node_adr, u16 ele_adr);
 u8 * get_virtual_adr_uuid(u16 pub_adr, model_common_t *p_com_md);
-int is_sno_exhausted();
-int is_iv_update_keep_enough_time_ll();
-int is_iv_update_keep_enough_time_rx();
-void iv_index_read_print_test();
-void iv_index_set_keep_time_test();
-void iv_index_set_sno_test();
-void iv_index_test_button_firmware();
-void mesh_receive_ivi_plus_one_in_normal_cb();
+int is_sno_exhausted(void);
+int is_iv_update_keep_enough_time_ll(void);
+int is_iv_update_keep_enough_time_rx(void);
+void iv_index_read_print_test(void);
+void iv_index_set_keep_time_test(void);
+void iv_index_set_sno_test(void);
+void iv_index_test_button_firmware(void);
+void mesh_receive_ivi_plus_one_in_normal_cb(void);
 void mesh_tx_reliable_start(u8 retry_cnt);
-void mesh_tx_reliable_tick_refresh();
+void mesh_tx_reliable_tick_refresh(void);
 
 //--------------- save
-void mesh_flash_save_check();
-void mesh_flash_retrieve();
-int mesh_key_retrieve();
+void mesh_flash_save_check(void);
+void mesh_flash_retrieve(void);
+int mesh_key_retrieve(void);
 
 void mesh_par_store(const u8 *in, u32 *p_adr, u32 adr_base, u32 size);
-int mesh_par_retrieve(u8 *out, u32 *p_adr, u32 adr_base, u32 size);
+int mesh_par_retrieve(u8 *out, u32 *p_adr, u32 adr_base, u32 size, u32 *p_out_current_addr);
 int mesh_common_retrieve(u32 adr_base);
 int mesh_common_store(u32 adr_base);
 int mesh_model_retrieve(bool4 sig_model, u32 md_id);
-void mesh_common_save_all_md();
+void mesh_common_save_all_md(void);
 int mesh_model_store(bool4 sig_model, u32 md_id);
 void mesh_common_retrieve_cb(int err, u32 adr_base);
-void mesh_common_reset_all();
+void mesh_common_reset_all(void);
 void factory_test_key_bind(int bind_flag);
 u32 mesh_net_key_find(u16 key_index);
 u8 mesh_net_key_set(u16 op, const u8 *nk, u16 key_idx, int save);
@@ -1756,19 +1787,19 @@ void mesh_app_key_set_default(u16 netkey_idx, int save);
 u8 mesh_app_key_set(u16 op, const u8 *ak, u16 app_key_idx, u16 net_key_idx, int save);
 u32 mesh_app_key_get(u8 *list);
 void set_dev_key(u8 *dev_key);
-int is_exist_valid_network_key();
-void mesh_key_save();
+int is_exist_valid_network_key(void);
+void mesh_key_save(void);
 void appkey_bind_all(int bind_flag, u16 ak_idx, int fac_filter_en);
-void mesh_key_flash_sector_init();
-u32 get_all_appkey_cnt();
-int get_mesh_adv_interval();
+void mesh_key_flash_sector_init(void);
+u32 get_all_appkey_cnt(void);
+int get_mesh_adv_interval(void);
 int get_mesh_tx_delay_ms(bear_delay_t *p_bear);
 void set_mesh_bear_tx_delay(u8 *p, int delay_ms);
 
-void VC_node_info_retrieve();
+void VC_node_info_retrieve(void);
 u8 * VC_master_get_other_node_dev_key(u16 adr);
 u8 VC_node_cps_save(mesh_page0_t * p_page0,u16 unicast, u32 len_cps);
-u8 VC_search_and_bind_model();
+u8 VC_search_and_bind_model(void);
 
 u8 * mesh_cfg_cmd_dev_key_get(const u16 adr);
 mesh_app_key_t * mesh_app_key_search_by_index(u16 netkey_idx, u16 appkey_idx);
@@ -1780,47 +1811,47 @@ static inline u16 get_netkey_index(u16 nk_array_idx){
 u8 get_nk_arr_idx(u16 netkey_idx);
 u8 get_ak_arr_idx(u8 nk_array_idx, u16 appkey_idx);
 u8 get_ak_arr_idx_first_valid(u8 nk_array_idx);
-u8 get_nk_arr_idx_first_valid();
-mesh_net_key_t *get_nk_first_valid();
-mesh_net_key_t *get_nk_primary();
+u8 get_nk_arr_idx_first_valid(void);
+mesh_net_key_t *get_nk_first_valid(void);
+mesh_net_key_t *get_nk_primary(void);
 
 u8 GetNKArrayIdxByPointer(mesh_net_key_t *key);
 
 mesh_app_key_t *mesh_tx_access_key_get(u8 *mat, u8 akf);
-void mesh_misc_store();
+void mesh_misc_store(void);
 void mesh_factory_test_mode_en(u8 en);
 void mesh_adv_txrx_to_self_en(u8 en);
 int is_valid_cfg_op_when_factory_test(u16 op);
-int is_activated_factory_test_mode();
+int is_activated_factory_test_mode(void);
 void APP_set_vd_id_mesh_save_map(u16 vd_id);
-int is_mesh_latency_window();
-void proc_node_reset();
+int is_mesh_latency_window(void);
+void proc_node_reset(void);
 u32 node_reset_start(u16 adr_src);
 void client_node_reset_cb(u16 adr_dst);
 int is_support_model_dst(u16 dst_adr, u32 model_id, bool4 sig_model);
 int is_support_op_dst(u16 op, u16 adr_dst);     // provisioner check dst unicast when tx command.
 int is_support_op_dst_VC_APP(u16 op, u16 adr_dst);
 u32 get_random_delay_pub_tick_ms(u32 interval_ms);
-void mesh_pub_period_proc();
+void mesh_pub_period_proc(void);
 int is_tx_status_cmd2self(u16 op, u16 adr_dst);
 u8 mesh_sub_search_ele_and_set(u16 op, u16 ele_adr, u16 sub_adr, u8 *uuid, u32 model_id, bool4 sig_model);
 void mesh_service_change_report(u16 conn_handle);
 #define MESH_PARA_RETRIEVE_VAL      1
 #define MESH_PARA_STORE_VAL         0
 int mesh_par_retrieve_store_win32(u8 *in_out, u32 *p_adr, u32 adr_base, u32 size,u8 flag);
-void mesh_seg_rx_init();
-void mesh_seg_ack_poll_rx();
-int is_retrans_segment_done();
-void mesh_seg_ack_poll_tx();
-void blc_pm_select_none();
+void mesh_seg_rx_init(void);
+void mesh_seg_ack_poll_rx(void);
+int is_retrans_segment_done(void);
+void mesh_seg_ack_poll_tx(void);
+void blc_pm_select_none(void);
 
-void mesh_key_node_identity_init(); // after power on ,we need to detect the flag ,and set timer part 
-void mesh_key_node_identity_set_prov_set();
-void mesh_switch_identity_proc();// run in loop
+void mesh_key_node_identity_init(void); // after power on ,we need to detect the flag ,and set timer part 
+void mesh_key_node_identity_set_prov_set(void);
+void mesh_switch_identity_proc(void);// run in loop
 int is_pkt_notify_only(u16 dst_adr, int relay_flag);
-u32 get_reliable_interval_ms_min();
+u32 get_reliable_interval_ms_min(void);
 void prov_random_proc(u8 *p_random);
-void mesh_node_refresh_binding_tick();
+void mesh_node_refresh_binding_tick(void);
 u64 mul32x32_64(u32 a, u32 b);
 void mesh_private_identity_change_by_proxy_service(mesh_net_key_t *p_netkey);
 int rf_link_get_op_para(u8 *ac,  int len_ac, u16 *op, u8 **params, int *par_len);
@@ -1832,31 +1863,31 @@ u16 get_vendor2sig_op(u16 op, u8 *p_sig_op);
 int is_rx_need_extend_invalid_model(u16 model, int get_op_st);
 u32 get_cps_vendor_op_extend(u8 *cps_out);
 bind_key_t * is_exist_bind_key_extend_op(u16 appkey_idx);
-int is_mesh_adv_cmd_fifo_empty();
+int is_mesh_adv_cmd_fifo_empty(void);
 u8 * mesh_cfg_cmd_dev_key_candi_get(const u16 adr);
 void mesh_tx_en_devkey_candi(u8 en);
-u8 mesh_cps_data_page0_page128_is_same();
-u8 mesh_cps_data_update_page0_from_page128();
+u8 mesh_cps_data_page0_page128_is_same(void);
+u8 mesh_cps_data_update_page0_from_page128(void);
 u32 get_crc32_16bytes(unsigned long crc_init, unsigned char* data);
 u32 get_blk_crc_tlk_type2(u32 crc_init, u8 *data, u32 len);
 int is_valid_tlk_fw_buf(u8 *p_flag);
 void power_on_io_proc(u8 i);
-unsigned char ble_module_id_is_kmadongle();
-void mesh_blc_ll_initExtendedAdv();
-u8 mesh_blc_ll_setExtAdvParamAndEnable();
+unsigned char ble_module_id_is_kmadongle(void);
+void mesh_blc_ll_initExtendedAdv(void);
+u8 mesh_blc_ll_setExtAdvParamAndEnable(void);
 int mesh_blc_aux_adv_filter(u8 *raw_pkt);
 void mesh_blc_ll_setExtAdvData(u8 adv_pdu_len, u8 *data);
 void mesh_ivi_event_cb(u8 search_flag);
 void mesh_netkey_cb(u8 idx,u16 op);
-void send_and_wait_completed_reset_node_status();
-void mesh_node_identity_refresh();
+void send_and_wait_completed_reset_node_status(void);
+void mesh_node_identity_refresh(void);
 int is_rx_seg_reject_before(u16 src_addr, u32 seqAuth);
 void add2rx_seg_reject_cache(u16 src_addr, u32 seqAuth);
-#if (!WIN32 && ((MCU_CORE_TYPE == MCU_CORE_8258) || (MCU_CORE_TYPE == MCU_CORE_8278)))
+#if (!defined(WIN32) && ((MCU_CORE_TYPE == MCU_CORE_8258) || (MCU_CORE_TYPE == MCU_CORE_8278)))
 void sys_clock_init(SYS_CLK_TypeDef SYS_CLK);
 #endif
 int gateway_upload_ividx(misc_save_gw2vc_t *p_misc);
-u32 mesh_sno_get_save_delta();
+u32 mesh_sno_get_save_delta(void);
 
 extern u16 ele_adr_primary;
 extern u8 g_ele_cnt;
@@ -1908,24 +1939,24 @@ extern const u16 my_fwRevisionUUID;
 extern const u8  my_fwRevision_value [FW_REVISION_VALUE_LEN];
 extern u8 g_gw_extend_adv_option;
 
-typedef struct{
+typedef struct __attribute__((packed)) {
 	u16 major 			:4;
 	u16 spec 			:4;
 	u16 second_minor	:4;
 	u16 minor 			:4;
 }sw_version_big_endian_t;
 
-#if (MESH_RX_TEST || WIN32)
+#if (MESH_RX_TEST || defined(WIN32))
 #define RX_TEST_BASE_TIME_SHIFT  	8 
 
-typedef struct{
+typedef struct __attribute__((packed)) {
 	u32 bear_type : 8;
 	u32 tick_base : 24;		// store (clock_time()>>RX_TEST_BASE_TIME_SHIFT)
 }bear_ttc_head_t;
 
 
 #define MAX_RELAY_INFO_TEST			9 		// TTL_DEFAULT is 10, and launch node is record in transmit_index, and the last one no need to record, so it is "TTL_DEFAULT - 1"
-typedef struct{
+typedef struct __attribute__((packed)) {
 	//u8 tid;			// TODO
 	u16 sno_cmd; 		// sequence number of test command, because we send maybe 1000 message at one time, and RX node want to know which message is missed.
 	u16 ttc_100us; 		// time to cost, unit 100us
@@ -1945,12 +1976,12 @@ typedef struct{
 #define SET_RELAY_TRANSMIT_INDEX(bit_field_val, ttl_rx, index) 	do{int start_bit = (TTL_DEFAULT - ttl_rx  + 1) * 3; if(start_bit >= 3 && start_bit <= (MAX_RELAY_INFO_TEST - 1)*3){ BM_SET_MASK_VAL(bit_field_val, (0x07 << start_bit), ((index & 0x07) << start_bit));}}while(0)
 
 #define RX_TEST_CACHE_CNT 1000
-typedef struct{
+typedef struct __attribute__((packed)) {
 	u16 max_time;
 	u16 min_time;
 	u16 avr_time;
 	u16 rcv_cnt;
-#if WIN32 
+#ifdef WIN32 
 	u16 src_addr;
 #else
 	u16 ack_par_len;
@@ -1982,15 +2013,15 @@ enum{
 	CPU_TIMER_WAKEUP,
 };
 
-int get_cpu_wakeup_source();
-void set_mesh_ota_distribute_100_flag();
-void clr_mesh_ota_distribute_100_flag();
-int is_mesh_ota_distribute_100_flag();
+int get_cpu_wakeup_source(void);
+void set_mesh_ota_distribute_100_flag(void);
+void clr_mesh_ota_distribute_100_flag(void);
+int is_mesh_ota_distribute_100_flag(void);
 
 #define set_ota_gatt_connected_flag_lpn		set_mesh_ota_distribute_100_flag
 #define clr_ota_gatt_connected_flag_lpn		clr_mesh_ota_distribute_100_flag
 #define is_ota_gatt_connected_flag_lpn		is_mesh_ota_distribute_100_flag
 
 int is_valid_startup_flag(u32 flag_addr, int check_all_flag);
-void check_self_startup_flag(void);
+bool blt_ota_software_check_flash_load_error(void);
 

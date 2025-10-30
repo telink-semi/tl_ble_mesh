@@ -29,6 +29,9 @@
 #include "app_buffer.h"
 #include "app_att.h"
 #include "app_ui.h"
+#include "../common/subnet_bridge.h"
+#include "vendor/common/remote_prov.h"
+#include "vendor/common/mesh_access_layer.h"
 #if (MESH_CDTP_ENABLE)
 #include "mesh_cdtp.h"
 #endif
@@ -46,9 +49,30 @@ int app_event_handler (u32 h, u8 *p, int n)
 		telink_ble_mi_app_event(subcode,p,n);
 		#endif 
 	//------------ ADV packet --------------------------------------------
-		if (subcode == HCI_SUB_EVT_LE_ADVERTISING_REPORT)	// ADV packet
+		if ((subcode == HCI_SUB_EVT_LE_ADVERTISING_REPORT)	// ADV packet
+		    || (subcode == HCI_SUB_EVT_LE_EXTENDED_ADVERTISING_REPORT)
+		    )
 		{
 			event_adv_report_t *pa = (event_adv_report_t *)p;
+            
+            #if (BLE_MULTIPLE_CONNECTION_ENABLE && EXTENDED_ADV_ENABLE)
+            int offset = 0;
+            extAdvEvt_info_t *pExtAdvInfo = NULL;
+            hci_le_extAdvReportEvt_t *pExtAdvRpt = (hci_le_extAdvReportEvt_t *)p;
+            for(int i=0; i<pExtAdvRpt->num_reports ; i++)
+            {               
+                pExtAdvInfo = (extAdvEvt_info_t *)(pExtAdvRpt->advEvtInfo + offset);
+                offset += (EXTADV_INFO_LENGTH + pExtAdvInfo->data_length);
+                              
+                pa = (event_adv_report_t *)(pExtAdvInfo->data - OFFSETOF(event_adv_report_t, data));
+                pa->event_type = pExtAdvInfo->event_type;
+                memcpy(pa->mac, pExtAdvInfo->address, 6);
+                rssi_pkt = pExtAdvInfo->rssi - 110;
+            }
+            #else
+            rssi_pkt = pa->data[pa->len] - 110;
+            #endif
+
 			#if MD_REMOTE_PROV
 				#if REMOTE_PROV_SCAN_GATT_EN
 			mesh_cmd_conn_prov_adv_cb(pa);// only for the remote gatt-provision proc part.
@@ -60,14 +84,14 @@ int app_event_handler (u32 h, u8 *p, int n)
 				#if DU_ULTRA_PROV_EN
 				app_event_handler_ultra_prov(pa->data);
 				#endif
-				
-				return 0;
 			}
+            
 			#if TEST_FORWARD_ADDR_FILTER_EN
 			if(!find_mac_in_filter_list(pa->mac)){
 				return 0;
 			}
 			#endif
+            
 			#if 0 // TESTCASE_FLAG_ENABLE
 			u8 mac_pts[] = {0xDA,0xE2,0x08,0xDC,0x1B,0x00};	// 0x001BDC08E2DA
 			u8 mac_pts2[] = {0xDB,0xE2,0x08,0xDC,0x1B,0x00};	// 0x001BDC08E2DA
@@ -75,9 +99,7 @@ int app_event_handler (u32 h, u8 *p, int n)
 				return 0;
 			}
 			#endif
-			if((pa->mac[0] == 0x03) && (pa->mac[1] == 0x01)){
-				tlkapi_send_string_data(APP_LOG_EN, "raw:", p, 16);
-			}
+            
 			#if DEBUG_MESH_DONGLE_IN_VC_EN
 			send_to_hci = (0 == mesh_dongle_adv_report2vc(pa->data, MESH_ADV_PAYLOAD));
 			#else
@@ -130,13 +152,15 @@ int app_event_handler (u32 h, u8 *p, int n)
 				#if DEBUG_MESH_DONGLE_IN_VC_EN
 				debug_mesh_report_BLE_st2usb(1);
 				#endif
-				proxy_cfg_list_init_upon_connection(pConnEvt->connHandle);
+
 				#if 0 // FEATURE_FRIEND_EN
 				fn_update_RecWin(get_RecWin_connected());
 				#endif
+                
 				#if !DU_ENABLE
 				mesh_service_change_report(pConnEvt->connHandle);
 				#endif
+                
 				#if LPN_CONTROL_EN
 				bls_l2cap_requestConnParamUpdate (pConnEvt->connHandle, 48, 56, 10, 500);
 				#endif
@@ -450,21 +474,20 @@ _attribute_no_inline_ void user_init_normal(void)
 
 #if (HCI_ACCESS == HCI_USE_USB)
 	//set USB ID
+	#if (MCU_CORE_TYPE == MCU_CORE_B91)
 	REG_ADDR8(0x1401f4) = 0x65;
 	REG_ADDR16(0x1401fe) = 0x08d4;
 	REG_ADDR8(0x1401f4) = 0x00;
+    #elif (MCU_CORE_TYPE == MCU_CORE_TL321X)
 
+    #endif
+    
 	// need to have a simulate insert
 	usb_dp_pullup_en (0);  //open USB enum
 	gpio_set_func(GPIO_DP,AS_GPIO);
 	gpio_set_output_en(GPIO_DP,1);
 	gpio_write(GPIO_DP,0);
 	sleep_us(20000);
-	#if (0 == __TLSR_RISCV_EN__)
-	gpio_set_func(GPIO_DP,AS_USB);
-	#else
-	gpio_set_func(GPIO_DP,AS_USB_DP);
-	#endif
 	usb_set_pin_en();
 #endif
 
@@ -481,9 +504,13 @@ _attribute_no_inline_ void user_init_normal(void)
 
 	blc_ll_initStandby_module(tbl_mac);
 
+    #if EXTENDED_ADV_ENABLE
+    mesh_blc_ll_initExtendedAdv();
+    blc_ll_initExtendedScanning_module();
+    #else
     blc_ll_initLegacyAdvertising_module();
-
     blc_ll_initLegacyScanning_module();
+    #endif
 
 	blc_ll_initAclConnection_module();
 
@@ -503,15 +530,20 @@ _attribute_no_inline_ void user_init_normal(void)
 	blc_hci_registerControllerDataHandler (blc_l2cap_pktHandler);
 
 	blc_hci_registerControllerEventHandler(app_event_handler); //controller hci event to host all processed in this func
+    
+    #if !EXTENDED_ADV_ENABLE
 	blc_register_advertise_prepare (blt_send_adv_cb);
 	blc_register_adv_scan_proc(blc_ll_procScanPkt_mesh);
+    #endif
+    
 	//bluetooth event
 	blc_hci_setEventMask_cmd (HCI_EVT_MASK_DISCONNECTION_COMPLETE);
 
 	//bluetooth low energy(LE) event
 	blc_hci_le_setEventMask_cmd(		HCI_LE_EVT_MASK_CONNECTION_COMPLETE  \
 									|	HCI_LE_EVT_MASK_ADVERTISING_REPORT \
-									|   HCI_LE_EVT_MASK_CONNECTION_UPDATE_COMPLETE);
+									|   HCI_LE_EVT_MASK_CONNECTION_UPDATE_COMPLETE \
+									|   HCI_LE_EVT_MASK_EXTENDED_ADVERTISING_REPORT);
 
 #if (HCI_ACCESS != HCI_USE_NONE)
 	#if (HCI_ACCESS==HCI_USE_USB)
@@ -601,23 +633,46 @@ _attribute_no_inline_ void user_init_normal(void)
 	//////////// Host Initialization  End /////////////////////////
 
 //////////////////////////// BLE stack Initialization  End //////////////////////////////////
-	mesh_init_all();
-	mesh_scan_rsp_init();
-	my_att_init (provision_mag.gatt_mode);
-
 
 //////////////////////////// User Configuration for BLE application ////////////////////////////
+    #if EXTENDED_ADV_ENABLE
+    mesh_blc_ll_setExtAdvParamAndEnable();
+       
+    blc_ll_setExtScanParam(OWN_ADDRESS_PUBLIC, SCAN_FP_ALLOW_ADV_ANY, (BLE_PHY_MODE == BLE_PHY_1M) ? SCAN_PHY_1M:SCAN_PHY_CODED,
+                                            SCAN_TYPE_PASSIVE, SCAN_INTERVAL_100MS, SCAN_WINDOW_100MS,
+                                            SCAN_TYPE_PASSIVE, SCAN_INTERVAL_100MS, SCAN_WINDOW_100MS);
+    
+    blc_ll_setExtScanEnable(BLC_SCAN_ENABLE, DUPE_FLTR_DISABLE, SCAN_DURATION_CONTINUOUS, SCAN_WINDOW_CONTINUOUS);
+    #else	
 	blc_ll_setAdvParam(ADV_INTERVAL_10MS, ADV_INTERVAL_10MS, ADV_TYPE_CONNECTABLE_UNDIRECTED, OWN_ADDRESS_PUBLIC, 0, NULL, BLT_ENABLE_ADV_ALL, ADV_FP_NONE);
 	blc_ll_setAdvEnable(BLC_ADV_ENABLE);  //ADV enable
 
-	blc_ll_setScanParameter(SCAN_TYPE_PASSIVE, ADV_INTERVAL_10MS, ADV_INTERVAL_10MS, OWN_ADDRESS_PUBLIC, SCAN_FP_ALLOW_ADV_ANY);
+	blc_ll_setScanParameter(SCAN_TYPE_PASSIVE, SCAN_INTERVAL_10MS, SCAN_WINDOW_10MS, OWN_ADDRESS_PUBLIC, SCAN_FP_ALLOW_ADV_ANY);
 	blc_ll_setScanEnable (BLC_SCAN_ENABLE, DUP_FILTER_DISABLE);
+    #endif
 
 	blc_ll_setDefaultTxPowerLevel(MY_RF_POWER_INDEX);
 
 	#if (BLE_APP_PM_ENABLE)
 		blc_ll_initPowerManagement_module();
 		blc_pm_setSleepMask(PM_SLEEP_LEG_ADV | PM_SLEEP_LEG_SCAN | PM_SLEEP_ACL_PERIPHR | PM_SLEEP_ACL_CENTRAL);
+
+		#if (PM_DEEPSLEEP_RETENTION_ENABLE)
+			blc_pm_setDeepsleepRetentionEnable(PM_DeepRetn_Enable);
+			blc_pm_setDeepsleepRetentionThreshold(95);
+
+			#if(MCU_CORE_TYPE == MCU_CORE_B91)
+				blc_pm_setDeepsleepRetentionEarlyWakeupTiming(450);
+			#elif(MCU_CORE_TYPE == MCU_CORE_B92)
+				blc_pm_setDeepsleepRetentionEarlyWakeupTiming(450);
+			#elif(MCU_CORE_TYPE == MCU_CORE_TL321X)
+                blc_pm_setDeepsleepRetentionEarlyWakeupTiming(580);//96M--550us, 32M--578us
+            #elif(MCU_CORE_TYPE == MCU_CORE_TL721X)
+                blc_pm_setDeepsleepRetentionEarlyWakeupTiming(890);
+			#endif
+		#else
+			blc_pm_setDeepsleepRetentionEnable(PM_DeepRetn_Disable);
+		#endif
 	#endif
 
 
@@ -626,6 +681,15 @@ _attribute_no_inline_ void user_init_normal(void)
 		blc_ota_setOtaProcessTimeout(600);
 		blc_ota_registerOtaResultIndicationCb(show_ota_result);
 	#endif
+    
+    //////////// MESH Initialization /////////////////////////
+	mesh_init_all();
+	mesh_scan_rsp_init();
+	my_att_init (provision_mag.gatt_mode);
+
+#if MESH_RX_TEST
+    mesh_register_upper_transport_layer_callback(mesh_upper_transport_layer_cb);
+#endif
 
 	#if MESH_CDTP_ENABLE
 	mesh_cdtp_init();
@@ -648,7 +712,32 @@ _attribute_no_inline_ void user_init_normal(void)
  */
 void user_init_deepRetn(void)
 {
+#if (PM_DEEPSLEEP_RETENTION_ENABLE)
+	blc_app_loadCustomizedParameters_deepRetn();
 
+	blc_ll_initBasicMCU();   //mandatory
+
+	blc_ll_setDefaultTxPowerLevel(MY_RF_POWER_INDEX);
+
+	blc_ll_recoverDeepRetention();
+
+	DBG_CHN0_HIGH;    //debug
+	irq_enable();
+#if (HCI_ACCESS == HCI_USE_UART)	//uart
+	uart_drv_init();
+#endif
+#if ADC_ENABLE
+	adc_drv_init();
+#endif
+
+#if (BATT_CHECK_ENABLE)
+	adc_hw_initialized=0;
+#endif
+
+#if (TLKAPI_DEBUG_ENABLE)
+	tlkapi_debug_deepRetn_init();
+#endif
+#endif
 }
 
 
@@ -720,7 +809,7 @@ int main_idle_loop (void)
 	du_loop_proc();
 #endif
 #if !DU_LPN_EN
-//	proc_ui();
+	proc_ui();
 	proc_led();
 	factory_reset_cnt_check();
 #endif

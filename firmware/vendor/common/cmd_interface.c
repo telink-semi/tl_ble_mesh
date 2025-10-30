@@ -22,7 +22,7 @@
  *          limitations under the License.
  *
  *******************************************************************************************************/
-#if WIN32
+#ifdef WIN32
 #include "../../../reference/tl_bulk/lib_file/host_fifo.h"
 #include "../../../reference/tl_bulk/lib_file/gatt_provision.h"
 #include "../../../reference/tl_bulk/lib_file/hw_fun.h"
@@ -159,7 +159,7 @@ int access_cmd_onoff(u16 adr_dst, u8 rsp_max, u8 onoff, int ack, transition_par_
 						   (u8 *)&par, par_len);
 }
 #else // for long packet test
-typedef struct{
+typedef struct __attribute__((packed)) {
 	u8 onoff;
 	u8 tid;
 	u8 transit_t;
@@ -259,7 +259,7 @@ int cfg_cmd_sub_get(u16 node_adr, u16 ele_adr, u16 md_id)
 	return SendOpParaDebug (node_adr, 1, CFG_SIG_MODEL_SUB_GET,(u8 *)&par, sizeof(mesh_cfg_model_sub_get_sig_t));
 }
 
-#if WIN32
+#ifdef WIN32
 int group_status[2][VC_UI_GROUP_CNT_MAX];
 #endif
 mesh_cfg_cmd_sub_set_par_t mesh_cfg_cmd_sub_set_par;
@@ -575,7 +575,7 @@ int cfg_cmd_key_phase_get(u16 node_adr, u16 nk_idx)
  * @return      0: success, others: error code of tx_errno_e.
  * @note        
  */
-#if !WIN32
+#ifndef WIN32
 int cfg_cmd_key_phase_set(u16 node_adr, u16 nk_idx, u8 transition)
 {
 	mesh_key_refresh_phase_set_t set;
@@ -977,11 +977,17 @@ int mesh_proxy_set_filter_cmd(u8 opcode,u8 filter_type, u8* dat,u8 len )
 			endianness_swap_u16(dat+2*i);
 		}
 	}
-	#if WIN32
+	#ifdef WIN32
 	LOG_MSG_INFO(TL_LOG_NODE_BASIC,dat,len ,"filter send cmd is %d",opcode);
 	#endif
 	
-	return mesh_tx_cmd_layer_proxy_cfg_primary(BLS_HANDLE_MIN, opcode, dat, len, PROXY_CONFIG_FILTER_DST_ADR);
+	#if BLE_MULTIPLE_CONNECTION_ENABLE
+	u16 conn_handle = get_periphr_conn_handle_by_idx(0);
+	#else
+	u16 conn_handle = BLS_CONN_HANDLE;
+	#endif
+	
+	return mesh_tx_cmd_layer_proxy_cfg_primary(conn_handle, opcode, dat, len, PROXY_CONFIG_FILTER_DST_ADR);
 }
 
 /**
@@ -1046,7 +1052,7 @@ int mesh_proxy_set_filter_init(u16 self_adr)
 }
 
 
-#if WIN32
+#ifdef WIN32
 /**
  * @brief       This function is to get network information for "sig_mesh_tool.exe"
  * @param[out]  p_netkey_val- 

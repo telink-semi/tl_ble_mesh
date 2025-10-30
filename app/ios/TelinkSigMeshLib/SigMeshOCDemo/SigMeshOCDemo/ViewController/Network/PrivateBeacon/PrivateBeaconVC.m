@@ -26,6 +26,8 @@
 
 @interface PrivateBeaconVC ()
 @property (weak, nonatomic) IBOutlet UITableView *tableView;
+@property (nonatomic, strong) UISwitch *configGattProxySwitch;
+@property (nonatomic, strong) UISwitch *privateGattProxySwitch;
 @property (strong, nonatomic) NSArray <NSString *>*dataArray;
 @property (nonatomic, assign) BOOL nodeIdentityEnable;
 @property (nonatomic, assign) BOOL privateNodeIdentityEnable;
@@ -97,6 +99,8 @@
     if (indexPath.row == 0) {
         cell.firstSwitch.on = [SigDataSource.share getLocalConfigGattProxyStateOfUnicastAddress:self.model.address];
         cell.secondSwitch.on = [SigDataSource.share getLocalPrivateGattProxyStateOfUnicastAddress:self.model.address];
+        self.configGattProxySwitch = cell.firstSwitch;
+        self.privateGattProxySwitch = cell.secondSwitch;
         [cell.firstSwitch addTarget:self action:@selector(clickConfigGattProxySwitch:) forControlEvents:UIControlEventValueChanged];
         [cell.secondSwitch addTarget:self action:@selector(clickPrivateGattProxySwitch:) forControlEvents:UIControlEventValueChanged];
     } else if (indexPath.row == 1) {
@@ -116,7 +120,7 @@
 - (void)clickPrivateGattProxySwitch:(UISwitch *)switchButton {
     // Mesh is disconnected,can not send Private GATT Proxy.
     if (!SigBearer.share.isOpen) {
-        [self showTips:@"Mesh is disconnected."];
+        [self.navigationController.view makeToast:@"Mesh is disconnected."];
         switchButton.on = !switchButton.on;
         return;
     }
@@ -125,6 +129,11 @@
     __block BOOL result = NO;
     __weak typeof(self) weakSelf = self;
     SigPrivateGattProxyState privateGattProxy = switchButton.isOn ? SigPrivateGattProxyState_enable : SigPrivateGattProxyState_disable;
+    if (switchButton.isOn && self.configGattProxySwitch.isOn) {
+        // need set configGattProxySwitch to OFF.
+        self.configGattProxySwitch.on = NO;
+        [self clickConfigGattProxySwitch:self.configGattProxySwitch];
+    }
     [SDKLibCommand privateGattProxySetWithPrivateGattProxy:privateGattProxy destination:des retryCount:2 responseMaxCount:1 successCallback:^(UInt16 source, UInt16 destination, SigPrivateGattProxyStatus * _Nonnull responseMessage) {
         if (source == des && responseMessage.privateGattProxy == privateGattProxy) {
             result = YES;
@@ -132,10 +141,10 @@
     } resultCallback:^(BOOL isResponseAll, NSError * _Nullable error) {
         dispatch_async(dispatch_get_main_queue(), ^{
             if (result) {
-                [weakSelf showTips:[NSString stringWithFormat:@"%@ Private GATT Proxy Success!", switchButton.isOn ? @"Enable" : @"Disable"]];
+                [weakSelf.navigationController.view makeToast:[NSString stringWithFormat:@"%@ Private GATT Proxy Success!", switchButton.isOn ? @"Enable" : @"Disable"]];
                 [SigDataSource.share setLocalPrivateGattProxyState:switchButton.isOn unicastAddress:des];
             } else {
-                [weakSelf showTips:[NSString stringWithFormat:@"%@ Private GATT Proxy Fail!", switchButton.isOn ? @"Enable" : @"Disable"]];
+                [weakSelf.navigationController.view makeToast:[NSString stringWithFormat:@"%@ Private GATT Proxy Fail!", switchButton.isOn ? @"Enable" : @"Disable"]];
                 switchButton.on = !switchButton.isOn;
             }
         });
@@ -145,7 +154,7 @@
 - (void)clickConfigGattProxySwitch:(UISwitch *)switchButton {
     // Mesh is disconnected,can not send Config GATT Proxy.
     if (!SigBearer.share.isOpen) {
-        [self showTips:@"Mesh is disconnected."];
+        [self.navigationController.view makeToast:@"Mesh is disconnected."];
         switchButton.on = !switchButton.on;
         return;
     }
@@ -154,6 +163,11 @@
     __block BOOL result = NO;
     __weak typeof(self) weakSelf = self;
     SigNodeGATTProxyState nodeGATTProxyState = switchButton.isOn ? SigNodeGATTProxyState_enabled : SigNodeGATTProxyState_notEnabled;
+    if (switchButton.isOn && self.privateGattProxySwitch.isOn) {
+        // need set privateGattProxySwitch to OFF.
+        self.privateGattProxySwitch.on = NO;
+        [self clickPrivateGattProxySwitch:self.privateGattProxySwitch];
+    }
     [SDKLibCommand configGATTProxySetWithDestination:des nodeGATTProxyState:nodeGATTProxyState retryCount:2 responseMaxCount:1 successCallback:^(UInt16 source, UInt16 destination, SigConfigGATTProxyStatus * _Nonnull responseMessage) {
         if (source == des && responseMessage.state == nodeGATTProxyState) {
             result = YES;
@@ -161,10 +175,10 @@
     } resultCallback:^(BOOL isResponseAll, NSError * _Nullable error) {
         dispatch_async(dispatch_get_main_queue(), ^{
             if (result) {
-                [weakSelf showTips:[NSString stringWithFormat:@"%@ Config GATT Proxy Success!", switchButton.isOn ? @"Enable" : @"Disable"]];
+                [weakSelf.navigationController.view makeToast:[NSString stringWithFormat:@"%@ Config GATT Proxy Success!", switchButton.isOn ? @"Enable" : @"Disable"]];
                 [SigDataSource.share setLocalConfigGattProxyState:switchButton.isOn unicastAddress:des];
             } else {
-                [weakSelf showTips:[NSString stringWithFormat:@"%@ Config GATT Proxy Fail!", switchButton.isOn ? @"Enable" : @"Disable"]];
+                [weakSelf.navigationController.view makeToast:[NSString stringWithFormat:@"%@ Config GATT Proxy Fail!", switchButton.isOn ? @"Enable" : @"Disable"]];
                 switchButton.on = !switchButton.isOn;
             }
         });
@@ -174,7 +188,7 @@
 - (void)clickPrivateNodeIdentitySwitch:(UISwitch *)switchButton {
     // Mesh is disconnected,can not send Private Node Identity.
     if (!SigBearer.share.isOpen) {
-        [self showTips:@"Mesh is disconnected."];
+        [self.navigationController.view makeToast:@"Mesh is disconnected."];
         switchButton.on = !switchButton.on;
         return;
     }
@@ -198,9 +212,9 @@
     } resultCallback:^(BOOL isResponseAll, NSError * _Nullable error) {
         dispatch_async(dispatch_get_main_queue(), ^{
             if (result) {
-                [weakSelf showTips:[NSString stringWithFormat:@"%@ Private Node Identity Success!", switchButton.isOn ? @"Enable" : @"Disable"]];
+                [weakSelf.navigationController.view makeToast:[NSString stringWithFormat:@"%@ Private Node Identity Success!", switchButton.isOn ? @"Enable" : @"Disable"]];
             } else {
-                [weakSelf showTips:[NSString stringWithFormat:@"%@ Private Node Identity Fail!", switchButton.isOn ? @"Enable" : @"Disable"]];
+                [weakSelf.navigationController.view makeToast:[NSString stringWithFormat:@"%@ Private Node Identity Fail!", switchButton.isOn ? @"Enable" : @"Disable"]];
                 switchButton.on = !switchButton.isOn;
             }
         });
@@ -210,7 +224,7 @@
 - (void)clickConfigNodeIdentitySwitch:(UISwitch *)switchButton {
     // Mesh is disconnected,can not send Config Node Identity.
     if (!SigBearer.share.isOpen) {
-        [self showTips:@"Mesh is disconnected."];
+        [self.navigationController.view makeToast:@"Mesh is disconnected."];
         switchButton.on = !switchButton.on;
         return;
     }
@@ -233,9 +247,9 @@
     } resultCallback:^(BOOL isResponseAll, NSError * _Nullable error) {
         dispatch_async(dispatch_get_main_queue(), ^{
             if (result) {
-                [weakSelf showTips:[NSString stringWithFormat:@"%@ Config Node Identity Success!", switchButton.isOn ? @"Enable" : @"Disable"]];
+                [weakSelf.navigationController.view makeToast:[NSString stringWithFormat:@"%@ Config Node Identity Success!", switchButton.isOn ? @"Enable" : @"Disable"]];
             } else {
-                [weakSelf showTips:[NSString stringWithFormat:@"%@ Config Node Identity Fail!", switchButton.isOn ? @"Enable" : @"Disable"]];
+                [weakSelf.navigationController.view makeToast:[NSString stringWithFormat:@"%@ Config Node Identity Fail!", switchButton.isOn ? @"Enable" : @"Disable"]];
                 switchButton.on = !switchButton.isOn;
             }
         });
@@ -245,7 +259,7 @@
 - (void)clickPrivateBeaconSwitch:(UISwitch *)switchButton {
     // Mesh is disconnected,can not send Private Beacon.
     if (!SigBearer.share.isOpen) {
-        [self showTips:@"Mesh is disconnected."];
+        [self.navigationController.view makeToast:@"Mesh is disconnected."];
         switchButton.on = !switchButton.on;
         return;
     }
@@ -261,10 +275,10 @@
     } resultCallback:^(BOOL isResponseAll, NSError * _Nullable error) {
         dispatch_async(dispatch_get_main_queue(), ^{
             if (result) {
-                [weakSelf showTips:[NSString stringWithFormat:@"%@ Private Beacon Success!", switchButton.isOn ? @"Enable" : @"Disable"]];
+                [weakSelf.navigationController.view makeToast:[NSString stringWithFormat:@"%@ Private Beacon Success!", switchButton.isOn ? @"Enable" : @"Disable"]];
                 [SigDataSource.share setLocalPrivateBeaconState:switchButton.isOn unicastAddress:des];
             } else {
-                [weakSelf showTips:[NSString stringWithFormat:@"%@ Private Beacon Fail!", switchButton.isOn ? @"Enable" : @"Disable"]];
+                [weakSelf.navigationController.view makeToast:[NSString stringWithFormat:@"%@ Private Beacon Fail!", switchButton.isOn ? @"Enable" : @"Disable"]];
                 switchButton.on = !switchButton.isOn;
             }
         });
@@ -274,7 +288,7 @@
 - (void)clickConfigBeaconSwitch:(UISwitch *)switchButton {
     // Mesh is disconnected,can not send Config Beacon.
     if (!SigBearer.share.isOpen) {
-        [self showTips:@"Mesh is disconnected."];
+        [self.navigationController.view makeToast:@"Mesh is disconnected."];
         switchButton.on = !switchButton.on;
         return;
     }
@@ -290,10 +304,10 @@
     } resultCallback:^(BOOL isResponseAll, NSError * _Nullable error) {
         dispatch_async(dispatch_get_main_queue(), ^{
             if (result) {
-                [weakSelf showTips:[NSString stringWithFormat:@"%@ Config Beacon Success!", switchButton.isOn ? @"Enable" : @"Disable"]];
+                [weakSelf.navigationController.view makeToast:[NSString stringWithFormat:@"%@ Config Beacon Success!", switchButton.isOn ? @"Enable" : @"Disable"]];
                 [SigDataSource.share setLocalConfigBeaconState:switchButton.isOn unicastAddress:des];
             } else {
-                [weakSelf showTips:[NSString stringWithFormat:@"%@ Config Beacon Fail!", switchButton.isOn ? @"Enable" : @"Disable"]];
+                [weakSelf.navigationController.view makeToast:[NSString stringWithFormat:@"%@ Config Beacon Fail!", switchButton.isOn ? @"Enable" : @"Disable"]];
                 switchButton.on = !switchButton.isOn;
             }
         });

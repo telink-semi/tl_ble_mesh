@@ -37,7 +37,7 @@
 #define URI_CERTIFY_ID	0x0000
 #define DEV_CERTIFY_ID	0x0001
 
-
+#define MAX_CERT_ITEM_CNT	2
 #define MAX_PEM_CERT_LEN 0x300
 extern u8 der_cert_buf[MAX_PEM_CERT_LEN];
 extern u32 der_buf_len;
@@ -87,35 +87,35 @@ typedef enum{
 #define PEM_PRIVATE_KEY_S 	"-----BEGIN EC PRIVATE KEY-----"
 #define PEM_PRIVATE_KEY_E	"-----END EC PRIVATE KEY-----"
 
-typedef struct{
+typedef struct __attribute__((packed)) {
 	int len;
 	u8  key[0x20];
 }cert_pri_t;
 
-typedef struct{
+typedef struct __attribute__((packed)) {
 	int len;
 	u8  key[0x41];
 	u8  rfu[3];
 }cert_pub_t;
 
-typedef struct{
+typedef struct __attribute__((packed)) {
 	int len;
 	u8 key[20];
 }cert_idkey_t;
 
-typedef struct{
+typedef struct __attribute__((packed)) {
 	int len;
 	u8 key[0x40];
 }cert_sign_t;
 
-typedef struct{
+typedef struct __attribute__((packed)) {
 	int val;
 	cert_pri_t pri;
 	cert_pub_t pub;
 }private_cert_str_t;
 
 
-typedef struct{
+typedef struct __attribute__((packed)) {
 	cert_pub_t pub;
 	cert_idkey_t subj;
 	cert_idkey_t author;
@@ -123,31 +123,31 @@ typedef struct{
 }dev_cert_tbs_part_t;
 
 
-typedef struct{
+typedef struct __attribute__((packed)) {
 	u16 id;	
 	u16 len;
 	const  char *p_item;
 }cert_item_t;
 
 
-int  cert_base_func_init();
+int  cert_base_func_init(void);
 void cert_set_uuid(u8 *p_uuid);
 void cert_base_set_key(u8 *pk,u8 *sk);
 void get_cert_id_list(u8 *p_list,u32 *p_len);
 const char * get_cert_content_by_id(u16 id,u32* p_len);
 u32 cert_id_get(u16 *p_id);
 
-void prov_clear_all_rec();
+void prov_clear_all_rec(void);
 void prov_set_rec_id(u16 *p_rec,u8 len);
 int prov_set_buf_len(u16 rec_id,u16 offset,u8 *p_buf,u32 len,u32 total);
 int prov_use_rec_id_get_pubkey(u16 rec_id,u8 *p_pubkey);
 int cert_item_rsp(u16 id,u16 offset,u16 max_size,u8 *p_buf,u16 *p_len);
 u32  use_cert_id_get_len(u8 id);
 
-void record_mag_init();
+void record_mag_init(void);
 void record_mag_set(u16 rec_id,u16 max_size,u16 offset);
 void record_mag_get(u16 *p_rec_id,u16 *p_max_size,u16 *p_offset);
 void record_mag_get_max_size(u16 *p_max_size);
-void cert_base_oob_set();
+void cert_base_oob_set(void);
 #endif
 #endif

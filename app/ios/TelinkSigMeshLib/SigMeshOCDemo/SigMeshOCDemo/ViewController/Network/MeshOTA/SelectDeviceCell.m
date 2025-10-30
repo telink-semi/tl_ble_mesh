@@ -28,6 +28,7 @@
 - (void)awakeFromNib {
     [super awakeFromNib];
     // Initialization code
+    self.selectButton.userInteractionEnabled = NO;
     [self configurationCornerWithBgView:_bgView];
 }
 

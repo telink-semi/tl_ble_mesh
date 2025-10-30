@@ -35,24 +35,24 @@ enum{
 	OP_AGG_UNKNOWN_MSG,
 };
 
-typedef struct{
+typedef struct __attribute__((packed)) {
  	u8 format:1;
 	u8 length:7;
 	u8 acc_par[1];
 }agg_item_short_t;
 
-typedef struct{
+typedef struct __attribute__((packed)) {
 	u16 format:1;
 	u16 length:15;
 	u8 acc_par[1];
 }agg_item_long_t;
 
-typedef struct{
+typedef struct __attribute__((packed)) {
 	u16 ele_addr;
 	u8 par[1];
 }op_agg_seq_t;
 
-typedef struct{
+typedef struct __attribute__((packed)) {
 	u16 op_rsp; // reserve for rsp_op
 	u8 status;
 	u16 ele_addr;
@@ -60,7 +60,7 @@ typedef struct{
 }op_agg_seq_st_t;
 
 
-typedef struct{
+typedef struct __attribute__((packed)) {
 	#if MD_SERVER_EN
 	model_g_light_s_t srv;			// server
     #endif
@@ -73,7 +73,7 @@ extern _align_4_ model_sig_op_agg_t model_sig_op_agg;
 extern u32 mesh_md_op_agg_addr;
 
 int is_op_agg_model(u32 model_id);
-int is_in_op_agg_mode();
+int is_in_op_agg_mode(void);
 int is_op_agg_use_device_key(u8 *par, int len);
 int mesh_op_agg_status_item_format_add(u32 len);
 

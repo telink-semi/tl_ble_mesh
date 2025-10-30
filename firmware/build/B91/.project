@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <projectDescription>
-	<name>tl_ble_mesh</name>
+	<name>TL_BLE_MESH_B91</name>
 	<comment></comment>
 	<projects>
 	</projects>
@@ -80,11 +80,6 @@
 		<nature>org.eclipse.cdt.managedbuilder.core.ScannerConfigNature</nature>
 	</natures>
 	<linkedResources>
-		<link>
-			<name>3rd-party</name>
-			<type>2</type>
-			<locationURI>PARENT-2-PROJECT_LOC/3rd-party</locationURI>
-		</link>
 		<link>
 			<name>algorithm</name>
 			<type>2</type>

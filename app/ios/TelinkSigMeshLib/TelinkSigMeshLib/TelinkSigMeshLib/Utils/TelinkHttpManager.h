@@ -25,9 +25,13 @@
 
 NS_ASSUME_NONNULL_BEGIN
 
+#define BaseUrl @"http://47.115.164.97:8080/"
+
 typedef void (^MyBlock) (id _Nullable result, NSError * _Nullable err);
 
 @interface TelinkHttpManager : NSObject
+/// base url of http
+@property (nonatomic, strong) NSString *baseUrl;
 
 + (instancetype)new __attribute__((unavailable("please initialize by use .share or .share()")));
 - (instancetype)init __attribute__((unavailable("please initialize by use .share or .share()")));

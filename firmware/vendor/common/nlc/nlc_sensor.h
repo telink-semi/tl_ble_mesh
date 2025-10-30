@@ -27,6 +27,7 @@
 #include "tl_common.h"
 #include "proj_lib/sig_mesh/app_mesh.h"
 
+#if (LIGHT_TYPE_SEL == LIGHT_TYPE_NLC_SENSOR)
 #if ((NLC_SENSOR_TYPE_SEL == NLCP_TYPE_OCS) || (NLC_SENSOR_TYPE_SEL == NLCP_TYPE_ALS))
 // -------- sensor define ----------------
 #define SENSOR_NONE							0 // use BDT or button to simulate.
@@ -39,5 +40,5 @@ void nlc_sensor_init(void);
 u32 nlc_sensor_get(void);
 
 #endif
-
+#endif
 

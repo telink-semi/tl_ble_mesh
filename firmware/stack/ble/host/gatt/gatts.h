@@ -45,7 +45,7 @@ void    blc_gatts_addAttributeServiceGroup(atts_group_t *pGroup);
  * @param[out]
  * @return      ble_sts_t.
  */
-void	blc_gatts_removeAttributeServiceGroup(u16 startHandle);
+void    blc_gatts_removeAttributeServiceGroup(u16 startHandle);
 
 /**
  * @brief gatt server get attribute value and attribute value length
@@ -71,12 +71,12 @@ void blc_gatts_notifyDisconnect(u16 connHandle);
 typedef void (*gatts_cfmCb)(u16 connHandle, u16 scid);
 
 typedef struct __attribute__((packed)){
-	u16 connHandle;
-	u16 scid;
-	u16 attrHandle;
-	void* value;
-	u16 valueLen;
-	gatts_cfmCb cb;
+    u16 connHandle;
+    u16 scid;
+    u16 attrHandle;
+    void* value;
+    u16 valueLen;
+    gatts_cfmCb cb;
 } gattsIndValue_t;
 
 ble_sts_t blc_gatts_indicateValue(gattsIndValue_t* ind);

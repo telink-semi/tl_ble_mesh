@@ -27,29 +27,29 @@
 #include "tl_common.h"
 #include "proj_lib/sig_mesh/app_mesh.h"
 
-static inline void mesh_model_store_cfg_s()
+static inline void mesh_model_store_cfg_s(void)
 {
 	mesh_model_store(1, SIG_MD_CFG_SERVER);
 }
 
-typedef struct{
+typedef struct __attribute__((packed)) {
 	u8 page;
 	u16 offset;
 }large_cps_get_t;
 
-typedef struct{
+typedef struct __attribute__((packed)) {
 	u8 page;
 	u16 offset;
 	u16 total_size;
 	u8 data[1];
 }large_cps_st_head_t;
 
-typedef struct{
+typedef struct __attribute__((packed)) {
 	u8 meta_page;
 	u16 offset;
 }models_meta_get_t;
 
-typedef struct{
+typedef struct __attribute__((packed)) {
 	u8 page;
 	u16 offset;
 	u16 total_size;
@@ -99,19 +99,19 @@ typedef struct{
 
 #if MD_ON_DEMAND_PROXY_EN
 extern u32 mesh_on_demand_proxy_time;
-void mesh_on_demand_private_gatt_proxy_start();
-void mesh_on_demand_private_gatt_proxy_stop();
-int mesh_on_demand_is_valid_st_to_rx_solicitation();
+void mesh_on_demand_private_gatt_proxy_start(void);
+void mesh_on_demand_private_gatt_proxy_stop(void);
+int mesh_on_demand_is_valid_st_to_rx_solicitation(void);
 #endif
 
-int is_publish_allow();
-u8 mesh_get_network_transmit();
-u8 mesh_get_relay_retransmit();
-u8 mesh_get_ttl();
-u8 mesh_get_hb_pub_ttl();
-u8 mesh_get_gatt_proxy();
-u8 mesh_get_friend();
-u8 mesh_get_relay();
+int is_publish_allow(void);
+u8 mesh_get_network_transmit(void);
+u8 mesh_get_relay_retransmit(void);
+u8 mesh_get_ttl(void);
+u8 mesh_get_hb_pub_ttl(void);
+u8 mesh_get_gatt_proxy(void);
+u8 mesh_get_friend(void);
+u8 mesh_get_relay(void);
 u8 mesh_cmd_sig_cfg_model_sub_set2(u16 op, u16 sub_adr, u8 *uuid, model_common_t *p_model, u32 model_id, bool4 sig_model);
 int mesh_sec_prov_confirmation_key_fun(unsigned char *key, unsigned char *input, int n, unsigned char ecdh[32],unsigned char auth[32],u8 hmac);
 int mesh_sec_prov_confirmation_fun(unsigned char *cfm, unsigned char *input, int n, unsigned char ecdh[32],
@@ -119,9 +119,9 @@ int mesh_sec_prov_confirmation_fun(unsigned char *cfm, unsigned char *input, int
 void mesh_sec_prov_salt_fun(unsigned char prov_salt[16],unsigned char *input,unsigned char randomProv[32], unsigned char randomDev[32],u8 hmac);
 int mesh_sec_prov_session_key_fun(unsigned char sk[16], unsigned char *sn, unsigned char *input, int n, unsigned char ecdh[32],
 									unsigned char randomProv[32], unsigned char randomDev[32],u8 hmac);
-int mesh_get_on_demand_private_proxy();
-u8 mesh_get_private_proxy();
-u8 mesh_get_private_node_identity();
+int mesh_get_on_demand_private_proxy(void);
+u8 mesh_get_private_proxy(void);
+u8 mesh_get_private_node_identity(void);
 int is_existed_sub_addr_and_not_virtual(model_common_t *p_model, u16 group_addr);
 
 

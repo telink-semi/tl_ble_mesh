@@ -29,7 +29,7 @@
  * @return     none
  */
 void usbhw_disable_manual_interrupt(int m) {
-	BM_SET(reg_ctrl_ep_irq_mode, m);
+    BM_SET(reg_ctrl_ep_irq_mode, m);
 }
 
 /**
@@ -38,7 +38,7 @@ void usbhw_disable_manual_interrupt(int m) {
  * @return     none
  */
 void usbhw_enable_manual_interrupt(int m) {
-	BM_CLR(reg_ctrl_ep_irq_mode, m);
+    BM_CLR(reg_ctrl_ep_irq_mode, m);
 }
 
 /**
@@ -49,12 +49,12 @@ void usbhw_enable_manual_interrupt(int m) {
  * @return     none
  */
 void usbhw_write_ep(unsigned int ep, unsigned char * data, int len) {
-	reg_usb_ep_ptr(ep) = 0;
+    reg_usb_ep_ptr(ep) = 0;
 
-	for(int i = 0; i < (len); ++i){
-		reg_usb_ep_dat(ep) = data[i];
-	}
-	reg_usb_ep_ctrl(ep) = FLD_EP_DAT_ACK;		// ACK
+    for(int i = 0; i < (len); ++i){
+        reg_usb_ep_dat(ep) = data[i];
+    }
+    reg_usb_ep_ctrl(ep) = FLD_EP_DAT_ACK;       // ACK
 }
 
 /**
@@ -64,8 +64,8 @@ void usbhw_write_ep(unsigned int ep, unsigned char * data, int len) {
  * @return     none
  */
 void usbhw_write_ctrl_ep_u16(unsigned short v){
-	usbhw_write_ctrl_ep_data(v & 0xff);
-	usbhw_write_ctrl_ep_data(v >> 8);
+    usbhw_write_ctrl_ep_data(v & 0xff);
+    usbhw_write_ctrl_ep_data(v >> 8);
 }
 
 /**
@@ -74,10 +74,49 @@ void usbhw_write_ctrl_ep_u16(unsigned short v){
  * @return  the two bytes data read from the control endpoint
  */
 unsigned short usbhw_read_ctrl_ep_u16(void){
-	unsigned short v = usbhw_read_ctrl_ep_data();
-	return (usbhw_read_ctrl_ep_data() << 8) | v;
+    unsigned short v = usbhw_read_ctrl_ep_data();
+    return (usbhw_read_ctrl_ep_data() << 8) | v;
 }
 
+/**
+ * @brief      This function serves to set dp_through_swire function.
+ * @param[in]  dp_through_swire - 1: swire_usb_en 0: swire_usb_dis
+ * @return     none.
+ */
+void dp_through_swire_en(bool dp_through_swire)
+{
+    if (dp_through_swire)
+    {
+        write_reg8(0x100c01, (read_reg8(0x100c01) | BIT(7))); // BIT(7) = 1 : swire_usb_en
+    }
+    else
+    {
+        write_reg8(0x100c01, (read_reg8(0x100c01) & ~BIT(7))); // BIT(7) = 0 : swire_usb_dis
+    }
+}
 
+/**
+ * @brief      This function serves to set GPIO MUX function as DP and DM pin of USB.
+ * @param[in]  dp_through_swire - 1: swire_usb_en 0: swire_usb_dis
+ * @return     none.
+ * @note       1. Configure usb_set_pin(0) , there are some risks, please refer to the startup.S file about DP_THROUGH_SWIRE_DIS
+ *                for detailed description (by default dp_through_swire is disabled). Configure usb_set_pin(1) to enable dp_through_swire again.
+ *             2. When dp_through_swire is enabled, Swire and USB applications do not affect each other.
+ */
+void usb_set_pin(bool dp_through_swire)
+{
+    reg_gpio_func_mux(GPIO_PA5) = reg_gpio_func_mux(GPIO_PA5) & (~BIT_RNG(2, 3));
+    gpio_function_dis(GPIO_PA5);
+    reg_gpio_func_mux(GPIO_PA6) = reg_gpio_func_mux(GPIO_PA6) & (~BIT_RNG(4, 5));
+    gpio_function_dis(GPIO_PA6);
+    gpio_input_en(GPIO_PA5 | GPIO_PA6); // DP/DM must set input enable
+    usb_dp_pullup_en(1);
+    /*                                      Note
+     * If you want to enable the dp_through_swire function, there are the following considerations:
+     * 1.configure dp_through_swire_en(1).
+     * 2.keep DM high (external hardware burning EVK has pull-up function, no software configuration is needed).
+     */
+    dp_through_swire_en(dp_through_swire);
+}
 
 

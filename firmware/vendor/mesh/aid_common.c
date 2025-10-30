@@ -135,7 +135,7 @@ void timer0_irq_handler(void)
 	}
 }
 
-void aid_loop()
+void aid_loop(void)
 {
 	if(Fifo_Read(&kwd_fifo, (char *)kwd_data, sizeof(short)*KWD_LEN, sizeof(short)*KWD_LEN) !=0 )
 	{
@@ -194,7 +194,7 @@ void aid_loop()
 	}
 }
 
-void aid_init()
+void aid_init(void)
 {
 	audio_set_codec_supply(CODEC_2P8V);
 	//delay_ms(1000);

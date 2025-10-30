@@ -87,18 +87,18 @@ enum{
     MESH_MFG_ACCESS_READ        = 1,
 };
 
-typedef struct{
+typedef struct __attribute__((packed)) {
 	u16 id;
 	u8 data[MESH_PROPERTY_STR_SIZE_MAX];
 }mesh_property_set_user_t;
 
-typedef struct{
+typedef struct __attribute__((packed)) {
 	u16 id;
 	u8 access;
 	u8 data[MESH_PROPERTY_STR_SIZE_MAX];
 }mesh_property_set_admin_t;
 
-typedef struct{
+typedef struct __attribute__((packed)) {
 	u16 id;
 	u8 access;
 }mesh_property_set_mfg_t;
@@ -108,7 +108,7 @@ extern _align_4_ model_property_t	model_sig_property;
 extern u32 mesh_md_property_addr;
 
 //---
-void mesh_property_global_init();
+void mesh_property_global_init(void);
 
 //--- rx
 int mesh_property_st_publish_user(u8 idx);

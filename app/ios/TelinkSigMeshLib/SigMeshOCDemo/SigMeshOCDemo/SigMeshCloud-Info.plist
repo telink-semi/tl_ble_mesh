@@ -29,5 +29,9 @@
 	</array>
 	<key>UIFileSharingEnabled</key>
 	<true/>
+	<key>com.apple.developer.nfc.readersession.iso7816.select-identifiers</key>
+	<array>
+		<string>JUK010</string>
+	</array>
 </dict>
 </plist>

@@ -56,7 +56,7 @@
 #endif
 
 #define OFFSETOF(type, member) 			((unsigned int) &((type *)0)->member)
-#define CONTAINER_OF(ptr, type, member) ({const typeof(((type *)0)->member)*__mptr = (ptr); (type *)((char *)__mptr - OFFSETOF(type, member));})
+#define CONTAINER_OF(ptr, type, member) ({const __typeof(((type *)0)->member)*__mptr = (ptr); (type *)((char *)__mptr - OFFSETOF(type, member));})
 
 #define ROUND_INT(x, r)			(((x) + (r) - 1) / (r) * (r))
 #define ROUND_TO_POW2(x, r)		(((x) + (r) - 1) & ~((r) - 1))
@@ -109,6 +109,7 @@
 #define SORT2(a, b, T) 			do { if ((a) > (b)) SWAP((a), (b), T); } while (0)
 
 #define foreach(i, n) 			for(int i = 0; i < (n); ++i)
+#define foreach_uint(i, n)      for(unsigned int i = 0; i < (n); ++i)
 #define foreach_range(i, s, e) 	for(int i = (s); i < (e); ++i)
 #define foreach_arr(i, arr) 	for(unsigned int i = 0; i < ARRAY_SIZE(arr); ++i)
 
@@ -228,7 +229,7 @@ static inline u64 mul64_32x32(u32 u, u32 v)
     return (u64)u*v;
 }
 
-typedef	struct {
+typedef	struct __attribute__((packed)) {
 	u32		size;
 	u16		num;
 	u8		wptr;
@@ -236,7 +237,7 @@ typedef	struct {
 	u8*		p;
 }	my_fifo_t;
 
-typedef	struct {		// BLE_SRC_TELINK_MESH_EN
+typedef	struct __attribute__((packed)) {		// BLE_SRC_TELINK_MESH_EN
 	u16		len;
 	u8		data[1];
 }	my_fifo_buf_t;
@@ -266,7 +267,7 @@ void my_fifo_reset(my_fifo_t *f);
 
 ///////////////////////////////////////ring buf ///////////////////////////////////
 
-typedef	struct {
+typedef	struct __attribute__((packed)) {
 	u16		size;
 	u16     mask;
 	u16		wptr;

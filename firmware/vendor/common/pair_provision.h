@@ -47,7 +47,7 @@ typedef enum{
 }pair_prov_proc_st_e;
 
 
-typedef struct{
+typedef struct __attribute__((packed)) {
 	provison_net_info_str net_info; // size is 25
 	u8 device_key[16];
 	u8 app_key[16];
@@ -55,11 +55,11 @@ typedef struct{
 	u8 mac_scan[6];
 }vd_cmd_pair_prov_distribute_t;
 
-typedef struct{
+typedef struct __attribute__((packed)) {
 	u8 mac_self[6];
 }vd_cmd_pair_prov_confirm_t;
 
-typedef struct{
+typedef struct __attribute__((packed)) {
 	vd_cmd_pair_prov_distribute_t distribute_data; // size is 65
 	_align_4_ u32 tick;
 	u16 cache_cnt;
@@ -73,14 +73,14 @@ typedef struct{
 
 
 void pair_proc_set_st(u8 st);
-void pair_proc_start();
-void pair_proc_set_start_scan();
-void pair_provision_proc();
+void pair_proc_start(void);
+void pair_proc_set_start_scan(void);
+void pair_provision_proc(void);
 
 int cb_vd_mesh_pair_prov_distribute(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par);
 int cb_vd_mesh_pair_prov_confirm(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par);
 int cb_vd_mesh_pair_prov_reset_all_nodes(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par);
 int vd_cmd_pair_prov_confirm(u16 addr_src, u16 addr_dst);
-void pair_prov_kick_out_all_nodes();
+void pair_prov_kick_out_all_nodes(void);
 
 

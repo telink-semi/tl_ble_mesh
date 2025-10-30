@@ -88,7 +88,7 @@ enum{
 
 #define LGT_CMD_MESH_PAIR       0xC9
 
-typedef struct{
+typedef struct __attribute__((packed)) {
 	u32 dma_len;
 	u8	type;
 	u8  rf_len;
@@ -100,7 +100,7 @@ typedef struct{
 	u8 value[30];//sno[3],src[2],dst[2],op[1~3],params[0~10],mac-app[5],ttl[1],mac-net[4]
 }tlk_mesh_rf_att_cmd_t;
 
-typedef struct{
+typedef struct __attribute__((packed)) {
     u8 sno[3];
     u8 src[2];
     u8 dst[2];
@@ -118,18 +118,19 @@ extern u32 dual_mode_tlk_ac[];
 extern u8 pair_ltk[17];
 
 
-int is_ble_found();
-int is_zigbee_found();
-u8 dual_mode_proc();
-void dual_mode_en_init();
-void dual_mode_select();
-void dual_mode_disable();
+int is_ble_found(void);
+int is_zigbee_found(void);
+u8 dual_mode_proc(void);
+void dual_mode_en_init(void);
+void dual_mode_select(void);
+void dual_mode_disable(void);
 void irq_zigbee_sdk_handler(void);
 int pair_dec_packet_mesh (u8 *ps);
+void rf_setTxModeNew(void);
 
 // telink mesh
-void dual_mode_restore_TLK_4K();
-int UI_restore_TLK_4K_with_check();
+void dual_mode_restore_TLK_4K(void);
+int UI_restore_TLK_4K_with_check(void);
 void tlk_mesh_access_code_backup(u32 ac);
 
 

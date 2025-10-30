@@ -167,7 +167,7 @@ int mesh_tx_cmd_g_onoff_st(u8 idx, u16 ele_adr, u16 dst_adr, u8 *uuid, model_com
 	foreach(i, 5){
 		code_add++;
 		memcpy(rsp_data + sizeof(rsp), (u8 *)&code_add, 4);
-		//LOG_USER_MSG_INFO(0,0,"node tx roll_code:%d, system_time:%d", code_add,system_time_s);
+		//LOG_MSG_LIB(TL_LOG_NODE_BASIC, 0,0,"node tx roll_code:%d, system_time:%d", code_add,system_time_s);
 		tx_rsp_flag |= mesh_tx_cmd_rsp(op_rsp, (u8 *)rsp_data, len + 210, ele_adr, dst_adr, uuid, pub_md);
 	}
 	return tx_rsp_flag;
@@ -278,7 +278,7 @@ int g_onoff_set(mesh_cmd_g_onoff_set_t *p_set, int par_len, int force_last, int 
 		mesh_cmd_g_level_set_t level_set_tmp;
 		memcpy(&level_set_tmp.tid, &p_set->tid, sizeof(mesh_cmd_g_level_set_t) - OFFSETOF(mesh_cmd_g_level_set_t,tid));
 		level_set_tmp.level = get_light_g_level_by_onoff(idx, p_set->onoff, st_trans_type, force_last);
-		int len_tmp = GET_LEVEL_PAR_LEN(par_len >= sizeof(mesh_cmd_g_onoff_set_t));
+		int len_tmp = GET_LEVEL_PAR_LEN(par_len >= (int)sizeof(mesh_cmd_g_onoff_set_t));
 		err = g_level_set((u8 *)&level_set_tmp, len_tmp, G_LEVEL_SET_NOACK, idx, retransaction, st_trans_type, 0, pub_list);
         if(!err){
 		    set_on_power_up_onoff(idx, st_trans_type, p_set->onoff);
@@ -399,7 +399,7 @@ int mesh_tx_cmd_g_level_st(u8 idx, u16 ele_adr, u16 dst_adr, u8 *uuid, model_com
 	mesh_rcv_t *p_result;
 
 	if(is_app_addr(dst_adr) || (ele_adr == dst_adr)){ // gatt connecting node or gateway self.
-		p_result = &mesh_rcv_ack;
+		p_result = &mesh_rcv_cmd;//p_result = &mesh_rcv_ack;
 	}
 	else{
 		p_result = &mesh_rcv_cmd;
@@ -789,7 +789,7 @@ int mesh_cmd_sig_g_power_range_set(u8 *par, int par_len, mesh_cb_fun_par_t *cb_p
 
 //battery model
 #if(MD_BATTERY_EN)
-#if !WIN32
+#ifndef WIN32
 STATIC_ASSERT(MD_LOCATION_EN == 0);// because use same flash sector to save in mesh_save_map, and should be care of OTA new firmware which add MD_SENSOR_EN
 #endif
 
@@ -846,7 +846,7 @@ int mesh_cmd_sig_g_battery_get(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par)
 
 //location model
 #if(MD_LOCATION_EN)
-#if !WIN32
+#ifndef WIN32
 STATIC_ASSERT((MD_SENSOR_EN == 0) && (MD_BATTERY_EN== 0));// because use same flash sector to save, and should be care of OTA new firmware which add MD_SENSOR_EN
 #endif
 
@@ -1504,7 +1504,7 @@ const mesh_cmd_sig_func_t mesh_cmd_sig_func[] = {
 
     // remote provision scan parameters 
     CMD_NO_STR(REMOTE_PROV_SCAN_GET,0,SIG_MD_REMOTE_PROV_CLIENT,SIG_MD_REMOTE_PROV_SERVER,mesh_cmd_sig_rp_scan_get,REMOTE_PROV_SCAN_STS),
-    #if WIN32
+    #ifdef WIN32
 	CMD_NO_STR(REMOTE_PROV_SCAN_START,0,SIG_MD_REMOTE_PROV_CLIENT,SIG_MD_REMOTE_PROV_SERVER,mesh_cmd_sig_rp_scan_start,STATUS_NONE),
 	#else
     CMD_NO_STR(REMOTE_PROV_SCAN_START,0,SIG_MD_REMOTE_PROV_CLIENT,SIG_MD_REMOTE_PROV_SERVER,mesh_cmd_sig_rp_scan_start,STATUS_NONE),
@@ -1518,7 +1518,7 @@ const mesh_cmd_sig_func_t mesh_cmd_sig_func[] = {
 
     // remote provision link parameters 
     CMD_NO_STR(REMOTE_PROV_LINK_GET,0,SIG_MD_REMOTE_PROV_CLIENT,SIG_MD_REMOTE_PROV_SERVER,mesh_cmd_sig_rp_link_get,REMOTE_PROV_LINK_STS),
-	#if WIN32
+	#ifdef WIN32
 	// binding the link report ,when send the link open cmd ,it should rsp the link report .
 	CMD_NO_STR(REMOTE_PROV_LINK_OPEN,0,SIG_MD_REMOTE_PROV_CLIENT,SIG_MD_REMOTE_PROV_SERVER,mesh_cmd_sig_rp_link_open,REMOTE_PROV_LINK_STS),
 	#else
@@ -2077,14 +2077,18 @@ const mesh_model_resource_t MeshSigModelResource[] = {
     {SIG_MD_DF_CFG_S, GET_SINGLE_MODEL_AND_COUNT(model_sig_cfg_s, 0)},
 #endif
 #if MD_DF_CFG_CLIENT_EN
+    #if MD_CFG_CLIENT_EN
     {SIG_MD_DF_CFG_C, GET_SINGLE_MODEL_AND_COUNT(model_sig_cfg_c, 0)},
+    #endif
 #endif
 
 #if MD_SBR_CFG_SERVER_EN
     {SIG_MD_BRIDGE_CFG_SERVER, GET_SINGLE_MODEL_AND_COUNT(model_sig_cfg_s, 0)},
 #endif
 #if MD_SBR_CFG_CLIENT_EN
+    #if MD_CFG_CLIENT_EN
     {SIG_MD_BRIDGE_CFG_CLIENT, GET_SINGLE_MODEL_AND_COUNT(model_sig_cfg_c, 0)},
+    #endif
 #endif
 
 #if MD_MESH_OTA_EN
@@ -2397,7 +2401,7 @@ u8* mesh_find_ele_resource_in_model(u16 ele_adr, u32 model_id, bool4 sig_model, 
     }
 
     if(0 == sig_model){
-#if WIN32
+#ifdef WIN32
     #if MD_SERVER_EN
         IF_find_ele_resource(p_model,g_vendor_md_light_vc_s,model_vd_light.srv);
             #if MD_VENDOR_2ND_EN
@@ -2455,7 +2459,7 @@ u8* mesh_find_ele_resource_in_model(u16 ele_adr, u32 model_id, bool4 sig_model, 
  * @return      none
  * @note        
  */
-void mesh_model_ele_adr_init()
+void mesh_model_ele_adr_init(void)
 {
     foreach_arr(m,MeshSigModelResource){
         const mesh_model_resource_t *p_source = &MeshSigModelResource[m];
@@ -2521,7 +2525,7 @@ void model_pub_st_cb_re_init_sensor_setup(cb_pub_st_t cb)
  * @return      none
  * @note        
  */
-void mesh_model_cb_pub_st_register()
+void mesh_model_cb_pub_st_register(void)
 {
     foreach_arr(m,MeshSigModelResource){
         const mesh_model_resource_t *p_source = &MeshSigModelResource[m];

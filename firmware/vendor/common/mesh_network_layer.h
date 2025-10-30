@@ -36,4 +36,4 @@ void cache_init(u16 ele_adr);
 void mesh_update_rpl(u8 *p, int idx);
 void mesh_add_rpl(u8 *p);
 int is_exist_in_cache(u8 *p, u8 friend_key_flag, int save);
-u16 get_mesh_current_cache_num(); // Note, there may be several elements in a node, but there is often only one element that is in cache.
+u16 get_mesh_current_cache_num(void); // Note, there may be several elements in a node, but there is often only one element that is in cache.

@@ -62,7 +62,7 @@ void pair_prov_set_scan_mac(u8 *mac)
 }
 
 // save all cache address before reset network
-void pair_proc_save_all_cache_addr()
+void pair_proc_save_all_cache_addr(void)
 {
 	pair_prov_proc_t *p_proc = &pair_prov_proc;
 	int cnt = 0;
@@ -111,7 +111,7 @@ void pair_proc_add_new_addr2cache(u16 addr)
 	}
 }
 
-u16 pair_prov_get_unicast_address()
+u16 pair_prov_get_unicast_address(void)
 {
 	u16 address = 0;
 	while(0 == address){ // -4: element count of a node may be up to 4.
@@ -158,7 +158,7 @@ void get_random_n(u8 *out, int len)
 	}
 }
 
-void pair_proc_create_new_network()
+void pair_proc_create_new_network(void)
 {
 	LOG_PAIR_PROV_DEBUG(0, 0, "pair proc start");
 	if(0 == is_provision_success()){
@@ -178,7 +178,7 @@ void pair_proc_create_new_network()
 	}
 }
 
-void pair_proc_start()
+void pair_proc_start(void)
 {
 	pair_prov_proc_t *p_proc = &pair_prov_proc;
 	if(PAIR_PROV_PROC_ST_IDLE == p_proc->st){
@@ -191,7 +191,7 @@ void pair_proc_start()
 	}
 }
 
-void pair_proc_set_start_scan()
+void pair_proc_set_start_scan(void)
 {
 	pair_prov_proc_t *p_proc = &pair_prov_proc;
 	if(PAIR_PROV_PROC_ST_GET_ONLINE_NODES == p_proc->st){
@@ -349,7 +349,7 @@ int vd_cmd_pair_prov_reset_all_nodes(u16 addr_dst)
 	return err;
 }
 
-void pair_prov_kick_out_all_nodes()
+void pair_prov_kick_out_all_nodes(void)
 {
 	if(PAIR_PROV_PROC_ST_IDLE == pair_prov_proc.st){
 		vd_cmd_pair_prov_reset_all_nodes(ADR_ALL_NODES);
@@ -358,7 +358,7 @@ void pair_prov_kick_out_all_nodes()
 // ------- message TX(sending) handling end -------------
 
 
-void pair_provision_proc()
+void pair_provision_proc(void)
 {
 	pair_prov_proc_t *p_proc = &pair_prov_proc;
 

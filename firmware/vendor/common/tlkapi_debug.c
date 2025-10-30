@@ -97,7 +97,7 @@ void tlkapi_debug_putchar(uint08 byte)
 	uint08 out_level = reg_gpio_out(TLKAPI_DEBUG_GPIO_PIN);
 	uint08 bit0 = out_level & ~(TLKAPI_DEBUG_GPIO_PIN);
 	uint08 bit1 = out_level | TLKAPI_DEBUG_GPIO_PIN;
-#elif (MCU_CORE_TYPE == MCU_CORE_B95)
+#elif (MCU_CORE_TYPE == MCU_CORE_TL721X || MCU_CORE_TYPE == MCU_CORE_TL321X)
 	uint16 bits[14] = {0};
 	uint16 bit0 = (TLKAPI_DEBUG_GPIO_PIN & 0xff)<<8;;
 	uint16 bit1 = TLKAPI_DEBUG_GPIO_PIN & 0xff;
@@ -202,9 +202,9 @@ int tlkapi_debug_init(void)
 		#if (BLE_APP_PM_ENABLE)
 			#error "can not use USB debug when PM enable !!!"
 		#endif
-		#if (MCU_CORE_TYPE == MCU_CORE_B95)
-			#error "B95 Unable to use USB debugging  !!!"  //todo
-		#endif
+		 #if (MCU_CORE_TYPE == MCU_CORE_TL721X)
+            #error "TL721X Unable to use USB debugging  !!!"  //todo
+        #endif
 		extern my_fifo_t   *myudb_print_fifo;
 		myudb_print_fifo = tlkapi_print_fifo;
 		tlkDbgCtl.dbg_chn = TLKAPI_DEBUG_CHANNEL_UDB;
@@ -562,7 +562,7 @@ int tlk_printf(const char *format, ...)
 	u8 *pd =  tlkapi_print_fifo->p + (tlkapi_print_fifo->wptr & (tlkapi_print_fifo->num - 1)) * tlkapi_print_fifo->size;
 	int ret;
 
-#if ((MCU_CORE_TYPE == MCU_CORE_B91) || (MCU_CORE_TYPE == MCU_CORE_B92) || (MCU_CORE_TYPE == MCU_CORE_B930)||(MCU_CORE_TYPE == MCU_CORE_B95))
+#if ((MCU_CORE_TYPE == MCU_CORE_B91) || (MCU_CORE_TYPE == MCU_CORE_B92) || (MCU_CORE_TYPE == MCU_CORE_TL751X)||(MCU_CORE_TYPE == MCU_CORE_TL721X)||(MCU_CORE_TYPE == MCU_CORE_TL321X))
 	va_list args;
 	va_start( args, format );
 

@@ -182,9 +182,9 @@
 
             SigSubnetBridgeModel *subnetBridgeModel = self.model.subnetBridgeList[indexPath.row];
             __weak typeof(self) weakSelf = self;
-            [self showAlertTitle:kDefaultAlertTitle message:[NSString stringWithFormat:@"Are you sure delete this subnet "] sure:^(UIAlertAction *action) {
+            [self showAlertSureAndCancelWithTitle:kDefaultAlertTitle message:[NSString stringWithFormat:@"Are you sure delete this subnet "] sure:^(UIAlertAction *action) {
                 [weakSelf deleteSubnetBridgeOfDevice:subnetBridgeModel];
-            }];
+            } cancel:nil];
         }
     }
 }

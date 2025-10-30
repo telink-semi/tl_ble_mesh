@@ -2,6 +2,8 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
+	<key>NFCReaderUsageDescription</key>
+	<string>The app needs to use NFC to read information about passive switches.</string>
 	<key>CFBundleURLTypes</key>
 	<array>
 		<dict>
@@ -29,5 +31,9 @@
 	</array>
 	<key>UIFileSharingEnabled</key>
 	<true/>
+	<key>com.apple.developer.nfc.readersession.iso7816.select-identifiers</key>
+	<array>
+		<string>JUK010</string>
+	</array>
 </dict>
 </plist>

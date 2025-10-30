@@ -35,7 +35,11 @@
 #endif
 #include "vendor/common/blt_soft_timer.h"
 
+#if(MCU_CORE_TYPE == MCU_CORE_TL321X)
+#define SLEEP_MAX_S						(2*60)	// TL321X not support long sleep now.
+#else
 #define SLEEP_MAX_S						(32*60*60)	// max 37 hours,but use 32 to be multiplied of SWITCH_IV_SEARCHING_INVL_S
+#endif
 #if IV_UPDATE_TEST_EN
 #define SWITCH_IV_SEARCHING_INTERVLAL_S	(IV_UPDATE_KEEP_TMIE_MIN_RX_S)
 #else
@@ -68,13 +72,13 @@ int soft_timer_test0(void)
 }
 #endif
 
-void switch_iv_update_time_refresh()
+void switch_iv_update_time_refresh(void)
 {
 	switch_iv_updata_s = clock_time_s();
 //	LOG_MSG_INFO(TL_LOG_IV_UPDATE,0, 0,"switch_iv_update_time_refresh time_s:%d", switch_iv_updata_s);
 }
 
-int soft_timer_rcv_beacon_timeout()
+int soft_timer_rcv_beacon_timeout(void)
 {
 	if(SWITCH_MODE_NORMAL == switch_mode){
 		ENABLE_SUSPEND_MASK;
@@ -119,7 +123,7 @@ void switch_send_publish_command(u32 ele_offset, bool4 onoff, u32 select_pub_mod
 #endif
 }
 
-void proc_ui()
+void proc_ui(void)
 {
 #if UI_KEYBOARD_ENABLE
 	mesh_proc_keyboard(0, 0, 0);
@@ -144,7 +148,7 @@ u8   key_released =1;
  * @return      0: keep same soft timer. -1: delete soft timer.
  * @note        
  */
-int soft_timer_key_scan()
+int soft_timer_key_scan(void)
 {
 	return key_released ? -1 : 0;
 }
@@ -326,7 +330,7 @@ void mesh_proc_keyboard(u8 e, u8 *p, int n)
 	                rf_link_light_event_callback(LGT_CMD_SWITCH_CMD);
 				}
 				key_released = 0;
-				// LOG_USER_MSG_INFO(0, 0, "key press:%d", kb_event.keycode[0]);
+				// LOG_MSG_LIB(TL_LOG_NODE_SDK, 0, 0, "key press:%d", kb_event.keycode[0]);
 			}
 			
 			if(kb_event.cnt == 1){
@@ -438,7 +442,7 @@ void mesh_proc_keyboard(u8 e, u8 *p, int n)
 }
 #endif
 
-void switch_check_and_enter_sleep()
+void switch_check_and_enter_sleep(void)
 {
 #if BLE_REMOTE_PM_ENABLE
 	if(my_fifo_data_cnt_get(&mesh_adv_cmd_fifo) || del_node_tick || is_busy_tx_segment_or_reliable_flow() || blt_soft_timer_cur_num()
@@ -472,14 +476,18 @@ void switch_check_and_enter_sleep()
 			if(blc_ll_isBleTaskIdle())
 			#endif
 			{
+			    #if(MCU_CORE_TYPE == MCU_CORE_TL321X)
+                cpu_sleep_wakeup(RETENTION_RAM_SIZE_USE, wakeup_src, clock_time() + sleep_s * 1000 * 1000 * sys_tick_per_us); // long sleep to be done.
+                #else
 				cpu_long_sleep_wakeup(RETENTION_RAM_SIZE_USE, wakeup_src, sleep_s*1000*32);
+                #endif
 			}
 		}
 	}
 #endif
 }
 
-void proc_rc_ui_suspend()
+void proc_rc_ui_suspend(void)
 {
     if(is_provision_success() && (!switch_provision_ok) && node_binding_tick){ // appkey binding
 		if(clock_time_exceed(node_binding_tick, 3*1000*1000)){
@@ -520,7 +528,7 @@ void proc_rc_ui_suspend()
 	}	
 }
 
-void mesh_switch_init()
+void mesh_switch_init(void)
 {
 	// mesh_tid.tx[0] = analog_read(REGA_TID);
     ////////// set up wakeup source: driver pin of keyboard  //////////
@@ -529,7 +537,7 @@ void mesh_switch_init()
 #endif
 }
 
-int mesh_switch_send_mesh_adv()
+int mesh_switch_send_mesh_adv(void)
 {
 	int ret = -1;	
 	mesh_send_adv2scan_mode(1);
@@ -540,7 +548,7 @@ int mesh_switch_send_mesh_adv()
 	return ret;
 }
 
-void global_reset_new_key_wakeup()
+void global_reset_new_key_wakeup(void)
 {
     rc_key_pressed = 0;
     rc_long_pressed = rc_repeat_key = 0;

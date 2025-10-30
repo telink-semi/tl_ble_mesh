@@ -186,7 +186,7 @@ int is_dim2dark_set_op(u16 op)
 }
 
 #if MD_SERVER_EN
-#if WIN32
+#ifdef WIN32
 /**
  * @brief       This function refresh level of UI for VC(sig_mesh_tool)
  * @param[in]   cb_par	- parameter data
@@ -386,7 +386,7 @@ int g_level_set(u8 *par, int par_len, u16 op, int idx, bool4 retransaction, int 
 		}
 		delta_last = p_set->level;
 		
-		if(par_len >= sizeof(mesh_cmd_g_level_delta_t)){	// existed transit_t and delay.
+		if(par_len >= (int)sizeof(mesh_cmd_g_level_delta_t)){	// existed transit_t and delay.
 			if(!is_valid_transition_step(p_set->transit_t)){
 				return -1;
 			}
@@ -402,12 +402,13 @@ int g_level_set(u8 *par, int par_len, u16 op, int idx, bool4 retransaction, int 
 		    return 0;
 		}
 		level_adjust = p_set->level;
-        set_trans.transit_t = p_set->transit_t;
 		
-		if(par_len >= sizeof(mesh_cmd_g_level_set_t)){	// existed transit_t and delay.
+		if(par_len >= (int)sizeof(mesh_cmd_g_level_set_t)){	// existed transit_t and delay.
 			if(!is_valid_transition_step(p_set->transit_t)){
 				return -1;
 			}
+			
+            set_trans.transit_t = p_set->transit_t;
 			set_trans.delay = p_set->delay;
 			p_set_trans = &set_trans;
 			
@@ -434,6 +435,24 @@ int g_level_set(u8 *par, int par_len, u16 op, int idx, bool4 retransaction, int 
 			p_set_trans = &set_trans;
 		}
 	}
+
+#if GATT_CONNECTED_DEV_PROCESS_MSG_DELAY_EN
+    mesh_global_rx_par_t *p_rx_par = &g_mesh_global_rx_par;
+    if(MESH_BEAR_GATT == p_rx_par->src_bearer_type && is_app_addr(p_rx_par->src_addr)){
+        if(!is_unicast_adr(p_rx_par->dst_addr)){
+            if(p_set_trans){
+                if(0 == p_set_trans->delay){
+                    p_set_trans->delay = GATT_CONNECTED_DEV_PROCESS_MSG_DELAY_MS / 5;
+                }
+            }else{
+                #if 1
+                set_trans.delay = GATT_CONNECTED_DEV_PROCESS_MSG_DELAY_MS / 5;
+                p_set_trans = &set_trans;
+                #endif
+            }
+        }
+    }
+#endif
 
 	s16 target_level = light_g_level_target_get(idx, st_trans_type);
 	set_trans.target_val = get_target_level_by_op(target_level, level_adjust, set_trans.op, idx, st_trans_type);
@@ -755,7 +774,7 @@ int level_u16_set(mesh_cmd_lightness_set_t *p_set, int par_len, u16 op, int idx,
 	mesh_cmd_g_level_set_t level_set_tmp;
 	memcpy(&level_set_tmp.tid, &p_set->tid, sizeof(mesh_cmd_g_level_set_t) - OFFSETOF(mesh_cmd_g_level_set_t,tid));
 	level_set_tmp.level = get_level_from_lightness(p_set->lightness);
-	int len_tmp = GET_LEVEL_PAR_LEN(par_len >= sizeof(mesh_cmd_lightness_set_t));
+	int len_tmp = GET_LEVEL_PAR_LEN(par_len >= (int)sizeof(mesh_cmd_lightness_set_t));
 	return g_level_set_and_update_last((u8 *)&level_set_tmp, len_tmp, G_LEVEL_SET_NOACK, idx, retransaction, st_trans_type, 0, pub_list);
 }
 
@@ -1165,7 +1184,7 @@ int light_ctl_temp_set(mesh_cmd_light_ctl_set_t *p_set, int par_len, u16 op, int
 	if(is_valid_ctl_temp(p_set->temp)){
 		mesh_cmd_g_level_set_t level_set_tmp;
 		memcpy(&level_set_tmp.tid, &p_set->tid, sizeof(mesh_cmd_g_level_set_t) - OFFSETOF(mesh_cmd_g_level_set_t,tid));
-		int len_tmp = GET_LEVEL_PAR_LEN(par_len >= sizeof(mesh_cmd_light_ctl_set_t));
+		int len_tmp = GET_LEVEL_PAR_LEN(par_len >= (int)sizeof(mesh_cmd_light_ctl_set_t));
 
 		// temp
         pub_list->no_dim_refresh_flag = 1;
@@ -1204,7 +1223,7 @@ int mesh_cmd_sig_light_ctl_set(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par)
     pub_list.no_dim_refresh_flag = 1;
 	mesh_cmd_lightness_set_t lightness_set_tmp = {0};
 	lightness_set_tmp.lightness = p_set->lightness;
-	int len_tmp = (par_len >= sizeof(mesh_cmd_light_ctl_set_t)) ? sizeof(mesh_cmd_lightness_set_t) : 2;
+	int len_tmp = (par_len >= (int)sizeof(mesh_cmd_light_ctl_set_t)) ? (int)sizeof(mesh_cmd_lightness_set_t) : 2;
 	memcpy(&lightness_set_tmp.tid, &p_set->tid, 3);
 	err = lightness_set(&lightness_set_tmp, len_tmp, cb_par->op, cb_par->model_idx, cb_par->retransaction, &pub_list);
     if(err){

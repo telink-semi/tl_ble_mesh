@@ -30,8 +30,6 @@
 #include "mesh_common.h"
 #include "drivers.h"
 
-void rf_setTxModeNew(void);
-int is_zigbee_found();
 
 #if (DUAL_MODE_ADAPT_EN || DUAL_MODE_WITH_TLK_MESH_EN)
 u8 dual_mode_state = (FW_START_BY_LEGACY_BOOTLOADER_EN) ? DUAL_MODE_SUPPORT_DISABLE : DUAL_MODE_NOT_SUPPORT;
@@ -100,7 +98,7 @@ void dual_mode_backup_TLK_4K()
     }
 }
 
-void dual_mode_restore_TLK_4K()
+void dual_mode_restore_TLK_4K(void)
 {
     // restore 4K, and calibration, if calibrate failed, try again.
     u32 cali_flag = 0;
@@ -136,7 +134,7 @@ void dual_mode_restore_TLK_4K()
     }
 }
 
-int UI_restore_TLK_4K_with_check()
+int UI_restore_TLK_4K_with_check(void)
 {
     if(DUAL_MODE_NOT_SUPPORT != dual_mode_state){
         dual_mode_restore_TLK_4K();
@@ -154,7 +152,7 @@ u8 pair_ltk[17] = MESH_LTK;
 
 #define START_UP_FLAG		(0x544c4e4b)
 
-void dual_mode_en_init()		// call in mesh_init_all();
+void dual_mode_en_init(void)		// call in mesh_init_all();
 {
 #if (0 == FW_START_BY_LEGACY_BOOTLOADER_EN)
 	u8 en = 0;
@@ -237,7 +235,7 @@ void dual_mode_disable()
 #endif
 }
 
-void dual_mode_select()    // 
+void dual_mode_select(void)    // 
 {
 	if(DUAL_MODE_SUPPORT_ENABLE == dual_mode_state){
 		dual_mode_state = DUAL_MODE_SUPPORT_DISABLE;
@@ -262,8 +260,8 @@ void dual_mode_select()    //
 	}
 }
 #else
-void dual_mode_en_init(){}
-void dual_mode_disable(){};
+void dual_mode_en_init(void){}
+void dual_mode_disable(void){};
 #endif
 
 #if DUAL_MESH_ZB_BL_EN
@@ -442,7 +440,7 @@ static u8 zigbeeNetworkFound = 0;
 
 static u8 _attribute_aligned_(4) rf_tx_buf[64];
 
-typedef struct{
+typedef struct __attribute__((packed)) {
 	u8 protocolId;
 	u16	stackProfile:4;
 	u16	nwkProtocolVer:4;
@@ -452,14 +450,14 @@ typedef struct{
 	u16 edCap:1;
 }zb_beacon_pld_t;
 
-typedef struct{
+typedef struct __attribute__((packed)) {
 	u16 frmCtrl;
 	u8  seqNo;
 	u16 srcPanID;
 	u16 srcAddr;
 }zb_mac_hdr_t;
 
-typedef struct{
+typedef struct __attribute__((packed)) {
 	u16 sfSpecification;
 	u8  gts;
 	u8 pendAddr;
@@ -737,24 +735,24 @@ void dual_mode_zigbee_init(void){
 
 
 // ---------------------dual mode switch check
-int is_ble_found()
+int is_ble_found(void)
 {
 	return ((BLS_LINK_STATE_ADV != blc_ll_getCurrentState()) || (get_provision_state() != STATE_DEV_UNPROV));
 }
 
-int is_zigbee_found()
+int is_zigbee_found(void)
 {
 	return zigbeeNetworkFound;
 }
 
-void zigbee_found_clear()
+void zigbee_found_clear(void)
 {
 	zigbeeNetworkFound = 0;
 }
 
 volatile u8 T_zigbeeSdkRun;
 volatile u8 T_DBG_zigbeeTest[2] = {0};
-u8 dual_mode_proc()
+u8 dual_mode_proc(void)
 {
 	if(DUAL_MODE_SUPPORT_ENABLE != dual_mode_state){
 		return RF_MODE_BLE;
@@ -859,7 +857,7 @@ void phy_set_telink_mesh_scan(int set_chn)
 	rf_set_rxmode ();
 }
 
-u8 dual_mode_proc()
+u8 dual_mode_proc(void)
 {
 	if(DUAL_MODE_SUPPORT_ENABLE != dual_mode_state){
 		return RF_MODE_BLE;

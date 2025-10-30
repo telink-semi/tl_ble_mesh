@@ -27,10 +27,10 @@
 
 //#include <memory.h>
 
-int test_mesh_sec_func ();
-int test_mesh_sec_key ();
-int test_mesh_sec_provision ();
-int test_mesh_sec_message ();
+int test_mesh_sec_func (void);
+int test_mesh_sec_key (void);
+int test_mesh_sec_provision (void);
+int test_mesh_sec_message (void);
 
 int mesh_sec_func_s1m (unsigned char *s1, char * m);
 int mesh_sec_func_s1 (unsigned char *s1, unsigned char * m, int n);
@@ -73,7 +73,7 @@ void mesh_sec_get_nid_ek_pk_friend(u8 lpn_idx, u8 *nid, u8 *ek, u8 *pk, u8 *nk);
 void mesh_sec_get_network_id(u8 *nw_id, u8 *nk);
 void mesh_sec_get_identity_key(u8 *id_key, u8 *nk);
 void mesh_sec_get_beacon_key(u8 *bc_key, u8 *nk);
-int mesh_sec_func_k1_pri_beaconkey(u8 *bc_key, u8 *nk);
+int mesh_sec_func_k1_pri_beaconkey(u8 *bc_key, u8 nk[16]);
 void mesh_sec_get_privacy_bacon_key(u8 *pbc_key,u8 *nk);
 
 int mesh_sec_pri_beacon(u8 key_flag,u8 *p_ivi,u8 *p_random,u8 *pri_beacon_key,u8 *pri_bea_adv);
@@ -92,13 +92,13 @@ void endianness_swap(u8 *nw, u8 swap_type);
 void endianness_swap_ut_ctl(u8 *nw, u8 *par, u32 len_ac/*len_ut*/, int filter_cfg); // len_ut = len_ac for control message.
 void endianness_swap_fri_sec_par(u8 *fri_sec_par);
 void mesh_swap_nw_lt(u8 *nw, u8 swap_type_lt);
-int test_proxy_adv_with_node_identity();
+int test_proxy_adv_with_node_identity(void);
 
 int ecc_shared_compute(void *p_ctx, u8 const *p_sk, u8 const *p_pk, u8 *p_ss);
 
 
 u8 crc8_rohc(u8 *data,u32 len);
-void test_virtual_address();
+void test_virtual_address(void);
 u16 cala_vir_adr_by_uuid(u8 *p_label_uuid);
 void encode_password_ll(u8 *sk_user, u8 *pd, u32 pd_len, int mic_len); // pd_len exclude mic
 int decode_password_ll(u8 *sk_user, u8 *pd, u32 pd_len, int mic_len); // pd_len include mic

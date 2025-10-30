@@ -27,6 +27,7 @@
 NS_ASSUME_NONNULL_BEGIN
 
 @interface ScanCodeVC : UIViewController
+@property (nonatomic, strong) ScanView *scanView;
 @property (nonatomic, copy) void(^scanCodeVCBlock)(id content);
 - (void)scanDataViewControllerBackBlock:(void (^)(id content))block;
 + (instancetype)scanCodeVC;

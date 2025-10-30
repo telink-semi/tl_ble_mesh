@@ -31,15 +31,17 @@ extern u32 system_time_ms;
 extern u32 system_time_100ms;
 extern u32 system_time_s;
 
-static inline u32 clock_time_ms(){
+#if MESH_TIMER_MS_100MS_EN
+static inline u32 clock_time_ms(void){
     return system_time_ms;
 }
 
-static inline u32 clock_time_100ms(){
+static inline u32 clock_time_100ms(void){
     return system_time_100ms;
 }
+#endif
 
-static inline u32 clock_time_s(){
+static inline u32 clock_time_s(void){
     return system_time_s;
 }
 
@@ -47,6 +49,7 @@ static inline int clock_time_expired(u32 ref){
 	return (u32)(clock_time() - ref) < BIT(30);
 }
 
+#if MESH_TIMER_MS_100MS_EN
 static inline int clock_time_ms_expired(u32 ref){
 	return (u32)(clock_time_ms() - ref) < BIT(30);
 }
@@ -54,13 +57,14 @@ static inline int clock_time_ms_expired(u32 ref){
 static inline int clock_time_100ms_expired(u32 ref){
 	return (u32)(clock_time_100ms() - ref) < BIT(30);
 }
+#endif
 
 static inline int clock_time_s_expired(u32 ref){
 	return (u32)(clock_time_s() - ref) < BIT(30);
 }
 
-void system_time_init();
-void system_time_run();
+void system_time_init(void);
+void system_time_run(void);
 u32 clock_time_exceed_ms(u32 ref, u32 span_ms);
 u32 clock_time_exceed_100ms(u32 ref, u32 span_100ms);
 u32 clock_time_exceed_s(u32 ref, u32 span_s);

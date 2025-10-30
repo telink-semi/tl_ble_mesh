@@ -31,13 +31,12 @@
 #define	SEG_DEBUG_LED(on)	//do{ light_onoff_all(on);}while(0)
 
 
-void mesh_message6();
+void mesh_message6(void);
 void friend_cmd_send_sample_message(u8 op);
-void friend_ship_sample_message_test();
-void mesh_message_fri_msg_ctl_seg();
+void friend_ship_sample_message_test(void);
+void mesh_message_fri_msg_ctl_seg(void);
 int mesh_tx_cmd_layer_upper_ctl_primary(u8 op, u8 *par, u32 len_par, u16 adr_dst);
-void test_cmd_wakeup_lpn();
-void test_cmd_tdebug();
+void test_cmd_tdebug(void);
 void mesh_iv_update_test_initiate(u8 key_code);
 
 

@@ -26,10 +26,24 @@
 
 #include "vendor/common/user_config.h"
 #include "drivers.h"
-#include "al_lib.h"
+#include "al_lib/al_lib.h"
 
-#define BLS_LINK_STATE_CONN				CONN_STATUS_ESTABLISH
-#define BLS_LINK_STATE_ADV				CONN_STATUS_DISCONNECT
+#ifndef DEFAULT_DEV_NAME
+#define DEFAULT_DEV_NAME						"Bluetooth_Mesh"
+#endif
+#define MAX_DEV_NAME_LEN						sizeof(DEFAULT_DEV_NAME)-1
+
+#if (BLE_MULTIPLE_CONNECTION_ENABLE && EXTENDED_ADV_ENABLE)
+#define GATT_ADV_HANDLE                 ADV_HANDLE0
+#define MESH_ADV_HANDLE                 ADV_HANDLE1
+#define MESH_RELAY_HANDLE               ADV_HANDLE2
+#define MESH_RELAY_HANDLE1              ADV_HANDLE3
+#define MESH_FRIEND_HANDLE              MESH_RELAY_HANDLE
+#define MESH_FRIEND_HANDLE1             MESH_RELAY_HANDLE1
+#endif
+
+#define BLS_LINK_STATE_ADV				0
+#define BLS_LINK_STATE_CONN				1
 #define SUSPEND_DISABLE					PM_SLEEP_DISABLE
 #define BLE_REMOTE_PM_ENABLE			BLE_APP_PM_ENABLE
 
@@ -74,6 +88,79 @@
 
 #define BLE_LL_EXT_ADV_MODE_NON_CONN_NON_SCAN    				LL_EXTADV_MODE_NON_CONN_NON_SCAN	// define in kite
 
+#define get_32k_tick()		clock_get_32k_tick()
+
+// BLE_SRC_TELINK_MESH_EN
+#define GAP_ADTYPE_FLAGS                        0x01 //!< Discovery Mode: @ref GAP_ADTYPE_FLAGS_MODES
+#define GAP_ADTYPE_16BIT_INCOMPLETE             0x02 //!< Incomplete List of 16-bit Service Class UUIDs
+#define GAP_ADTYPE_16BIT_COMPLETE               0x03 //!< Complete List of 16-bit Service Class UUIDs
+#define GAP_ADTYPE_32BIT_INCOMPLETE             0x04 //!< Service: More 32-bit UUIDs available
+#define GAP_ADTYPE_32BIT_COMPLETE               0x05 //!< Service: Complete list of 32-bit UUIDs
+#define GAP_ADTYPE_128BIT_INCOMPLETE            0x06 //!< Service: More 128-bit UUIDs available
+#define GAP_ADTYPE_128BIT_COMPLETE              0x07 //!< Service: Complete list of 128-bit UUIDs
+#define GAP_ADTYPE_LOCAL_NAME_SHORT             0x08 //!< Shortened local name
+#define GAP_ADTYPE_LOCAL_NAME_COMPLETE          0x09 //!< Complete local name
+#define GAP_ADTYPE_TX_POWER_LEVEL               0x0A //!< TX Power Level: 0xXX: -127 to +127 dBm
+#define GAP_ADTYPE_OOB_CLASS_OF_DEVICE          0x0D //!< Simple Pairing OOB Tag: Class of device (3 octets)
+#define GAP_ADTYPE_OOB_SIMPLE_PAIRING_HASHC     0x0E //!< Simple Pairing OOB Tag: Simple Pairing Hash C (16 octets)
+#define GAP_ADTYPE_OOB_SIMPLE_PAIRING_RANDR     0x0F //!< Simple Pairing OOB Tag: Simple Pairing Randomizer R (16 octets)
+#define GAP_ADTYPE_DEVICE_ID                    0x10 //!< Device ID Profile v1.3 or later
+#define GAP_ADTYPE_SM_TK                        0x10 //!< Security Manager TK Value
+#define GAP_ADTYPE_SM_OOB_FLAG                  0x11 //!< Secutiry Manager OOB Flags
+#define GAP_ADTYPE_SLAVE_CONN_INTERVAL_RANGE    0x12 //!< Min and Max values of the connection interval (2 octets Min, 2 octets Max) (0xFFFF indicates no conn interval min or max)
+#define GAP_ADTYPE_SERVICES_LIST_16BIT          0x14 //!< Service Solicitation: list of 16-bit Service UUIDs
+#define GAP_ADTYPE_SERVICES_LIST_32BIT          0x1F //!< Service Solicitation: list of 32-bit Service UUIDs
+#define GAP_ADTYPE_SERVICES_LIST_128BIT         0x15 //!< Service Solicitation: list of 128-bit Service UUIDs
+#define GAP_ADTYPE_SERVICE_DATA                 0x16 //!< Service Data
+#define GAP_ADTYPE_SERVICE_DATA_UUID_16BIT      0x16 //!< Service Data - 16-bit UUID
+#define GAP_ADTYPE_SERVICE_DATA_UUID_32BIT      0x20 //!< Service Data - 32-bit UUID
+#define GAP_ADTYPE_SERVICE_DATA_UUID_128BIT     0x21 //!< Service Data - 128-bit UUID
+#define GAP_ADTYPE_TARGET_ADDR_PUBLIC           0x17 //!< Public Target Address
+#define GAP_ADTYPE_TARGET_ADDR_RANDOM           0x18 //!< Random Target Address
+#define GAP_ADTYPE_APPEARANCE                   0x19 //!< Appearance
+#define GAP_ADTYPE_ADVERTISING_INTERVAL         0x1A //!< Advertising Interval
+#define GAP_ADTYPE_LE_BLUETOOTH_DEVICE_ADDR     0x1B //!< ​LE Bluetooth Device Address
+#define GAP_ADTYPE_LE_ROLE                      0x1C //!< LE Role
+#define GAP_ADTYPE_SIMPLE_PAIRING_HASHC_256     0x1D //!< Simple Pairing Hash C-256
+#define GAP_ADTYPE_SIMPLE_PAIRING_RAND_R256     0x1E //!< Simple Pairing Randomizer R-256
+#define GAP_ADTYPE_3D_INFORMATION_DATA          0x3D //!< 3D Synchronization Profile, v1.0 or later
+#define GAP_ADTYPE_MANUFACTURER_SPECIFIC        0xFF //!< Manufacturer Specific Data: first 2 octets contain the Company Identifier Code followed by the additional manufacturer specific data
+
+/************************* Telink service uuid **************************/
+#define TELINK_ONLINE_ST_UUID_SERVICE       0x10,0x1A,0x0d,0x0c,0x0b,0x0a,0x09,0x08,0x07,0x06,0x05,0x04,0x03,0x02,0x01,0x00		//!< TELINK_SPP service
+#define TELINK_ONLINE_ST_DATA_UUID          0x11,0x1A,0x0d,0x0c,0x0b,0x0a,0x09,0x08,0x07,0x06,0x05,0x04,0x03,0x02,0x01,0x00		//!< TELINK_SPP service
+
+#define TELINK_UNUSED_GATT					{0xdd,0x7f,0x0d,0x0c,0x0b,0x0a,0x09,0x08,0x07,0x06,0x05,0x04,0x03,0x02,0x01,0x00}//telink proxy gatt 
+#define TELINK_USERDEFINE_GATT				{0xde,0x7f,0x0d,0x0c,0x0b,0x0a,0x09,0x08,0x07,0x06,0x05,0x04,0x03,0x02,0x01,0x00}
+#define TELINK_USERDEFINE_UUID				0xdf,0x7f,0x0d,0x0c,0x0b,0x0a,0x09,0x08,0x07,0x06,0x05,0x04,0x03,0x02,0x01,0x00
+
+/************************* sig-mesh service uuid **************************/
+#define SIG_MESH_PROVISION_SERVICE 			0x27,0x18
+#define SIG_MESH_PROVISION_DATA_IN 			0xdb,0x2a//write without rsp 
+#define SIG_MESH_PROVSIION_DATA_OUT			0xdc,0x2a//notify
+
+#define SIG_MESH_PROXY_SERVICE				0x28,0x18
+#define SIG_MESH_PROXY_DATA_IN 				0xdd,0x2a// write without rsp 
+#define SIG_MESH_PROXY_DATA_OUT				0xde,0x2a//notify 
+
+#define SIG_MESH_ATT_UNUSED					{0xdd,0x7f}
+
+#define SIG_MESH_PROVISION_SRV_VAL			0x1827
+#define SIG_MESH_PROXY_SRV_VAL				0x1828
+#define SIG_MESH_PROXY_SOLI_VAL				0x1859
+
+#define ALI_IOT_SERVICE_UUID				0xfeb3
+#define ALI_IOT_READ_UUID					0xfed4
+#define ALI_IOT_WRITE_UUID					0xfed5
+#define ALI_IOT_INDICATE_UUID				0xfed6
+#define ALI_IOT_WRITE_WITHOUT_RSP_UUID		0xfed7
+#define ALI_IOT_NOTIFY_UUID					0xfed8
+
+typedef struct __attribute__((packed)) {
+	s8	rssi;       // have been -110
+	s16	dc;
+	u32	timeStamp;
+} adv_report_extend_t;
 
 /**
  * @brief   system Timer : 16Mhz, Constant
@@ -106,6 +193,7 @@ static inline int get_switch_scan_mode(int ready)
 #endif
 }
 
+#if (MCU_CORE_TYPE == MCU_CORE_B91)
 static inline void clock_init_B91()
 {
 #if (CLOCK_SYS_CLOCK_HZ == 16000000)
@@ -124,6 +212,7 @@ static inline void clock_init_B91()
 #error clock error
 #endif
 }
+#endif
 
 // ota
 #define START_UP_FLAG			(0x544c4e4b)	// BLE_SRC_TELINK_MESH_EN
@@ -138,22 +227,53 @@ enum{
     FW_CHECK_MAX,
 };
 
+extern unsigned int ota_program_bootAddr;
+extern unsigned int ota_firmware_max_size;
+extern unsigned int ota_program_offset;
+
 void set_ota_reboot_flag(u8 flag);
 bool blt_ota_isOtaBusy(void);
 void blt_ota_finished_flag_set(u8 reset_flag);
 int ota_save_data(u32 flash_addr, int len, u8 * data);
 int is_valid_startup_flag(u32 flag_addr, int check_all_flag);
 void check_self_startup_flag(void);
-u8 get_fw_ota_value();
+u8 get_fw_ota_value(void);
 
 // uart
 #define UART_DMA_CHANNEL_RX  	DMA2
 #define UART_DMA_CHANNEL_TX  	DMA3
+
+#if UART_SECOND_EN
+#define UART_DMA_CHANNEL_RX_2ND     DMA6
+#define UART_DMA_CHANNEL_TX_2ND     DMA7
+#else
+// audio
+    #if (AUDIO_MESH_EN || SPEECH_ENABLE)
+#define AUDIO_DMA_CHANNEL_MIC  		DMA6
+#define AUDIO_DMA_CHANNEL_SPEAKER  	DMA7
+    #endif
+#endif
+#if(MCU_CORE_TYPE == MCU_CORE_B91)
 #define UART_NUM_GET(pin)		(((((int)pin==UART0_RX_PA4)||((int)pin==UART0_RX_PB3)||((int)pin==UART0_RX_PD3))|| \
 									(((int)pin==UART0_TX_PA3)||((int)pin==UART0_TX_PB2)||((int)pin==UART0_TX_PD2))) ? UART0 : UART1)
 #define UART_IRQ_GET(pin)		((UART_NUM_GET(pin) == UART0) ? IRQ19_UART0 : IRQ18_UART1)
+#elif(MCU_CORE_TYPE == MCU_CORE_TL321X)
+#define IRQ18_UART1             IRQ_UART1                /* UART1_IRQ, - uart1_irq_handler */
+#define IRQ19_UART0             IRQ_UART0                /* UART0_IRQ, - uart0_irq_handler */
+#define IRQ48_UART2             IRQ_UART2
 
-typedef struct{
+//for compatibility
+#define uart_reset      uart_hw_fsm_reset
+#define UART_RXDONE     UART_RXDONE_IRQ_STATUS
+#define UART_TXDONE     UART_TXDONE_IRQ_STATUS
+
+#define UART_NUM_GET(pin)		UART0
+#define UART_IRQ_GET(pin)		((UART_NUM_GET(pin) == UART0) ? IRQ19_UART0 : (UART_NUM_GET(pin) == UART1) ? IRQ18_UART1 : IRQ48_UART2)
+#endif
+
+#define UART_MODULE_SEL     UART_RX_NUM
+
+typedef struct __attribute__((packed)) {
 	unsigned int len;  // must be 4 byte align 
 	unsigned char data[1];
 }uart_data_t;
@@ -162,12 +282,15 @@ extern const uart_num_e UART_RX_NUM;
 extern const uart_num_e UART_TX_NUM;
 extern const u32 UART_IRQ_NUM;
 
-void uart_tx_busy_timeout_poll();
-unsigned char uart_tx_is_busy_dma_tick();
+void uart_tx_busy_timeout_poll(void);
+unsigned char uart_tx_is_busy_dma_tick(void);
 unsigned char uart_Send_dma_with_busy_hadle(unsigned char* data, unsigned int len);
 unsigned char uart_ErrorCLR(void);
-void irq_uart_handle_fifo();
-void uart_drv_init_B91m();
+void irq_uart_handle_fifo(void);
+void uart_drv_init_B91m(void);
+#if UART_SECOND_EN
+void uart_drv_init_B91m_2nd();
+#endif
 
 typedef struct {
 	u8 (*rx_aux_adv)(u8 * raw_pkt, u8 * new_pkt);
@@ -188,8 +311,6 @@ extern unsigned char adc_hw_initialized;
 #define cpu_long_sleep_wakeup		cpu_long_sleep_wakeup_32k_rc
 #define adc_sample_and_get_result 	adc_get_voltage
 
-extern int pkt_adv_pending;
-
 void gpio_set_func(unsigned int pin, unsigned int func);	// modify by haiwen for compatibility
 void flash_en_support_arch_flash(unsigned char en);
 int otaRead(u16 connHandle, void * p);
@@ -198,23 +319,28 @@ void        blt_send_adv2scan_mode(int tx_adv);
 void blc_ll_initScanning_module_mesh(void);
 void usb_bulk_drv_init (void *p);
 void usb_handle_irq(void);
-void usb_init();
-int blc_hci_tx_to_usb();
-void aid_loop();
-void aid_init();
+void usb_init(void);
+int blc_hci_tx_to_usb(void);
+void aid_loop(void);
+void aid_init(void);
 void gpio_set_wakeup(u32 pin, u32 level, int en);
-void main_loop_risv_sdk();
-void user_init_risv_sdk();
-void ble_loop_send_adv_in_gatt();
+void main_loop_risv_sdk(void);
+void user_init_risv_sdk(void);
 unsigned short adc_get_voltage(void);
 int  blc_ll_procScanPkt_mesh(u8 *raw_pkt, u8 *new_pkt);
 u8 adv_filter_proc(u8 *raw_pkt, u8 blt_sts);
-int mesh_adv_prepare_proc();
+int mesh_adv_prepare_proc(void);
+int is_mesh_adv_tx_pending(void);
 
 void blc_register_adv_scan_proc (void *p);
 void blc_register_advertise_prepare (void *p);
 
 int  bls_ll_terminateConnection (u8 reason);
+u8 blc_ll_getCurrentState(void);
+u8 bls_ll_isConnectState (void);
+int blc_ll_isAllSlaveConnected(void);
+int get_periphr_idx_by_conn_handle(u16 connHandle);
+u16 get_periphr_conn_handle_by_idx(int idx);
 
 /**
  * @brief      for user to initialize default RF TX power level index

@@ -23,15 +23,17 @@
  *
  *******************************************************************************************************/
 #include "app_heartbeat.h"
+
+#if (MESH_HEARTBEAT_EN)
 #if DU_ENABLE
 #include "user_du.h"
-u8 heartbeat_en =1;
+u8 heartbeat_en = 1;
 #else
-u8 heartbeat_en =1;
+u8 heartbeat_en = 1;
 #endif
 u8 hb_sts_change = 0;
-u32 hb_pub_100ms =0;
-u32 hb_sub_100ms =0;
+u32 hb_pub_100ms = 0;
+u32 hb_sub_100ms = 0;
 
 
 /**
@@ -39,7 +41,7 @@ u32 hb_sub_100ms =0;
  * @return      none
  * @note        
  */
-void mesh_cmd_sig_lowpower_heartbeat()
+void mesh_cmd_sig_lowpower_heartbeat(void)
 {
 	if(model_sig_cfg_s.hb_pub.feature & BIT(MESH_HB_LOWPOWER_BIT)){
 		hb_sts_change = 1;
@@ -302,7 +304,7 @@ void mesh_process_hb_sub(mesh_cmd_bear_t *p_bear)
 {
 	mesh_cmd_nw_t *p_nw = &(p_bear->nw);
 	mesh_heartbeat_sub_str *p_sub = &(model_sig_cfg_s.hb_sub);
-	#if WIN32 
+	#ifdef WIN32 
 	mesh_heartbeat_cb_data(p_bear);
 	#endif
 	#if GATEWAY_ENABLE
@@ -337,7 +339,7 @@ void mesh_process_hb_sub(mesh_cmd_bear_t *p_bear)
  * @return      none
  * @note        
  */
-void heartbeat_cmd_send_conf()
+void heartbeat_cmd_send_conf(void)
 {
     mesh_hb_msg_t hb_msg;
     memset(&hb_msg, 0, sizeof(hb_msg));
@@ -367,7 +369,7 @@ void heartbeat_cmd_send_conf()
  * @return      none
  * @note        
  */
-void mesh_heartbeat_sub_poll()
+void mesh_heartbeat_sub_poll(void)
 {
 	// dispatch the heartbeat subscription part 
 	mesh_heartbeat_sub_str *p_sub = &(model_sig_cfg_s.hb_sub);
@@ -394,7 +396,7 @@ void mesh_heartbeat_sub_poll()
  * @return      none
  * @note        
  */
-void mesh_heartbeat_pub_poll()
+void mesh_heartbeat_pub_poll(void)
 {
 	// dispatch the heartbeat publication part 
 	mesh_heartbeat_pub_str *p_pub = &(model_sig_cfg_s.hb_pub);
@@ -439,7 +441,7 @@ void mesh_heartbeat_pub_poll()
  * @return      none
  * @note        
  */
-void mesh_heartbeat_poll_100ms()
+void mesh_heartbeat_poll_100ms(void)
 {
     if(!heartbeat_en){
         return ;
@@ -457,7 +459,7 @@ void mesh_heartbeat_poll_100ms()
  * @return      none
  * @note        
  */
-void set_heartbeat_feature()
+void set_heartbeat_feature(void)
 {
 	//set the heartbeat feature enable by the feature 
 	mesh_page_feature_t *p_ft = (mesh_page_feature_t *)&model_sig_cfg_s.hb_pub.feature;
@@ -537,7 +539,7 @@ u8 dispatch_heartbeat_pub_ttl(u8 val)
  * @return      none
  * @note        
  */
-void init_heartbeat_str()
+void init_heartbeat_str(void)
 {
 	// need to trigger the heartbeat msg ,at the first time 
 	//hb_pub_100ms = clock_time_100ms()- BIT(31);//reserve 32767s
@@ -565,4 +567,8 @@ void init_heartbeat_str()
 	*/
 	return ;
 }
+#else
+u8 heartbeat_en = 0;
+void mesh_process_hb_sub(mesh_cmd_bear_t *p_bear){ }
+#endif
 

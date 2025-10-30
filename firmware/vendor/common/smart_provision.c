@@ -36,7 +36,7 @@ int my_fifo_push_hci_rx_fifo (u8 *p, u16 n, u8 *head, u8 head_len)
 		return -1;
 	}
 
-	if (n + (2+head_len) > f->size)    // sizeof(len) == 2
+	if ((u32)(n + (2+head_len)) > f->size)    // sizeof(len) == 2
 	{
 		return -1;
 	}
@@ -57,7 +57,7 @@ int my_fifo_push_hci_rx_fifo (u8 *p, u16 n, u8 *head, u8 head_len)
 
 void smart_get_rand(u8 *out, int len)
 {
-	for(int i = 0; i < len / sizeof(u32); i++){
+	for(u32 i = 0; i < len / sizeof(u32); i++){
 		u32 tmp_rand = rand();
 		memcpy(out + sizeof(u32) * i, &tmp_rand, sizeof(u32));
 	}
@@ -65,7 +65,7 @@ void smart_get_rand(u8 *out, int len)
 	return;
 }
 
-int smart_gateway_provision_data_set()
+int smart_gateway_provision_data_set(void)
 {
 	if(!is_provision_success()){
 		u8 device_key[16];
@@ -89,7 +89,7 @@ int smart_gateway_provision_data_set()
 	return 0;
 }
 
-int smart_provision_appkey_add()
+int smart_provision_appkey_add(void)
 {
 	u8 head[] = GATEWAY_APPKEY_ADD_HEAD;
 	u8 appkey[16];
@@ -119,7 +119,7 @@ u8 smart_white_list[SMART_SCAN_WHITE_LIST_NUM][16]; // 16:uuid length
 u8 smart_black_list_cnt = 0;
 u8 smart_black_list[SMART_SCAN_BLACK_LIST_NUM][16];
 
-int is_smart_provision_running()
+int is_smart_provision_running(void)
 {
 	return (smart_provision_st != SMART_CONFIG_IDLE);
 }
@@ -137,17 +137,17 @@ void mesh_smart_provision_st_set(int st)
 	smart_provision_st = st;
 }
 
-int mesh_smart_provision_st_get()
+int mesh_smart_provision_st_get(void)
 {
 	return smart_provision_st;
 }
 
-void mesh_smart_scan_tick_refresh()
+void mesh_smart_scan_tick_refresh(void)
 {
 	smart_scan_tick = clock_time()|1;
 }
 
-void mesh_smart_provision_start()
+void mesh_smart_provision_start(void)
 {
 	if(!is_smart_provision_running()){
 		mesh_smart_provision_st_set(SMART_CONFIG_SCAN_START);
@@ -158,7 +158,7 @@ void mesh_smart_provision_start()
 #endif
 }
 
-void mesh_smart_provision_stop()
+void mesh_smart_provision_stop(void)
 {
 	mesh_smart_provision_st_set(SMART_CONFIG_IDLE);
 #if BLE_REMOTE_PM_ENABLE
@@ -167,7 +167,7 @@ void mesh_smart_provision_stop()
 #endif 
 }
 
-int smart_provision_scan_start()
+int smart_provision_scan_start(void)
 {
 	u8 scan[] = GATEWAY_SCAN_START;
 	return my_fifo_push_hci_rx_fifo(scan, sizeof(scan), 0, 0);
@@ -183,7 +183,7 @@ void smart_provision_data_get(provison_net_info_str *p)
 	p->unicast_address = provision_mag.unicast_adr_last;
 }
 
-int smart_provision_link_open_start()
+int smart_provision_link_open_start(void)
 {
 	u8 head[] = GATEWAY_START_PROVISION_HEAD;
 	provison_net_info_str net_info;
@@ -191,7 +191,7 @@ int smart_provision_link_open_start()
 	return my_fifo_push_hci_rx_fifo((u8 *)&net_info, sizeof(net_info), head, sizeof(head));
 }
 
-void smart_scan_list_init()
+void smart_scan_list_init(void)
 {
 	smart_white_list_cnt = 0;
 	smart_black_list_cnt = 0;
@@ -301,7 +301,7 @@ int mesh_smart_provision_rsp_handle(u8 code, u8 *p, int len)
 	return 0;
 }
 
-void mesh_smart_provision_proc()
+void mesh_smart_provision_proc(void)
 {
 	switch(smart_provision_st){
 		case SMART_CONFIG_SCAN_START:

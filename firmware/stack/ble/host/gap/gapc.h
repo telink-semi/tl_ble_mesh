@@ -23,24 +23,24 @@
  *******************************************************************************************************/
 #pragma once
 
-#define BLT_GAPC_DEBUG(fmt, ...)				BLT_HOST_DBUG(DBG_GAPC_LOG, "[GAPC]"fmt, ##__VA_ARGS__)
+#define BLT_GAPC_DEBUG(fmt, ...)                BLT_HOST_DBUG(DBG_GAPC_LOG, "[GAPC]"fmt, ##__VA_ARGS__)
 
-#define GAPC_DISCOVERY_MAX_NUM				2
-#define GAPC_DISC_MAX_ATTR_INFO				2
-#define GAPC_DISC_MAX_INCLUDE_INFO			3
+#define GAPC_DISCOVERY_MAX_NUM              2
+#define GAPC_DISC_MAX_ATTR_INFO             2
+#define GAPC_DISC_MAX_INCLUDE_INFO          3
 
 typedef enum{
-	GAPC_CHAR_FIND_DESCRIPTOR = BIT(2),
-	GAPC_CHAR_SUBSCRIBE_CCC_NOTIFY = BITS(0, 2),
-	GAPC_CHAR_SUBSCRIBE_CCC_INDICATE = BITS(1, 2),
-	GAPC_CHAR_SUBSCRIBE_CCC_ALL = BITS(0, 1, 2),
-	GAPC_CHAR_READ_CHARACTER_VALUE = BIT(3),
+    GAPC_CHAR_FIND_DESCRIPTOR = BIT(2),
+    GAPC_CHAR_SUBSCRIBE_CCC_NOTIFY = BITS(0, 2),
+    GAPC_CHAR_SUBSCRIBE_CCC_INDICATE = BITS(1, 2),
+    GAPC_CHAR_SUBSCRIBE_CCC_ALL = BITS(0, 1, 2),
+    GAPC_CHAR_READ_CHARACTER_VALUE = BIT(3),
 } blc_gapc_char_setting_enum;
 
 typedef struct{
-	u8 properties;	//supported CHAR_PROP_READ, CHAR_PROP_NOTIFY, CHAR_PROP_INDICATE
-	u16 valueHandle;
-	u16 cccHandle;
+    u8 properties;  //supported CHAR_PROP_READ, CHAR_PROP_NOTIFY, CHAR_PROP_INDICATE
+    u16 valueHandle;
+    u16 cccHandle;
 } blc_gapc_charInfo_t;
 
 /*
@@ -119,120 +119,120 @@ typedef int (*gapc_getCharInfo_fun_t)(u16 connHandle, blc_gapc_charInfo_t* charI
  * @param connHandle --- acl connection handle.
  * @param count --- the number of reconnect include uuid. 1, 2, ...
  * @return true --- can reconnect this include service.
- * 			false --- not supported reconnect include.
+ *          false --- not supported reconnect include.
  */
 typedef bool (*gapc_reconnIncl_fun_t)(u16 connHandle, int count);
 
 /*
  * @param connHandle --- acl connection handle.
  * @param count --- the number of reconnect service uuid. 1, 2, ...
- * 					0 mean reconnect service ending
+ *                  0 mean reconnect service ending
  * @return true --- can reconnect this service.
- * 			false --- not supported reconnect service.
+ *          false --- not supported reconnect service.
  */
 typedef bool (*gapc_reconnService_fun_t)(u16 connHandle, int count);
 
 typedef struct{
-	//service uuid.
-	uuid_t uuid;
-	//found service uuid callback function.
-	gapc_foundService_func_t sfun;
+    //service uuid.
+    uuid_t uuid;
+    //found service uuid callback function.
+    gapc_foundService_func_t sfun;
 } blc_gapc_discService_t;
 
 typedef struct{
-	union {
-		u8 setting;	//blc_gapc_char_setting_enum
-		struct {
-			//Automatically subscribe to the notify property, if had.
-			bool subscribeNtf	:1;
-			//Automatically subscribe to the indicate property, if had.
-			bool subscribeInd	:1;
-			//found Descriptors, if had.
-			bool findDecs		:1;
-			//Automatically read characteristic value, if had read property.
-			bool readValue		:1;
-		};
-	};
-	//characteristic uuid.
-	uuid_t uuid;
-	//found characteristic uuid callback function.
-	gapc_foundChar_fun_t cfun;
-	//found characteristic Descriptors uuid callback function.
-	gapc_foundCharDesc_func_t dfun;
-	//subscribe client characteristic configuration callback function.
-	gapc_subscribeCcc_func_t scfun;
-	//want read characteristic value callback function.
-	gapc_startReadChar_func_t rfun;
+    union {
+        u8 setting; //blc_gapc_char_setting_enum
+        struct {
+            //Automatically subscribe to the notify property, if had.
+            bool subscribeNtf   :1;
+            //Automatically subscribe to the indicate property, if had.
+            bool subscribeInd   :1;
+            //found Descriptors, if had.
+            bool findDecs       :1;
+            //Automatically read characteristic value, if had read property.
+            bool readValue      :1;
+        };
+    };
+    //characteristic uuid.
+    uuid_t uuid;
+    //found characteristic uuid callback function.
+    gapc_foundChar_fun_t cfun;
+    //found characteristic Descriptors uuid callback function.
+    gapc_foundCharDesc_func_t dfun;
+    //subscribe client characteristic configuration callback function.
+    gapc_subscribeCcc_func_t scfun;
+    //want read characteristic value callback function.
+    gapc_startReadChar_func_t rfun;
 } blc_gapc_discChar_t;
 
 typedef struct{
-	//supported characteristic uuid size.
-	u8 size;
-	//discovery characteristic uuid table.
-	const blc_gapc_discChar_t *characteristic;
-	//found unknown characteristic uuuid callback function.
-	gapc_foundUnknownChar_func_t ufun;
+    //supported characteristic uuid size.
+    u8 size;
+    //discovery characteristic uuid table.
+    const blc_gapc_discChar_t *characteristic;
+    //found unknown characteristic uuuid callback function.
+    gapc_foundUnknownChar_func_t ufun;
 } blc_gapc_discCharTable_t;
 
 typedef struct{
-	//discovery include service uuid.
-	uuid_t uuid;
-	//include characteristic uuid table.
-	blc_gapc_discCharTable_t characteristic;
-	//found include service uuid callback function.
-	gapc_foundInclude_func_t ifun;
+    //discovery include service uuid.
+    uuid_t uuid;
+    //include characteristic uuid table.
+    blc_gapc_discCharTable_t characteristic;
+    //found include service uuid callback function.
+    gapc_foundInclude_func_t ifun;
 } blc_gapc_discInclude_t;
 
 typedef struct{
-	//supported discovery include uuid size.
-	u8 size;
-	//include discovery information table.
-	const blc_gapc_discInclude_t *include[GAPC_DISC_MAX_INCLUDE_INFO];
-	//found unknown include uuid callback function.
-	gapc_foundUnknownInclude_func_t uifun;
+    //supported discovery include uuid size.
+    u8 size;
+    //include discovery information table.
+    const blc_gapc_discInclude_t *include[GAPC_DISC_MAX_INCLUDE_INFO];
+    //found unknown include uuid callback function.
+    gapc_foundUnknownInclude_func_t uifun;
 } blc_gapc_discIncludeTable_t;
 
 typedef struct{
-	//discovery service uuid maximum count.
-	u8 maxServiceCount;
-	const blc_gapc_discService_t *service;
-	const blc_gapc_discIncludeTable_t includeTable;
-	const blc_gapc_discCharTable_t characteristicTable;
+    //discovery service uuid maximum count.
+    u8 maxServiceCount;
+    const blc_gapc_discService_t *service;
+    const blc_gapc_discIncludeTable_t includeTable;
+    const blc_gapc_discCharTable_t characteristicTable;
 } blc_gapc_discList_t;
 
 typedef struct{
-	//get characteristic information callback function.
-	gapc_getCharInfo_fun_t ifun;
-	//want read characteristic value callback function.
-	gapc_startReadChar_func_t rfun;
+    //get characteristic information callback function.
+    gapc_getCharInfo_fun_t ifun;
+    //want read characteristic value callback function.
+    gapc_startReadChar_func_t rfun;
 } blc_gapc_reconnChar_t;
 
 typedef struct{
-	//supported reconnect characteristic size.
-	u8 size;
-	//reconnect characteristic list.
-	const blc_gapc_reconnChar_t *characteristic;
+    //supported reconnect characteristic size.
+    u8 size;
+    //reconnect characteristic list.
+    const blc_gapc_reconnChar_t *characteristic;
 } blc_gapc_reconnCharTable_t;
 
 typedef struct{
-	//gapc reconnect include characteristic callback function. if not set, default 1.
-	gapc_reconnIncl_fun_t reifun;
-	// reconnect include characteristic table list.
-	const blc_gapc_reconnCharTable_t charTb;
+    //gapc reconnect include characteristic callback function. if not set, default 1.
+    gapc_reconnIncl_fun_t reifun;
+    // reconnect include characteristic table list.
+    const blc_gapc_reconnCharTable_t charTb;
 } blc_gapc_reconnInclTable_t;
 
 typedef struct{
-	const uuid_t serviceUuid;
-	//gapc reconnect service characteristic callback function. if not set, default 1.
-	gapc_reconnService_fun_t resfun;
+    const uuid_t serviceUuid;
+    //gapc reconnect service characteristic callback function. if not set, default 1.
+    gapc_reconnService_fun_t resfun;
 
-	// reconnect service characteristic table list.
-	const blc_gapc_reconnCharTable_t charTb;
+    // reconnect service characteristic table list.
+    const blc_gapc_reconnCharTable_t charTb;
 
-	//supported discovery include uuid size.
-	u8 inclSize;
-	//include reconnect information table.
-	const blc_gapc_reconnInclTable_t *includeCharTb[GAPC_DISC_MAX_INCLUDE_INFO];
+    //supported discovery include uuid size.
+    u8 inclSize;
+    //include reconnect information table.
+    const blc_gapc_reconnInclTable_t *includeCharTb[GAPC_DISC_MAX_INCLUDE_INFO];
 
 } blc_gapc_reconnList_t;
 
@@ -241,7 +241,7 @@ typedef void (*gapc_write_func_t)(u16 connHandle, u8 err, void* data);
 /** @brief GAP Write procedure parameters configuration */
 typedef struct gapc_write_cfg {
     /** Response callback */
-	gapc_write_func_t func;
+    gapc_write_func_t func;
     /** Attribute handle */
     u16 handle;
     /** Data to be written if length > MTU-3, data must global variables*/
@@ -257,15 +257,15 @@ typedef struct gapc_write_cfg {
 /** @brief GAP read procedure parameters configuration */
 typedef struct gapc_read_cfg {
     /** Response callback */
-	gapc_read_func_t func;
+    gapc_read_func_t func;
     /** Attribute handle */
     u16 handle;
     /** Read data pointer*/
     u8 *wBuff;
     /** Read data length pointer*/
-	u16 *wBuffLen;
-	/** read data maximum length*/
-	u16 maxLen;
+    u16 *wBuffLen;
+    /** read data maximum length*/
+    u16 maxLen;
 } gapc_read_cfg_t;
 
 /**

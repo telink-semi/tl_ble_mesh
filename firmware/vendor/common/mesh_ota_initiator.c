@@ -31,7 +31,7 @@
 #include "proj_lib/mesh_crypto/sha256_telink.h"
 
 #if (MD_MESH_OTA_EN && INITIATOR_CLIENT_EN)
-#if WIN32
+#ifdef WIN32
 #include "proj/common/tstring.h"
 #endif
 
@@ -50,17 +50,17 @@ int is_mesh_ota_initiator_tx_client_model(u32 id, bool4 sig_model)
     return (sig_model && (SIG_MD_FW_DISTRIBUT_C == id));
 }
 
-u8 get_fw_initiator_proc_st()
+u8 get_fw_initiator_proc_st(void)
 {
     return fw_initiator_proc.st_initiator;
 }
 
-int is_mesh_ota_initiator_wait_ack()
+int is_mesh_ota_initiator_wait_ack(void)
 {
     return (fw_initiator_proc.st_wait_flag);
 }
 
-void clr_mesh_ota_initiator_wait_ack()
+void clr_mesh_ota_initiator_wait_ack(void)
 {
     fw_initiator_proc.st_wait_flag = 0;
 }
@@ -126,7 +126,7 @@ int is_initiator_st_to_updating_node()
     return 1;
 }
 
-void mesh_ota_initiator_wait_ack_st_set()
+void mesh_ota_initiator_wait_ack_st_set(void)
 {
 	if(fw_initiator_proc.st_initiator){
     	fw_initiator_proc.st_wait_flag = 1;
@@ -142,7 +142,7 @@ void mesh_ota_initiator_wait_ack_st_return(int success)
     fw_initiator_proc.st_wait_flag = 0;
 }
 
-void mesh_ota_initiator_ack_timeout_handle()
+void mesh_ota_initiator_ack_timeout_handle(void)
 {
     if(is_mesh_ota_initiator_wait_ack()){
         mesh_ota_initiator_wait_ack_st_return(0);
@@ -154,7 +154,7 @@ void mesh_ota_initiator_ack_timeout_handle()
     }
 }
 
-int mesh_ota_initiator_check_skip_current_node()
+int mesh_ota_initiator_check_skip_current_node(void)
 {
     fw_initiator_proc_t *distr_proc = &fw_initiator_proc;
     if(distr_proc->list[distr_proc->node_num].skip_flag){
@@ -167,7 +167,7 @@ int mesh_ota_initiator_check_skip_current_node()
     return 0;
 }
 
-u32 is_need_block_transfer_initiator()
+u32 is_need_block_transfer_initiator(void)
 {
     return (BLOB_TRANS_ST_SUCCESS == fw_initiator_proc.list_distributor.st_block_start);
 }
@@ -186,7 +186,7 @@ void fw_initiator_updating_list_init(fw_update_list_t *p_update_list, u32 update
 
 #define INITIATOR_ALL_RECEIVER_INVALID_ERR_NO		(-99)
 
-u32 get_1st_valid_receiver()
+u32 get_1st_valid_receiver(void)
 {
     foreach(i, fw_initiator_proc.node_cnt){
         if(!fw_initiator_proc.list[i].skip_flag){
@@ -196,13 +196,13 @@ u32 get_1st_valid_receiver()
 	return INITIATOR_ALL_RECEIVER_INVALID_ERR_NO;
 }
 
-int is_initiator_all_receivers_invalid()
+int is_initiator_all_receivers_invalid(void)
 {
 	return (INITIATOR_ALL_RECEIVER_INVALID_ERR_NO == get_1st_valid_receiver());
 }
 
 #if (DEBUG_SHOW_VC_SELF_EN && DISTRIBUTOR_NO_UPDATA_START_2_SELF)
-int is_only_initiator_as_receiver()
+int is_only_initiator_as_receiver(void)
 {
 	if(1 == fw_initiator_proc.node_cnt){
 		return (is_own_ele(fw_initiator_proc.list[0].adr));
@@ -560,7 +560,7 @@ int mesh_ota_initiator_rx (mesh_rc_rsp_t *rsp, u16 op, u32 size_op)
     return op_handle_ok;
 }
 
-void mesh_ota_initiator_proc()
+void mesh_ota_initiator_proc(void)
 {
     fw_initiator_proc_t *distr_proc = &fw_initiator_proc;
     static u32 tick_receiver_get;
@@ -568,7 +568,7 @@ void mesh_ota_initiator_proc()
 		return ;
 	}
 	
-#if (WIN32 && (PROXY_HCI_SEL == PROXY_HCI_GATT))
+#if (defined(WIN32) && (PROXY_HCI_SEL == PROXY_HCI_GATT))
 	extern unsigned char connect_flag;
 	if(!(pair_login_ok || DEBUG_SHOW_VC_SELF_EN) || distr_proc->pause_flag){
 		return ;

@@ -50,10 +50,13 @@
         }
     }
     //显示短地址+PID
-    self.address.text = [NSString stringWithFormat:@"%@(%@)",tempAddress,tempType];
-
-    if (!model.isKeyBindSuccess) {
-        self.address.text = [NSString stringWithFormat:@"%@(unbound)",tempAddress];
+    if (model.isEnOceanDevice) {
+        self.address.text = tempAddress;
+    } else {
+        self.address.text = [NSString stringWithFormat:@"%@(%@)",tempAddress,tempType];
+        if (!model.isKeyBindSuccess) {
+            self.address.text = [NSString stringWithFormat:@"%@(unbound)",tempAddress];
+        }
     }
     self.nodeName.text = model.name;
     self.address.textColor = self.nodeName.textColor = [UIColor grayColor];

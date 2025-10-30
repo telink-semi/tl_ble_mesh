@@ -69,38 +69,38 @@
 	#define MI_GW_FOUND_RSP				2
 	#define MI_DEV_FOUND_RSP			3
 	#define MI_NET_PARA_REQ				128
-typedef struct{
+typedef struct __attribute__((packed)) {
 	u8 ssid;
 	u8 piid;
 }vd_mi_head_str;
 
-typedef struct{
+typedef struct __attribute__((packed)) {
 	vd_mi_head_str mi_head;
 	u8 buf[4];
 }vd_mi_get_property_str;
 
-typedef struct{
+typedef struct __attribute__((packed)) {
 	vd_mi_head_str mi_head;
 	u8 value[4];
 	u8 tid;
 	u8 type;
 }vd_mi_set_property_str;
 
-typedef struct{
+typedef struct __attribute__((packed)) {
 	vd_mi_head_str mi_head;
 	u8 value[4];
 	u8 tid;
 	u8 type;
 }vd_mi_set_noack_property_str;
 
-typedef struct{
+typedef struct __attribute__((packed)) {
 	vd_mi_head_str mi_head;
 	u8 value[4];
 	u8 tid;
 	u8 type;
 }vd_mi_property_changed_str;
 
-typedef struct{
+typedef struct __attribute__((packed)) {
 	vd_mi_head_str mi_head;
 	u8 value1;
 	u8 value2;
@@ -110,13 +110,13 @@ typedef struct{
 	u8 value6;
 }vd_mi_action_str;
 
-typedef struct{
+typedef struct __attribute__((packed)) {
 	vd_mi_head_str mi_head;
 	u8 code;
 	u8 value[5];
 }vd_mi_reply_action_str;
 
-typedef struct{
+typedef struct __attribute__((packed)) {
 	vd_mi_head_str mi_head;
 	u8 value1;
 	u8 value2;
@@ -134,17 +134,17 @@ typedef struct{
 
 
 //------op parameters
-typedef struct{
+typedef struct __attribute__((packed)) {
 	u8 code;
 	u8 rsv[7];
 }vd_mi_rc_key_report_t;
 
-typedef struct{
+typedef struct __attribute__((packed)) {
 	u8 onoff;
 	u8 tid;
 }vd_mi_light_onoff_set_t;
 
-typedef struct{
+typedef struct __attribute__((packed)) {
 	u8 present_onoff;
 }vd_mi_light_onoff_st_t;
 

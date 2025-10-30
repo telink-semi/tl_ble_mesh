@@ -60,17 +60,31 @@ extern "C" {
 #define PM_DEEPSLEEP_RETENTION_ENABLE				0
 #endif
 
-#if (PM_DEEPSLEEP_RETENTION_ENABLE)
-	#define	BLC_PM_EN								1
-	#define	BLC_PM_DEEP_RETENTION_MODE_EN			1
+
+#ifndef BLC_PM_EN
+#define BLC_PM_EN                                   1
 #endif
 
-#ifndef	BLC_PM_EN
-#define	BLC_PM_EN									0
+#ifndef BLC_PM_DEEP_RETENTION_MODE_EN
+#define BLC_PM_DEEP_RETENTION_MODE_EN               1
 #endif
 
-#ifndef	BLC_PM_DEEP_RETENTION_MODE_EN
-#define	BLC_PM_DEEP_RETENTION_MODE_EN				0
+#ifndef BLE_APP_PM_ENABLE
+#define BLE_APP_PM_ENABLE                           0
+#endif
+
+
+#if(!BLE_APP_PM_ENABLE && PM_DEEPSLEEP_RETENTION_ENABLE)
+    #error "can not use deep retention when PM disable !!!"
+#endif
+
+
+#ifndef OS_SEPARATE_STACK_SPACE
+#define OS_SEPARATE_STACK_SPACE                     0
+#endif
+
+#ifndef FREERTOS_ENABLE
+#define FREERTOS_ENABLE                             0
 #endif
 
 #ifndef APP_HW_FIRMWARE_ENCRYPTION_ENABLE
@@ -81,18 +95,29 @@ extern "C" {
 #define APP_HW_SECURE_BOOT_ENABLE					0 	//secure boot: firmware signature verification
 #endif
 
-
-#ifndef ACL_CENTRAL_SMP_ENABLE
-#define ACL_CENTRAL_SMP_ENABLE						0
-#endif
-
-
 #ifndef BLE_OTA_SERVER_ENABLE
 #define BLE_OTA_SERVER_ENABLE						0
 #endif
 
+#ifndef ACL_PERIPHR_SMP_ENABLE
+#define ACL_PERIPHR_SMP_ENABLE                      0
+#endif
 
+#ifndef ACL_CENTRAL_SMP_ENABLE
+#define ACL_CENTRAL_SMP_ENABLE                      0
+#endif
 
+#ifndef BLE_MASTER_SIMPLE_SDP_ENABLE
+#define BLE_MASTER_SIMPLE_SDP_ENABLE                0
+#endif
+
+#ifndef CENTRAL_CONNECT_PERIPHR_MAC_FILTER_EN
+#define CENTRAL_CONNECT_PERIPHR_MAC_FILTER_EN       0
+#endif
+
+#ifndef PERIPHR_CONNECT_CENTRAL_MAC_FILTER_EN
+#define PERIPHR_CONNECT_CENTRAL_MAC_FILTER_EN       0
+#endif
 
 #if (APP_HW_FIRMWARE_ENCRYPTION_ENABLE && !HARDWARE_FIRMWARE_ENCRYPTION_SUPPORT_EN)
 	#error "MCU do not support HW FIRMWARE ENCRYPTION"
@@ -102,6 +127,35 @@ extern "C" {
 	#error "MCU do not support HW SECURE BOOT"
 #endif
 
+#ifndef APPLICATION_DONGLE
+#define APPLICATION_DONGLE                          0
+#endif
+
+#ifndef UART_PRINT_DEBUG_ENABLE
+#define UART_PRINT_DEBUG_ENABLE                     0
+#endif
+
+#if (TLKAPI_DEBUG_ENABLE && UART_PRINT_DEBUG_ENABLE)
+    #error "TLKAPI_DEBUG_ENABLE and UART_PRINT_DEBUG_ENABLE can not be enable at same time !!!"
+#endif
+
+///////////////////  USB   /////////////////////////////////
+#ifndef IRQ_USB_PWDN_ENABLE
+#define IRQ_USB_PWDN_ENABLE                         0
+#endif
+
+#ifndef MS_OS_DESCRIPTOR_ENABLE
+#define MS_OS_DESCRIPTOR_ENABLE                     0
+#endif
+
+#ifndef AUDIO_HOGP
+#define AUDIO_HOGP                                  0
+#endif
+
+#ifndef USB_CDC_ENABLE
+#define USB_CDC_ENABLE                              0
+#endif
+
 #else
 
 #ifndef STRING_PRODUCT
@@ -109,7 +163,6 @@ extern "C" {
 #endif
 #ifndef STRING_SERIAL
 #define STRING_SERIAL		L"TLSR8869"
-#endif
 #endif
 
 #define	CHIP_REVISION_A4 	1
@@ -121,6 +174,7 @@ extern "C" {
 
 #ifndef DONLGE_MONITOR_MODE
 #define DONLGE_MONITOR_MODE	0
+#endif
 #endif
 
 // default setting
@@ -139,12 +193,27 @@ extern "C" {
 #ifndef PINGPONG_OTA_DISABLE
 #define PINGPONG_OTA_DISABLE    0
 #endif
+
 #ifndef	SWITCH_FW_ENABLE
 #define SWITCH_FW_ENABLE		0
 #endif
+
+#ifndef FW_START_BY_LEGACY_BOOTLOADER_EN
+#define FW_START_BY_LEGACY_BOOTLOADER_EN    0
+#endif
+
+#ifndef FW_START_BY_BOOTLOADER_EN
+#define FW_START_BY_BOOTLOADER_EN    0
+#endif
+
+#ifndef DUAL_MODE_WITH_TLK_MESH_EN
+#define DUAL_MODE_WITH_TLK_MESH_EN   0
+#endif
+
 #ifndef	GATT_LPN_EN
 #define GATT_LPN_EN		        0
 #endif
+
 #ifndef	MESH_DLE_MODE
 #define MESH_DLE_MODE		    0
 #endif
@@ -172,9 +241,11 @@ extern "C" {
 #ifndef	AUDIO_MESH_EN
 #define AUDIO_MESH_EN      		0
 #endif
+
 #ifndef PAIR_PROVISION_ENABLE
 #define PAIR_PROVISION_ENABLE	0
 #endif
+
 #ifndef	USE_DP_TO_BURN_FW
 #define USE_DP_TO_BURN_FW      	0
 #endif
@@ -191,6 +262,14 @@ extern "C" {
 
 #ifndef LIGHT_CONTROL_SERVER_LOCATE_EXCLUSIVE_ELEMENT_EN
 #define LIGHT_CONTROL_SERVER_LOCATE_EXCLUSIVE_ELEMENT_EN	0
+#endif
+
+#ifndef MESH_TIMER_MS_100MS_EN
+#define MESH_TIMER_MS_100MS_EN      1
+#endif
+
+#ifndef MESH_HEARTBEAT_EN
+#define MESH_HEARTBEAT_EN           1
 #endif
 
 //////////// debug  /////////////////////////////////
@@ -960,6 +1039,21 @@ enum{
 #define USB_MOUSE_RELEASE_TIMEOUT       (200000) // in us
 #define USB_SOMATIC_RELEASE_TIMEOUT     (200000) // in us
 
+#ifndef BATT_CHECK_ENABLE
+#define BATT_CHECK_ENABLE                               0
+#endif
+
+
+///////////////////  FLASH   /////////////////////////////////
+#ifndef FLASH_4LINE_MODE_ENABLE
+#define FLASH_4LINE_MODE_ENABLE                    0
+#endif
+
+#ifndef APP_FLASH_PROTECTION_ENABLE
+#define APP_FLASH_PROTECTION_ENABLE                     0
+#endif
+
+#if (!__TLSR_RISCV_EN__)
 ////////////////  ethernet /////////////////	
 #define	ETH_RX_PKT_BUFF_LEN			512			//  including the dam_length,  that is the max ip packet size is ETH_RX_PKT_BUFF_SIZE - 4
 #define	ETH_RX_PKT_BUFF_COUNT		4 			//	
@@ -1033,6 +1127,19 @@ enum{
 #define RF4CE_VENDOR_STRING_LENGTH                  7
 #define RF4CE_USER_STRING_LENGTH                    15
 #define RF4CE_SEC_KEY_SEED_LENGTH                   80
+#endif
+
+#ifndef UI_KEYBOARD_ENABLE
+#define UI_KEYBOARD_ENABLE                              0
+#endif
+
+#ifndef LED_ON_LEVEL
+#define LED_ON_LEVEL                                    1
+#endif
+
+#ifndef DEBUG_GPIO_ENABLE
+#define DEBUG_GPIO_ENABLE                               0
+#endif
 
 #if (__TLSR_RISCV_EN__)
 #if (DEBUG_GPIO_ENABLE)

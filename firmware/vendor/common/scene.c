@@ -388,7 +388,7 @@ int mesh_cmd_sig_scene_recall(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par)
                 mesh_cmd_light_x_set_t x_set_tmp = {0};
                 mesh_cmd_light_y_set_t y_set_tmp = {0};
                 #endif
-                int is_len_with_trans = (par_len >= sizeof(scene_recall_t));
+                int is_len_with_trans = ((u32)par_len >= sizeof(scene_recall_t));
                 int trans_flag_scene = 0;
                 
     			if(is_len_with_trans){

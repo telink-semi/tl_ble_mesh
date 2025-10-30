@@ -482,7 +482,7 @@ para:
 return :
         not define 
 **************************************************************/
-extern void mesh_proxy_master_terminate_cmd();
+extern void mesh_proxy_master_terminate_cmd(void);
 /******************* mesh_proxy_master_terminate_cmd ****************************
 function :to set the pid and the mac part 
 para:
@@ -586,7 +586,7 @@ ret: 0 suc  other err
 extern int mesh_par_retrieve_store_win32(u8 *in_out, u32 *p_adr, u32 adr_base, u32 size,u8 flag);
 
 // need to reliaze 
-u8 win32_proved_state();
+u8 win32_proved_state(void);
 
 
 void mesh_heartbeat_cb_data(mesh_cmd_bear_t *p_bear);

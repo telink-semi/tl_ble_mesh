@@ -22,15 +22,15 @@
  *
  *******************************************************************************************************/
 /*******************************      analog control registers: 0xb8      ******************************/
-/**	@page ANALOG
+/** @page ANALOG
  *
- *	Introduction
- *	===============
- *	B91 analog support dma and normal mode, in each mode, support byte/halfword/word/buffer write and read.
+ *  Introduction
+ *  ===============
+ *  analog support dma and normal mode, in each mode, support byte/halfword/word/buffer write and read.
  *
- *	API Reference
- *	===============
- *	Header File: analog.h
+ *  API Reference
+ *  ===============
+ *  Header File: analog.h
  */
 #pragma once
 
@@ -57,6 +57,15 @@
 /**********************************************************************************************************************
  *                                      global function prototype                                                     *
  *********************************************************************************************************************/
+
+/**
+ * When reading and writing analog registers in DMA mode, exit interface after configuration.
+ * But the actual operation of the analog register is not finished, and the DMA is still moving the data.
+ * An interrupt may be opened at this time, and if there is an operation on the analog register,
+ * it will interrupt the previous DMA reading and writing the analog register, creating an unknown risk.
+ * Therefore, it is not recommended to use DMA to read and write analog registers.
+ */
+#define ANALOG_DMA      0
 
 /**
  * @brief      This function serves to analog register read by byte.
@@ -109,18 +118,18 @@ _attribute_ram_code_sec_noinline_ void analog_write_reg32(unsigned char addr, un
  * @param[in]  len   - the length of read value.
  * @return     none.
  */
-_attribute_ram_code_sec_noinline_ void analog_read_buff(unsigned char addr, unsigned char *buff, int len);
+_attribute_ram_code_sec_noinline_ void analog_read_buff(unsigned char addr, unsigned char *buff, unsigned char len);
 
 /**
  * @brief      This function serves to analog register write.
  * @param[in]  addr  - address need to be write.
  * @param[in]  buff  - the ptr of value need to be write.
- * @param[in]  len   - the length of write value.
+ * @param[in]  len   - the length of write value.(The data length cannot be greater than 8)
  * @return     none.
  */
-_attribute_ram_code_sec_noinline_ void analog_write_buff(unsigned char addr, unsigned char *buff, int len);
+_attribute_ram_code_sec_noinline_ void analog_write_buff(unsigned char addr, unsigned char *buff, unsigned char len);
 
-
+#if (ANALOG_DMA == 1)
 /**
  * @brief      This function serves to analog register write by word using dma.
  * @param[in]  chn  - the dma channel.
@@ -154,11 +163,11 @@ void analog_write_buff_dma(dma_chn_e chn, unsigned char addr, unsigned char *pda
  * @param[in]  chn  - the dma channel.
  * @param[in]  addr - address need to be read from.
  * @param[out] pdat - the buffer ptr to store read data.
- * 			   note: The size of array pdat must be a multiple of 4.
- * 			  	 	For example, if you just need read 5 byte by dma, you should
- * 			  	 	define the size of array pdat to be greater than 8 other than 5.
- * 			  	 	Because the dma would return 4 byte data every time, 5 byte is
- * 			  	 	not enough to store them.
+ *             note: The size of array pdat must be a multiple of 4.
+ *                  For example, if you just need read 5 byte by dma, you should
+ *                  define the size of array pdat to be greater than 8 other than 5.
+ *                  Because the dma would return 4 byte data every time, 5 byte is
+ *                  not enough to store them.
  * @param[in]  len  - the length of read data.
  * @return     none.
  */
@@ -168,18 +177,19 @@ void analog_read_buff_dma(dma_chn_e chn, unsigned char addr, unsigned char *pdat
  * @brief      This function write buffer to analog register by dma channel.
  * @param[in]  chn  - the dma channel.
  * @param[in]  pdat - the buffer(addr & data) ptr need to be write,
- * 			   note: The array pdat should look like this,
- * 			   |  pdat     |            |        |
- * 			   |  :------  | :----------|  :---- |
- * 			   |  pdat[0]  |   address  |  0x3a  |
- * 			   |  pdat[1]  |    data    |  0x11  |
- * 			   |  pdat[2]  |   address  |  0x3b  |
- *			   |  pdat[3]  |    data    |  0x22  |
- *			   |  ......   |            |        |
- * 				It means write data 0x11 to address 0x3a,
- * 						 write data 0x22 to address 0x3b,
- * 						 ......
+ *             note: The array pdat should look like this,
+ *             |  pdat     |            |        |
+ *             |  :------  | :----------|  :---- |
+ *             |  pdat[0]  |   address  |  0x3a  |
+ *             |  pdat[1]  |    data    |  0x11  |
+ *             |  pdat[2]  |   address  |  0x3b  |
+ *             |  pdat[3]  |    data    |  0x22  |
+ *             |  ......   |            |        |
+ *              It means write data 0x11 to address 0x3a,
+ *                       write data 0x22 to address 0x3b,
+ *                       ......
  * @param[in]  len - the length of read data.
  * @return     none.
  */
 void analog_write_addr_data_dma(dma_chn_e chn, void *pdat, int len);
+#endif

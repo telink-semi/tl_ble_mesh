@@ -26,41 +26,41 @@
 #include "../gpio.h"
 
 
-_attribute_data_retention_sec_	rf_pa_callback_t  blc_rf_pa_cb = 0;
+_attribute_data_retention_sec_  rf_pa_callback_t  blc_rf_pa_cb = 0;
 
 _attribute_ram_code_
 void app_rf_pa_handler(int type)
 {
 #if(PA_ENABLE)
-	u32 r = irq_disable();	// add irq disable should be better due to called in both main loop and irq.
+	u32 r = irq_disable();	// BLE_SRC_TELINK_MESH_EN, add irq disable should be better due to called in both main loop and irq.
 
-	if(type == PA_TYPE_TX_ON){
-		gpio_set_low_level(PA_RXEN_PIN);
-		gpio_set_high_level(PA_TXEN_PIN);
-	}
-	else if(type == PA_TYPE_RX_ON){
-		gpio_set_low_level(PA_TXEN_PIN);
-		gpio_set_high_level(PA_RXEN_PIN);
-	}
-	else{
-		gpio_set_low_level(PA_RXEN_PIN);
-		gpio_set_low_level(PA_TXEN_PIN);
-	}
+    if(type == PA_TYPE_TX_ON){
+        gpio_set_low_level(PA_RXEN_PIN);
+        gpio_set_high_level(PA_TXEN_PIN);
+    }
+    else if(type == PA_TYPE_RX_ON){
+        gpio_set_low_level(PA_TXEN_PIN);
+        gpio_set_high_level(PA_RXEN_PIN);
+    }
+    else{
+        gpio_set_low_level(PA_RXEN_PIN);
+        gpio_set_low_level(PA_TXEN_PIN);
+    }
 
-	irq_restore(r);
+	irq_restore(r); // BLE_SRC_TELINK_MESH_EN
 #endif
 }
 
 
 /**
- * @brief	RF software PA initialization
- * @param	none
- * @return	none
+ * @brief   RF software PA initialization
+ * @param   none
+ * @return  none
  */
 void rf_pa_init(void)
 {
 #if(PA_ENABLE)
-	gpio_function_en(PA_TXEN_PIN);
+    gpio_function_en(PA_TXEN_PIN);
     gpio_input_dis(PA_TXEN_PIN);        //disable input
     gpio_output_en(PA_TXEN_PIN);         //enable output
     gpio_set_level(PA_TXEN_PIN, 0);

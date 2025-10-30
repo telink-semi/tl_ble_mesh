@@ -57,7 +57,7 @@
 	 */
 	/* default GPIO, user can change it in app_config.h */
 	#ifndef TLKAPI_DEBUG_GPIO_PIN
-	#define TLKAPI_DEBUG_GPIO_PIN        		GPIO_PD4
+	#define TLKAPI_DEBUG_GPIO_PIN        		GPIO_PA1
 	#endif
 
 	/* default UART baudrate, user can change it in app_config.h */

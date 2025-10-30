@@ -73,7 +73,38 @@
  *               }
  *               PLIC_ISR_REGISTER(stimer_irq_handler, IRQ_SYSTIMER)
  *              @endcode
- *
+ *    - Saving and disabling global interrupts and restoring global interrupts example.
+ *        -# Saving and disabling global interrupts example:
+ *            @code
+ *            void global_interrupts_save_and_disable(void)
+ *            {
+ *                g_mstatus_value = core_interrupt_disable();
+ *                g_mie_value     = core_mie_disable(FLD_MIE_MSIE | FLD_MIE_MTIE | FLD_MIE_MEIE);
+ *                plic_all_interrupt_save_and_disable();
+ *            }
+ *            @endcode
+ *        -# Restoring global interrupts example:
+ *            @code
+ *            void global_interrupts_restore(void)
+ *            {
+ *                plic_all_interrupt_restore();
+ *                core_mie_restore(g_mie_value);
+ *                core_restore_interrupt(g_mstatus_value);
+ *            }
+ *            @endcode
+ *    - WFI Example.
+ *      # Before entering WFI, set the wakeup source and turn off unneeded interrupts:
+ *          @code
+ *          plic_irqs_preprocess_for_wfi(1, FLD_MIE_MEIE); // disable all interrupts except MEIE.
+ *          plic_interrupt_enable(IRQ_SYSTIMER); // stimer wakeup.
+ *          core_entry_wfi_mode(); // enter wfi.
+ *          @endcode
+ *      # After WFI wakeup, clear the corresponding interrupt flag bit and restore other interrupts:
+ *          @code
+ *          core_entry_wfi_mode();
+ *          stimer_clr_irq_status(FLD_SYSTEM_IRQ); // clear stimer irq status.
+ *          plic_irqs_postprocess_for_wfi(); // restore interrupts.
+ *          @endcode
  */
 
 #ifndef  INTERRUPT_H
@@ -88,8 +119,8 @@
  */
 typedef struct
 {
-	unsigned char preempt_en;
-	unsigned char threshold;
+    unsigned char preempt_en;
+    unsigned char threshold;
 }preempt_config_t ;
 
 /**
@@ -263,20 +294,20 @@ void ISR_ENTRY_NAME(irq_num)(void) {                                            
  * @note  an interrupt occurs only when priority is greater than threshold
  */
 typedef enum{
-	IRQ_PRI_LEV0, /**< 0 indicates that no interrupt is generated. */
-	IRQ_PRI_LEV1,
-	IRQ_PRI_LEV2,
-	IRQ_PRI_LEV3,
+    IRQ_PRI_LEV0, /**< 0 indicates that no interrupt is generated. */
+    IRQ_PRI_LEV1,
+    IRQ_PRI_LEV2,
+    IRQ_PRI_LEV3,
 }irq_priority_e;
 
 /**
  * @brief target interrupt priority threshold. the larger the value, the higher the threshold. default threshold value is 0.
  */
 typedef enum{
-	IRQ_PRI_NUM0,
-	IRQ_PRI_NUM1,
-	IRQ_PRI_NUM2,
-	IRQ_PRI_NUM3,
+    IRQ_PRI_NUM0,
+    IRQ_PRI_NUM1,
+    IRQ_PRI_NUM2,
+    IRQ_PRI_NUM3,
 }irq_threshold_e;
 
 /**
@@ -286,7 +317,7 @@ typedef enum{
  */
 static inline void plic_set_feature (feature_e feature)
 {
-	reg_irq_feature = feature; /* set preempt and vector mode */
+    reg_irq_feature = feature; /* set preempt and vector mode */
 }
 
 /**
@@ -299,8 +330,8 @@ static inline void plic_set_feature (feature_e feature)
  */
 static inline void plic_preempt_feature_en (core_preempt_pri_e preempt_pri)
 {
-	reg_irq_feature |= FLD_FEATURE_PREEMPT_PRIORITY_INT_EN;
-	g_plic_preempt_en = preempt_pri;
+    reg_irq_feature |= FLD_FEATURE_PREEMPT_PRIORITY_INT_EN;
+    g_plic_preempt_en = preempt_pri;
 }
 
 /**
@@ -309,8 +340,8 @@ static inline void plic_preempt_feature_en (core_preempt_pri_e preempt_pri)
  */
 static inline void plic_preempt_feature_dis (void)
 {
-	reg_irq_feature &=(~ FLD_FEATURE_PREEMPT_PRIORITY_INT_EN);
-	g_plic_preempt_en=0;
+    reg_irq_feature &=(~ FLD_FEATURE_PREEMPT_PRIORITY_INT_EN);
+    g_plic_preempt_en=0;
 }
 
 
@@ -321,7 +352,7 @@ static inline void plic_preempt_feature_dis (void)
  */
 static inline void plic_set_pending (unsigned int src)
 {
-	reg_irq_pending(src)=BIT(src%32);
+    reg_irq_pending(src)=BIT(src%32);
 }
 
 /**
@@ -337,10 +368,10 @@ static inline void plic_set_threshold (irq_threshold_e threshold)
 /*the priority number in the threshold register will be saved to a preempted priority stack and the new priority number of the claimed interrupt will be written to the threshold register.
 when the mcu sends an interrupt completion message to the PLIC (plic_interrupt_complete()), the PLIC will restore(Hardware automatic operation) the highest priority number in the preempted priority stack back to the priority threshold register.
 it is possible that when hardware and software write threshold registers at the same time, there is a risk of software write failure, so turn off the global interrupt before software writes, and resume after writing*/
-	unsigned int r = core_interrupt_disable();
-	reg_irq_threshold=threshold;
+    unsigned int r = core_interrupt_disable();
+    reg_irq_threshold=threshold;
     fence_iorw; /* Hardware may change this value, fence IO ensures that software changes are valid. */
-	core_restore_interrupt(r);
+    core_restore_interrupt(r);
 }
 
 /**
@@ -355,7 +386,7 @@ it is possible that when hardware and software write threshold registers at the 
  */
 static inline void plic_set_priority (unsigned int src, irq_priority_e priority)
 {
-	reg_irq_src_priority(src)=priority;
+    reg_irq_src_priority(src)=priority;
 }
 
 
@@ -367,7 +398,7 @@ static inline void plic_set_priority (unsigned int src, irq_priority_e priority)
  */
 static inline void plic_interrupt_enable(unsigned int src)
 {
-	reg_irq_src(src) |= BIT(src%32);
+    reg_irq_src(src) |= BIT(src%32);
 }
 
 /**
@@ -380,7 +411,7 @@ static inline void plic_interrupt_enable(unsigned int src)
  */
 static inline void plic_interrupt_disable(unsigned int src)
 {
-	reg_irq_src(src) &= (~ BIT(src%32));
+    reg_irq_src(src) &= (~ BIT(src%32));
 }
 
 /**
@@ -392,7 +423,7 @@ static inline void plic_interrupt_disable(unsigned int src)
  */
 static inline void plic_interrupt_complete(unsigned int src)
 {
-	reg_irq_done = src;
+    reg_irq_done = src;
 }
 
 /**
@@ -401,6 +432,7 @@ static inline void plic_interrupt_complete(unsigned int src)
  * @note
  *          - For vector interrupt, the hardware will automatically claim an interrupt, in general, the software does not need to claim.
  *          - plic_interrupt_claim() and plic_interrupt_complete() must be used in pairs.
+ *          - If the corresponding interrupt has never been enabled, claim does not get the corresponding interrupt ID, and the interface returns 0.
  */
 static inline  unsigned int plic_interrupt_claim(void)
 {
@@ -461,5 +493,42 @@ _attribute_ram_code_sec_ void plic_isr(func_isr_t func, unsigned int src);
  *          - When global interrupt is enabled, the application does not need to call this interface, the hardware and interrupt service routine handle interrupt requests.
  */
 _attribute_ram_code_sec_ int plic_clr_all_request(void);
+
+/**
+ * @brief      This function serves to save and disable all PLIC interrupt sources.
+ * @return     none
+ * @note       plic_all_interrupt_save_and_disable and plic_all_interrupt_restore must be used in pairs.
+ */
+void plic_all_interrupt_save_and_disable(void);
+
+/**
+ * @brief      This function serves to restore and all PLIC interrupt sources.
+ * @return     none
+ * @note       plic_all_interrupt_save_and_disable and plic_all_interrupt_restore must be used in pairs.
+ */
+void plic_all_interrupt_restore(void);
+
+/**
+ * @brief      This function serves to save and disable interrupts, including the MIE bit of the MSTATUS register(depends on the first parameter,regardless of whether the global interrupt is enabled or not.), \n
+ *             MSIE, MTIE, and MEIE bits of the MIE register, and all PLIC interrupt sources.
+ * @param[in]  flag - Global interrupt disable flag, 1: disable, 0: not disable.
+ * @param[in]  mie - MSIE, MTIE, and MEIE Which one wakes up WFI.
+ * @note
+ *  - When the core is awoken by the taken interrupt and global interrupts enable, it will resume and start to execute from the corresponding interrupt service routine.
+ *  - When the core is awoken by the pending interrupt and global interrupts disable, it will resume and start to execute from the instruction after the WFI instruction.
+ *  - plic_irqs_preprocess_for_wfi and plic_irqs_postprocess_for_wfi must be used in pairs.
+ */
+void plic_irqs_preprocess_for_wfi(unsigned char flag, mie_e mie);
+
+/**
+ * @brief      This function serves to restore interrupts, including the MIE bit of the MSTATUS register, \n
+ *             MSIE, MTIE, and MEIE bits of the MIE register, and all PLIC interrupt sources.
+ * @return     none
+ * @note
+ *  - Make sure that the status flag of the corresponding interrupt is cleared before calling this interface.
+ *  - This function will enable PLIC interrupt so this interface cannot be called from the interrupt service routine.
+ *  - plic_irqs_preprocess_for_wfi and plic_irqs_postprocess_for_wfi must be used in pairs.
+ */
+void plic_irqs_postprocess_for_wfi(void);
 
 #endif

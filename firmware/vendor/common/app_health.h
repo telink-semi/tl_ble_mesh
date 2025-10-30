@@ -91,44 +91,48 @@ typedef enum{
 }mesh_fault_array_code_e;
 
 
-typedef struct{
+typedef struct __attribute__((packed)) {
 	u16 company_id;
 }mesh_health_fault_get_t;
-typedef struct{
+
+typedef struct __attribute__((packed)) {
 	u16 company_id;
 }mesh_health_clear_t;
-typedef struct{
+
+typedef struct __attribute__((packed)) {
 	u16 company_id;
 }mesh_health_clear_unrel_t;
-typedef struct{
+
+typedef struct __attribute__((packed)) {
 	u16 company_id;
 }mesh_health_clear_rel_t;
-typedef struct{
+
+typedef struct __attribute__((packed)) {
 	u8 test_id;
 	u16 company_id;
 }mesh_health_fault_test_t;
-typedef struct{
+
+typedef struct __attribute__((packed)) {
 	u8 test_id;
 	u16 company_id;
 }mesh_health_fault_status_unrel_t;
 
-extern u8 init_health_para();
-extern u8 mesh_health_poll_100ms();
+u8 init_health_para(void);
 
-extern int mesh_cmd_sig_health_cur_sts(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par);
-extern int mesh_cmd_sig_health_fault_sts(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par);
-extern int mesh_cmd_sig_fault_get(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par);
-extern int mesh_cmd_sig_fault_clr(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par);
-extern int mesh_cmd_sig_fault_clr_unrel(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par);
-extern int mesh_cmd_sig_fault_test(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par);
-extern int mesh_cmd_sig_fault_test_unrel(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par);
-extern int mesh_cmd_sig_period_get(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par);
-extern int mesh_cmd_sig_period_set(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par);
-extern int mesh_cmd_sig_period_set_unrel(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par);
-extern int mesh_cmd_sig_period_status(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par);
-extern int mesh_cmd_sig_attention_get(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par);
-extern int mesh_cmd_sig_attention_set(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par);
-extern int mesh_cmd_sig_attention_status(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par);
+int mesh_cmd_sig_health_cur_sts(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par);
+int mesh_cmd_sig_health_fault_sts(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par);
+int mesh_cmd_sig_fault_get(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par);
+int mesh_cmd_sig_fault_clr(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par);
+int mesh_cmd_sig_fault_clr_unrel(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par);
+int mesh_cmd_sig_fault_test(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par);
+int mesh_cmd_sig_fault_test_unrel(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par);
+int mesh_cmd_sig_period_get(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par);
+int mesh_cmd_sig_period_set(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par);
+int mesh_cmd_sig_period_set_unrel(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par);
+int mesh_cmd_sig_period_status(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par);
+int mesh_cmd_sig_attention_get(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par);
+int mesh_cmd_sig_attention_set(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par);
+int mesh_cmd_sig_attention_status(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par);
 
 int mesh_health_cur_fault_add(u8 fault);
 

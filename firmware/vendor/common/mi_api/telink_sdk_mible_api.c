@@ -279,7 +279,7 @@ mible_status_t telink_ble_mi_gap_adv_data_set(uint8_t const * p_data,
 }
 // user function ,and will call by the mi part 
 
-mible_status_t telink_ble_mi_adv_stop()
+mible_status_t telink_ble_mi_adv_stop(void)
 {
 	if(blc_ll_getCurrentState() == BLS_LINK_STATE_CONN){
 		return MI_ERR_INVALID_STATE;
@@ -577,7 +577,7 @@ mible_status_t telink_mi_timer_stop(void* timer_id)
 // record dispatch part 
 u32 flash_idx_adr = FLASH_ADR_MI_RECORD;
 u32 flash_idx_adr_cpy = FLASH_ADR_MI_RECORD_TMP;
-void telink_record_part_init()
+void telink_record_part_init(void)
 {
 	
 	uint8_t *p_buf = (u8 *)(&telink_record);
@@ -593,7 +593,7 @@ void telink_record_part_init()
 }
 
 u8 mi_ota_downing =0;
-unsigned char  mi_ota_is_busy()
+unsigned char  mi_ota_is_busy(void)
 {
 	if(mi_ota_downing){
 		return 1;
@@ -620,6 +620,9 @@ void mible_dfu_handler(mible_dfu_state_t state, mible_dfu_param_t *param)
     if(MIBLE_DFU_STATE_START == state){
 		#if (ZBIT_FLASH_WRITE_TIME_LONG_WORKAROUND_EN)
 		check_and_set_1p95v_to_zbit_flash();
+		#endif
+		#if APP_FLASH_PROTECTION_ENABLE
+		app_flash_protection_ota_begin();
 		#endif
         MI_LOG_INFO("state = MIBLE_DFU_STATE_START\n");
 		mi_ota_downing =1;
@@ -767,7 +770,7 @@ static int user_state_process(uint8_t event, void *data)
 	return 0;
 }
 
-void telink_mi_vendor_init()
+void telink_mi_vendor_init(void)
 {
 	mi_config_init();
 	mible_mesh_device_init();
@@ -792,7 +795,7 @@ u8 telink_write_flash(u32 *p_adr,u8 *p_buf,u8 len )
 	return TRUE;
 }
 
-u8 telink_record_clean_cpy()
+u8 telink_record_clean_cpy(void)
 {
 	u32 record_adr = FLASH_ADR_MI_RECORD;
 	u32 record_adr_cpy = FLASH_ADR_MI_RECORD_TMP;
@@ -1040,7 +1043,7 @@ mible_status_t telink_mi_task_post(mible_handler_t handler, void *arg)
 		return MI_SUCCESS;
 	}
 }
-mible_status_t telink_mi_task_exec()
+mible_status_t telink_mi_task_exec(void)
 {
 	// pull the function pointer part 
 	mi_task_fun_t task_fun;
@@ -1053,10 +1056,10 @@ mible_status_t telink_mi_task_exec()
 	}
 	return MI_SUCCESS;
 }
-void telink_mible_ota_start()
+void telink_mible_ota_start(void)
 {}
 
-void telink_mible_ota_end()
+void telink_mible_ota_end(void)
 {}
 
 void telink_mible_nvm_write(void * p_data, uint32_t length, uint32_t address)
@@ -1074,7 +1077,7 @@ void telink_mible_upgrade_firmware(void)
 }
 
 // set the button part 
-void mi_testboard_init()
+void mi_testboard_init(void)
 {
 	gpio_set_func(GPIO_PD2,AS_GPIO);
 	gpio_set_input_en(GPIO_PD2,1);// wait to detect
@@ -1085,7 +1088,7 @@ void mi_testboard_init()
 	gpio_set_output_en(GPIO_PC4,1);
 	gpio_write(GPIO_PC4,0);
 }
-void mi_detect_reset_proc()
+void mi_detect_reset_proc(void)
 {
 	// demo code to read the io part 
 	if(!gpio_read(GPIO_PD2)){
@@ -1095,7 +1098,7 @@ void mi_detect_reset_proc()
 	}	
 }
 
-u8 mi_api_loop_run()
+u8 mi_api_loop_run(void)
 {
 	mible_tasks_exec();// must
 	mible_mesh_device_main_thread();// must
@@ -1351,7 +1354,7 @@ int soft_timer_proc_mi_beacon(void)
 	}
 }
 
-void mi_mesh_sleep_init()
+void mi_mesh_sleep_init(void)
 {
 	#if LPN_CONTROL_EN
 	// only in the adv mode will update the tick part .
@@ -1366,7 +1369,7 @@ void mi_mesh_sleep_init()
 	
 }
 
-u8 mi_mesh_sleep_time_exceed_adv_iner()
+u8 mi_mesh_sleep_time_exceed_adv_iner(void)
 {
 	if(clock_time_exceed(mi_mesh_sleep_time.last_tick,(MI_RUN_INTERVAL+MI_SLEEP_INTERVAL)*1000)){//1.26s
 		return 1;
@@ -1402,7 +1405,7 @@ void mi_mesh_state_set(u8 state)
 	}
 }
 
-u8 mi_mesh_get_state()
+u8 mi_mesh_get_state(void)
 {
 	return mi_busy_state;
 }
@@ -1423,7 +1426,7 @@ void mesh_inter_cmd_proc(u8 en)
 	}
 }
 
-void mi_mesh_lowpower_loop()
+void mi_mesh_lowpower_loop(void)
 {
 	if(du_ota_get_flag()){
 		#if LPN_FAST_OTA_EN
@@ -1485,7 +1488,7 @@ void mi_mesh_lowpower_loop()
 }
 
 	#else
-void mi_mesh_lowpower_loop()
+void mi_mesh_lowpower_loop(void)
 {
 	if(blc_ll_getCurrentState() == BLS_LINK_STATE_CONN || mi_mesh_get_state()||du_ota_reboot_flag){ // in the ble connection mode ,it will not trigger the deep mode ,and stop the mesh adv sending part
 		bls_pm_setSuspendMask (SUSPEND_DISABLE);

@@ -91,7 +91,7 @@ int ismemzero4(unsigned int a[], unsigned int wordLen)
 #endif
 
 int ismemf4(void *data, unsigned int len){
-	int *p = (int*)data;
+	unsigned int *p = (unsigned int*)data;
 	len = len >> 2;
 	for(unsigned int i = 0; i < len; ++i){
 		if(*p != 0xffffffff){
@@ -125,18 +125,18 @@ void *memset(void * d, int c, unsigned int  n)
 _attribute_ram_code_sec_noinline_
 void *memcpy(void * des_ptr, const void * src_ptr, unsigned int n)
 {
-    smemcpy(des_ptr, (void *)src_ptr, n);
+    smemcpy(des_ptr, (const void *)src_ptr, n);
 	return des_ptr;
 }
 
 _attribute_ram_code_sec_noinline_
 int memcmp(const void *_s1, const void *_s2, unsigned int _n)
 {
-    return smemcmp((void *)_s1, (void *)_s2, _n);
+    return smemcmp((const void *)_s1, (const void *)_s2, _n);
 }
 
 _attribute_ram_code_sec_
 unsigned int strlen(const char *str) 
 {
-	return tlk_strlen((char *)str);
+	return tlk_strlen((const char *)str);
 }

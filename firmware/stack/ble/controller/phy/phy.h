@@ -29,10 +29,10 @@
 
 /**
  * @brief      this function is used to initialize 2M/Coded PHY  feature
- * @param	   none
+ * @param      none
  * @return     none
  */
-void		blc_ll_init2MPhyCodedPhy_feature(void);
+void        blc_ll_init2MPhyCodedPhy_feature(void);
 
 
 #endif /* PHY_H_ */

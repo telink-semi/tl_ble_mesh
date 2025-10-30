@@ -1,0 +1,95 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<document type="com.apple.InterfaceBuilder3.CocoaTouch.XIB" version="3.0" toolsVersion="32700.99.1234" targetRuntime="iOS.CocoaTouch" propertyAccessControl="none" useAutolayout="YES" useTraitCollections="YES" useSafeAreas="YES" colorMatched="YES">
+    <device id="retina6_12" orientation="portrait" appearance="light"/>
+    <dependencies>
+        <deployment identifier="iOS"/>
+        <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="22684"/>
+        <capability name="Safe area layout guides" minToolsVersion="9.0"/>
+        <capability name="System colors in document resources" minToolsVersion="11.0"/>
+        <capability name="documents saved in the Xcode 8 format" minToolsVersion="8.0"/>
+    </dependencies>
+    <objects>
+        <placeholder placeholderIdentifier="IBFilesOwner" id="-1" userLabel="File's Owner" customClass="NFCMiFareTagScanVC">
+            <connections>
+                <outlet property="detailLabel" destination="gJF-Sr-2d8" id="odi-La-5kW"/>
+                <outlet property="energyHarvestSwitchImageView" destination="5eR-LV-Ocy" id="s4a-Cu-OLc"/>
+                <outlet property="executeButton" destination="cau-lf-917" id="ZSu-ma-10N"/>
+                <outlet property="phoneImageView" destination="TdI-qZ-690" id="tie-G3-4Iy"/>
+                <outlet property="titleLabel" destination="3Fo-rc-uLa" id="9Au-Ug-XGL"/>
+                <outlet property="view" destination="i5M-Pr-FkT" id="sfx-zR-JGt"/>
+            </connections>
+        </placeholder>
+        <placeholder placeholderIdentifier="IBFirstResponder" id="-2" customClass="UIResponder"/>
+        <view clearsContextBeforeDrawing="NO" contentMode="scaleToFill" id="i5M-Pr-FkT">
+            <rect key="frame" x="0.0" y="0.0" width="393" height="852"/>
+            <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
+            <subviews>
+                <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="Press execute to scan" textAlignment="center" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="3Fo-rc-uLa">
+                    <rect key="frame" x="20" y="588.33333333333337" width="353" height="32.333333333333371"/>
+                    <fontDescription key="fontDescription" type="boldSystem" pointSize="27"/>
+                    <nil key="textColor"/>
+                    <nil key="highlightedColor"/>
+                </label>
+                <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" usesAttributedText="YES" lineBreakMode="tailTruncation" numberOfLines="0" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="gJF-Sr-2d8">
+                    <rect key="frame" x="20" y="650.66666666666663" width="353" height="77.333333333333371"/>
+                    <attributedString key="attributedText">
+                        <fragment>
+                            <string key="content">The NFC antenna is located on the slim top edge of your iPhone. Stand your iPhone on its top edge in the center of the NFC enabled device as close as possible and hold still during scanning.</string>
+                            <attributes>
+                                <font key="NSFont" metaFont="system"/>
+                                <paragraphStyle key="NSParagraphStyle" alignment="center" lineBreakMode="wordWrapping" baseWritingDirection="natural" lineSpacing="5" tighteningFactorForTruncation="0.0"/>
+                            </attributes>
+                        </fragment>
+                    </attributedString>
+                    <nil key="highlightedColor"/>
+                </label>
+                <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="cau-lf-917">
+                    <rect key="frame" x="20" y="748" width="353" height="50"/>
+                    <color key="backgroundColor" white="1" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
+                    <constraints>
+                        <constraint firstAttribute="height" constant="50" id="Cwn-Fk-Q5V"/>
+                    </constraints>
+                    <state key="normal" title="Execute"/>
+                    <connections>
+                        <action selector="clickExecuteButton:" destination="-1" eventType="touchUpInside" id="Wo0-V6-Slf"/>
+                    </connections>
+                </button>
+                <imageView clipsSubviews="YES" userInteractionEnabled="NO" contentMode="scaleAspectFit" horizontalHuggingPriority="251" verticalHuggingPriority="251" image="energyHarvestSwitch" translatesAutoresizingMaskIntoConstraints="NO" id="5eR-LV-Ocy">
+                    <rect key="frame" x="30" y="233" width="80" height="80"/>
+                    <constraints>
+                        <constraint firstAttribute="height" constant="80" id="wJ1-E0-3Oz"/>
+                        <constraint firstAttribute="width" constant="80" id="ymt-Fz-gLW"/>
+                    </constraints>
+                </imageView>
+                <imageView clipsSubviews="YES" userInteractionEnabled="NO" contentMode="scaleAspectFit" horizontalHuggingPriority="251" verticalHuggingPriority="251" fixedFrame="YES" image="phone" translatesAutoresizingMaskIntoConstraints="NO" id="TdI-qZ-690">
+                    <rect key="frame" x="198" y="223" width="150" height="150"/>
+                    <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
+                </imageView>
+            </subviews>
+            <viewLayoutGuide key="safeArea" id="Q5M-cg-NOt"/>
+            <color key="backgroundColor" systemColor="systemBackgroundColor"/>
+            <constraints>
+                <constraint firstItem="5eR-LV-Ocy" firstAttribute="leading" secondItem="Q5M-cg-NOt" secondAttribute="leading" constant="30" id="0DN-ek-ey6"/>
+                <constraint firstItem="cau-lf-917" firstAttribute="top" secondItem="gJF-Sr-2d8" secondAttribute="bottom" constant="20" id="2lA-9T-Z4P"/>
+                <constraint firstItem="cau-lf-917" firstAttribute="trailing" secondItem="3Fo-rc-uLa" secondAttribute="trailing" id="5K0-Lr-HGg"/>
+                <constraint firstItem="gJF-Sr-2d8" firstAttribute="leading" secondItem="3Fo-rc-uLa" secondAttribute="leading" id="Bir-yf-cY6"/>
+                <constraint firstItem="Q5M-cg-NOt" firstAttribute="bottom" secondItem="cau-lf-917" secondAttribute="bottom" constant="20" id="F4T-j1-gjC"/>
+                <constraint firstItem="5eR-LV-Ocy" firstAttribute="top" secondItem="Q5M-cg-NOt" secondAttribute="top" constant="130" id="RsE-li-id5"/>
+                <constraint firstItem="gJF-Sr-2d8" firstAttribute="top" secondItem="3Fo-rc-uLa" secondAttribute="bottom" constant="30" id="bKg-wk-9pd"/>
+                <constraint firstItem="cau-lf-917" firstAttribute="leading" secondItem="Q5M-cg-NOt" secondAttribute="leading" constant="20" id="hc9-WO-A8H"/>
+                <constraint firstItem="gJF-Sr-2d8" firstAttribute="trailing" secondItem="3Fo-rc-uLa" secondAttribute="trailing" id="ke7-LC-klI"/>
+                <constraint firstItem="cau-lf-917" firstAttribute="leading" secondItem="3Fo-rc-uLa" secondAttribute="leading" id="o6k-tA-opJ"/>
+                <constraint firstItem="Q5M-cg-NOt" firstAttribute="trailing" secondItem="cau-lf-917" secondAttribute="trailing" constant="20" id="xaP-rO-1pp"/>
+            </constraints>
+            <simulatedNavigationBarMetrics key="simulatedTopBarMetrics" prompted="NO"/>
+            <point key="canvasLocation" x="35.877862595419849" y="19.718309859154932"/>
+        </view>
+    </objects>
+    <resources>
+        <image name="energyHarvestSwitch" width="100" height="100"/>
+        <image name="phone" width="100" height="100"/>
+        <systemColor name="systemBackgroundColor">
+            <color white="1" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
+        </systemColor>
+    </resources>
+</document>

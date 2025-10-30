@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<document type="com.apple.InterfaceBuilder3.CocoaTouch.XIB" version="3.0" toolsVersion="22155" targetRuntime="iOS.CocoaTouch" propertyAccessControl="none" useAutolayout="YES" useTraitCollections="YES" useSafeAreas="YES" colorMatched="YES">
+<document type="com.apple.InterfaceBuilder3.CocoaTouch.XIB" version="3.0" toolsVersion="32700.99.1234" targetRuntime="iOS.CocoaTouch" propertyAccessControl="none" useAutolayout="YES" useTraitCollections="YES" useSafeAreas="YES" colorMatched="YES">
     <device id="retina6_12" orientation="portrait" appearance="light"/>
     <dependencies>
         <deployment identifier="iOS"/>
-        <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="22131"/>
+        <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="22685"/>
         <capability name="Safe area layout guides" minToolsVersion="9.0"/>
         <capability name="System colors in document resources" minToolsVersion="11.0"/>
         <capability name="documents saved in the Xcode 8 format" minToolsVersion="8.0"/>
@@ -28,8 +28,8 @@
                                     <constraint firstAttribute="width" constant="24" id="eWe-Nm-kxy"/>
                                 </constraints>
                             </imageView>
-                            <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="setting name" textAlignment="natural" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="QSC-Kv-xSm">
-                                <rect key="frame" x="54" y="0.0" width="252" height="60"/>
+                            <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="setting name" textAlignment="natural" lineBreakMode="tailTruncation" numberOfLines="0" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="QSC-Kv-xSm">
+                                <rect key="frame" x="54" y="20" width="234" height="20"/>
                                 <fontDescription key="fontDescription" type="system" pointSize="15"/>
                                 <nil key="textColor"/>
                                 <nil key="highlightedColor"/>
@@ -44,14 +44,13 @@
                         </subviews>
                         <color key="backgroundColor" systemColor="systemBackgroundColor"/>
                         <constraints>
-                            <constraint firstItem="QSC-Kv-xSm" firstAttribute="top" secondItem="zP5-Rn-MDI" secondAttribute="top" id="0uy-VJ-e9N"/>
-                            <constraint firstAttribute="bottom" secondItem="OQZ-I7-g9b" secondAttribute="bottom" constant="18" id="Ak4-sG-PiG"/>
-                            <constraint firstAttribute="trailing" secondItem="QSC-Kv-xSm" secondAttribute="trailing" id="VqQ-Ff-3Sq"/>
-                            <constraint firstAttribute="bottom" secondItem="QSC-Kv-xSm" secondAttribute="bottom" id="XtC-hG-glw"/>
+                            <constraint firstItem="QSC-Kv-xSm" firstAttribute="top" secondItem="zP5-Rn-MDI" secondAttribute="top" constant="20" id="0uy-VJ-e9N"/>
+                            <constraint firstAttribute="bottom" secondItem="QSC-Kv-xSm" secondAttribute="bottom" constant="20" id="XtC-hG-glw"/>
+                            <constraint firstItem="hDu-Gd-LDD" firstAttribute="leading" secondItem="QSC-Kv-xSm" secondAttribute="trailing" id="Zex-Gp-TbU"/>
                             <constraint firstItem="QSC-Kv-xSm" firstAttribute="leading" secondItem="OQZ-I7-g9b" secondAttribute="trailing" constant="10" id="i2Y-5V-84D"/>
                             <constraint firstItem="hDu-Gd-LDD" firstAttribute="centerY" secondItem="zP5-Rn-MDI" secondAttribute="centerY" id="n1X-c3-JNz"/>
+                            <constraint firstItem="OQZ-I7-g9b" firstAttribute="centerY" secondItem="zP5-Rn-MDI" secondAttribute="centerY" id="uhw-Mk-2Or"/>
                             <constraint firstItem="OQZ-I7-g9b" firstAttribute="leading" secondItem="zP5-Rn-MDI" secondAttribute="leading" constant="20" id="wzg-ob-nW5"/>
-                            <constraint firstItem="OQZ-I7-g9b" firstAttribute="top" secondItem="zP5-Rn-MDI" secondAttribute="top" constant="18" id="x2Z-9X-Pbb"/>
                             <constraint firstAttribute="trailing" secondItem="hDu-Gd-LDD" secondAttribute="trailing" constant="10" id="zTX-Si-TYb"/>
                         </constraints>
                     </view>

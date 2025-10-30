@@ -120,7 +120,7 @@ u8 con_sec_data[16];
 
 #if(DUAL_VENDOR_EN)
 // default use mi_api's parameters, if device provisioned by spirit, reinit the parameters.
-void mesh_ais_global_var_set()
+void mesh_ais_global_var_set(void)
 {
     vendor_id_check_and_update();
 	#if 0 // can't change mac to ensure reconnect
@@ -140,7 +140,7 @@ void mesh_ais_global_var_set()
 
 void read_three_para_sha256_from_flash()
 {
-#if !WIN32
+#ifndef WIN32
 	u8 idx =0;
 	u32 product_id_flash;
 	flash_read_page(FLASH_ADR_THREE_PARA_ADR,sizeof(product_id_flash),(u8 *)(&product_id_flash));
@@ -171,7 +171,7 @@ void set_sha256_init_para_mode(u8 mode)
 	return ;
 }
 
-void set_dev_uuid_for_sha256()
+void set_dev_uuid_for_sha256(void)
 {
 	sha256_dev_uuid_str dev_uuid;
 	sha256_dev_uuid_str *p_uuid = &dev_uuid;
@@ -293,9 +293,9 @@ void calculate_sha256_to_create_pro_oob(u8 *pro_auth,u8 *random)
 	#endif
 }
 
-void calculate_sha256_to_create_static_oob()
+void calculate_sha256_to_create_static_oob(void)
 {
-	#if !WIN32		// confirm later
+	#ifndef WIN32		// confirm later
 	u8 sha256_out[32];
 	calculate_sha256_node_oob(sha256_out,dev_random);
 	mesh_set_dev_auth(sha256_out, 16);
@@ -303,12 +303,12 @@ void calculate_sha256_to_create_static_oob()
 }
 
 ais_gatt_auth_t ais_gatt_auth;
-void ais_gatt_auth_init()
+void ais_gatt_auth_init(void)
 {
 	ais_gatt_auth.auth_ok = 0;
 }
 
-int ais_auth_cipher(ais_msg_t *p_ais_msg)
+int ais_auth_cipher(u16 connHandle, ais_msg_t *p_ais_msg)
 {
 	ais_msg_t ais_msg_result;
 	memset(&ais_msg_result, 0x00, sizeof(ais_msg_result));		
@@ -317,7 +317,7 @@ int ais_auth_cipher(ais_msg_t *p_ais_msg)
 	ais_msg_result.frame_seq = ais_msg_result.frame_total = 0;
 	ais_msg_result.length = 0x10;
 	memcpy(ais_msg_result.data, p_ais_msg->data, 16);
-	return blc_gatt_pushHandleValueIndicate(BLS_HANDLE_MIN, AIS_INDICATE_HANDLE, (u8 *)&ais_msg_result, OFFSETOF(ais_msg_t, data)+16);
+	return blc_gatt_pushHandleValueIndicate(connHandle, AIS_INDICATE_HANDLE, (u8 *)&ais_msg_result, OFFSETOF(ais_msg_t, data)+16);
 }
 
 AES_ctx ais_aes_ctx;
@@ -328,6 +328,10 @@ int ais_write_pipe(u16 conn_handle, void *p)
 int ais_write_pipe(void *p)
 #endif
 {
+	#if !BLE_MULTIPLE_CONNECTION_ENABLE
+	u16 conn_handle = BLS_CONN_HANDLE;
+	#endif
+		
 	rf_packet_att_data_t *req = (rf_packet_att_data_t*)p;
 	ais_msg_t *ais_p = (ais_msg_t *)req->dat;
 
@@ -349,7 +353,7 @@ int ais_write_pipe(void *p)
 		memcpy(ais_gatt_auth.ble_key, sha256_out, 16);
 
 		aes_cbc_encrypt(ais_p->data, 16, &ais_aes_ctx, ais_gatt_auth.ble_key, iv);
-		ais_auth_cipher(ais_p);
+		ais_auth_cipher(conn_handle, ais_p);
 	}
 	else if(AIS_AUTH_CHECK == ais_p->msg_type){
 		ais_p->msg_type = AIS_AUTH_RESULT;
@@ -361,7 +365,8 @@ int ais_write_pipe(void *p)
 			ais_p->data[0] = 0;	  // 0 means success
 			ais_gatt_auth.auth_ok = 1;
 		}
-		return blc_gatt_pushHandleValueIndicate(BLS_HANDLE_MIN, AIS_INDICATE_HANDLE, (u8 *)req->dat, OFFSETOF(ais_msg_t, data)+1);
+		
+		return blc_gatt_pushHandleValueIndicate(conn_handle, AIS_INDICATE_HANDLE, (u8 *)req->dat, OFFSETOF(ais_msg_t, data)+1);
 	}
 	return 0;
 }
@@ -420,6 +425,9 @@ int ais_ota_req(u8 *p)
 	if(ais_gatt_auth.auth_ok){	
 #if (ZBIT_FLASH_WRITE_TIME_LONG_WORKAROUND_EN)
 		check_and_set_1p95v_to_zbit_flash();
+#endif
+#if APP_FLASH_PROTECTION_ENABLE
+		app_flash_protection_ota_begin();
 #endif
 		ais_msg_rsp.enc_flag = 1;
 		AES128_pkcs7_padding(ais_msg_rsp.data, sizeof(ais_ota_rsp_t), ais_msg_rsp.data);
@@ -564,8 +572,8 @@ int ais_otaWrite(void * p)
 }
 #else
 void set_sha256_init_para_mode(u8 mode){}
-void set_dev_uuid_for_sha256(){}
-void calculate_sha256_to_create_static_oob(){}
+void set_dev_uuid_for_sha256(void){}
+void calculate_sha256_to_create_static_oob(void){}
 
 #endif
 void create_sha256_input_string(char *p_input,u8 *pid,u8 *p_mac,u8 *p_secret)
@@ -631,7 +639,7 @@ void ali_new_create_sha256_input_string(char *p_input,u8 *pid,u8 *p_mac,u8 *p_se
 	}
 }
 
-void calculate_auth_value()
+void calculate_auth_value(void)
 {
 	static u8 ali_input_string[87];
 	static u8 ali_output_sha[32];

@@ -102,7 +102,7 @@ void friend_cmd_send_fn(u8 lpn_idx, u8 op)  // always need.
 // @ par: len:  from "trans_par_val"
 void mesh_friend_logmsg(mesh_cmd_bear_t *p_bear_big, u8 len)
 {
-	#if (DEBUG_PROXY_FRIEND_SHIP && WIN32)
+	#if (DEBUG_PROXY_FRIEND_SHIP && defined(WIN32))
 	extern u8 log_en_lpn1,log_en_lpn2;
 	u16 adr_dst = p_bear_big->nw.dst;
 	endianness_swap_u16((u8 *)&adr_dst);
@@ -115,7 +115,7 @@ void mesh_friend_logmsg(mesh_cmd_bear_t *p_bear_big, u8 len)
 	#endif
 }
 
-void friend_subsc_list_add_adr(lpn_adr_list_t *adr_list_src, lpn_adr_list_t *adr_list_add, u32 cnt)
+void friend_subsc_list_add_adr(lpn_adr_list_t *adr_list_src, lpn_adr_list_t *adr_list_add, int cnt)
 {
     // should not use u16* as parameter,because it is not sure 2bytes aligned
     foreach(i,cnt){
@@ -131,7 +131,7 @@ void friend_subsc_list_add_adr(lpn_adr_list_t *adr_list_src, lpn_adr_list_t *adr
             foreach(k,SUB_LIST_MAX_LPN){
                 if(0 == adr_list_src->adr[k]){
                     adr_list_src->adr[k] = adr_list_add->adr[i];
-					#if (MD_DF_CFG_SERVER_EN && !FEATURE_LOWPOWER_EN && !WIN32)					
+					#if (MD_DF_CFG_SERVER_EN && !FEATURE_LOWPOWER_EN && !defined(WIN32))					
 					directed_forwarding_solication_start(mesh_key.netkey_sel_dec, (mesh_ctl_path_request_solication_t *)&adr_list_src->adr[k], 1);
 					#endif
 					break;
@@ -142,7 +142,7 @@ void friend_subsc_list_add_adr(lpn_adr_list_t *adr_list_src, lpn_adr_list_t *adr
 }
 
 // use 'inline' should be better. 
-void friend_subsc_list_rmv_adr(lpn_adr_list_t *adr_list_src, lpn_adr_list_t *adr_list_rmv, u32 cnt)
+void friend_subsc_list_rmv_adr(lpn_adr_list_t *adr_list_src, lpn_adr_list_t *adr_list_rmv, int cnt)
 {
     // should not use u16* as parameter,because it is not sure 2bytes aligned
     foreach(i,cnt){
@@ -163,7 +163,7 @@ void friend_cmd_send_clear(u16 adr_dst, u8 *par, u32 len)
 
 
 #if TEST_CASE_HBS_BV_05_EN
-void friend_add_special_grp_addr()
+void friend_add_special_grp_addr(void)
 {
 	u16 sub_adr = 0xc100;
 	friend_subsc_list_add_adr(fn_other_par[0].SubsList, &sub_adr, 1);
@@ -171,7 +171,7 @@ void friend_add_special_grp_addr()
 }
 #endif
 
-void fn_quick_send_adv()
+void fn_quick_send_adv(void)
 {
 #ifndef WIN32
 	u32 r = irq_disable(); // should be disable, otherwise cause too much delay.(bltParam.adv_scanReq_connReq will be true and return from irq_blt_sdk_handler directedly if interrupt trigger)
@@ -415,7 +415,7 @@ void friend_cmd_send_subsc_conf(u16 adr_dst, u8 transNo)
 u8 fn2lpn_no_retransmit = 0;
 int mesh_tx_cmd_add_packet_fn2lpn(u8 *p_bear)
 {
-    #if WIN32	// WIN32 can't use mesh_adv_fifo_fn2lpn, because not call app_advertise_prepare_handler_
+    #ifdef WIN32	// WIN32 can't use mesh_adv_fifo_fn2lpn, because not call app_advertise_prepare_handler_
     use_mesh_adv_fifo_fn2lpn = 0;
     return mesh_tx_cmd_add_packet(p_bear);
     #else
@@ -534,7 +534,7 @@ void friend_ship_disconnect_fn(u8 lpn_idx, int type)
     mesh_friend_ship_clear_FN(lpn_idx);
 }
 
-void mesh_friend_ship_init_all()
+void mesh_friend_ship_init_all(void)
 {
     foreach(i,g_max_lpn_num){
         mesh_friend_ship_clear_FN(i);
@@ -562,7 +562,7 @@ int is_in_mesh_friend_st_fn(u8 lpn_idx)
 }
 
 #if GATEWAY_ENABLE
-int is_in_mesh_friend_st_fn_all()
+int is_in_mesh_friend_st_fn_all(void)
 {
 	for(int i=0;i<MAX_LPN_NUM;i++){
 		if(is_in_mesh_friend_st_fn(i)){
@@ -1018,7 +1018,7 @@ MYFIFO_INIT(mesh_adv_fifo_fn2lpn, (sizeof(mesh_cmd_bear_t)+DELTA_EXTEND_AND_NORM
 
 #endif
 
-void mesh_feature_set_fn(){
+void mesh_feature_set_fn(void){
     #if FRI_SAMPLE_EN
 	friend_ship_sample_message_test();
     #else
@@ -1077,7 +1077,7 @@ u32 get_RecWin_connected()
 }
 #endif
 
-u8 mesh_get_fn_cache_size_log_cnt()
+u8 mesh_get_fn_cache_size_log_cnt(void)
 {
     return (1<<FN_CACHE_SIZE_LOG);
 }
@@ -1102,7 +1102,7 @@ void friend_ship_disconnect_cb_fn(u8 lpn_idx, int type)
 }
 
 
-void mesh_global_var_init_fn_buf()
+void mesh_global_var_init_fn_buf(void)
 {
 	foreach(i,MAX_LPN_NUM){
 		mesh_fri_cache_fifo[i].size = (sizeof(mesh_fri_cache_fifo_b[0])/(1 << FN_CACHE_SIZE_LOG));
@@ -1121,7 +1121,7 @@ mesh_fri_ship_other_t fn_other_par[MAX_LPN_NUM];// = {0};
 void mesh_iv_update_start_poll_fn(u8 iv_update_by_sno, u8 beacon_iv_update_pkt_flag){}
 u16 mesh_group_match_friend(u16 adr){return 0;}
 int mesh_tx_cmd_add_packet_fn2lpn(u8 *p_bear){return -1;}
-void mesh_friend_ship_init_all(){}
+void mesh_friend_ship_init_all(void){}
 u32 get_poll_timeout_fn(u16 lpn_adr){return 0;}
 u16 mesh_mac_match_friend(u16 adr){return 0;}
 mesh_fri_ship_other_t * mesh_fri_cmd2cache(u8 *p_bear_big, u8 len_nw, u8 adv_type, u8 trans_par_val, u16 F2L_bit){return 0;}

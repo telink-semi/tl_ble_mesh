@@ -520,7 +520,7 @@
 /// @param transitionTime transitionTime value of SchedulerModel Object.
 - (void)setTransitionTime:(UInt64)transitionTime {
     UInt64 tem = 0xFF;
-    _schedulerData = (_schedulerData & (~tem<<56)) | ((transitionTime & tem) << 56);
+    _schedulerData = (_schedulerData & (~(tem<<56))) | ((transitionTime & tem) << 56);
 }
 
 @end
@@ -3292,7 +3292,6 @@
     UInt16 _address;
 }
 
-
 - (instancetype)init{
     /// Use the init method of the parent class to initialize some properties of the parent class of the subclass instance.
     if (self = [super init]) {
@@ -3332,7 +3331,6 @@
     }
     return self;
 }
-
 
 - (instancetype)initWithNode:(SigNodeModel *)node {
     /// Use the init method of the parent class to initialize some properties of the parent class of the subclass instance.
@@ -3378,6 +3376,22 @@
     return self;
 }
 
+- (instancetype)initEnOceanNodeWithEnOceanInfo:(EnOceanInfo *)info {
+    if (self = [super init]) {
+        UInt16 unicastAddress = [SigDataSource.share getProvisionAddressWithElementCount:1];
+        [self setAddress:unicastAddress];
+        _macAddress = info.staticSourceAddress;
+        _pid = [SigHelper.share getUint16String:info.productId];//model.pid = 字符串0xe215就是对的
+        _securityKey = info.securityKey;
+        _orderingCode = info.orderingCode;
+        _stepCodeRevision = info.stepCodeRevision;
+        _NFCPINCode = info.NFCPINCode;
+        _serialNumber = info.serialNumber;
+        _buttonInfo = [[EnOceanButtonInfo alloc] initWithOldEnOceanButtonInfo:info.buttonInfo];
+    }
+    return self;
+}
+
 - (nonnull id)copyWithZone:(nullable NSZone *)zone {
     SigNodeModel *device = [[[self class] alloc] init];
     device.features = self.features;
@@ -3416,6 +3430,14 @@
     device.excluded = self.excluded;
     device.directControlStatus = self.directControlStatus;
     device.onDemandPrivateGATTProxy = self.onDemandPrivateGATTProxy;
+    
+    device.securityKey = self.securityKey;
+    device.orderingCode = self.orderingCode;
+    device.stepCodeRevision = self.stepCodeRevision;
+    device.NFCPINCode = self.NFCPINCode;
+    device.serialNumber = self.serialNumber;
+    device.buttonInfo = [[EnOceanButtonInfo alloc] initWithOldEnOceanButtonInfo:self.buttonInfo];
+
     return device;
 }
 
@@ -3453,6 +3475,11 @@
 /// Return whether the node is a ambient light sensor.
 - (BOOL)isAmbientLightSensor {
     return [self hasPropertyID:DevicePropertyID_PresentAmbientLightLevel];
+}
+
+/// Return whether the node is a EnOcean switch device.
+- (BOOL)isEnOceanDevice {
+    return [_pid isEqualToString:kDefaultEnOceanPID];
 }
 
 /// Return whether the node has this propertyID.
@@ -3540,7 +3567,7 @@
 }
 
 - (UInt8)getElementCount{
-    UInt8 tem = 2;
+    UInt8 tem = 1;
     if (self.elements && self.elements.count != 0) {
         tem = (UInt8)self.elements.count;
     }
@@ -3898,6 +3925,25 @@
         }
         dict[@"sensorCadenceArray"] = array;
     }
+    //EnOcean
+    if (_securityKey) {
+        dict[securityKeyKey] = _securityKey;
+    }
+    if (_orderingCode) {
+        dict[orderingCodeKey] = _orderingCode;
+    }
+    if (_stepCodeRevision) {
+        dict[stepCodeRevisionKey] = _stepCodeRevision;
+    }
+    if (_NFCPINCode) {
+        dict[NFCPINCodeKey] = _NFCPINCode;
+    }
+    if (_serialNumber) {
+        dict[serialNumberKey] = _serialNumber;
+    }
+    if (_buttonInfo) {
+        dict[ButtonInfo] = [_buttonInfo getDictionaryOfEnOceanButtonInfo];
+    }
     return dict;
 }
 
@@ -4083,6 +4129,27 @@
             [sensorCadenceArray addObject:model];
         }
         _sensorCadenceArray = sensorCadenceArray;
+    }
+    //EnOcean
+    if ([allKeys containsObject:securityKeyKey]) {
+        _securityKey = dictionary[securityKeyKey];
+    }
+    if ([allKeys containsObject:orderingCodeKey]) {
+        _orderingCode = dictionary[orderingCodeKey];
+    }
+    if ([allKeys containsObject:stepCodeRevisionKey]) {
+        _stepCodeRevision = dictionary[stepCodeRevisionKey];
+    }
+    if ([allKeys containsObject:NFCPINCodeKey]) {
+        _NFCPINCode = dictionary[NFCPINCodeKey];
+    }
+    if ([allKeys containsObject:serialNumberKey]) {
+        _serialNumber = dictionary[serialNumberKey];
+    }
+    if ([allKeys containsObject:ButtonInfo]) {
+        EnOceanButtonInfo *info = [[EnOceanButtonInfo alloc] init];
+        [info setDictionaryToEnOceanButtonInfo:dictionary[ButtonInfo]];
+        _buttonInfo = info;
     }
 }
 
@@ -6513,4 +6580,398 @@
     return self;
 }
 
+@end
+
+
+@implementation EnOceanButtonItemInfo
+
+- (instancetype)init {
+    if (self = [super init]) {
+        _isActionMerge = NO;
+        _publishAddress = 0xFFFF;
+    }
+    return self;
+}
+
+- (instancetype)initWithOldEnOceanButtonItemInfo:(EnOceanButtonItemInfo *)itemInfo {
+    if (self = [super init]) {
+        _index = itemInfo.index;
+        _isActionMerge = itemInfo.isActionMerge;
+        _publishAddress = itemInfo.publishAddress;
+        _type = itemInfo.type;
+        _value = itemInfo.value;
+    }
+    return self;
+}
+
+/// get dictionary from EnOceanButtonItemInfo object.
+/// @returns return dictionary object.
+- (NSDictionary *)getDictionaryOfEnOceanButtonItemInfo {
+    NSMutableDictionary *dict = [NSMutableDictionary dictionary];
+    dict[Index] = @(_index);
+    dict[IsActionMerge] = [NSNumber numberWithBool:_isActionMerge];
+    dict[PublishAddress] = @(_publishAddress);
+    dict[Type] = @(_type);
+    dict[Value] = @(_value);
+    return dict;
+}
+
+/// Set dictionary to EnOceanButtonItemInfo object.
+/// @param dictionary EnOceanButtonItemInfo dictionary object.
+- (void)setDictionaryToEnOceanButtonItemInfo:(NSDictionary *)dictionary {
+    if (dictionary == nil || dictionary.allKeys.count == 0) {
+        return;
+    }
+    NSArray *allKeys = dictionary.allKeys;
+    if ([allKeys containsObject:Index]) {
+        _index = [dictionary[Index] intValue];
+    }
+    if ([allKeys containsObject:IsActionMerge]) {
+        _isActionMerge = [dictionary[IsActionMerge] boolValue];
+    }
+    if ([allKeys containsObject:PublishAddress]) {
+        _publishAddress = [dictionary[PublishAddress] intValue];
+    }
+    if ([allKeys containsObject:Type]) {
+        _type = [dictionary[Type] intValue];
+    }
+    if ([allKeys containsObject:Value]) {
+        _value = [dictionary[Value] intValue];
+    }
+}
+
+- (NSString *)getButtonItemNameString {
+    if (_isActionMerge) {
+        return [NSString stringWithFormat:@"Key%d + Key%d", _index, _index+1];
+    } else {
+        return [NSString stringWithFormat:@"Key%d", _index];
+    }
+}
+
+- (NSString *)getButtonItemActionString {
+    NSString *tem = @"Action: UNKNOWN";
+    switch (_type) {
+        case EnOceanButtonItemType_OnOff:
+            if (_isActionMerge) {
+                tem = [NSString stringWithFormat:@"Action:\tKey%d:%@, Key%d:%@", _index, _value == 0 ? @"OFF":@"ON", _index+1, _value == 0 ? @"ON":@"OFF"];
+            } else {
+                tem = [NSString stringWithFormat:@"Action:\tKey%d:%@", _index, _value == 0 ? @"OFF":@"ON"];
+            }
+            break;
+        case EnOceanButtonItemType_Light:
+            if (_isActionMerge) {
+                tem = [NSString stringWithFormat:@"Action:\tKey%d:light%@%d, Key%d:light%@%d", _index, _value >= 0 ? @"+":@"-", abs(_value), _index+1, _value < 0 ? @"+":@"-", abs(_value)];
+            } else {
+                tem = [NSString stringWithFormat:@"Action:\tKey%d:light%@%d", _index, _value >= 0 ? @"+":@"-", abs(_value)];
+            }
+            break;
+        case EnOceanButtonItemType_CT:
+            if (_isActionMerge) {
+                tem = [NSString stringWithFormat:@"Action:\tKey%d:CT%@%d, Key%d:CT%@%d", _index, _value >= 0 ? @"+":@"-", abs(_value), _index+1, _value < 0 ? @"+":@"-", abs(_value)];
+            } else {
+                tem = [NSString stringWithFormat:@"Action:\tKey%d:CT%@%d", _index, _value >= 0 ? @"+":@"-", abs(_value)];
+            }
+            break;
+        case EnOceanButtonItemType_SceneRecall:
+            if (_isActionMerge) {
+                tem = @"No Action";
+            } else {
+                tem = [NSString stringWithFormat:@"Action:\tKey%d:%@", _index, _value == 0 ? @"No Action" : [NSString stringWithFormat:@"sceneId=0x%X", _value]];
+            }
+            break;
+        default:
+            break;
+    }
+    return tem;
+}
+
+@end
+
+
+@implementation EnOceanButtonInfo
+
+- (instancetype)init {
+    if (self = [super init]) {
+        _registerAddressList = [NSMutableArray array];
+        _buttonConfigList = [NSMutableArray array];
+        _actionLayoutType = EnOceanActionLayoutType_12_34;
+    }
+    return self;
+}
+
+- (instancetype)initWithOldEnOceanButtonInfo:(EnOceanButtonInfo *)info {
+    if (self = [super init]) {
+        _registerAddressList = [NSMutableArray arrayWithArray:info.registerAddressList];
+        NSMutableArray *mArray = [NSMutableArray array];
+        NSArray *array = [NSArray arrayWithArray:info.buttonConfigList];
+        for (EnOceanButtonItemInfo *item in array) {
+            [mArray addObject:[[EnOceanButtonItemInfo alloc] initWithOldEnOceanButtonItemInfo:item]];
+        }
+        _buttonConfigList = mArray;
+        _actionLayoutType = info.actionLayoutType;
+    }
+    return self;
+}
+
+/// get dictionary from EnOceanButtonInfo object.
+/// @returns return dictionary object.
+- (NSDictionary *)getDictionaryOfEnOceanButtonInfo {
+    NSMutableDictionary *dict = [NSMutableDictionary dictionary];
+    dict[RegisterAddressList] = _registerAddressList;
+    NSArray *array = [NSArray arrayWithArray:_buttonConfigList];
+    NSMutableArray *buttonConfigListDictArray = [NSMutableArray array];
+    for (EnOceanButtonItemInfo *info in array) {
+        [buttonConfigListDictArray addObject:info.getDictionaryOfEnOceanButtonItemInfo];
+    }
+    dict[ButtonConfigList] = buttonConfigListDictArray;
+    dict[ActionLayoutType] = @(_actionLayoutType);
+    return dict;
+}
+
+/// Set dictionary to EnOceanButtonInfo object.
+/// @param dictionary EnOceanButtonInfo dictionary object.
+- (void)setDictionaryToEnOceanButtonInfo:(NSDictionary *)dictionary {
+    if (dictionary == nil || dictionary.allKeys.count == 0) {
+        return;
+    }
+    NSArray *allKeys = dictionary.allKeys;
+    if ([allKeys containsObject:RegisterAddressList]) {
+        _registerAddressList = [NSMutableArray arrayWithArray:dictionary[RegisterAddressList]];
+    }
+    NSMutableArray *mArray = [NSMutableArray array];
+    if ([allKeys containsObject:ButtonConfigList]) {
+        for (NSDictionary *dict in dictionary[ButtonConfigList]) {
+            EnOceanButtonItemInfo *info = [[EnOceanButtonItemInfo alloc] init];
+            [info setDictionaryToEnOceanButtonItemInfo:dict];
+            [mArray addObject:info];
+        }
+    }
+    if ([allKeys containsObject:ActionLayoutType]) {
+        _actionLayoutType = [dictionary[ActionLayoutType] intValue];
+    }
+    _buttonConfigList = mArray;
+}
+
+@end
+
+
+@implementation EnOceanInfo
+
+-(instancetype)initWithQRCodeString:(NSString *)string {
+    if (self = [super init]) {
+        if (string && string.length > 0) {
+            // 使用+作为分隔符进行分割
+            NSArray *components = [string componentsSeparatedByString:@"+"];
+            // 遍历并打印分割后的字符串数组
+            for (NSString *component in components) {
+                if ([component hasPrefix:@"30S"]) {
+                    if (component.length > 3) {
+                        _staticSourceAddress = [component substringFromIndex:3];
+                    }
+                } else if ([component hasPrefix:@"Z"]) {
+                    if (component.length > 1) {
+                        _securityKey = [component substringFromIndex:1];
+                    }
+                } else if ([component hasPrefix:@"30P"]) {
+                    if (component.length > 3) {
+                        _orderingCode = [component substringFromIndex:3];
+                    }
+                } else if ([component hasPrefix:@"2P"]) {
+                    if (component.length > 2) {
+                        _stepCodeRevision = [component substringFromIndex:2];
+                    }
+                } else if ([component hasPrefix:@"31Z"]) {
+                    if (component.length > 3) {
+                        _NFCPINCode = [component substringFromIndex:3];
+                    }
+                } else if ([component hasPrefix:@"S"]) {
+                    if (component.length > 1) {
+                        _serialNumber = [component substringFromIndex:1];
+                    }
+                }
+            }
+            if (_staticSourceAddress == nil || _securityKey == nil) {
+                return nil;
+            }
+            [self addDefaultButtonConfigListWithActionLayoutType:EnOceanActionLayoutType_12_34];
+        }
+    }
+    return self;
+}
+
+- (void)addDefaultButtonConfigListWithActionLayoutType:(EnOceanActionLayoutType)actionLayoutType {
+    NSMutableArray *registerAddressList = nil;
+    if (_buttonInfo.registerAddressList.count > 0) {
+        registerAddressList = [NSMutableArray arrayWithArray:_buttonInfo.registerAddressList];
+    }
+    _buttonInfo = [[EnOceanButtonInfo alloc] init];
+    _buttonInfo.actionLayoutType = actionLayoutType;
+    _buttonInfo.registerAddressList = registerAddressList;
+    _productId = CFSwapInt16HostToBig([LibTools uint16FromBytes:[LibTools nsstringToHex:[_staticSourceAddress substringToIndex:4]]]);
+    if ([[_staticSourceAddress substringToIndex:4] isEqualToString:[kDefaultPinCode substringFromIndex:4]]) {
+        //4按钮开关
+        EnOceanButtonItemInfo *info1 = [[EnOceanButtonItemInfo alloc] init];
+        info1.value = 1;
+        info1.index = 0;
+        info1.type = EnOceanButtonItemType_OnOff;
+        EnOceanButtonItemInfo *info2 = [[EnOceanButtonItemInfo alloc] init];
+        info2.value = 0;
+        info2.index = 1;
+        info2.type = EnOceanButtonItemType_OnOff;
+        EnOceanButtonItemInfo *info3 = [[EnOceanButtonItemInfo alloc] init];
+        info3.value = 20;
+        info3.index = 2;
+        info3.type = EnOceanButtonItemType_Light;
+        EnOceanButtonItemInfo *info4 = [[EnOceanButtonItemInfo alloc] init];
+        info4.value = -20;
+        info4.index = 3;
+        info4.type = EnOceanButtonItemType_Light;
+        if (_buttonInfo.actionLayoutType == EnOceanActionLayoutType_1_2_3_4) {
+            _buttonInfo.buttonConfigList = [NSMutableArray arrayWithArray:@[info1, info2, info3, info4]];
+        } else if (_buttonInfo.actionLayoutType == EnOceanActionLayoutType_12_3_4) {
+            info1.isActionMerge = YES;
+            _buttonInfo.buttonConfigList = [NSMutableArray arrayWithArray:@[info1, info3, info4]];
+        } else if (_buttonInfo.actionLayoutType == EnOceanActionLayoutType_1_2_34) {
+            info3.isActionMerge = YES;
+            _buttonInfo.buttonConfigList = [NSMutableArray arrayWithArray:@[info1, info2, info3]];
+        } else if (_buttonInfo.actionLayoutType == EnOceanActionLayoutType_12_34) {
+            info1.isActionMerge = info3.isActionMerge = YES;
+            _buttonInfo.buttonConfigList = [NSMutableArray arrayWithArray:@[info1, info3]];
+        }
+    }
+}
+
+- (instancetype)initWithOldEnOceanInfo:(EnOceanInfo *)info {
+    if (self = [super init]) {
+        _staticSourceAddress = info.staticSourceAddress;
+        _securityKey = info.securityKey;
+        _orderingCode = info.orderingCode;
+        _stepCodeRevision = info.stepCodeRevision;
+        _NFCPINCode = info.NFCPINCode;
+        _serialNumber = info.serialNumber;
+        _deviceAddress = info.deviceAddress;
+        _buttonInfo = [[EnOceanButtonInfo alloc] initWithOldEnOceanButtonInfo:info.buttonInfo];
+        _productId = info.productId;
+    }
+    return self;
+}
+
+/// get dictionary from EnOceanInfo object.
+/// @returns return dictionary object.
+- (NSDictionary *)getDictionaryOfEnOceanInfo {
+    NSMutableDictionary *dict = [NSMutableDictionary dictionary];
+    dict[@"unicastAddress"] = @(self.deviceAddress);
+    dict[@"pid"] = [SigHelper.share getUint16String:self.productId];
+    dict[@"macAddress"] = [LibTools getMacStringWithMac:_staticSourceAddress];
+    dict[securityKeyKey] = _securityKey;
+    dict[orderingCodeKey] = _orderingCode;
+    dict[stepCodeRevisionKey] = _stepCodeRevision;
+    dict[NFCPINCodeKey] = _NFCPINCode;
+    dict[serialNumberKey] = _serialNumber;
+    dict[ButtonInfo] = [_buttonInfo getDictionaryOfEnOceanButtonInfo];
+    return dict;
+}
+
+/// Set dictionary to EnOceanInfo object.
+/// @param dictionary EnOceanInfo dictionary object.
+- (void)setDictionaryToEnOceanInfo:(NSDictionary *)dictionary {
+    if (dictionary == nil || dictionary.allKeys.count == 0) {
+        return;
+    }
+    NSArray *allKeys = dictionary.allKeys;
+    if ([allKeys containsObject:@"unicastAddress"]) {
+        _deviceAddress = [LibTools uint16From16String:dictionary[@"unicastAddress"]];
+    }
+    if ([allKeys containsObject:@"pid"]) {
+        _productId = [LibTools uint16From16String:dictionary[@"pid"]];
+    }
+    if ([allKeys containsObject:@"macAddress"]) {
+        NSString *mac = dictionary[@"macAddress"];
+        _staticSourceAddress = [mac stringByReplacingOccurrencesOfString:@":" withString:@""];
+    }
+    if ([allKeys containsObject:securityKeyKey]) {
+        _securityKey = dictionary[securityKeyKey];
+    }
+    if ([allKeys containsObject:orderingCodeKey]) {
+        _orderingCode = dictionary[orderingCodeKey];
+    }
+    if ([allKeys containsObject:stepCodeRevisionKey]) {
+        _stepCodeRevision = dictionary[stepCodeRevisionKey];
+    }
+    if ([allKeys containsObject:NFCPINCodeKey]) {
+        _NFCPINCode = dictionary[NFCPINCodeKey];
+    }
+    if ([allKeys containsObject:serialNumberKey]) {
+        _serialNumber = dictionary[serialNumberKey];
+    }
+    if ([allKeys containsObject:ButtonInfo]) {
+        NSDictionary *dict = dictionary[ButtonInfo];
+        EnOceanButtonInfo *info = [[EnOceanButtonInfo alloc] init];
+        [info setDictionaryToEnOceanButtonInfo:dict];
+        _buttonInfo = info;
+    }
+}
+
+@end
+
+
+@implementation MiFareReadCommand
+- (instancetype)initWithAddress:(UInt8)address {
+    if (self = [super init]) {
+        _commandCode = MiFareCommandCode_READ;
+        _address = address;
+    }
+    return self;
+}
+- (NSData *)getCommandParameters {
+    NSMutableData *data = [NSMutableData data];
+    UInt8 tem8 = _commandCode;
+    [data appendBytes:&tem8 length:1];
+    tem8 = _address;
+    [data appendBytes:&tem8 length:1];
+    return data;
+}
+@end
+
+
+@implementation MiFareWriteCommand
+- (instancetype)initWithAddress:(UInt8)address data:(NSData *)data {
+    if (self = [super init]) {
+        _commandCode = MiFareCommandCode_WRITE;
+        _address = address;
+        _data = data;
+    }
+    return self;
+}
+- (NSData *)getCommandParameters {
+    NSMutableData *data = [NSMutableData data];
+    UInt8 tem8 = _commandCode;
+    [data appendBytes:&tem8 length:1];
+    tem8 = _address;
+    [data appendBytes:&tem8 length:1];
+    if (_data.length > 0) {
+        [data appendData:_data];
+    }
+    return data;
+}
+@end
+
+
+@implementation MiFarePasswordAuthenticationCommand
+- (instancetype)initWithPasswordData:(NSData *)passwordData {
+    if (self = [super init]) {
+        _commandCode = MiFareCommandCode_PWD_AUTH;
+        _passwordData = passwordData;
+    }
+    return self;
+}
+- (NSData *)getCommandParameters {
+    NSMutableData *data = [NSMutableData data];
+    UInt8 tem8 = _commandCode;
+    [data appendBytes:&tem8 length:1];
+    if (_passwordData.length > 0) {
+        [data appendData:_passwordData];
+    }
+    return data;
+}
 @end

@@ -58,7 +58,7 @@
 
 //------------------vendor op end-------------------
 
-typedef struct{
+typedef struct __attribute__((packed)) {
 	u16 lightness;
 	u16 hue;
 	u16 sat;
@@ -67,59 +67,59 @@ typedef struct{
 	u8 delay;		// unit 5ms
 }mesh_cmd_light_hsl_set_t;
 
-typedef struct{
+typedef struct __attribute__((packed)) {
 	u16 lightness;
 	u16 hue;
 	u16 sat;
 	u8 remain_t;
 }mesh_cmd_light_hsl_st_t;
 
-typedef struct{
+typedef struct __attribute__((packed)) {
 	u16 hue;
 	u8 tid;
 	u8 transit_t;
 	u8 delay;		// unit 5ms
 }mesh_cmd_light_hue_set_t;
 
-typedef struct{
+typedef struct __attribute__((packed)) {
 	u16 present;
 	u16 target;
 	u8 remain_t;
 }mesh_cmd_light_hue_st_t;
 
-typedef struct{
+typedef struct __attribute__((packed)) {
 	u16 sat;
 	u8 tid;
 	u8 transit_t;
 	u8 delay;		// unit 5ms
 }mesh_cmd_light_sat_set_t;
 
-typedef struct{
+typedef struct __attribute__((packed)) {
 	u16 present;
 	u16 target;
 	u8 remain_t;
 }mesh_cmd_light_sat_st_t;
 
-typedef struct{
+typedef struct __attribute__((packed)) {
 	u16 lightness;
 	u16 hue;
 	u16 sat;
 }mesh_cmd_light_hsl_def_set_t;
 
-typedef struct{
+typedef struct __attribute__((packed)) {
 	u16 lightness;
 	u16 hue;
 	u16 sat;
 }mesh_cmd_light_hsl_def_st_t;
 
-typedef struct{
+typedef struct __attribute__((packed)) {
 	u16 hue_min;
 	u16 hue_max;
 	u16 sat_min;
 	u16 sat_max;
 }mesh_cmd_light_hsl_range_set_t;
 
-typedef struct{
+typedef struct __attribute__((packed)) {
 	u8 st;
 	u16 hue_min;
 	u16 hue_max;
