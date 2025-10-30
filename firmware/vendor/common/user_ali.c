@@ -31,7 +31,9 @@
 #include "proj_lib/mesh_crypto/aes_cbc.h"
 #include "vendor/common/mesh_node.h"
 #include "vendor/common/mesh_ota.h"
-
+#if DU_ENABLE
+#include "user_du.h"
+#endif
 
 const char num2char[17] = "0123456789abcdef";
 
@@ -186,7 +188,11 @@ void set_dev_uuid_for_sha256(void)
 	#if(MESH_USER_DEFINE_MODE == MESH_MI_SPIRIT_ENABLE)
 	memcpy(p_uuid->mac, con_mac_address, sizeof(tbl_mac));
 	#endif
+    #if DU_ULTRA_PROV_EN
+    p_uuid->uuid_ver = DU_SDK_VIRSION;
+    #else
 	p_uuid->uuid_ver = 1;
+    #endif
 	p_uuid->adv_flag = 0;
 	memcpy(prov_para.device_uuid,(u8 *)(p_uuid),sizeof(sha256_dev_uuid_str));
 }

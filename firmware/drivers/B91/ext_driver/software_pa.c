@@ -24,7 +24,7 @@
 #include "compiler.h"
 #include "software_pa.h"
 #include "../gpio.h"
-
+#include "drivers.h" // BLE_SRC_TELINK_MESH_EN
 
 _attribute_data_retention_sec_  rf_pa_callback_t  blc_rf_pa_cb = 0;
 
@@ -32,7 +32,7 @@ _attribute_ram_code_
 void app_rf_pa_handler(int type)
 {
 #if(PA_ENABLE)
-	u32 r = irq_disable();	// BLE_SRC_TELINK_MESH_EN, add irq disable should be better due to called in both main loop and irq.
+    u32 r = irq_disable();  // BLE_SRC_TELINK_MESH_EN, add irq disable should be better due to called in both main loop and irq.
 
     if(type == PA_TYPE_TX_ON){
         gpio_set_low_level(PA_RXEN_PIN);
@@ -47,7 +47,7 @@ void app_rf_pa_handler(int type)
         gpio_set_low_level(PA_TXEN_PIN);
     }
 
-	irq_restore(r); // BLE_SRC_TELINK_MESH_EN
+    irq_restore(r); // BLE_SRC_TELINK_MESH_EN
 #endif
 }
 

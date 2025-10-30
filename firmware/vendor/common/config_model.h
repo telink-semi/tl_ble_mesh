@@ -153,3 +153,14 @@ int mesh_cmd_sig_cfg_models_metadata_status(u8 *par, int par_len, mesh_cb_fun_pa
 #define mesh_cmd_sig_cfg_models_metadata_status							(0)
 #endif
 
+void share_model_sub_by_rx_cmd(u16 op, u16 ele_adr, u16 sub_adr, u16 dst_adr,u8 *uuid, u32 model_id, bool4 sig_model);
+
+typedef enum{
+	MODEL_SHARE_TYPE_NONE 					= 0,
+	MODEL_SHARE_TYPE_ONOFF_SERVER_EXTEND 	= 1,
+	MODEL_SHARE_TYPE_OTHERS_SERVER_EXTEND 	= 2,
+}model_share_type_e;
+model_share_type_e share_model_sub_onoff_server_extend(u16 op, u16 sub_adr, u8 *uuid, u16 ele_adr);
+int mesh_cmd_sig_cfg_model_sub_cb(u8 st,mesh_cfg_model_sub_set_t * p_sub_set,bool4 sig_model,u16 adr_src);
+u8 mesh_sub_search_ele_and_set(u16 op, u16 ele_adr, u16 sub_adr, u8 *uuid, u32 model_id, bool4 sig_model);
+

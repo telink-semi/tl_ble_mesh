@@ -23,10 +23,8 @@
  *
  *******************************************************************************************************/
 #pragma once
-#ifndef WIN32
-#include <stdbool.h>
-#include <stdint.h>
-#endif
+
+#include "common/types.h"
 #include "../user_config.h"
 
 #if NL_API_ENABLE

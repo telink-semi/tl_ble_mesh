@@ -25,6 +25,7 @@
 ENTRY(_RESET_ENTRY)
 SECTIONS
 {
+    NDS_SAG_LMA_FLASH = 0x20000000 ;
     . = (0x20000000 + __FW_OFFSET); /* support boot loader */
     PROVIDE (BIN_BEGIN = . + __FW_OFFSET);
     .vectors        : { KEEP(*(.vectors )) }
@@ -58,10 +59,10 @@ SECTIONS
     .sbss   (NOLOAD)    : { *(.dynsbss ) *(.sbss .sbss.* .gnu.linkonce.sb.* ) *(.scommon .scommon.* ) }
     .bss    (NOLOAD)    : { *(.dynbss ) *(.bss .bss.* .gnu.linkonce.b.* ) *(COMMON ) . = ALIGN(8); }
     PROVIDE (_BSS_VMA_END = .);
-    
+
     . = ALIGN(8);
     .ram_code   : AT( ALIGN(LOADADDR (.data) + SIZEOF (.data),8)) 
-        { KEEP(*(.ram_code )) }
+        { KEEP(*(.ram_code )) KEEP(*libgcc.a:save-restore.o) KEEP(*(.exec.itable)) }
     PROVIDE (_RAMCODE_VMA_END = .);
     PROVIDE (_RAMCODE_VMA_START = ADDR(.ram_code));
     PROVIDE (_RAMCODE_LMA_START = LOADADDR(.ram_code));
@@ -87,12 +88,9 @@ SECTIONS
     . = ALIGN(0x20);
     .eh_frame   : AT(ALIGN(LOADADDR (.eh_frame_hdr) + SIZEOF (.eh_frame_hdr), 32))
         { KEEP(*(.eh_frame )) }
-        
-    .exec.itable    : AT(ALIGN(LOADADDR (.eh_frame) + SIZEOF (.eh_frame), ALIGNOF(.exec.itable)))
-        { KEEP(*(.exec.itable)) }
 
     . = ALIGN(ADDR (.iram_bss) + SIZEOF (.iram_bss), 8);
-    .no_ret_data : AT(ALIGN(LOADADDR (.exec.itable) + SIZEOF (.exec.itable),  ALIGNOF(.no_ret_data)))
+    .no_ret_data : AT(ALIGN(LOADADDR (.eh_frame) + SIZEOF (.eh_frame),  ALIGNOF(.no_ret_data))) /* locate no retention data to 96k retention ram, due to 96k is enough for mesh. "no retention" just for re-init data. */
         { KEEP(*(.no_ret_data )) }
     PROVIDE (_NO_RETENTION_DATA_VMA_START = ADDR(.no_ret_data));
     PROVIDE (_NO_RETENTION_DATA_LMA_START = LOADADDR(.no_ret_data));
@@ -100,12 +98,18 @@ SECTIONS
 
     . = ALIGN(8);
     PROVIDE (_NO_RETENTION_BSS_VMA_START = .);
-    .no_ret_bss     (NOLOAD)	: { KEEP(*(.no_ret_bss )) }
+    .no_ret_bss     (NOLOAD)    : { KEEP(*(.no_ret_bss )) }
     PROVIDE (_NO_RETENTION_BSS_VMA_END = .);
-                
-    /*. = 0x00080000;*/
+
+    . = 0x00080000;
+
     . = ALIGN(8);
-    .dlm_data	: AT(ALIGN(LOADADDR (.no_ret_data) + SIZEOF (.no_ret_data),  ALIGNOF(.dlm_data)))
+    .rf_certification_cfg : AT(ALIGN(LOADADDR(.no_ret_data) + SIZEOF(.no_ret_data), ALIGNOF(.rf_certification_cfg)))
+        { KEEP(*(.rf_certification_cfg)) }
+    PROVIDE (_RF_CERTIFICATION_CFG_ADDR_OFFSET = LOADADDR(.rf_certification_cfg) - BIN_BEGIN);
+    
+    . = ALIGN(8);
+    .dlm_data    : AT(ALIGN(LOADADDR (.rf_certification_cfg) + SIZEOF (.rf_certification_cfg),  ALIGNOF(.dlm_data)))
         { KEEP(*(.dlm_data )) }
     PROVIDE (_DLM_DATA_VMA_START = ADDR(.dlm_data));
     PROVIDE (_DLM_DATA_LMA_START = LOADADDR(.dlm_data));
@@ -113,7 +117,7 @@ SECTIONS
     
     . = ALIGN(8);
     PROVIDE (_DLM_BSS_VMA_START = .);
-    .dlm_bss	(NOLOAD)	: { KEEP(*(.dlm_bss )) }
+    .dlm_bss    (NOLOAD)        : { KEEP(*(.dlm_bss )) }
     /* When using the S file _FILL_STK function (which clears all the values in the stack space to 0x55), 
      * if _BSS_VMA_END does not have four-byte alignment, there may be an out-of-bounds access beyond _STACK_TOP,
      * resulting in a store access fault.
@@ -132,8 +136,10 @@ SECTIONS
     PROVIDE (_STACK_TOP = 0x0088000);
     PROVIDE (FLASH_SIZE = 0x0100000);
 }
-
-ASSERT((_IRAM_BSS_VMA_END * __PM_DEEPSLEEP_RETENTION_ENABLE) <= (0x00068000 + 96*1024), "Error: RETENTION RAM OVERFLOW");
-ASSERT((_DLM_BSS_VMA_END) <= (_STACK_TOP - __STACK_INIT_SIZE__), "Error: IRAM OVERFLOW. Please move some _attribute_no_retention_bss_ to _attribute_bss_dlm_");
-ASSERT((_NO_RETENTION_BSS_VMA_END) <= (0x00068000 + 120*1024), "Error: DRAM OVERFLOW");
+PROVIDE(_retention_size_ =_IRAM_BSS_VMA_END - 0x00068000);
+PROVIDE(_iram_use_size_ = _NO_RETENTION_BSS_VMA_END - 0x00068000);
+PROVIDE(_dram_use_size_ = _DLM_BSS_VMA_END - 0x00080000);
+ASSERT((_retention_size_ * __PM_DEEPSLEEP_RETENTION_ENABLE) <= (96*1024), "Error: RETENTION RAM OVERFLOW");
+ASSERT((_iram_use_size_) <= (96*1024), "Error: IRAM OVERFLOW. Please move some _attribute_no_retention_bss_ to _attribute_bss_dlm_");
+ASSERT((_dram_use_size_) <= (_STACK_TOP - __STACK_INIT_SIZE__ - 0x00080000), "Error: DRAM OVERFLOW.");
 ASSERT((BIN_SIZE)<= FLASH_SIZE, "Error: BIN FILE OVERFLOW");

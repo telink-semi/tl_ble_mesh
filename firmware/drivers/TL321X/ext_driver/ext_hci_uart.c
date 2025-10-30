@@ -86,7 +86,7 @@ ext_hci_StatusTypeDef_e ext_hci_uartInit(ext_hci_InitTypeDef * uart)
     uart_set_pin(EXT_HCI_UART_CHANNEL,uart->tx_Pin,uart->rx_Pin);
 
     uart_cal_div_and_bwpc(uart->baudrate, sys_clk.pclk*1000*1000, &div, &bwpc);
-    uart_set_rx_timeout(EXT_HCI_UART_CHANNEL, bwpc, 12, UART_BW_MUL2,0);
+    uart_set_rx_timeout_with_exp(EXT_HCI_UART_CHANNEL, bwpc, 12, UART_BW_MUL2,0);
 
     uart_init(EXT_HCI_UART_CHANNEL, div, bwpc, UART_PARITY_NONE, UART_STOP_BIT_ONE);
 

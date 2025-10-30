@@ -31,7 +31,7 @@
  * @brief   software PA enable
  */
 #ifndef PA_ENABLE
-#define PA_ENABLE                           0 // BLE_SRC_TELINK_MESH_EN
+#define PA_ENABLE                           0
 #endif
 
 

@@ -22,13 +22,13 @@
  *
  *******************************************************************************************************/
  #include "user_config.h"
-
+ 
 #if (AUDIO_MESH_EN)
-	.equ __STACK_INIT_SIZE__,	(9*1024)
+    .equ __STACK_INIT_SIZE__, (9*1024)
 #else
-	.equ __STACK_INIT_SIZE__,	(5*1024)
+    .equ __STACK_INIT_SIZE__, (5*1024)
 #endif
-	.global  __STACK_INIT_SIZE__			// include normal stack and irq stack
+    .global  __STACK_INIT_SIZE__ // include normal stack and irq stack
 
 /**
  * @brief   Set "DP_THROUGH_SWIRE_DIS" as "1" to disable the "dp_through_swire" function. Set "DP_THROUGH_SWIRE_DIS" as "0" to enable the "dp_through_swire" function.
@@ -39,10 +39,20 @@
  *          1. During fixture production, burning a firmware program that disables the "dp_through_swire"function into unprogrammed chip will cause the problem that chip can not be burned again due to swire communication failure.
  *          2. Burning a firmware program that disables the "dp_through_swire" function with BDT tool may result in failure of debugging due to swire communication failure.
  *          If developers evaluate that the above scheme (set "DP_THROUGH_SWIRE_DIS" as "1") cannot be used, they can only set "DP_THROUGH_SWIRE_DIS" to "0" to enable the "dp_through_swire" function. However, be careful not to make DP and DM pin trigger "dp_through_swire" timing.
+ *          In USB applications, 1. calling the usb_set_pin(1) interface (equivalent to usb_set_pin_en) will re-enable the dp_through_swire function 2. calling the usb_set_pin(0) interface will disable the dp_through_swire function.
  */
 #ifndef DP_THROUGH_SWIRE_DIS
 #define DP_THROUGH_SWIRE_DIS      1
 #endif
+
+/* If using Andes toolchain, these two Macro are defined in it's toolchain */
+/* If using std gcc toolchain, these two core registers(not standard risc-v core registers)
+    should be defined here. */
+#ifdef STD_GCC
+#define mmisc_ctl  0x7D0
+#define mcache_ctl 0x7CA
+#endif
+
 .extern gpio_shutdown_flashcode_for_asm
 .extern gpio_shutdown_ramcode_for_asm
 
@@ -66,8 +76,14 @@
     .align 2
 _RESET_ENTRY:
     j        _START
-    .word	(BUILD_VERSION)
+    .word    (BUILD_VERSION)
     //free the 6th ~ 7th byte to store the crc type of the bin file
+
+    /* This configuration is specifically for RF_Certification and does not need to be enabled for other scenarios */
+#ifdef RF_CERTIFICATION_CGF_EN
+    .org 0x10
+    .word(_RF_CERTIFICATION_CFG_ADDR_OFFSET)
+#endif
 
 /* used to check flash protection function consistency between the old and new  firmware when OTA upgrading */
 #if APP_FLASH_PROTECTION_ENABLE
@@ -144,15 +160,15 @@ _START:
 #if DP_THROUGH_SWIRE_DIS
     lui     t0, 0x80100
     addi    t0 , t0 , 0x700
-    li      t1, 0x40
-    sb      t1, 0x501(t0)  //0x80100c01 -> 0x40  <7>: 0 swire_usb_dis <6>:read-only bit
+    li      t1, 0x00
+    sb      t1, 0x501(t0)  //0x80100c01 -> 0x00  <7>: 0 swire_usb_dis 
 #endif
 
     /* Initialize stack pointer */
     la     t0, _STACK_TOP
     mv     sp, t0
 
-#if 1
+#if JTAG_DEBUG_DISABLE
     /* gpio shutdown to decrease current. for power on or deep this function was in flash code segment. */
     la     t0, gpio_shutdown_flashcode_for_asm
     jalr   t0
@@ -219,9 +235,12 @@ _RETENTION_DATA_INIT_BEGIN:
 
     /* Move ramcode from flash to sram */
 _RAMCODE_INIT:
+    .option push
+    .option norelax
     la     t1, _RAMCODE_LMA_START
     la     t2, _RAMCODE_VMA_START
     la     t3, _RAMCODE_VMA_END
+    .option pop
 _RAMCODE_INIT_BEGIN:
     bleu   t3, t2, _DATA_INIT
     lw     t0, 0(t1)
@@ -307,7 +326,7 @@ _FILL_STK:
 #if 1 // run only on powerup, so it is ok that enable as default.
     lui    t0, 0x55555
     addi   t0, t0, 0x555
-    la     t2, (_STACK_TOP - (__STACK_INIT_SIZE__)) // _BSS_VMA_END // include IRQ stack. must 4 bytes aligned, if not will cause trap entry.
+    la     t2, (_STACK_TOP - (__STACK_INIT_SIZE__))    //_DLM_BSS_VMA_END  must be 4-byte aligned, if not, will cause trap entry. // include IRQ stack.
     la     t3, _STACK_TOP      //_STACK_TOP    must be 4-byte aligned
 _FILL_STK_BEGIN:
     bleu   t3, t2, _MAIN_FUNC
@@ -343,9 +362,10 @@ _IRESET_ENTRY:
     /* Decide whether this is an NMI or cold reset */
     j       _ISTART
 
-    .org 0x22
-_ISTART:
+    /* BLE SDK use: change from 0x22 to 0x24 */
+    .org 0x24
 
+_ISTART:
 #if 0
     // add debug, PB4 output 1
     lui     t0, 0x80140
@@ -383,15 +403,15 @@ _ISTART:
 #if DP_THROUGH_SWIRE_DIS
     lui     t0, 0x80100
     addi    t0 , t0 , 0x700
-    li      t1, 0x40
-    sb      t1, 0x501(t0)  //0x80100c01 -> 0x40  <7>: 0 swire_usb_dis <6>:read-only bit
+    li      t1, 0x00
+    sb      t1, 0x501(t0)  //0x80100c01 -> 0x00  <7>: 0 swire_usb_dis 
 #endif
 
     /* Initialize stack pointer */
     la     t0, _STACK_TOP
     mv     sp, t0
 
-#if 1
+#if JTAG_DEBUG_DISABLE
     /* gpio shutdown to decrease current. for retention this function was in ram segment which can be called early. */
     la     t0, gpio_shutdown_ramcode_for_asm
     jalr   t0
@@ -487,7 +507,71 @@ _MULTI_ADDRESS_BEGIN:
     srli    t2, t2, 16            //t2 = t2 >>16
     sh      t2, 0x7c5(t0)        //t2 half word store t0+0x7c3(0xA3FFFFc4)
 
-#if 0 // IRAM data/bss is retention as default, so no need init.
+    /* Zero .no ret bss section in sram */
+_INO_RET_BSS_INIT:
+    lui    t0, 0
+    la     t2, _NO_RETENTION_BSS_VMA_START
+    la     t3, _NO_RETENTION_BSS_VMA_END
+_INO_RET_BSS_BEGIN:
+    bleu   t3, t2, _IDLM_BSS_INIT
+    sw     t0, 0(t2)
+    addi   t2, t2, 4
+    j      _INO_RET_BSS_BEGIN
+
+    /* Zero .dlm bss section in sram */
+_IDLM_BSS_INIT:
+    lui    t0, 0
+    la     t2, _DLM_BSS_VMA_START
+    la     t3, _DLM_BSS_VMA_END
+_IDLM_BSS_BEGIN:
+    bleu   t3, t2, _IFILL_STK
+    sw     t0, 0(t2)
+    addi   t2, t2, 4
+    j      _IDLM_BSS_BEGIN
+
+    /* Fill the remaining section in sram */
+_IFILL_STK:
+#if 0 // no init to save time
+        lui    t0, 0x55555
+        addi   t0, t0, 0x555
+        la     t2, (_STACK_TOP - (__STACK_INIT_SIZE__)) // _DLM_BSS_VMA_END // include IRQ stack. must 4 bytes aligned, if not will cause trap entry.
+        la     t3, _STACK_TOP      //_STACK_TOP    must be 4-byte aligned
+    _IFILL_STK_BEGIN:
+        bleu   t3, t2, _INO_RET_DATA_INIT
+        sw     t0, 0(t2)
+        addi   t2, t2, 4
+        j      _IFILL_STK_BEGIN
+#endif
+
+    /* Move No Retention Data from flash to sram */
+//Read the flash as late as possible to lengthen the time from the wake up to the operation of the flash.
+_INO_RET_DATA_INIT:
+    la     t1, _NO_RETENTION_DATA_LMA_START
+    la     t2, _NO_RETENTION_DATA_VMA_START
+    la     t3, _NO_RETENTION_DATA_VMA_END
+_INO_RET_DATA_INIT_BEGIN:
+    bleu   t3, t2, _IDLM_DATA_INIT
+    lw     t0, 0(t1)
+    sw     t0, 0(t2)
+    addi   t1, t1, 4
+    addi   t2, t2, 4
+    j      _INO_RET_DATA_INIT_BEGIN
+
+    /* Move DLM Data from flash to sram */
+//Read the flash as late as possible to lengthen the time from the wake up to the operation of the flash.
+_IDLM_DATA_INIT:
+    la     t1, _DLM_DATA_LMA_START
+    la     t2, _DLM_DATA_VMA_START
+    la     t3, _DLM_DATA_VMA_END
+_IDLM_DATA_INIT_BEGIN:
+    bleu   t3, t2, _IMAIN_FUNC
+    lw     t0, 0(t1)
+    sw     t0, 0(t2)
+    addi   t1, t1, 4
+    addi   t2, t2, 4
+    j      _IDLM_DATA_INIT_BEGIN
+
+#if 0 // IRAM data/bss is retention as default, so no need init. if enable, need move _IDATA_INIT after all bss clear to delay reading flash.
     /* Zero .bss section in sram */
 _IZERO_BSS:
     lui    t0, 0
@@ -506,74 +590,12 @@ _IDATA_INIT:
     la     t2, _DATA_VMA_START
     la     t3, _DATA_VMA_END
 _IDATA_INIT_BEGIN:
-    bleu   t3, t2, _INO_RET_DATA_INIT
+    bleu   t3, t2, _IMAIN_FUNC
     lw     t0, 0(t1)
     sw     t0, 0(t2)
     addi   t1, t1, 4
     addi   t2, t2, 4
     j      _IDATA_INIT_BEGIN
-#endif
-
-    /* Move No Retention Data from flash to sram */
-_INO_RET_DATA_INIT:
-    la     t1, _NO_RETENTION_DATA_LMA_START
-    la     t2, _NO_RETENTION_DATA_VMA_START
-    la     t3, _NO_RETENTION_DATA_VMA_END
-_INO_RET_DATA_INIT_BEGIN:
-    bleu   t3, t2, _INO_RET_BSS_INIT
-    lw     t0, 0(t1)
-    sw     t0, 0(t2)
-    addi   t1, t1, 4
-    addi   t2, t2, 4
-    j      _INO_RET_DATA_INIT_BEGIN
-
-    /* Zero .no ret bss section in sram */
-_INO_RET_BSS_INIT:
-    lui    t0, 0
-    la     t2, _NO_RETENTION_BSS_VMA_START
-    la     t3, _NO_RETENTION_BSS_VMA_END
-_INO_RET_BSS_BEGIN:
-    bleu   t3, t2, _IDLM_DATA_INIT
-    sw     t0, 0(t2)
-    addi   t2, t2, 4
-    j      _INO_RET_BSS_BEGIN
-
-    /* Move DLM Data from flash to sram */
-_IDLM_DATA_INIT:
-    la     t1, _DLM_DATA_LMA_START
-    la     t2, _DLM_DATA_VMA_START
-    la     t3, _DLM_DATA_VMA_END
-_IDLM_DATA_INIT_BEGIN:
-    bleu   t3, t2, _IDLM_BSS_INIT
-    lw     t0, 0(t1)
-    sw     t0, 0(t2)
-    addi   t1, t1, 4
-    addi   t2, t2, 4
-    j      _IDLM_DATA_INIT_BEGIN
-
-    /* Zero .dlm bss section in sram */
-_IDLM_BSS_INIT:
-    lui    t0, 0
-    la     t2, _DLM_BSS_VMA_START
-    la     t3, _DLM_BSS_VMA_END
-_IDLM_BSS_BEGIN:
-    bleu   t3, t2, _IFILL_STK
-    sw     t0, 0(t2)
-    addi   t2, t2, 4
-    j      _IDLM_BSS_BEGIN
-
-    /* Fill the remaining section in sram */
-_IFILL_STK:
-#if 0 // no init to save time
-        lui    t0, 0x55555
-        addi   t0, t0, 0x555
-        la     t2, (_STACK_TOP - (__STACK_INIT_SIZE__)) // _BSS_VMA_END // include IRQ stack. must 4 bytes aligned, if not will cause trap entry.
-        la     t3, _STACK_TOP      //_STACK_TOP    must be 4-byte aligned
-    _IFILL_STK_BEGIN:
-        bleu   t3, t2, _IMAIN_FUNC
-        sw     t0, 0(t2)
-        addi   t2, t2, 4
-        j      _IFILL_STK_BEGIN
 #endif
 
     /* Jump to the main function */

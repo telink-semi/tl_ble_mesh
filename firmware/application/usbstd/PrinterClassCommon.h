@@ -1,12 +1,12 @@
 /********************************************************************************************************
  * @file    PrinterClassCommon.h
  *
- * @brief   This is the header file for BLE SDK
+ * @brief   This is the header file for Telink RISC-V MCU
  *
- * @author  BLE GROUP
- * @date    06,2022
+ * @author  Driver Group
+ * @date    2019
  *
- * @par     Copyright (c) 2022, Telink Semiconductor (Shanghai) Co., Ltd. ("TELINK")
+ * @par     Copyright (c) 2019, Telink Semiconductor (Shanghai) Co., Ltd. ("TELINK")
  *
  *          Licensed under the Apache License, Version 2.0 (the "License");
  *          you may not use this file except in compliance with the License.
@@ -22,35 +22,35 @@
  *
  *******************************************************************************************************/
 #pragma once
-	/* Includes: */
-#include "tl_common.h"
-	
-	/* Enable C linkage for C++ Compilers: */
+/* Includes: */
+
+
+/* Enable C linkage for C++ Compilers: */
 #if defined(__cplusplus)
-	extern "C" {
+extern "C"
+{
 #endif
-	
 
-#define PRNT_PORTSTATUS_NOTERROR	BIT(3)
-#define PRNT_PORTSTATUS_SELECT		BIT(4)
-#define PRNT_PORTSTATUS_PAPEREMPTY	BIT(5)
 
-enum PRNT_Descriptor_ClassSubclassProtocol_t
-{
-	PRNT_CSCP_PrinterClass = 0x07,
-	PRNT_CSCP_PrinterSubclass = 0x01,
-	PRNT_CSCP_BidirectionalProtocol = 0x02,
-};
+#define PRNT_PORTSTATUS_NOTERROR   BIT(3)
+#define PRNT_PORTSTATUS_SELECT     BIT(4)
+#define PRNT_PORTSTATUS_PAPEREMPTY BIT(5)
 
-enum PRNT_ClassRequests_t
-{
-	PRNT_REQ_GetDeviceID,
-	PRNT_REQ_GetPortStatus,
-	PRNT_REQ_SoftReset,
-};
+    enum PRNT_Descriptor_ClassSubclassProtocol_t
+    {
+        PRNT_CSCP_PrinterClass          = 0x07,
+        PRNT_CSCP_PrinterSubclass       = 0x01,
+        PRNT_CSCP_BidirectionalProtocol = 0x02,
+    };
+
+    enum PRNT_ClassRequests_t
+    {
+        PRNT_REQ_GetDeviceID,
+        PRNT_REQ_GetPortStatus,
+        PRNT_REQ_SoftReset,
+    };
 
 /* Disable C linkage for C++ Compilers: */
 #if defined(__cplusplus)
-	}
+}
 #endif
-

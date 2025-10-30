@@ -26,27 +26,32 @@
 
 #include "dma.h"
 #include "reg_include/ske_reg.h"
-
+#include "chip_config.h"
 
 #ifdef __cplusplus
-extern "C" {
+extern "C"
+{
 #endif
 
 
 
+
+#if(COMPATIBLE_WITH_TL321X_AND_TL323X == 0)
 #define SUPPORT_SKE_DES
-#if 0                               //warning: hardware does not support 3DES directly, here the 4 MACRO should be defined or not defined simultaneously
+#endif
+#if(COMPATIBLE_WITH_TL321X_AND_TL323X == 0)                              //warning: hardware does not support 3DES directly, here the 4 MACRO should be defined or not defined simultaneously
 #define SUPPORT_SKE_TDES_128
 #define SUPPORT_SKE_TDES_192
 #define SUPPORT_SKE_TDES_EEE_128
 #define SUPPORT_SKE_TDES_EEE_192
 #endif
 #define SUPPORT_SKE_AES_128
+#if(COMPATIBLE_WITH_TL321X_AND_TL323X == 0)
 #define SUPPORT_SKE_AES_192
 #define SUPPORT_SKE_AES_256
-#if defined(MCU_CORE_TL721X)
-#define SUPPORT_SKE_SM4
 #endif
+// #define SUPPORT_SKE_SM4
+
 //#define SUPPORT_SKE_IRQ
 
 #define SUPPORT_SKE_MODE_ECB
@@ -54,15 +59,19 @@ extern "C" {
 #define SUPPORT_SKE_MODE_CFB
 #define SUPPORT_SKE_MODE_OFB
 #define SUPPORT_SKE_MODE_CTR
-//#define SUPPORT_SKE_MODE_XTS        //warning: hardware does not support directly
+#if(COMPATIBLE_WITH_TL321X_AND_TL323X == 0)
+#define SUPPORT_SKE_MODE_XTS        //warning: hardware does not support directly
+#endif
 #define SUPPORT_SKE_MODE_GCM
 #ifdef SUPPORT_SKE_MODE_GCM
 #define SUPPORT_SKE_MODE_GMAC       //GMAC is specialization of GCM mode
 #endif
-//#define SUPPORT_SKE_MODE_CMAC       //warning: hardware does not support directly
-//#define SUPPORT_SKE_MODE_CBC_MAC    //warning: hardware does not support directly
+#define SUPPORT_SKE_MODE_CMAC       //warning: hardware does not support directly
+#if(COMPATIBLE_WITH_TL321X_AND_TL323X == 0)
+#define SUPPORT_SKE_MODE_CBC_MAC    //warning: hardware does not support directly
+#endif
 #define SUPPORT_SKE_MODE_CCM
-//#define SUPPORT_SKE_AES_XCBC_MAC_96 //warning: hardware does not support directly
+// #define SUPPORT_SKE_AES_XCBC_MAC_96 //warning: hardware does not support directly
 
 
 
@@ -75,7 +84,7 @@ extern "C" {
 #define SKE_LP_DMA_DISABLE                             (0)
 
 
-//#define SKE_SECURE_PORT_FUNCTION  //open avoid unused key_idx warnning
+//#define SKE_SECURE_PORT_FUNCTION
 #ifdef SKE_SECURE_PORT_FUNCTION
 #define SKE_MAX_KEY_IDX                                (8)   //if key is from secure port, the max key index(or the number of keys)
 #endif
@@ -185,7 +194,6 @@ typedef enum {
 } SKE_MAC;
 
 
-
 //SKE Algorithm
 typedef enum {
 #ifdef SUPPORT_SKE_DES
@@ -242,6 +250,8 @@ enum SKE_RET_CODE
 typedef enum{
     SKE_NO_PADDING,
     SKE_ZERO_PADDING,
+    SKE_PKCS_5_7_PADDING,     //actually not support in this ske driver version
+    SKE_ISO_7816_4_PADDING,   //actually not support in this ske driver version
 } SKE_PADDING;
 
 
@@ -249,6 +259,8 @@ typedef enum{
 typedef struct{
     unsigned char block_bytes;
     unsigned char block_words;
+
+    unsigned short sp_key_idx;
 } SKE_CTX;
 
 
@@ -398,7 +410,7 @@ void ske_lp_set_key_uint32(unsigned int *key, unsigned int idx, unsigned int key
       -# 1.please make sure the three parameters are valid.
   @endverbatim
  */
-void ske_lp_set_iv_uint32(unsigned int *iv, unsigned int block_words);
+void ske_lp_set_iv_uint32( unsigned int *iv, unsigned int block_words);
 
 #if (defined(SUPPORT_SKE_MODE_GCM) || defined(SUPPORT_SKE_MODE_CCM))
 /**
@@ -470,8 +482,6 @@ unsigned int ske_lp_expand_key(unsigned int dma_en);
       -# 2.please make sure key/in/out address is word aligned.
   @endverbatim
  */
-unsigned int ske_lp_aes128_ecb_one_block(SKE_CRYPTO crypto, unsigned int *key, unsigned int *in, unsigned int *out);
-
 #ifdef SKE_LP_DMA_FUNCTION
 /**
  * @brief       wait till ske_lp dma calculating is done.
@@ -495,7 +505,7 @@ unsigned int ske_lp_dma_calc_wait_till_done(SKE_CALLBACK callback);
       -# 2.it could be without output, namely, out can be NULL, out_words can be 0(for input AAD, or CBC_MAC/CMAC mode).
   @endverbatim
  */
-unsigned int ske_lp_dma_operate(SKE_CTX *ctx, unsigned int *in, unsigned int *out, unsigned int in_words, unsigned int out_words,
+unsigned int ske_lp_dma_operate(SKE_CTX *ctx,  unsigned int *in, unsigned int *out, unsigned int in_words, unsigned int out_words,
         SKE_CALLBACK callback);
 
 /**
@@ -559,6 +569,19 @@ unsigned int ske_lp_gmac_update_blocks_internal(unsigned char *in, unsigned int 
 unsigned int tdes_ecb_update_one_block(unsigned int is_EEE, unsigned int key[6], SKE_CRYPTO crypto, unsigned int in[2], unsigned int out[2]);
 #endif
 
+/*
+ * @brief       ske_lp AES128_ECB encrypting or decrypting one block(16bytes) (CPU style, one-off style)
+ * @param[in]   key                  - key
+ * @param[in]   in                   - one block.
+ * @param[out]  out                  - one block.
+ * @return      SKE_SUCCESS(success), other(error)
+ * @note
+  @verbatim
+      -# 1.please make sure all parameter valid, include crypto is encrypto or decrypto
+      -# 2.please make sure key/iv/in/out address is word aligned.
+  @endverbatim
+ */
+unsigned int ske_lp_aes128_ecb_one_block(SKE_CRYPTO crypto, unsigned int *key, unsigned int *in, unsigned int *out);
 
 #ifdef __cplusplus
 }

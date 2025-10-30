@@ -26,21 +26,16 @@
 
 #include "tl_common.h"
 #include "mesh_lpn.h"
-#if __TLSR_RISCV_EN__
 #include "stack/ble/ble.h"
-#else
-#include "proj_lib/ble/ll/ll.h"
-#endif
 #include "mesh_fn.h"
 #include "time_model.h"
 #include "scheduler.h"
 #include "mesh_property.h"
 #include "vendor/common/battery_check.h"
+#include "mesh_adv_bear.h"
 #if (!defined(WIN32) && EXTENDED_ADV_ENABLE)
 #if __TLSR_RISCV_EN__
 #include "chip_adapt_layer/app_audio.h"
-#else
-#include "stack/ble/ll/ll_ext_adv.h"
 #endif
 #endif
 
@@ -230,6 +225,8 @@ void app_enable_scan_all_device (void);
  * @note        
  */
 int mesh_set_adv_scan_enable(int adv_en, int scan_en);
+int mesh_set_adv_enable(int adv_en);
+int mesh_set_scan_enable(int scan_en, int immediate);
 int	app_device_mac_match (u8 *mac, u8 *mask);
 int app_l2cap_packet_receive (u16 handle, u8 * raw_pkt);
 int chn_conn_update_dispatch(u8 *p);
@@ -242,9 +239,6 @@ ret: 1  means OK
 	 0 means err 
 ****************************************************************************/
 int mesh_send_adv2scan_mode(int tx_adv);
-#if (BLE_MULTIPLE_CONNECTION_ENABLE)
-int blt_send_adv_cb(void);
-#endif
 int app_advertise_prepare_handler (rf_packet_adv_t * p);
 void my_att_init(u8 mode);
 void ble_mac_init(void);
@@ -256,34 +250,13 @@ int blc_hci_tx_to_uart (void);
 void mesh_scan_rsp_init(void);
 int SendOpParaDebug(u16 adr_dst, u8 rsp_max, u16 op, u8 *par, int len);
 int SendOpParaDebug_vendor(u16 adr_dst, u8 rsp_max, u16 op, u8 *par, int len, u8 rsp_op, u8 tid);
-void share_model_sub_by_rx_cmd(u16 op, u16 ele_adr, u16 sub_adr, u16 dst_adr,u8 *uuid, u32 model_id, bool4 sig_model);
 
-typedef enum{
-	MODEL_SHARE_TYPE_NONE 					= 0,
-	MODEL_SHARE_TYPE_ONOFF_SERVER_EXTEND 	= 1,
-	MODEL_SHARE_TYPE_OTHERS_SERVER_EXTEND 	= 2,
-}model_share_type_e;
-model_share_type_e share_model_sub_onoff_server_extend(u16 op, u16 sub_adr, u8 *uuid, u16 ele_adr);
 void APP_reset_vendor_id(u16 vd_id);
-int mesh_rc_data_layer_access_cb(u8 *params, int par_len, mesh_cb_fun_par_t *cb_par);
 int mesh_tx_cmd2self_primary(u32 light_idx, u8 *ac, int len_ac);
 u32 get_mesh_pub_interval_ms(u32 model_id, bool4 sig_model, mesh_pub_period_t *period);
 void publish_when_powerup(void);
 int is_need_response_to_self(u16 adr_dst, u16 op);
-int app_func_before_suspend(u32 wakeup_tick);
 void beacon_str_disable(void);
-
-#if GATEWAY_ENABLE
-typedef u8 (*access_layer_dst_addr)(mesh_cmd_nw_t *p_nw);
-void register_access_layer_dst_addr_callback(void* p);
-/**
- * @brief  the callback function for register_access_layer_dst_addr_callback
- *   gateway can set the dst addr valid by return true even not subscribe the addr
- * @param  p_nw: point to network message
- * @return: 0:invalid,  1:valid
- */
-u8 mesh_access_layer_dst_addr_valid(mesh_cmd_nw_t *p_nw);
-#endif
 
 extern u8 gatt_adv_send_flag;
 extern u16 g_vendor_id;
@@ -414,10 +387,7 @@ extern u8 model_need_key_bind_whitelist(u16 *key_bind_list_buf,u8 *p_list_cnt,u8
 extern int LogMsgModuleDlg_and_buf(u8 *pbuf,int len,char *log_str,char *format, va_list list);
 void mesh_node_prov_event_callback(u8 evt_code);
 void wd_clear_lib(void);
-void bls_ota_set_fwSize_and_fwBootAddr(int firmware_size_k, int boot_addr);
-void mesh_cfg_cmd_force_seg_set(material_tx_cmd_t *p,mesh_match_type_t *p_match_type);
 void mesh_secure_beacon_loop_proc(void);
-int mesh_cmd_sig_cfg_model_sub_cb(u8 st,mesh_cfg_model_sub_set_t * p_sub_set,bool4 sig_model,u16 adr_src);
 void start_reboot(void);
 void blc_l2cap_register_pre_handler(void *p);
 #ifndef WIN32
@@ -445,95 +415,12 @@ void print_log_mesh_tx_cmd_layer_upper_ctl_ll(material_tx_cmd_t *p_mat, int err,
 
 
 // ------------ clock -----------
-#if (0 == __TLSR_RISCV_EN__)
-#if (CHIP_TYPE >= CHIP_TYPE_8258)
-    #if (CLOCK_SYS_CLOCK_HZ == 16000000)
-#define SYS_CLK_CRYSTAL     (SYS_CLK_16M_Crystal)
-    #elif (CLOCK_SYS_CLOCK_HZ == 24000000)
-#define SYS_CLK_CRYSTAL     (SYS_CLK_24M_Crystal)
-    #elif (CLOCK_SYS_CLOCK_HZ == 32000000)
-#define SYS_CLK_CRYSTAL     (SYS_CLK_32M_Crystal)
-    #elif (CLOCK_SYS_CLOCK_HZ == 48000000)
-#define SYS_CLK_CRYSTAL     (SYS_CLK_48M_Crystal)
-    #else
-#error clock not set properly
-    #endif
-#else
-#define SYS_CLK_CRYSTAL     // NULL
-#endif
-#endif
-
 void clock_switch_to_highest(void);
 void clock_switch_to_normal(void);
 
 static inline int is_tlk_gatt_ota_busy(void){
-#if __TLSR_RISCV_EN__
 	return blt_ota_isOtaBusy();
-#else
-	return blcOta.ota_start_flag;
-#endif
 }
-
-#if (__TLSR_RISCV_EN__)
-	#if (!BLE_MULTIPLE_CONNECTION_ENABLE)
-#include "stack/ble/controller/ll/ll_stack.h"
-
-ble_sts_t blc_ll_setScanEnable (scan_en_t scan_enable, dupFilter_en_t filter_duplicate);
-
-static inline void set_blt_state(u8 st)
-{
-	bltParam.blt_state = st;
-}
-
-static inline u8 get_ble_state()
-{
-	return bltParam.ble_state;
-}
-
-static inline u8 get_blt_busy()
-{
-	return bltParam.blt_busy;
-}
-
-static inline void set_blt_busy(u8 busy)
-{
-	bltParam.blt_busy = busy;
-}
-
-static inline void set_sdk_mainLoop_run_flag(u8 flag)
-{
-	bltParam.sdk_mainLoop_run_flag = flag; // 1 means already run mainloop.
-}
-	#endif
-#else
-extern u8 blt_busy;
-
-static inline void set_blt_state(u8 st)
-{
-	blt_state = st;
-}
-
-static inline u8 get_ble_state()
-{
-	return ble_state;
-}
-
-static inline u8 get_blt_busy()
-{
-	return blt_busy;
-}
-
-static inline void set_blt_busy(u8 busy)
-{
-	blt_busy = busy;
-}
-
-extern int sdk_mainLoop_run_flag;
-static inline void set_sdk_mainLoop_run_flag(u8 flag)
-{
-	sdk_mainLoop_run_flag = flag;	// 1 means already run mainloop.
-}
-#endif
 
 #if (FW_START_BY_BOOTLOADER_EN)
 void bootloader_ota_setNewFirmwwareStorageAddress(void);

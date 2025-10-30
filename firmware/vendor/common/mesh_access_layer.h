@@ -28,4 +28,5 @@
 #include "proj_lib/sig_mesh/app_mesh.h"
 
 int mesh_upper_transport_layer_cb(mesh_cmd_bear_t *p_bear);
+int mesh_rc_data_layer_access_cb(u8 *params, int par_len, mesh_cb_fun_par_t *cb_par);
 

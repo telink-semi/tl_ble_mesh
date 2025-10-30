@@ -83,15 +83,9 @@ const light_res_hw_t light_res_hw[LIGHT_CNT][3] = {
 	/*[0] = */{RES_HW_PWM_R, RES_HW_PWM_G, RES_HW_PWM_B},
 };
 #elif (LIGHT_TYPE_SEL == LIGHT_TYPE_CT)
-	#if XIAOMI_MODULE_ENABLE
-const light_res_hw_t light_res_hw[LIGHT_CNT][3] = {
-	/*[0] = */{RES_HW_PWM_R, RES_HW_PWM_G, RES_HW_PWM_W},
-};
-	#else
 const light_res_hw_t light_res_hw[LIGHT_CNT][2] = {
 	/*[0] = */{RES_HW_PWM_R, RES_HW_PWM_G},
 };
-	#endif
 #else
 const light_res_hw_t light_res_hw[LIGHT_CNT][1] = {
 	[0] = {RES_HW_PWM_R},
@@ -488,11 +482,7 @@ void light_pwm_init(void)
 		#else
 	        pwm_set(p_hw->id, PWM_MAX_TICK, p_hw->invert ? (PWM_MAX_TICK - level_def) : level_def);
 	        // light_dim_refresh(i);
-	        #if((MCU_CORE_TYPE==MCU_CORE_8258) || (MCU_CORE_TYPE==MCU_CORE_8278))
 	        gpio_set_func(p_hw->gpio, p_hw->func);
-	        #else
-	        gpio_set_func(p_hw->gpio, AS_PWM);
-	        #endif
 		#endif	
             pwm_start_id(p_hw->id);
         }
@@ -506,9 +496,7 @@ void light_pwm_init(void)
         {
             light_transition_onoff_manual(G_OFF, 0, i);
             if(onoff_present && CB_USER_LIGHT_INIT_ON_CONDITION()){
-				#if !MI_SWITCH_LPN_EN
 				light_transition_onoff_manual(G_ON, (analog_read(MESH_DEEP_ANA_REG)&(OTA_REBOOT_CHECK_FLAG|FLD_LOW_BATT_LOOP_FLG))?0:edch_is_exist()?g_def_trans_time_val(i):0, i);
-				#endif
 			}
         }
     }
@@ -662,7 +650,7 @@ void light_dim_set_hw(int idx, int idx2, u16 val)
 {
     if((idx < (int)ARRAY_SIZE(light_res_hw)) && (idx2 < (int)ARRAY_SIZE(light_res_hw[0]))){
 		const light_res_hw_t *p_hw = &light_res_hw[idx][idx2];
-		#if (FEATURE_LOWPOWER_EN || SPIRIT_PRIVATE_LPN_EN)
+		#if (FEATURE_LOWPOWER_EN || SPIRIT_PRIVATE_LPN_EN || MESH_RX_TEST)
 		led_onoff_gpio(p_hw->gpio, 0 != val);
 		#else
         pwm_set_lum(p_hw->id, val, p_hw->invert);
@@ -858,11 +846,6 @@ _USER_CAN_REDEFINE_ void light_dim_refresh(int idx) // idx: index of LIGHT_CNT.
     light_dim_set_hw(idx, 0, get_pwm_smooth(lightness_65535, LIGHTNESS_AVERAGE_STEP));
     #else
 	    #if (LIGHT_TYPE_CT_EN)
-            #if (XIAOMI_MODULE_ENABLE&&!AIS_ENABLE)
-    p_trans_l = p_trans_l; // will be optimized
-    lightness_65535 = lightness_65535; // will be optimized
-	light_dim_refresh_mi_ct(idx);
-            #else
 	st_transition_t *p_trans_ct = P_ST_TRANS(idx, ST_TRANS_CTL_TEMP);
 	u32 ct_65535 = s16_to_u16(p_trans_ct->present);
     if(ct_flag && (lightness_65535 != 0)){
@@ -883,7 +866,6 @@ _USER_CAN_REDEFINE_ void light_dim_refresh(int idx) // idx: index of LIGHT_CNT.
 		
 		//LOG_MSG_LIB(TL_LOG_NODE_SDK,0,0,"pwm:0x%04x,0x%04x", warn_led_pwm, cold_led_pwm);
     }
-            #endif   
         #endif
         
         #if (LIGHT_TYPE_HSL_EN)
@@ -1880,7 +1862,44 @@ void led_onoff_gpio(u32 gpio, u8 on){
 #endif
 }
 
-#if (__PROJECT_MESH_SWITCH__ || PM_DEEPSLEEP_RETENTION_ENABLE || (0 == MD_SERVER_EN))
+#if MESH_RX_TEST
+void mesh_rx_test_rf_power_led(void)
+{
+    static u8 my_rf_power_index_last = 0xff;
+    if(my_rf_power_index != my_rf_power_index_last){
+        if(MESH_RX_TEST_RF_POWER_P10dBm == my_rf_power_index){
+            led_onoff_gpio(PWM_R, 1);
+            led_onoff_gpio(PWM_G, 0);
+            led_onoff_gpio(PWM_B, 0);
+            led_onoff_gpio(PWM_W, 0);
+        }
+        else if(MESH_RX_TEST_RF_POWER_P3dBm == my_rf_power_index){
+            led_onoff_gpio(PWM_R, 0);
+            led_onoff_gpio(PWM_G, 1);
+            led_onoff_gpio(PWM_B, 0);
+            led_onoff_gpio(PWM_W, 0);
+        }
+        else if(MESH_RX_TEST_RF_POWER_P0dBm == my_rf_power_index){
+            led_onoff_gpio(PWM_R, 0);
+            led_onoff_gpio(PWM_G, 0);
+            led_onoff_gpio(PWM_B, 1);
+            led_onoff_gpio(PWM_W, 0);
+        }
+        else if(MESH_RX_TEST_RF_POWER_N25dBm == my_rf_power_index){
+            led_onoff_gpio(PWM_R, 0);
+            led_onoff_gpio(PWM_G, 0);
+            led_onoff_gpio(PWM_B, 0);
+            led_onoff_gpio(PWM_W, 1);
+        }
+         
+        my_rf_power_index_last = my_rf_power_index;
+    }
+
+    return;
+}
+#endif
+
+#if (__PROJECT_MESH_SWITCH__ || PM_DEEPSLEEP_RETENTION_ENABLE || (0 == MD_SERVER_EN) || MESH_RX_TEST)
 /**
  * @brief       This function is led indicator event polling function
  * @return      none
@@ -1888,6 +1907,10 @@ void led_onoff_gpio(u32 gpio, u8 on){
  */
 void proc_led()
 {
+    #if MESH_RX_TEST
+    mesh_rx_test_rf_power_led();
+    #endif
+  
 	if(p_vendor_proc_led){
 		p_vendor_proc_led();
 		return;
@@ -1906,13 +1929,13 @@ void proc_led()
 	if (led_event_pending)
 	{
 		// new event
-		led_ton = (led_event_pending & 0xff) * 64000 * CLOCK_SYS_CLOCK_1US;
-		led_toff = ((led_event_pending>>8) & 0xff) * 64000 * CLOCK_SYS_CLOCK_1US;
+		led_ton = (led_event_pending & 0xff) * 64000 * CLOCK_SYS_TIMER_CLK_1US;
+		led_toff = ((led_event_pending>>8) & 0xff) * 64000 * CLOCK_SYS_TIMER_CLK_1US;
 		led_count = (led_event_pending>>16) & 0xff;
 		led_sel = led_event_pending>>24;
 
 		led_event_pending = 0;
-		led_tick = clock_time () + 30000000 * CLOCK_SYS_CLOCK_1US;
+		led_tick = clock_time () + 30000000 * CLOCK_SYS_TIMER_CLK_1US;
 		led_no = 0;
 		led_is_on = 0;
 	}
@@ -1976,13 +1999,13 @@ void proc_led(void)
 	if (led_event_pending)
 	{
 		// new event
-		led_ton = (led_event_pending & 0xff) * 64000 * CLOCK_SYS_CLOCK_1US;
-		led_toff = ((led_event_pending>>8) & 0xff) * 64000 * CLOCK_SYS_CLOCK_1US;
+		led_ton = (led_event_pending & 0xff) * 64000 * CLOCK_SYS_TIMER_CLK_1US;
+		led_toff = ((led_event_pending>>8) & 0xff) * 64000 * CLOCK_SYS_TIMER_CLK_1US;
 		led_count = (led_event_pending>>16) & 0xff;
 		led_sel = led_event_pending>>24;
 
 		led_event_pending = 0;
-		led_tick = clock_time () + 30000000 * CLOCK_SYS_CLOCK_1US;
+		led_tick = clock_time () + 30000000 * CLOCK_SYS_TIMER_CLK_1US;
 		led_no = 0;
 		led_is_on = 0;
 	}
@@ -2149,6 +2172,8 @@ void light_ev_with_sleep(u32 count, u32 half_cycle_us)
  */
 _USER_CAN_REDEFINE_ void show_ota_result(int result)
 {
+    set_keep_onoff_state_after_ota();
+
 	if(result == OTA_REBOOT_NO_LED){
 		// nothing
 	}else if(result == OTA_SUCCESS){

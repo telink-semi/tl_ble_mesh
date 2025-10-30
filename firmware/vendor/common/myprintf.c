@@ -28,7 +28,13 @@
 #include "mesh_common.h"
 #include "myprintf.h"
 
-#define		BIT_INTERVAL_SYS_TICK	(CLOCK_SYS_CLOCK_1S/BAUD_USE)
+#if (MCU_CORE_TYPE == CHIP_TYPE_TC321X)
+#define UART_DEBUG_TX_PIN_REG	reg_gpio_out_set_clear(DEBUG_INFO_TX_PIN)
+#else
+#define UART_DEBUG_TX_PIN_REG	reg_gpio_out(DEBUG_INFO_TX_PIN)
+#endif
+
+#define		BIT_INTERVAL_SYS_TICK	(CLOCK_SYS_TIMER_CLK_1S/BAUD_USE)
 
 _attribute_no_retention_bss_ static int tx_pin_initialed = 0;
 
@@ -59,7 +65,7 @@ static void uart_do_put_char(u16 *bit)
 	/*! Make sure the following loop instruction starts at 4-byte alignment: (which is destination address of "tjne") */
 	// _ASM_NOP_; 
 	#if (CLOCK_SYS_CLOCK_HZ == 16000000)
-	#define UART_IO_ONE_BIT(index)	do{reg_gpio_out(DEBUG_INFO_TX_PIN) = bit[j];fence_iorw;}while(0)
+	#define UART_IO_ONE_BIT(index)	do{UART_DEBUG_TX_PIN_REG = bit[j];fence_iorw;}while(0)
 	UART_IO_ONE_BIT(0); // 1us exactly
 	UART_IO_ONE_BIT(1);
 	UART_IO_ONE_BIT(2);
@@ -84,7 +90,7 @@ static void uart_do_put_char(u16 *bit)
 	#else
 	#error "error CLOCK_SYS_CLOCK_HZ"
 	#endif
-        reg_gpio_out(DEBUG_INFO_TX_PIN) = bit[j];
+        UART_DEBUG_TX_PIN_REG = bit[j];
 		fence_iorw;
 	}
 	#endif
@@ -98,7 +104,7 @@ static void uart_do_put_char(u16 *bit)
 		while(t1 - t2 < BIT_INTERVAL_SYS_TICK){
 			t1	= clock_time();//read_reg32(0x740);
 		}
-        reg_gpio_out(DEBUG_INFO_TX_PIN) = bit[j];
+        UART_DEBUG_TX_PIN_REG = bit[j];
 	}
 #endif
 }
@@ -125,7 +131,7 @@ static void uart_do_put_char(u16 *bit)
 	#else
 	#error "error CLOCK_SYS_CLOCK_HZ"
 	#endif
-		reg_gpio_out(DEBUG_INFO_TX_PIN) = bit[j];
+		UART_DEBUG_TX_PIN_REG = bit[j];
 	}
 #else
 	u32 t1 = 0, t2 = 0;
@@ -136,7 +142,7 @@ static void uart_do_put_char(u16 *bit)
 		while(t1 - t2 < BIT_INTERVAL_SYS_TICK){
 			t1	= clock_time();//read_reg32(0x740);
 		}
-		reg_gpio_out(DEBUG_INFO_TX_PIN) = bit[j];
+		UART_DEBUG_TX_PIN_REG = bit[j];
 	}
 #endif
 }
@@ -153,13 +159,13 @@ _attribute_ram_code_ static void uart_put_char(u8 byte){
 		tx_pin_initialed = 1;
 	}
 
-    #if (MCU_CORE_TYPE == MCU_CORE_TL721X || MCU_CORE_TYPE == MCU_CORE_TL321X)
+    #if ((MCU_CORE_TYPE == MCU_CORE_TL721X || MCU_CORE_TYPE == MCU_CORE_TL321X) || \
+        (MCU_CORE_TYPE == CHIP_TYPE_TC321X))
 	uint16 tmp_bit0 = (DEBUG_INFO_TX_PIN & 0xff)<<8;;
 	uint16 tmp_bit1 = DEBUG_INFO_TX_PIN & 0xff;
     #else
-    uint08 out_level = reg_gpio_out(DEBUG_INFO_TX_PIN);
-	uint08 tmp_bit0 = out_level & ~(DEBUG_INFO_TX_PIN);
-	uint08 tmp_bit1 = out_level | DEBUG_INFO_TX_PIN;    
+	uint08 tmp_bit0 = UART_DEBUG_TX_PIN_REG & ~(DEBUG_INFO_TX_PIN);
+	uint08 tmp_bit1 = UART_DEBUG_TX_PIN_REG | DEBUG_INFO_TX_PIN;    
     #endif
     
 	u16 bit[10] = {0};

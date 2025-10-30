@@ -24,9 +24,7 @@
  *******************************************************************************************************/
 #include "tl_common.h"
 #include "proj_lib/sig_mesh/app_mesh.h"
-#if (!__TLSR_RISCV_EN__)
-#include "proj_lib/ble/service/ble_ll_ota.h"
-#endif
+#include "stack/ble/ble.h"
 #include "mesh_ota.h"
 #include "user_ali.h"
 #include "user_nmw.h"

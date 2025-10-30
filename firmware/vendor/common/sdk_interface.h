@@ -23,15 +23,12 @@
  *
  *******************************************************************************************************/
 #include "tl_common.h"
-#include "proj_lib/ble/ll/ll.h"
+#include "stack/ble/ll/ll.h"
 #include "proj_lib/ble/blt_config.h"
 #include "vendor/common/user_config.h"
 #include "proj_lib/sig_mesh/app_health.h"
 #include "proj_lib/sig_mesh/app_mesh.h"
 #include "vendor_model.h"
-#if MI_API_ENABLE
-#include "vendor/common/mi_api/mi_vendor/vendor_model_mi.h"
-#endif
 
 //--------------------------------------------------------------------------
 /**************************tn_p256_keypair**************************

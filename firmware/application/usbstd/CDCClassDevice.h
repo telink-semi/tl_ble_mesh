@@ -1,12 +1,12 @@
 /********************************************************************************************************
  * @file    CDCClassDevice.h
  *
- * @brief   This is the header file for BLE SDK
+ * @brief   This is the header file for Telink RISC-V MCU
  *
- * @author  BLE GROUP
- * @date    06,2022
+ * @author  Driver Group
+ * @date    2019
  *
- * @par     Copyright (c) 2022, Telink Semiconductor (Shanghai) Co., Ltd. ("TELINK")
+ * @par     Copyright (c) 2019, Telink Semiconductor (Shanghai) Co., Ltd. ("TELINK")
  *
  *          Licensed under the Apache License, Version 2.0 (the "License");
  *          you may not use this file except in compliance with the License.
@@ -22,46 +22,43 @@
  *
  *******************************************************************************************************/
 #pragma once
-
-/* Includes: */
-#include <application/usbstd/CDCClassCommon.h>
-#include "../common/types.h"
-
 /* Enable C linkage for C++ Compilers: */
 #if defined(__cplusplus)
-    extern "C" {
-#endif
-
-typedef struct
+extern "C"
 {
-	struct
-	{
-		u8 ControlInterfaceNumber;
-		u8 DataINEndpointNumber;
-		u16 DataINEndpointSize;
-		bool DataINEndpointDoubleBank;
-		u8 DataOUTEndpointNumber;
-		u16 DataOUTEndpointSize;
-		bool DataOUTEndpointDoubleBank;
-		u8 NotificationEndpointNumber;
-		u16 NotificationEndpointSize;
-		bool NotificationEndpointDoubleBank;
-	} Config;
+#endif
+/* Includes: */
+#include "CDCClassCommon.h"
 
-	struct
-	{
-		struct
-		{
-			u16 HostToDevice;
-			u16 DeviceToHost;
-		} ControlLineStates;
+    typedef struct
+    {
+        struct
+        {
+            unsigned char  ControlInterfaceNumber;
+            unsigned char  DataINEndpointNumber;
+            unsigned short DataINEndpointSize;
+            _Bool          DataINEndpointDoubleBank;
+            unsigned char  DataOUTEndpointNumber;
+            unsigned short DataOUTEndpointSize;
+            _Bool          DataOUTEndpointDoubleBank;
+            unsigned char  NotificationEndpointNumber;
+            unsigned short NotificationEndpointSize;
+            _Bool          NotificationEndpointDoubleBank;
+        } __attribute__((packed)) Config;
 
-		CDC_LineEncoding_t LineEncoding;
-	} State;
-} USB_ClassInfo_CDC_Device_t;
+        struct
+        {
+            struct
+            {
+                unsigned short HostToDevice;
+                unsigned short DeviceToHost;
+            } ControlLineStates;
 
+            CDC_LineEncoding_t LineEncoding;
+        } __attribute__((packed)) State;
+    } __attribute__((packed)) USB_ClassInfo_CDC_Device_t;
 
 /* Disable C linkage for C++ Compilers: */
 #if defined(__cplusplus)
-	}
+}
 #endif

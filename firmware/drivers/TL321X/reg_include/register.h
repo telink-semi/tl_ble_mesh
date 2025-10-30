@@ -21,16 +21,20 @@
  *          limitations under the License.
  *
  *******************************************************************************************************/
-#ifndef  REGISTER_H
-#define  REGISTER_H
-
+#ifndef REGISTER_H
+#define REGISTER_H
+#include "chip_config.h"
 #include "gpio_reg.h"
 #include "soc.h"
 #include "analog_reg.h"
+#if(COMPATIBLE_WITH_TL321X_AND_TL323X == 0)
 #include "audio_reg.h"
+#endif
 #include "timer_reg.h"
 #include "dma_reg.h"
+#if(COMPATIBLE_WITH_TL321X_AND_TL323X == 0)
 #include "usb_reg.h"
+#endif
 #include "pwm_reg.h"
 #include "spi_reg.h"
 #include "i2c_reg.h"
@@ -49,5 +53,7 @@
 #include "plmt_reg.h"
 #include "analog_afe3v_reg.h"
 #include "analog_afe1v_reg.h"
+#if(COMPATIBLE_WITH_TL321X_AND_TL323X == 0)
 #include "ir_learn_reg.h"
+#endif
 #endif

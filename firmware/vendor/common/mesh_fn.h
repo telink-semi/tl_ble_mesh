@@ -35,7 +35,7 @@ enum{
 enum{
     FN_CACHE_REPLACE_NONE           = 0,
     FN_CACHE_REPLACE_FINISH	        = 1,
-    FN_CACHE_REPLACE_AND_OVERWRITE  = 2,
+//  FN_CACHE_REPLACE_AND_OVERWRITE  = 2,
 };
 
 void mesh_feature_set_fn(void);

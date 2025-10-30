@@ -26,16 +26,16 @@
 
 
 /**
- * @brief		This is detect callback function
- * @param[in]	none
+ * @brief       This is detect callback function
+ * @param[in]   none
  * @return      none
  */
 void app_detect_callback(u32 de_evt);
 
 
 /**
- * @brief		This is detect initialization function
- * @param[in]	none
+ * @brief       This is detect initialization function
+ * @param[in]   none
  * @return      none
  */
 void app_detect_init(void);

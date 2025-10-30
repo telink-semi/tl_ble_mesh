@@ -61,7 +61,7 @@ unsigned char flash_read_status(flash_command_e cmd);
  *              there may be a risk of error in the operation of the flash (especially for the write and erase operations.
  *              If an abnormality occurs, the firmware and user data may be rewritten, resulting in the final Product failure)
  */
-void flash_write_status(flash_status_typedef_e type , unsigned short data);
+void flash_write_status(flash_status_typedef_e type, unsigned short data);
 
 /**
  * @brief       This function serves to read data from the Security Registers of the flash.
@@ -79,7 +79,7 @@ void flash_write_status(flash_status_typedef_e type , unsigned short data);
  *              there may be a risk of error in the operation of the flash (especially for the write and erase operations.
  *              If an abnormality occurs, the firmware and user data may be rewritten, resulting in the final Product failure)
  */
-void flash_read_otp(unsigned long addr, unsigned long len, unsigned char* buf);
+void flash_read_otp(unsigned long addr, unsigned long len, unsigned char *buf);
 
 /**
  * @brief       This function serves to write data to the Security Registers of the flash you choose.
@@ -132,7 +132,7 @@ void flash_erase_otp(unsigned long addr);
  *              there may be a risk of error in the operation of the flash (especially for the write and erase operations.
  *              If an abnormality occurs, the firmware and user data may be rewritten, resulting in the final Product failure)
  */
-_attribute_text_sec_ void flash_write_config(flash_command_e cmd,unsigned char data);
+_attribute_text_sec_ void flash_write_config(flash_command_e cmd, unsigned char data);
 
 /**
  * @brief       This function is used to read the configure of the flash,P25Q16SU/P25Q32SU/PY25Q128H uses this function.
@@ -147,6 +147,5 @@ _attribute_text_sec_ void flash_write_config(flash_command_e cmd,unsigned char d
  *              there may be a risk of error in the operation of the flash (especially for the write and erase operations.
  *              If an abnormality occurs, the firmware and user data may be rewritten, resulting in the final Product failure)
  */
-_attribute_text_sec_ unsigned char  flash_read_config(void);
+_attribute_text_sec_ unsigned char flash_read_config(void);
 #endif
-

@@ -40,9 +40,6 @@
 #include "../../../reference/tl_bulk/lib_file/gatt_provision.h"
 #include "../../../reference/tl_bulk/Sig_mesh_json_info.h"
 #endif
-#if MI_API_ENABLE 
-#include "vendor/common/mi_api/telink_sdk_mible_api.h"
-#endif 
 
 #if (MD_REMOTE_PROV&&__PROJECT_MESH_PRO__)
 

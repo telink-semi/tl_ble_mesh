@@ -986,6 +986,9 @@ static inline int is_mesh_ota_master_wait_ack(void)
 static inline void clr_mesh_ota_master_wait_ack(void)
 {
     fw_distribut_srv_proc.st_wait_flag = 0;
+#if NODE_DISTRIBUT_RETRY_FLOW_EN
+    fw_distribut_srv_proc.wait_ack_tick = 0;
+#endif
 }
 
 static inline int is_rx_upload_start_before(void)

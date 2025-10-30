@@ -85,6 +85,13 @@ int mesh_reset_network(u8 provision_enable)
 	p_uuid->adv_flag = 0;
 	#endif	
 	
+// switch project
+    #if __PROJECT_MESH_SWITCH__
+    extern u8 switch_provision_ok;
+    switch_provision_ok = 0;
+    switch_mode_set(SWITCH_MODE_GATT);
+    #endif
+
 //	irq_restore(r);
 	return 0;
 }
@@ -95,6 +102,7 @@ void mesh_revert_network(void)
 	
 	#if FAST_PROVISION_ENABLE
 	if((!fast_prov.not_need_prov)&&(mesh_fast_prov_sts_get() == FAST_PROV_COMPLETE)){
+        mesh_fast_device_key_set();
 		mesh_provision_par_handle(&fast_prov.net_info.pro_data);
 		//set app_key
 		mesh_appkey_set_t *p_set = (mesh_appkey_set_t *)&fast_prov.net_info.appkey_set;
@@ -360,7 +368,7 @@ u8 *mesh_fast_prov_get_mac_from_buf()
 
 
 #if FAST_PROVISION_ENABLE
-void mesh_device_key_set_default(void){
+void mesh_fast_device_key_set(void){
 	memset(mesh_key.dev_key, 0x00, sizeof(mesh_key.dev_key));
 	memcpy(mesh_key.dev_key, tbl_mac, sizeof(tbl_mac));
 }
@@ -372,7 +380,6 @@ void mesh_fast_prov_val_init(void)
 		fast_prov.not_need_prov = 1;
 	}
 	else{
-		mesh_device_key_set_default();
 		fast_prov.get_mac_en = 1;
 	}
 }
@@ -575,7 +582,8 @@ int cb_vd_mesh_reset_network(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par)
 	mesh_fast_prov_val_init(); // the proxy node maybe just provision by pb_gatt
 	mesh_fast_prov_rcv_op(cb_par->op);
 	fast_prov.delay = par[0] + (par[1]<<8);
-
+    fast_prov.provisioner_addr = cb_par->adr_src;
+    
 	return 0;
 }
 

@@ -26,7 +26,6 @@
 
 #include "vendor/common/user_config.h"
 #include "drivers.h"
-#include "al_lib/al_lib.h"
 
 #ifndef DEFAULT_DEV_NAME
 #define DEFAULT_DEV_NAME						"Bluetooth_Mesh"
@@ -34,12 +33,22 @@
 #define MAX_DEV_NAME_LEN						sizeof(DEFAULT_DEV_NAME)-1
 
 #if (BLE_MULTIPLE_CONNECTION_ENABLE && EXTENDED_ADV_ENABLE)
+/* In extended advertising model, mesh use different adv handle to send different message.
+ * GATT_ADV_HANDLE is for connectable adv.
+ * MESH_ADV_HANDLE is for mesh message.
+ * MESH_RELAY_HANDLE and MESH_RELAY_HANDLE1 is for relay message.
+ * MESH_FRIEND_HANDLE and MESH_FRIEND_HANDLE1 is for relay message.
+ * Note: Except connectable adv, before sending the next adv, use is_extend_adv_disable(adv_handle) check whether the adv handle is ready(or previous adv has finished). 
+ *       When max_extAdvEvt set by blc_ll_setExtAdvEnable(adv_en_t enable, u8 adv_handle, u16 duration, u8 max_extAdvEvt) is finished, the corresponding adv_handle will be ready again.
+ */
 #define GATT_ADV_HANDLE                 ADV_HANDLE0
 #define MESH_ADV_HANDLE                 ADV_HANDLE1
 #define MESH_RELAY_HANDLE               ADV_HANDLE2
 #define MESH_RELAY_HANDLE1              ADV_HANDLE3
 #define MESH_FRIEND_HANDLE              MESH_RELAY_HANDLE
 #define MESH_FRIEND_HANDLE1             MESH_RELAY_HANDLE1
+#else
+#define GATT_ADV_HANDLE                 ADV_HANDLE0
 #endif
 
 #define BLS_LINK_STATE_ADV				0
@@ -63,6 +72,8 @@
 #define bls_ll_setScanRspData			blc_ll_setScanRspData
 #define pkt_scan_rsp					pkt_scanRsp
 
+#define rand                            trng_rand
+
 //#include "drivers.h" // can not include drivers.h, because it is included by drivers.h
 
 // ---- config for BLE lib for mesh
@@ -75,14 +86,13 @@
 /**
  * @brief   system Timer : 16Mhz, Constant
  */
-#define	CLOCK_16M_SYS_TIMER_CLK_1S		SYSTEM_TIMER_TICK_1S
-#define	CLOCK_16M_SYS_TIMER_CLK_1MS		SYSTEM_TIMER_TICK_1MS
-#define	CLOCK_16M_SYS_TIMER_CLK_1US		SYSTEM_TIMER_TICK_1US
+#define	CLOCK_SYS_TIMER_CLK_1S			SYSTEM_TIMER_TICK_1S
+#define	CLOCK_SYS_TIMER_CLK_1MS			SYSTEM_TIMER_TICK_1MS
+#define	CLOCK_SYS_TIMER_CLK_1US			SYSTEM_TIMER_TICK_1US
 
-
-#define	CLOCK_SYS_CLOCK_1S				SYSTEM_TIMER_TICK_1S
-#define	CLOCK_SYS_CLOCK_1MS				SYSTEM_TIMER_TICK_1MS
-#define	CLOCK_SYS_CLOCK_1US				SYSTEM_TIMER_TICK_1US
+#define	CLOCK_SYS_CLOCK_1S				CLOCK_SYS_CLOCK_HZ
+#define	CLOCK_SYS_CLOCK_1MS				(CLOCK_SYS_CLOCK_1S / 1000)
+#define	CLOCK_SYS_CLOCK_1US				(CLOCK_SYS_CLOCK_1S / 1000000)
 
 #define sys_tick_per_us					(SYSTEM_TIMER_TICK_1US)
 
@@ -162,17 +172,18 @@ typedef struct __attribute__((packed)) {
 	u32	timeStamp;
 } adv_report_extend_t;
 
-/**
- * @brief   system Timer : 16Mhz, Constant
- */
-#define	CLOCK_16M_SYS_TIMER_CLK_1S		SYSTEM_TIMER_TICK_1S
-#define	CLOCK_16M_SYS_TIMER_CLK_1MS		SYSTEM_TIMER_TICK_1MS
-#define	CLOCK_16M_SYS_TIMER_CLK_1US		SYSTEM_TIMER_TICK_1US
+typedef struct {
+	u8 bear_par_type;	// be equal to bear_head_t->par_type
+	u16 src_addr;
+	u8 sno_low; 		// low byte of message sequence number
+}bear_head_src_sno_t;
 
-
-#define	CLOCK_SYS_CLOCK_1S				SYSTEM_TIMER_TICK_1S
-#define	CLOCK_SYS_CLOCK_1MS				SYSTEM_TIMER_TICK_1MS
-#define	CLOCK_SYS_CLOCK_1US				SYSTEM_TIMER_TICK_1US
+typedef struct{
+	u8 len;
+	u8 ad_type;		// always DATA_TYPE_MANUFACTURER_SPECIFIC_DATA
+	u16 vnd_id;		// vendor id
+	bear_head_src_sno_t head_src_sno; // be equal to bear_head_t
+}mesh_aux_payload_t;
 
 typedef enum{
 	SET_RX_WITHOUT_CHN,		// must set to rx mode
@@ -204,8 +215,6 @@ static inline void clock_init_B91()
 	CCLK_32M_HCLK_32M_PCLK_16M;
 #elif (CLOCK_SYS_CLOCK_HZ == 48000000)
 	CCLK_48M_HCLK_48M_PCLK_24M;
-#elif (CLOCK_SYS_CLOCK_HZ == 64000000)
-	CCLK_64M_HCLK_32M_PCLK_16M;
 #elif (CLOCK_SYS_CLOCK_HZ == 96000000)
 	CCLK_96M_HCLK_48M_PCLK_24M;
 #else
@@ -267,29 +276,30 @@ u8 get_fw_ota_value(void);
 #define UART_RXDONE     UART_RXDONE_IRQ_STATUS
 #define UART_TXDONE     UART_TXDONE_IRQ_STATUS
 
-#define UART_NUM_GET(pin)		UART0
+#define UART_NUM_GET(pin)		(((pin == UART_RX_PIN) || (pin == UART_TX_PIN)) ? UART0 : UART1)
 #define UART_IRQ_GET(pin)		((UART_NUM_GET(pin) == UART0) ? IRQ19_UART0 : (UART_NUM_GET(pin) == UART1) ? IRQ18_UART1 : IRQ48_UART2)
 #endif
-
-#define UART_MODULE_SEL     UART_RX_NUM
 
 typedef struct __attribute__((packed)) {
 	unsigned int len;  // must be 4 byte align 
 	unsigned char data[1];
 }uart_data_t;
 
-extern const uart_num_e UART_RX_NUM;
-extern const uart_num_e UART_TX_NUM;
+extern const uart_num_e UART_NUM;
 extern const u32 UART_IRQ_NUM;
+#if UART_SECOND_EN
+extern const uart_num_e UART_NUM_SECOND;
+extern _align_4_ my_fifo_t hci_rx_fifo_2nd;
+#endif
 
 void uart_tx_busy_timeout_poll(void);
-unsigned char uart_tx_is_busy_dma_tick(void);
-unsigned char uart_Send_dma_with_busy_hadle(unsigned char* data, unsigned int len);
+unsigned char uart_tx_is_busy_dma_tick(uart_num_e uart_num);
+unsigned char uart_Send_dma_with_busy_hadle(uart_num_e uart_num, unsigned char* data, unsigned int len);
 unsigned char uart_ErrorCLR(void);
 void irq_uart_handle_fifo(void);
-void uart_drv_init_B91m(void);
+void uart_drv_init_riscv(void);
 #if UART_SECOND_EN
-void uart_drv_init_B91m_2nd();
+void uart_drv_dma_init_2nd(void);
 #endif
 
 typedef struct {
@@ -311,6 +321,9 @@ extern unsigned char adc_hw_initialized;
 #define cpu_long_sleep_wakeup		cpu_long_sleep_wakeup_32k_rc
 #define adc_sample_and_get_result 	adc_get_voltage
 
+
+unsigned short crc16(const unsigned char *pD, int len);
+
 void gpio_set_func(unsigned int pin, unsigned int func);	// modify by haiwen for compatibility
 void flash_en_support_arch_flash(unsigned char en);
 int otaRead(u16 connHandle, void * p);
@@ -327,13 +340,13 @@ void gpio_set_wakeup(u32 pin, u32 level, int en);
 void main_loop_risv_sdk(void);
 void user_init_risv_sdk(void);
 unsigned short adc_get_voltage(void);
-int  blc_ll_procScanPkt_mesh(u8 *raw_pkt, u8 *new_pkt);
+
 u8 adv_filter_proc(u8 *raw_pkt, u8 blt_sts);
 int mesh_adv_prepare_proc(void);
 int is_mesh_adv_tx_pending(void);
-
-void blc_register_adv_scan_proc (void *p);
+int blt_send_adv_cb(u8 adv_idx);
 void blc_register_advertise_prepare (void *p);
+int mesh_set_custom_ext_adv_data(bool enable, uint8_t *data, uint16_t len);
 
 int  bls_ll_terminateConnection (u8 reason);
 u8 blc_ll_getCurrentState(void);
@@ -341,13 +354,6 @@ u8 bls_ll_isConnectState (void);
 int blc_ll_isAllSlaveConnected(void);
 int get_periphr_idx_by_conn_handle(u16 connHandle);
 u16 get_periphr_conn_handle_by_idx(int idx);
-
-/**
- * @brief      for user to initialize default RF TX power level index
- * @param      rfPwrLvlIdx - refer to 'rf_power_level_index_e'
- * @return     none
- */
-void        blc_ll_setDefaultTxPowerLevel (rf_power_level_index_e rfPwrLvlIdx);
 
 int tlk_strlen(const char *str);
 void i2c_write_series(unsigned int Addr, unsigned int AddrLen, unsigned char * dataBuf, int dataLen);

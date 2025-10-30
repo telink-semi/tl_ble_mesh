@@ -395,7 +395,7 @@ int mesh_tx_privacy_nw_beacon_all_net(u8 blt_sts)
 {
 	int err = 0;    // default success.
 	mesh_privacy_beacon_save_t *p_beacon_srv = &g_mesh_model_misc_save.privacy_bc;
-	if(!is_provision_success()||MI_API_ENABLE){// if not provisioned it will not send private beacon .
+	if(!is_provision_success()){// if not provisioned it will not send private beacon .
 		return err;
 	}
 	if(blt_sts == 0 && p_beacon_srv->beacon_sts != PRIVATE_BEACON_ENABLE){ // in the adv state
@@ -419,7 +419,7 @@ int mesh_tx_privacy_nw_beacon_all_net(u8 blt_sts)
 			/* in the pts private beacon proxy bv-08c , it should not send 
 			two secure beacon on gatt connection , other wise the filter sts will fail*/
 			err = mesh_tx_sec_privacy_beacon(p_netkey_base, blt_sts);
-			if(blt_sts && beacon_send.conn_beacon_flag ){
+			if(blt_sts && beacon_send.conn_handle){
 				break;
 			}
 		#else

@@ -38,18 +38,17 @@
 #include "common/usb_dbg/myudb.h"
 #include "common/sdk_version.h"
 
-#include "proj_lib/ble/blt_config.h"
+#include "proj_lib/ble/blt_config.h"            // BLE_SRC_TELINK_MESH_EN
 #include "vendor/common/user_config.h"
-#include "common/tstring.h" 					// (BLE_SRC_TELINK_MESH_EN)
-#include "vendor/common/chip_adapt_layer/al.h" 	// BLE_SRC_TELINK_MESH_EN
-#include "application/print/u_printf.h" 		// BLE_SRC_TELINK_MESH_EN
+#include "common/tstring.h"                     // BLE_SRC_TELINK_MESH_EN
+#include "vendor/common/chip_adapt_layer/al.h"  // BLE_SRC_TELINK_MESH_EN
+#include "application/print/u_printf.h"         // BLE_SRC_TELINK_MESH_EN
 
 #include "vendor/common/app_common.h"
 #include "vendor/common/ble_flash.h"
 #include "vendor/common/blt_fw_sign.h"
 #include "vendor/common/blt_led.h"
 #include "vendor/common/blt_soft_timer.h"
-#include "vendor/common/custom_pair.h"
 #include "vendor/common/device_manage.h"
 #include "vendor/common/simple_sdp.h"
 #include "vendor/common/flash_fw_check.h"
@@ -60,6 +59,7 @@
 #include "vendor/common/emi_test.h"
 #include "gpio_default.h"
 
+                                                 // BLE_SRC_TELINK_MESH_EN
 #include "application/keyboard/keyboard.h"
 #include "application/usbstd/usbkeycode.h"
 

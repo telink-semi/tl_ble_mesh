@@ -159,7 +159,13 @@ enum{/*vendor generic group, op code include C1-C4*/
 	#if 1 // __TLSR_RISCV_EN__
     VD_GROUP_G_MIC_TX_REQ				= 3,	// for AUDIO_MESH_EN
 	#endif
+    #if 1 // ENERGY_HARVEST_RX_EN
+    VD_GROUP_G_EH_PAIR_MAC_AND_KEY_SET  = 4,
+    VD_GROUP_G_EH_PAIR_DELETE           = 5,
+    VD_GROUP_G_EH_PUBLISH_SET           = 6,
+    #endif
     VD_G_TELINK_END     = 0x7F,
+    
     /* user use sub op from 0x80 to 0xff*/
     VD_GROUP_G_USER_START               = 0x80,
     #if VENDOR_SUB_OP_USER_DEMO_EN

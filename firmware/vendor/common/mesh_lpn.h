@@ -47,6 +47,7 @@ void lpn_debug_alter_debug_pin(int reset);
 #endif
 
 void lpn_set_poll_ready(void);
+int is_lpn_poll_ready(void);
 void friend_cmd_send_poll(void);
 void mesh_friend_ship_start_poll(void);
 void mesh_feature_set_lpn(void);
@@ -69,18 +70,10 @@ int mesh_lpn_rcv_delay_wakeup(void);
 int mesh_lpn_poll_md_wakeup(void);
 int mesh_lpn_adv_interval_update(u8 adv_tick_refresh);
 void soft_timer_mesh_adv_proc(void);
-void  lpn_set_sleep_wakeup (u8 e, u8 *p, int n);
-/************************** access_set_lum **************************
-function : cache the sublist address for lpn  
-para:
-	op: opcode
-	addr: sublist address 
-	ready: 0:send sublist control message after receive pre sublist confirm message.  1:ready to send sublist control message.
-ret: 0  means OK 
-	-1 or other value means err 
-****************************************************************************/
-int mesh_lpn_subsc_pending_add(u16 op, u16 *p_sublist, int sub_cnt, int overwrite_flag);
+int mesh_tx_cmd_add_packet_fn_poll_cahce(u8 *p_bear);
+int friend_subsc_list_retry_update(u8 type, u16 *p_sublist, int sub_cnt, int overwrite_flag);
 u32 get_lpn_poll_interval_ms(void);
+int set_lpn_poll_interval(int poll_ms);
 
 enum{
     HANDLE_NONE                     = 0,
@@ -120,9 +113,7 @@ typedef struct{
 	u32  cnt;
 }lpn_sub_list_event_t;
 
-extern _align_4_ lpn_sub_list_event_t mesh_lpn_subsc_pending;
 extern mesh_subsc_list_retry_t subsc_list_retry;
 
-#define LPN_SUBSC_LIST_ADD_CNT_MAX		(SUB_LIST_MAX_IN_ONE_MSG + ARRAY_SIZE(mesh_lpn_subsc_pending.sub_list))	// default is 10.
 
 

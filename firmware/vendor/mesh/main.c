@@ -35,30 +35,25 @@
 
 #if (HCI_ACCESS == HCI_USE_UART)
 #include "drivers.h"
-extern my_fifo_t hci_rx_fifo;
 
-_attribute_ram_code_ void irq_uart_handle()
+_attribute_ram_code_ void irq_uart_handle(void)
 {
     irq_uart_handle_fifo();
 }
 
-#if (UART_SECOND_EN || (UART_NUM_USE == 0))
+#if UART0_ENABLE
 _attribute_ram_code_ void uart0_irq_handler(void)
 {
-	if(IRQ19_UART0 == UART_IRQ_NUM || UART_SECOND_EN){
-		irq_uart_handle();
-	}
+    irq_uart_handle();
 }
 
 PLIC_ISR_REGISTER(uart0_irq_handler, IRQ_UART0); // function size is 128byte if not use this irq handle
 #endif
 
-#if (UART_SECOND_EN || (UART_NUM_USE == 1))
+#if UART1_ENABLE
 _attribute_ram_code_ void uart1_irq_handler(void)
 {
-	if(IRQ18_UART1 == UART_IRQ_NUM || UART_SECOND_EN){
-		irq_uart_handle();
-	}
+    irq_uart_handle();
 }
 
 PLIC_ISR_REGISTER(uart1_irq_handler, IRQ_UART1); // function size is 128byte if not use this irq handle
@@ -101,6 +96,52 @@ PLIC_ISR_REGISTER_OS(stimer_irq_handler, IRQ_SYSTIMER)
 PLIC_ISR_REGISTER(stimer_irq_handler, IRQ_SYSTIMER)
 #endif
 
+/**
+ * @brief      application system initialization
+ * @param[in]  none.
+ * @return     none.
+ */
+__INLINE void blc_app_system_init(void)
+{
+#if (MCU_CORE_TYPE == MCU_CORE_B91)
+    sys_init(DCDC_1P4_LDO_1P8, VBAT_MAX_VALUE_GREATER_THAN_3V6, INTERNAL_CAP_XTAL24M);
+    gpio_set_up_down_res(GPIO_SWS, GPIO_PIN_PULLUP_1M);
+    wd_stop();
+    clock_init_B91();
+#elif (MCU_CORE_TYPE == MCU_CORE_B92)
+    sys_init(DCDC_1P4_LDO_2P0, VBAT_MAX_VALUE_GREATER_THAN_3V6, GPIO_VOLTAGE_3V3, INTERNAL_CAP_XTAL24M);
+    pm_update_status_info(1);
+    gpio_set_up_down_res(GPIO_SWS, GPIO_PIN_PULLUP_1M);
+    wd_32k_stop();
+    CCLK_32M_HCLK_32M_PCLK_16M;
+#elif (MCU_CORE_TYPE == MCU_CORE_TL721X)
+    sys_init(DCDC_0P94_DCDC_1P8, VBAT_MAX_VALUE_GREATER_THAN_3V6, INTERNAL_CAP_XTAL24M);
+    pm_update_status_info(1);
+    gpio_set_up_down_res(GPIO_SWS, GPIO_PIN_PULLUP_1M);
+    wd_32k_stop();
+    wd_stop();
+    PLL_240M_CCLK_48M_HCLK_48M_PCLK_48M_MSPI_48M;
+#elif (MCU_CORE_TYPE == MCU_CORE_TL321X)
+    sys_init(DCDC_1P25_LDO_1P8, VBAT_MAX_VALUE_GREATER_THAN_3V6, INTERNAL_CAP_XTAL24M);
+    pm_update_status_info(1);
+    gpio_set_up_down_res(GPIO_SWS, GPIO_PIN_PULLUP_1M);
+    wd_32k_stop();
+    wd_stop();
+    #if JTAG_DEBUG_DISABLE
+    PLL_192M_CCLK_48M_HCLK_24M_PCLK_24M_MSPI_48M;
+    #endif
+#elif (MCU_CORE_TYPE == MCU_CORE_TL751X)
+    sys_init(VBAT_MAX_VALUE_GREATER_THAN_3V6);
+    wd_32k_stop();
+    wd_stop();
+    CCLK_96M_HCLK_96M_PCLK_24M_MSPI_48M;
+#endif
+
+#if(MODULE_WATCHDOG_ENABLE)
+    wd_set_interval_ms(WATCHDOG_INIT_TIMEOUT);
+    wd_start();
+#endif
+}
 
 FLASH_ADDRESS_DEFINE;
 /**
@@ -108,7 +149,10 @@ FLASH_ADDRESS_DEFINE;
  * @param[in]	none
  * @return      none
  */
-_attribute_ram_code_ int main(void)
+ #if PM_DEEPSLEEP_RETENTION_ENABLE
+_attribute_ram_code_
+#endif
+int main(void)
 {
 	FLASH_ADDRESS_CONFIG;
 	blc_ota_setFirmwareSizeAndBootAddress(FW_SIZE_MAX_K, MULTI_BOOT_ADDR_0x80000);
@@ -118,26 +162,7 @@ _attribute_ram_code_ int main(void)
   	   (2). For B91 only: even no power management */
 	blc_pm_select_internal_32k_crystal();
 
-	#if (MCU_CORE_TYPE == MCU_CORE_B91)
-		sys_init(DCDC_1P4_LDO_1P8, VBAT_MAX_VALUE_GREATER_THAN_3V6, INTERNAL_CAP_XTAL24M);
-		clock_init_B91();
-	#elif (MCU_CORE_TYPE == MCU_CORE_B92)
-        sys_init(DCDC_1P4_LDO_2P0, VBAT_MAX_VALUE_GREATER_THAN_3V6, GPIO_VOLTAGE_3V3, INTERNAL_CAP_XTAL24M);
-        wd_32k_stop();
-        CCLK_32M_HCLK_32M_PCLK_16M;
-    #elif (MCU_CORE_TYPE == MCU_CORE_TL721X)
-        sys_init(DCDC_0P94_DCDC_1P8,VBAT_MAX_VALUE_GREATER_THAN_3V6,INTERNAL_CAP_XTAL24M);
-        gpio_set_up_down_res(GPIO_SWS, GPIO_PIN_PULLUP_1M);
-        wd_32k_stop();
-        wd_stop();
-        PLL_240M_CCLK_40M_HCLK_40M_PCLK_40M_MSPI_40M;
-    #elif(MCU_CORE_TYPE == MCU_CORE_TL321X)
-        sys_init(DCDC_1P25_LDO_1P8, VBAT_MAX_VALUE_GREATER_THAN_3V6, INTERNAL_CAP_XTAL24M);
-        gpio_set_up_down_res(GPIO_SWS, GPIO_PIN_PULLUP_1M);
-        wd_32k_stop();
-        wd_stop();
-        PLL_192M_CCLK_96M_HCLK_48M_PCLK_24M_MSPI_48M;
-    #endif
+    blc_app_system_init();
 
 	/* detect if MCU is wake_up from deep retention mode */
 	int deepRetWakeUp = pm_is_MCU_deepRetentionWakeup();  //MCU deep retention wakeUp
@@ -170,6 +195,9 @@ _attribute_ram_code_ int main(void)
 
 	while(1)
 	{
+        #if(MODULE_WATCHDOG_ENABLE)
+        wd_clear();
+        #endif
 		main_loop ();
 	}
 #endif

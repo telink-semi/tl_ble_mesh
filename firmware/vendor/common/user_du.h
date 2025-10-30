@@ -25,13 +25,12 @@
 #ifndef __USER_DU_H
 #define __USER_DU_H
 #include "tl_common.h"
-#if __TLSR_RISCV_EN__
 #include "stack/ble/ble.h"
-#else
-#include "proj_lib/ble/ll/ll.h"
-#endif
 #include "proj_lib/ble/blt_config.h"
 #include "vendor/common/user_config.h"
+
+//SDK版本
+#define DU_SDK_VIRSION                  (7)
 
 #define	DU_SAMPLE_DATA_TEST_EN			0
 #define DU_APP_ADV_CONTROL_EN			0
@@ -300,6 +299,19 @@ typedef struct __attribute__((packed)) {
 	genie_nw_t genie_nw;
 }mesh_bear_rsp2_app_t;
 
+typedef struct{
+    u8 length;
+    u8 data_type;
+    union{
+        struct{
+            u16 cid;
+            u8 manu_data[1];
+        };
+        u16 uuid;
+        u8 data[1];
+    };
+}ble_adv_data_t;
+
 typedef struct __attribute__((packed)) { 
 	u8 len_flag;
 	u8 flag_type;
@@ -376,14 +388,6 @@ typedef struct __attribute__((packed)) {
 } ios_nw_t;
 
 typedef struct __attribute__((packed)) { 
-	u8 len_flag;
-	u8 flag_type;
-	u8 flags;
-#if 0 // ios below version 12 does't have power type 	
-	u8 power_len;
-	u8 power_type;
-	u8 tx_power;
-#endif
 	u8 uuid_len;
 	u8 uuid_type;
 	union{
@@ -447,7 +451,7 @@ void du_ota_set_flag(u8 value);
 u8   du_ota_get_flag(void);
 
 int genie_manu_nw_package(genie_nw_cache_t *p);
-int app_event_handler_ultra_prov(u8 *p_payload);
+int app_event_handler_ultra_prov(u8 *p_payload, int len);
 void mesh_du_ultra_prov_loop(void);
 
 #endif

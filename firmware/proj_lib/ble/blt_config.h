@@ -45,13 +45,13 @@
         #if(MCU_CORE_TYPE == MCU_CORE_B91)
 #define     MY_RF_POWER_INDEX       RF_POWER_INDEX_P0p01dBm
         #elif(MCU_CORE_TYPE == MCU_CORE_TL321X)
-#define     MY_RF_POWER_INDEX       RF_POWER_INDEX_N0p07dBm
+#define     MY_RF_POWER_INDEX       RF_POWER_INDEX_P0p08dBm
         #endif
     #else
         #if(MCU_CORE_TYPE == MCU_CORE_B91)
-#define     MY_RF_POWER_INDEX       RF_POWER_INDEX_P3p25dBm
+#define     MY_RF_POWER_INDEX       RF_POWER_INDEX_P4p35dBm
         #elif(MCU_CORE_TYPE == MCU_CORE_TL321X)
-#define     MY_RF_POWER_INDEX       RF_POWER_INDEX_P3p49dBm
+#define     MY_RF_POWER_INDEX       RF_POWER_INDEX_P5p93dBm
         #endif
     #endif
 #endif
@@ -182,89 +182,83 @@ typedef struct {
 		extern unsigned int flash_adr_misc;	
 
 #if (0 == FLASH_PLUS_ENABLE)
-#define 		FLASH_ADR_AREA_FIRMWARE_END	0x60000 // 60000 = 384K  need to be 0x60000 for flash protection.
+#define 		FLASH_ADR_AREA_FIRMWARE_END     0x60000 // 60000 = 384K  need to be 0x60000 for flash protection.
 /* Flash adr 0x00000 ~ 0x5ffff  is firmware area*/
 /* Flash adr 0x60000 ~ 0x7ffff  is reserved area, due to flash protection function*/
+#define         FLASH_ADR_AREA_1_START          0x60000
+#define			FLASH_ADR_MESH_KEY              FLASH_ADR_AREA_1_START
+#define			FLASH_ADR_MD_CFG_S              0x61000
+#define			FLASH_ADR_MD_HEALTH             0x62000
+#define			FLASH_ADR_MD_G_ONOFF_LEVEL      0x63000
+#define			FLASH_ADR_MD_LIGHT_CTL          0x64000
+#define			FLASH_ADR_MD_LIGHT_LC           0x65000
+#define			FLASH_ADR_MD_LIGHTNESS          0x66000
+#define 		FLASH_ADR_MD_SENSOR             0x67000
+#define			FLASH_ADR_MD_LIGHT_HSL          0x68000
+#define			FLASH_ADR_MD_G_POWER_ONOFF      0x69000
+#define			FLASH_ADR_MD_PROPERTY           0x6a000
+#define			FLASH_ADR_MD_MESH_OTA           0x6b000
+#define         FLASH_ADR_AREA_1_END            0x6c000 // not included
+
 /* Flash adr 0x80000 ~ 0xdffff  is ota area*/
-#define			FLASH_ADR_AREA_1_START		0xe0000
-#define			FLASH_ADR_MESH_KEY			0xe0000
-#define			FLASH_ADR_MD_CFG_S			0xe1000
-#define			FLASH_ADR_MD_HEALTH			0xe2000
-#define			FLASH_ADR_MD_G_ONOFF_LEVEL	0xe3000
-#define			FLASH_ADR_MD_TIME_SCHEDULE	0xe4000
-#define			FLASH_ADR_MD_LIGHTNESS		0xe5000	// share with power level
-#define			FLASH_ADR_MD_LIGHT_CTL		0xe6000
-#define			FLASH_ADR_MD_LIGHT_LC		0xe7000
-#define			FLASH_ADR_MD_SCENE			0xe8000
-#define 		FLASH_ADR_MD_SENSOR		    0xe9000
-#define 		FLASH_ADR_PROVISION_CFG_S	0xea000
-#define			FLASH_ADR_MD_LIGHT_HSL		0xeb000 // cps before V23
-#define			FLASH_ADR_MD_VD_LIGHT		0xec000
-#define			FLASH_ADR_MD_G_POWER_ONOFF	0xed000
-#define			FLASH_ADR_FRIEND_SHIP		0xee000 // backup both FLASH_ADR_MISC and FLASH_ADR_VC_NODE_INFO(gateway) temporarily
-#define			FLASH_ADR_MD_PROPERTY		0xef000 // just test
-#define			FLASH_ADR_MD_DF_SBR			0xef000
+/* area above is flash protect area, flash protect default FLASH_LOCK_LOW_896K(0xe0000) for 1M flash, refer to FLASH_LOCK_AREA_SUPPORT.*/
+#define			FLASH_ADR_AREA_2_START          0xe0000 
+#define			FLASH_ADR_MD_TIME_SCHEDULE      FLASH_ADR_AREA_2_START
+#define			FLASH_ADR_MD_SCENE              0xe1000
+#define 		FLASH_ADR_PROVISION_CFG_S       0xe2000
+#define			FLASH_ADR_MD_VD_LIGHT           0xe3000
+#define			FLASH_ADR_FRIEND_SHIP           0xe4000 // backup both FLASH_ADR_MISC, rebuild_fwd_tbl_entry() and FLASH_ADR_VC_NODE_INFO(gateway) temporarily
+#define			FLASH_ADR_MD_DF_SBR             0xe5000
+#define			FLASH_ADR_MISC                  0xe6000 // should be located at the unprotected flash area.
+#define			FLASH_ADR_RESET_CNT             0xe7000 // should be located at the unprotected flash area.
+#define			FLASH_ADR_SW_LEVEL              0xe8000 // should be located at the unprotected flash area.
+#define			FLASH_ADR_MD_MISC_PAR           0xe9000
 
-#define			FLASH_ADR_AREA_1_END		0xf0000
-
-/* Flash adr 0x80000 ~ 0xedfff  is firmware(OTA) area*/
-#define			FLASH_ADR_AREA_2_START		0xf0000
-#define			FLASH_ADR_MISC				0xf0000 // should be located at the last 64K for future flash protect function.
-#define			FLASH_ADR_RESET_CNT			0xf1000 // should be located at the last 64K for future flash protect function.
-#define			FLASH_ADR_SW_LEVEL			0xf2000 // should be located at the last 64K for future flash protect function.
-#define			FLASH_ADR_MD_MISC_PAR		0xf3000 // SDK type is 0xFD000 for B91m
-#define			FLASH_ADR_MD_MESH_OTA		0xf4000
 #if (__PROJECT_MESH_PRO__ || __PROJECT_MESH_GW_NODE__)
-#define 		FLASH_ADR_VC_NODE_INFO		0xf5000	//
-#define 		FLASH_ADR_VC_NODE_INFO_END	0xf6000
+#define 		FLASH_ADR_VC_NODE_INFO          0xea000	//
+#define 		FLASH_ADR_VC_NODE_INFO_END      0xec000 // not included
 #endif
-#define			FLASH_ADR_AREA_2_END		0xf6000
 
-
-/*******vendor define here, from 0xf6000 to 0xfcfff
-vendor use from 0xf6000 to 0xfcfff should be better, because telink may use 0xFB000,0xFC000 later.
-********************************************/
-#if (MESH_USER_DEFINE_MODE == MESH_MI_ENABLE)
-#define 		FLASH_ADR_MI_RECORD			0xf6000
-#define 		FLASH_ADR_MI_RECORD_TMP		0xf7000
-#define 		FLASH_ADR_MI_RECORD_MAX		0xf8000
-
-//                      MI_BLE_MESH_CER_ADR	        0xFC000 // don't modify
-#elif (MESH_USER_DEFINE_MODE == MESH_MI_SPIRIT_ENABLE)
-#define 		FLASH_ADR_THREE_PARA_ADR	0xf6000
-#define         FLASH_ADR_THREE_PARA_ADR_0x100_0xF00    //please refer to "FLASH_ADR_EDCH_PARA"
-#define 		FLASH_ADR_MI_RECORD			0xf7000
-#define 		FLASH_ADR_MI_RECORD_TMP		0xf8000
-#define 		FLASH_ADR_MI_RECORD_MAX		0xf9000
-    #if (ALI_MD_TIME_EN)
-#define 		FLASH_ADR_VD_TIME_INFO	    FLASH_ADR_MI_RECORD_MAX  // 0x7b000
+#if (MD_DF_CFG_SERVER_EN)
+#define 		FLASH_ADR_FIXED_FWD_TBL         0xee000 // fixed forwarding table
+#define 		FLASH_ADR_FIXED_FWD_TBL_END     0xef000 // not included
+    #if (CONFIG_ALWAYS_GET_ROUTE_FROM_FLASH)
+#define 		FLASH_ADR_NON_FIXED_FWD_TBL     0xef000 // non-fixed forwarding table
+#define 		FLASH_ADR_NON_FIXED_FWD_TBL_END 0xf0000 // not included
     #endif
+#endif
 
-//                      MI_BLE_MESH_CER_ADR	        0xFC000 // don't modify
-#elif(AIS_ENABLE)
+#define         FLASH_ADR_AREA_2_END            0xf0000 // not included
+// mesh model parameters end
+
+/*******vendor define here, from 0xf0000 to 0xf7fff
+vendor use from 0xf0000 to 0xf7fff should be better.
+********************************************/
+#if(AIS_ENABLE)
 	#if(MESH_USER_DEFINE_MODE == MESH_TAIBAI_ENABLE)
-#define DU_STORE_ADR						0xf7000
-#define DU_OTA_REBOOT_ADR					0xf8000
+#define DU_STORE_ADR                            0xf5000
+#define DU_OTA_REBOOT_ADR                       0xf6000
 	#endif
 
-#define 		FLASH_ADR_THREE_PARA_ADR	0xf6000
+#define 		FLASH_ADR_THREE_PARA_ADR        0xf7000
 #define         FLASH_ADR_THREE_PARA_ADR_0x100_0xF00    //please refer to "FLASH_ADR_EDCH_PARA"
     #if (ALI_MD_TIME_EN)
-#define 		FLASH_ADR_VD_TIME_INFO		0xf7000
+#define 		FLASH_ADR_VD_TIME_INFO          0xf6000
     #endif
 #elif(DUAL_MODE_WITH_TLK_MESH_EN)
-#define			FLASH_ADR_DUAL_MODE_4K		0xf6000 // backup dual mode 4K firmware
+#define			FLASH_ADR_DUAL_MODE_4K          0xf7000 // backup dual mode 4K firmware
 #elif(LLSYNC_ENABLE)
-#define			FLASH_ADR_THREE_PARA_ADR	0xf6000
+#define			FLASH_ADR_THREE_PARA_ADR        0xf7000
 #elif (CERTIFY_BASE_ENABLE)
-#define 		FLASH_ADR_CERTIFY_ADR		0xf6000 // we will burn in an 4k bin
+#define 		FLASH_ADR_CERTIFY_ADR           0xf7000 // we will burn in an 4k bin
 #endif
 
-
-#define			FLASH_ADR_PAR_USER_MAX		0xfd000 // not include 0xfd000
-//#define		FLASH_ADR_MESH_TYPE_FLAG	0xfd000	// don't change, must same with telink mesh SDK
-//------------------------------------------0xfe000 // is CFG_ADR_CALIBRATION
-//------------------------------------------0xff000 // is CFG_ADR_MAC
+#define			FLASH_ADR_PAR_USER_MAX          0xf8000 // not include 0xf8000
+// 0xf8000~0xfbfff is reserved for hardware security boot.
+// 0xfc000~0xfd000 is reserved for future use.
+//#define		FLASH_ADR_MESH_TYPE_FLAG        0xfd000	// don't change, must same with telink mesh SDK
+//----------------------------------------------0xfe000 // is CFG_ADR_CALIBRATION
+//----------------------------------------------0xff000 // is CFG_ADR_MAC
 #else // 2M or more
 #endif /*end of (1 == FLASH_PLUS_ENABLE)*/
 

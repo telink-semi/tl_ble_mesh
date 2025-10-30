@@ -31,11 +31,24 @@
 #define DIRECTED_FRIEND_EN					FEATURE_FRIEND_EN
 
 #define MAX_FIXED_PATH						(PTS_TEST_EN?2:16)
-#define MAX_NON_FIXED_PATH					(PTS_TEST_EN?2:64)
+#define MAX_NON_FIXED_PATH					(PTS_TEST_EN?2:32)
 #define MAX_DEPENDENT_NUM					(PTS_TEST_EN?1:(2+1))   // 2 + 1: dependent node(lpn and directed client). 
 
-#define MAX_DSC_TBL							(PTS_TEST_EN?4:0x10)
-#define MAX_CONCURRENT_CNT					4
+#if MD_DF_CFG_SERVER_EN
+#define FWD_ENTRY_SAVE_SIZE                 ((sizeof(path_entry_save_t) + 15) / 16 * 16)    // 16 bytes align in flash.
+#define FWD_ENTRYS_PER_SECTOR               (FLASH_SECTOR_SIZE / FWD_ENTRY_SAVE_SIZE)       // max entrys save in 1 sector
+#define NON_FIXED_ENTRY_SECTORS             ((FLASH_ADR_NON_FIXED_FWD_TBL_END - FLASH_ADR_NON_FIXED_FWD_TBL) / FLASH_SECTOR_SIZE)   // sectors num to save non-fixed entrys
+#define FIXED_ENTRY_SECTORS                 ((FLASH_ADR_FIXED_FWD_TBL_END - FLASH_ADR_FIXED_FWD_TBL) / FLASH_SECTOR_SIZE)           // sectors num to save fixed entrys
+
+#define GET_FWD_SECTOR_INDEX(fwd_entry_index)       ((fwd_entry_index) / FWD_ENTRYS_PER_SECTOR) // get forwarding table entry sector index by fwd_entry_index
+#define GET_FWD_ENTRY_OFFSET(fwd_entry_index)       ((GET_FWD_SECTOR_INDEX(fwd_entry_index) * FLASH_SECTOR_SIZE) + (((fwd_entry_index) % FWD_ENTRYS_PER_SECTOR) * FWD_ENTRY_SAVE_SIZE)) // get entry flash offset
+#define GET_FWD_ENTRY_INDEX(entry_flash_offset)       ((((entry_flash_offset) / FLASH_SECTOR_SIZE) * FWD_ENTRYS_PER_SECTOR) + (((entry_flash_offset) % FLASH_SECTOR_SIZE) / FWD_ENTRY_SAVE_SIZE))
+#endif
+
+#define MAX_DSC_TBL							4
+#define MAX_CONCURRENT_CNT					2
+
+#define MAX_SOLICITATION_ADDR_LIST          5 // unsegmented control message
 
 #define PATH_REPLY_DELAY_MS					500 // unit:ms
 #define PATH_REQUEST_DELAY_MS				150 // unit:ms
@@ -195,6 +208,7 @@ typedef struct __attribute__((packed)) {
 }discovery_timing_t;
 
 typedef struct __attribute__((packed)) {
+    u16 update_id;
 	directed_control_t directed_control;
 	path_metric_t path_metric;
 	u8 max_concurrent_init;
@@ -483,32 +497,42 @@ typedef struct __attribute__((packed)) {	// one entry of the forwarding table
 	u16  bearer_toward_path_target;
 }path_entry_com_t;
 
+typedef struct __attribute__((packed)) {	// one entry of the forwarding table
+    mesh_save_head_t head;
+    u8 netkey_offset;
+    u8 rfu[3];
+    path_entry_com_t entry;
+}path_entry_save_t;
+
 typedef struct __attribute__((packed)) {
 	u8 path_need:1;
 	u8 path_monitoring:1;
+    u8 is_path_origin:1;
+    u8 is_unicast_path_dst:1;
 	u32 lifetime_ms;
 	u32 path_echo_timer_ms;
 	u32 path_echo_reply_timeout_timer;
 	u8  forwarding_number;
 	u8  lane_counter;
+#if CONFIG_ALWAYS_GET_ROUTE_FROM_FLASH
+    u16 fwd_entry_index;
+#endif
 }non_fixed_entry_state_t;
 
 typedef struct __attribute__((packed)) {
-	non_fixed_entry_state_t state;
-	path_entry_com_t entry;
+	non_fixed_entry_state_t *p_state;
+	path_entry_com_t *p_entry;
 }non_fixed_entry_t;
 
-#if MD_DF_CFG_SERVER_EN
 typedef struct __attribute__((packed)) {
-	non_fixed_entry_t path[MAX_NON_FIXED_PATH];
-//	u16 update_id; // use model_sig_g_df_sbr_cfg.df_cfg.fixed_fwd_tbl[netkey_offset].update_id instead
-}non_fixed_fwd_tbl_t;
+    u16 fwd_entry_index:15; // use to record entry in flash address, delete and rebuild entrys in flash.
+    u16 vaild:1;
+}fixed_entry_state_t;
 
-typedef struct __attribute__((packed)) {	
-	path_entry_com_t path[MAX_FIXED_PATH];
-	u16 update_id;
-}fixed_fwd_tbl_t;
-#endif
+typedef struct __attribute__((packed)) {
+	fixed_entry_state_t *p_state;
+	path_entry_com_t *p_entry;
+}fixed_entry_t;
 
 typedef struct __attribute__((packed)) {
 	u8 path_need;
@@ -552,11 +576,16 @@ typedef struct __attribute__((packed)) {
 
 typedef struct __attribute__((packed)) {
 	mesh_directed_forward_t directed_forward;
-	fixed_fwd_tbl_t fixed_fwd_tbl[NET_KEY_MAX];
 }model_df_cfg_t;
+
+typedef struct __attribute__((packed)) {
+	u16 addr[NET_KEY_MAX][MAX_SOLICITATION_ADDR_LIST];
+	u32 tick;
+}path_req_solication_tbl_t;
 #endif
 
 extern int path_monitoring_test_mode;
+int mesh_fwd_tbl_entry_init(void);
 void mesh_df_led_event(u8 nid, u8 is_ctl_op);
 int is_directed_forwarding_en(u16 netkey_offset);
 int is_directed_relay_en(u16 netkey_offset);
@@ -582,6 +611,9 @@ int is_address_in_dependent_target(path_entry_com_t *p_fwd_entry, u16 addr);
 int is_addr_in_entry(u16 src_addr, u16 destination, path_entry_com_t *p_fwd_entry);
 int forwarding_tbl_dependent_add(u16 range_start, u8 range_length, path_addr_t *p_dependent_list);
 int directed_forwarding_solication_start(u16 netkey_offset, mesh_ctl_path_request_solication_t *p_addr_list, u8 list_num);
+#if DF_TEST_MODE_EN
+path_entry_com_t * get_fixed_path_entry_by_origin(u16 netkey_offset, u16 path_origin);
+#endif
 
 discovery_entry_par_t * get_discovery_entry_correspond2_path_request(u16 netkey_offset, u16 path_origin, u8 forwarding_number);
 int cfg_cmd_send_path_request(mesh_ctl_path_req_t *p_path_req, u8 len, u16 netkey_offset);
@@ -737,9 +769,5 @@ int mesh_cmd_sig_cfg_directed_control_relay_transmit_status(u8 *par, int par_len
 #define mesh_cmd_sig_cfg_directed_control_network_transmit_status		(0)
 #define mesh_cmd_sig_cfg_directed_control_relay_transmit_status			(0)
 #endif
-
-static inline non_fixed_entry_t *GET_NON_FIXED_ENTRY_POINT(u8 *p){
-	return (non_fixed_entry_t *)(p - OFFSETOF(non_fixed_entry_t,entry));
-}
 
 #endif

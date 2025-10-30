@@ -39,8 +39,11 @@ extern "C" {
 #ifndef ID_PRODUCT_BASE
 #define ID_PRODUCT_BASE		0x8800
 #endif
+
+#define ID_VERSION          0x0100
+
 #ifndef STRING_VENDOR
-#define STRING_VENDOR		L"Telink"
+#define STRING_VENDOR		"Telink"
 #endif
 
 #ifndef ACL_PERIPHR_MAX_NUM
@@ -49,11 +52,11 @@ extern "C" {
 
 #if (__TLSR_RISCV_EN__)
 #ifndef STRING_PRODUCT
-#define STRING_PRODUCT		L"BLE 5.3"
+#define STRING_PRODUCT		"BLE 5.3"
 #endif
 
 #ifndef STRING_SERIAL
-#define STRING_SERIAL		L"TLSR95XX"
+#define STRING_SERIAL		"TL_BLE_SDK"
 #endif
 
 #ifndef PM_DEEPSLEEP_RETENTION_ENABLE
@@ -73,8 +76,12 @@ extern "C" {
 #define BLE_APP_PM_ENABLE                           0
 #endif
 
+#ifndef BLE_REMOTE_PM_ENABLE
+#define BLE_REMOTE_PM_ENABLE                        BLE_APP_PM_ENABLE
+#endif
 
-#if(!BLE_APP_PM_ENABLE && PM_DEEPSLEEP_RETENTION_ENABLE)
+
+#if(!(BLE_APP_PM_ENABLE || BLE_REMOTE_PM_ENABLE) && (PM_DEEPSLEEP_RETENTION_ENABLE))
     #error "can not use deep retention when PM disable !!!"
 #endif
 
@@ -129,10 +136,6 @@ extern "C" {
 
 #ifndef APPLICATION_DONGLE
 #define APPLICATION_DONGLE                          0
-#endif
-
-#ifndef UART_PRINT_DEBUG_ENABLE
-#define UART_PRINT_DEBUG_ENABLE                     0
 #endif
 
 #if (TLKAPI_DEBUG_ENABLE && UART_PRINT_DEBUG_ENABLE)
@@ -270,6 +273,10 @@ extern "C" {
 
 #ifndef MESH_HEARTBEAT_EN
 #define MESH_HEARTBEAT_EN           1
+#endif
+
+#ifndef ENERGY_HARVEST_RX_EN
+#define ENERGY_HARVEST_RX_EN        0
 #endif
 
 //////////// debug  /////////////////////////////////
@@ -985,64 +992,130 @@ enum{
 #endif
 
 ///////////////////  USB   /////////////////////////////////
+#define USB_ENUM_IN_INTERRUPT 0                   /* 1: usb enumeration in interrupt, 0: usb enumeration in main_loop. */
+
+#if (MCU_CORE_TYPE == MCU_CORE_B91) || (MCU_CORE_TYPE == MCU_CORE_B92)
+    #define USB_PHYSICAL_EDP_CDC_IN  USB_EDP4_IN  /* physical in endpoint */
+    #define USB_PHYSICAL_EDP_CDC_OUT USB_EDP5_OUT /* physical out endpoint */
+    #define USB_CTR_ENDPOINT_SIZE 8
+#else
+    /* control endpoint size config. */
+    #define USB_CTR_ENDPOINT_SIZE 64              /* 8/16/32/64 */
+    #define USB_CTR_SIZE          (USB_CTR_ENDPOINT_SIZE == 64) ? SIZE_64_BYTE :                                                                   \
+                                                                  ((USB_CTR_ENDPOINT_SIZE == 32) ? SIZE_32_BYTE :                                  \
+                                                                                                   ((USB_CTR_ENDPOINT_SIZE == 16) ? SIZE_16_BYTE : \
+                                                                                                                                    ((USB_CTR_ENDPOINT_SIZE == 8) ? SIZE_8_BYTE : SIZE_64_BYTE)))
+
+    #define USB_MAP_EN               0                /* 1:usb map function enable, 0:usb map function disable. */
+
+    #if (MCU_CORE_TYPE != MCU_CORE_TL322X)
+        #define USB_PHYSICAL_EDP_CDC_IN  USB_EDP4_IN      /* physical in endpoint */
+        #define USB_PHYSICAL_EDP_CDC_OUT USB_EDP5_OUT     /* physical out endpoint */
+    #endif
+
+    #if (USB_MAP_EN == 1)
+        #define CDC_RX_EPNUM USB_EDP5_OUT             /* logical in endpoint */
+        #define CDC_TX_EPNUM USB_EDP5_OUT             /* logical out endpoint */
+    #else
+        #define CDC_RX_EPNUM USB_PHYSICAL_EDP_CDC_OUT /* USB_MAP_EN = 0, logical endpoint is the same as the physical endpoint */
+        #define CDC_TX_EPNUM USB_PHYSICAL_EDP_CDC_IN  /* USB_MAP_EN = 0, logical endpoint is the same as the physical endpoint*/
+    #endif
+
+#endif
+
+#ifndef IRQ_USB_PWDN_ENABLE
+    #define IRQ_USB_PWDN_ENABLE 0
+#endif
+
+#ifndef MS_OS_DESCRIPTOR_ENABLE
+    #define MS_OS_DESCRIPTOR_ENABLE 0
+#endif
+
+#ifndef AUDIO_HOGP
+    #define AUDIO_HOGP 0
+#endif
+
+#ifndef USB_CDC_ENABLE
+    #define USB_CDC_ENABLE 0
+#endif
+
 #ifndef USB_PRINTER_ENABLE
-#define	USB_PRINTER_ENABLE 		0
+    #define USB_PRINTER_ENABLE 0
 #endif
+
 #ifndef USB_SPEAKER_ENABLE
-#define	USB_SPEAKER_ENABLE 		0
+    #define USB_SPEAKER_ENABLE 0
 #endif
+
 #ifndef USB_MIC_ENABLE
-#define	USB_MIC_ENABLE 			0
+    #define USB_MIC_ENABLE 0
 #endif
+
 #ifndef USB_MOUSE_ENABLE
-#define	USB_MOUSE_ENABLE 			0
+    #define USB_MOUSE_ENABLE 0
 #endif
+
 #ifndef USB_KEYBOARD_ENABLE
-#define	USB_KEYBOARD_ENABLE 		0
+    #define USB_KEYBOARD_ENABLE 0
 #endif
+
 #ifndef USB_SOMATIC_ENABLE
-#define	USB_SOMATIC_ENABLE 		0
+    #define USB_SOMATIC_ENABLE 0
 #endif
+
+#ifndef USB_CRC_ENABLE
+    #define USB_CRC_ENABLE 0
+#endif
+
 #ifndef USB_CUSTOM_HID_REPORT
-#define	USB_CUSTOM_HID_REPORT 		0
+    #define USB_CUSTOM_HID_REPORT 0
 #endif
+
 #ifndef USB_AUDIO_441K_ENABLE
-#define USB_AUDIO_441K_ENABLE  	0
+    #define USB_AUDIO_441K_ENABLE 0
 #endif
+
+#ifndef DESC_IAD_ENABLE
+    #define DESC_IAD_ENABLE 0
+#endif
+
 #ifndef USB_MASS_STORAGE_ENABLE
-#define USB_MASS_STORAGE_ENABLE  	0
+    #define USB_MASS_STORAGE_ENABLE 0
 #endif
+
 #ifndef MIC_CHANNEL_COUNT
-#define MIC_CHANNEL_COUNT  			2
+    #define MIC_CHANNEL_COUNT 2
 #endif
 
 #ifndef USB_DESCRIPTOR_CONFIGURATION_FOR_KM_DONGLE
-#define USB_DESCRIPTOR_CONFIGURATION_FOR_KM_DONGLE  			0
+    #define USB_DESCRIPTOR_CONFIGURATION_FOR_KM_DONGLE 0
 #endif
 
 #ifndef USB_ID_AND_STRING_CUSTOM
-#define USB_ID_AND_STRING_CUSTOM  								0
+    #define USB_ID_AND_STRING_CUSTOM 0
 #endif
 
-#define KEYBOARD_RESENT_MAX_CNT			3
-#define KEYBOARD_REPEAT_CHECK_TIME		300000	// in us	
-#define KEYBOARD_REPEAT_INTERVAL		100000	// in us	
-#define KEYBOARD_SCAN_INTERVAL			16000	// in us
-#define MOUSE_SCAN_INTERVAL				8000	// in us	
-#define SOMATIC_SCAN_INTERVAL     		8000
+#define KEYBOARD_RESENT_MAX_CNT    3
+#define KEYBOARD_REPEAT_CHECK_TIME 300000     // in us
+#define KEYBOARD_REPEAT_INTERVAL   100000     // in us
+#define KEYBOARD_SCAN_INTERVAL     16000      // in us
+#define MOUSE_SCAN_INTERVAL        8000       // in us
+#define SOMATIC_SCAN_INTERVAL      8000
 
-#define USB_KEYBOARD_POLL_INTERVAL		10		// in ms	USB_KEYBOARD_POLL_INTERVAL < KEYBOARD_SCAN_INTERVAL to ensure PC no missing key
-#define USB_MOUSE_POLL_INTERVAL			4		// in ms
-#define USB_SOMATIC_POLL_INTERVAL     	8		// in ms
+#define USB_KEYBOARD_POLL_INTERVAL 10         // in ms    USB_KEYBOARD_POLL_INTERVAL < KEYBOARD_SCAN_INTERVAL to ensure PC no missing key
 
-#define USB_KEYBOARD_RELEASE_TIMEOUT    (450000) // in us
-#define USB_MOUSE_RELEASE_TIMEOUT       (200000) // in us
-#define USB_SOMATIC_RELEASE_TIMEOUT     (200000) // in us
+#ifndef USB_MOUSE_POLL_INTERVAL
+    #define USB_MOUSE_POLL_INTERVAL 4         // in ms
+#endif
+
+#define USB_SOMATIC_POLL_INTERVAL    8        // in ms
+
+#define USB_KEYBOARD_RELEASE_TIMEOUT (450000) // in us
+#define USB_MOUSE_RELEASE_TIMEOUT    (200000) // in us
 
 #ifndef BATT_CHECK_ENABLE
-#define BATT_CHECK_ENABLE                               0
+    #define BATT_CHECK_ENABLE 0
 #endif
-
 
 ///////////////////  FLASH   /////////////////////////////////
 #ifndef FLASH_4LINE_MODE_ENABLE

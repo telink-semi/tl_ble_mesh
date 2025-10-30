@@ -24,19 +24,11 @@
 #ifndef DRIVERS_TL321X_EXT_MISC_H_
 #define DRIVERS_TL321X_EXT_MISC_H_
 
-//#include "drivers/TL321X/reg_include/core_reg.h" //#include "nds_intrinsic.h"
-
 #include "types.h"
 #include "../compatibility_pack/cmpt.h"
-#include "../lib/include/analog.h"
-#include "../adc.h"
-#include "../gpio.h"
-#include "../lib/include/stimer.h"
-#include "../lib/include/pm/pm.h"
-#include "lib/include/rf/rf_common.h"
-#include "../lib/include/trng/trng.h"
+#include "../driver.h"
 #include <stdbool.h>
-#include "common/static_assert.h" 			   // BLE_SRC_TELINK_MESH_EN
+#include "common/static_assert.h"    // BLE_SRC_TELINK_MESH_EN
 
 /*
  * addr - only 0x00012 ~ 0x00021 can be used !!! */
@@ -57,17 +49,33 @@
 /******************************* core_start ******************************************************************/
 #define irq_disable                 core_interrupt_disable
 #define irq_enable                  core_interrupt_enable
-#define  irq_restore(en)			do{STATIC_ASSERT(sizeof(en) == sizeof(unsigned int)); core_restore_interrupt(en);}while(0) // BLE_SRC_TELINK_MESH_EN
+#define  irq_restore(en)            do{STATIC_ASSERT(sizeof(en) == sizeof(unsigned int)); core_restore_interrupt(en);}while(0) // BLE_SRC_TELINK_MESH_EN
 
 /******************************* core_end ********************************************************************/
 
 
 
+/******************************* mac start ************************************************************/
+ static inline bool get_device_mac_address(u8* mac_read, int length)
+ {
+    unsigned char mac[8];
+    efuse_get_ieee_addr(mac);
 
-/******************************* efuse start *****************************************************************/
+    u8 empty_8_byte_0[8] = {0, 0, 0, 0, 0, 0, 0, 0};
+    u8 empty_8_byte_F[8] = {0XFF, 0XFF, 0XFF, 0XFF, 0XFF, 0XFF, 0XFF, 0XFF};
+    if(memcmp(mac, empty_8_byte_0, 8) && memcmp(mac, empty_8_byte_F, 8)){
+        if(length > 8){
+            length = 8;
+        }
+        memcpy(mac_read, (u8*)mac, 6);
 
-bool efuse_get_mac_address(u8* mac_read, int length);
-/******************************* efuse end *******************************************************************/
+        return TRUE;
+    }
+    else{
+        return FALSE;
+    }
+ }
+/******************************* mac end **************************************************************/
 
 
 
@@ -130,9 +138,9 @@ void gpio_setup_up_down_resistor(gpio_pin_e gpio, gpio_pull_type up_down);
  */
 void rf_drv_ble_init(void);
 
-#define RF_POWER_P3dBm   RF_POWER_INDEX_P2p99dBm
-#define RF_POWER_P0dBm   RF_POWER_INDEX_N0p07dBm
-#define RF_POWER_P9dBm   RF_POWER_INDEX_P8p95dBm
+#define RF_POWER_P3dBm   RF_POWER_INDEX_P3p03dBm
+#define RF_POWER_P0dBm   RF_POWER_INDEX_P0p08dBm
+#define RF_POWER_P9dBm   RF_POWER_INDEX_P9p10dBm
 
 #if RF_THREE_CHANNEL_CALIBRATION
 
@@ -157,7 +165,7 @@ void rf_set_channel_power_enable(unsigned char enable);
 
 
 /******************************* trng_start ******************************************************************/
-#define rand                        trng_rand
+
 #define random_generator_init       trng_init
 
 

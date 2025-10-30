@@ -26,17 +26,17 @@
 #include "vendor/common/version.h"    // include mesh_config.h inside.
 
 
-#define ACL_CENTRAL_MAX_NUM							0 // ACL central maximum number
-#define ACL_PERIPHR_MAX_NUM							4 // ACL peripheral maximum number
+#define ACL_CENTRAL_MAX_NUM 0 // ACL central maximum number
+#define ACL_PERIPHR_MAX_NUM 4 // ACL peripheral maximum number
 
 ///////////////////////// Feature Configuration////////////////////////////////////////////////
-#define ACL_PERIPHR_SMP_ENABLE						0  //1 for smp,  0 no security
-#define BLE_OTA_SERVER_ENABLE						1
+#define ACL_PERIPHR_SMP_ENABLE        0 //1 for smp,  0 no security
+#define BLE_OTA_SERVER_ENABLE         1
 
-#define BLE_APP_PM_ENABLE							1
-#define PM_DEEPSLEEP_RETENTION_ENABLE				1
+#define BLE_APP_PM_ENABLE             1
+#define PM_DEEPSLEEP_RETENTION_ENABLE 1
 
-#define BATT_CHECK_ENABLE							0
+#define BATT_CHECK_ENABLE             0
 
 
 /* Flash Protection:
@@ -48,22 +48,21 @@
  *    be directly used on user's mass production application without any change. User should refer to sample code, understand the
  *    principles and methods, then change and implement a more appropriate mechanism according to their application if needed.
  */
-#define APP_FLASH_PROTECTION_ENABLE					1
+#define APP_FLASH_PROTECTION_ENABLE 1
 
-#define APP_EMI_TEST_ENABLE         				0
+#define APP_EMI_TEST_ENABLE         0
 
 ///////////////////////// OS settings /////////////////////////////////////////////////////////
-#define FREERTOS_ENABLE								0
-#define OS_SEPARATE_STACK_SPACE						1   //Separate the task stack and interrupt stack space
-#define configTOTAL_HEAP_SIZE                       (16*1024)
-#define configISR_PLIC_STACK_SIZE                   640
+#define FREERTOS_ENABLE           0
+#define OS_SEPARATE_STACK_SPACE   1 //Separate the task stack and interrupt stack space
+#define configTOTAL_HEAP_SIZE     (16 * 1024)
+#define configISR_PLIC_STACK_SIZE 640
 
 
-
-//////////////////Board Select Configuration/////////////////////////////////////
-#define PCBA_ADK80D_C1T213A20_V13          	1	// development board
-#define PCBA_C1T213A16_V13_PA_DONGLE 		2	// PA dongle
-#define PCBA_C1T213A3_V11_DONGLE			3 	// dongle without PA
+/////////////////////// Board Select Configuration ///////////////////////////////
+#define PCBA_ADK80D_C1T213A20_V13           1    // development board
+#define PCBA_C1T213A16_V13_PA_DONGLE        2    // PA dongle
+#define PCBA_C1T213A3_V11_DONGLE            3    // dongle without PA
 #define BOARD_953X_EVK_C1T313A20            0x313A20
 #define BOARD_321X_EVK_C1T335A20            0x335A20
 
@@ -76,32 +75,32 @@
 #endif
 
 ///////////////////////// UI Configuration ////////////////////////////////////////////////////
-#define UI_LED_ENABLE								0
-#define	UI_KEYBOARD_ENABLE							0
+#define UI_LED_ENABLE           0
+#define UI_KEYBOARD_ENABLE      0
 
 /////////////////////mesh common define///////////////////////////////////////
-#define HCI_USE_NONE	0
-#define HCI_USE_UART	1
-#define HCI_USE_USB		2
-	
+#define HCI_USE_NONE            0
+#define HCI_USE_UART            1
+#define HCI_USE_USB             2
+
 #ifndef HCI_ACCESS
 #if PTS_TEST_EN
-#define HCI_ACCESS		HCI_USE_USB
+#define HCI_ACCESS              HCI_USE_USB
 #elif MESH_MONITOR_EN
-#define HCI_ACCESS		HCI_USE_UART
+#define HCI_ACCESS              HCI_USE_UART
 #else
-#define HCI_ACCESS		HCI_USE_NONE
+#define HCI_ACCESS              HCI_USE_NONE
 #endif 
-	
+
 #if (HCI_ACCESS==HCI_USE_UART)
-#define UART_TX_PIN				UART0_TX_PB2
-#define UART_RX_PIN				UART0_RX_PB3
-#define UART_DMA_BAUDRATE		115200
+#define UART_TX_PIN             UART0_TX_PB2
+#define UART_RX_PIN             UART0_RX_PB3
+#define UART_DMA_BAUDRATE       115200
 #endif
 #endif
 
 #ifndef HCI_LOG_FW_EN
-#define HCI_LOG_FW_EN 	0
+#define HCI_LOG_FW_EN           0
 #endif
 
 #define TRANSITION_TIME_DEFAULT_VAL (0)
@@ -127,7 +126,7 @@
 
 #if (BOARD_SELECT == BOARD_321X_EVK_C1T313A20)
     // key mode, KB_LINE_MODE default 0(key matrix), set to 1 in button mode.
-    #define KB_LINE_MODE			0
+    #define KB_LINE_MODE                    0
     
     /**
      *  @brief  Normal keyboard map
@@ -197,7 +196,7 @@
     #define PC3_INPUT_ENABLE                1
     #define PC1_INPUT_ENABLE                1
 #else
-	#error "Current board do not support keyboard !"
+    #error "Current board do not support keyboard !"
 #endif
 #endif
 
@@ -249,10 +248,10 @@
 #define PWM_INV_B   0
 #define PWM_INV_W   0
 #elif(BOARD_SELECT == PCBA_ADK80D_C1T213A20_V13)
-#define PWM_R       PWM_PWM2_PB7	//red
-#define PWM_G       PWM_PWM1_PB5	//green
-#define PWM_B       PWM_PWM0_PB4	//blue
-#define PWM_W       PWM_PWM5_PB0	//white // GPIO_PB6 is not PWM IO // please connect TL_PB0 to LED_W for J34 from C1T213A20_V1_3.pdf.
+#define PWM_R       PWM_PWM2_PB7    //red
+#define PWM_G       PWM_PWM1_PB5    //green
+#define PWM_B       PWM_PWM0_PB4    //blue
+#define PWM_W       PWM_PWM5_PB0    //white // GPIO_PB6 is not PWM IO // please connect TL_PB0 to LED_W for J34 from C1T213A20_V1_3.pdf.
 
 #define PWM_FUNC_R  0  // no use, just for compile
 #define PWM_FUNC_G  0  // no use, just for compile
@@ -271,56 +270,59 @@
 #endif
 
 #ifndef GPIO_LED
-#define GPIO_LED	PWM_R
+#define GPIO_LED    PWM_R
 #endif
 
-#define CLOCK_SYS_CLOCK_HZ  				16000000 // just for compiler, clock refer to main()
+#define CLOCK_SYS_CLOCK_HZ      16000000 // just for compiler, clock refer to main()
 
-#define PWM_PCLK_SPEED			12000000 //pwm clock 12M.
-#define	CLOCK_PWM_CLOCK_1S      PWM_PCLK_SPEED
+#define PWM_PCLK_SPEED          12000000 //pwm clock 12M.
+#define CLOCK_PWM_CLOCK_1S      PWM_PCLK_SPEED
 #define CLOCK_PWM_CLOCK_1MS     (CLOCK_PWM_CLOCK_1S / 1000)
-#define	CLOCK_PWM_CLOCK_1US     (CLOCK_PWM_CLOCK_1S / 1000000)
+#define CLOCK_PWM_CLOCK_1US     (CLOCK_PWM_CLOCK_1S / 1000000)
+
+/////////////////// watchdog  //////////////////////////////
+#define MODULE_WATCHDOG_ENABLE		1
+#define WATCHDOG_INIT_TIMEOUT		2000
 
 ///////////////////////// DEBUG  Configuration ////////////////////////////////////////////////
-#define DEBUG_GPIO_ENABLE							0
+#define DEBUG_GPIO_ENABLE    0
 
-#define TLKAPI_DEBUG_ENABLE							1
-#define TLKAPI_DEBUG_CHANNEL         		 		TLKAPI_DEBUG_CHANNEL_GSUART
+#define TLKAPI_DEBUG_ENABLE  1
+#define TLKAPI_DEBUG_CHANNEL TLKAPI_DEBUG_CHANNEL_GSUART
 
-#define APP_LOG_EN									1
-#define APP_CONTR_EVT_LOG_EN						1	//controller event
-#define APP_HOST_EVT_LOG_EN							1
-#define APP_KEY_LOG_EN								1
+#define APP_LOG_EN           1
+#define APP_CONTR_EVT_LOG_EN 1 //controller event
+#define APP_HOST_EVT_LOG_EN  1
+#define APP_KEY_LOG_EN       1
 
-#define JTAG_DEBUG_DISABLE							1  //if use JTAG, change this
-
+#define JTAG_DEBUG_DISABLE   1 //if use JTAG, change this
 
 
 /////////////////// DEEP SAVE FLG //////////////////////////////////
-#define USED_DEEP_ANA_REG                   PM_ANA_REG_POWER_ON_CLR_BUF1 //u8,can save 8 bit info when deep
-#define	LOW_BATT_FLG					    BIT(0) //if 1: low battery
-#define CONN_DEEP_FLG	                    BIT(1) //if 1: conn deep, 0: adv deep
-
+#define USED_DEEP_ANA_REG PM_ANA_REG_POWER_ON_CLR_BUF1 //u8,can save 8 bit info when deep
+#define LOW_BATT_FLG      BIT(0)                       //if 1: low battery
+#define CONN_DEEP_FLG     BIT(1)                       //if 1: conn deep, 0: adv deep
 
 
 #if FREERTOS_ENABLE
-/////////////////////////////////////// PRINT DEBUG INFO ///////////////////////////////////////
-	#define APP_REAL_TIME_PRINTF  1
+    /////////////////////////////////////// PRINT DEBUG INFO ///////////////////////////////////////
+    #undef UI_KEYBOARD_ENABLE
+    #define UI_KEYBOARD_ENABLE           0
 
-	
-	#define traceAPP_LED_Task_Toggle()  //gpio_toggle(GPIO_CH01);
-	#define traceAPP_BLE_Task_BEGIN()	//gpio_write(GPIO_CH02,1);
-	#define traceAPP_BLE_Task_END()		//gpio_write(GPIO_CH02,0);
-	#define traceAPP_KEY_Task_BEGIN()	//gpio_write(GPIO_CH03,1);
-	#define traceAPP_KEY_Task_END()		//gpio_write(GPIO_CH03,0);
-	#define traceAPP_BAT_Task_BEGIN()	//gpio_write(GPIO_CH04,1);
-	#define traceAPP_BAT_Task_END()		//gpio_write(GPIO_CH04,0);
 
-	#define traceAPP_MUTEX_Task_BEGIN()	//gpio_write(GPIO_CH05,1);
-	#define traceAPP_MUTEX_Task_END()	//gpio_write(GPIO_CH05,0);
+    #define traceAPP_LED_Task_Toggle()   //gpio_toggle(GPIO_CH01);
+    #define traceAPP_BLE_Task_BEGIN()    //gpio_write(GPIO_CH02,1);
+    #define traceAPP_BLE_Task_END()      //gpio_write(GPIO_CH02,0);
+    #define traceAPP_KEY_Task_BEGIN()    //gpio_write(GPIO_CH03,1);
+    #define traceAPP_KEY_Task_END()      //gpio_write(GPIO_CH03,0);
+    #define traceAPP_BAT_Task_BEGIN()    //gpio_write(GPIO_CH04,1);
+    #define traceAPP_BAT_Task_END()      //gpio_write(GPIO_CH04,0);
 
-	#define tracePort_IrqHandler_BEGIN() //gpio_write(GPIO_CH06,1);
-	#define tracePort_IrqHandler_END() 	 //gpio_write(GPIO_CH06,0);
+    #define traceAPP_MUTEX_Task_BEGIN()  //gpio_write(GPIO_CH05,1);
+    #define traceAPP_MUTEX_Task_END()    //gpio_write(GPIO_CH05,0);
+
+    #define tracePort_IrqHandler_BEGIN() //gpio_write(GPIO_CH06,1);
+    #define tracePort_IrqHandler_END()   //gpio_write(GPIO_CH06,0);
 
 #endif
 

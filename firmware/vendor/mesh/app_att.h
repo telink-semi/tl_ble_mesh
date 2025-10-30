@@ -143,6 +143,7 @@ typedef enum
 	ONLINE_ST_CD_H,							//UUID: 2803,	VALUE:				Prop: read | write | write_without_rsp | notify
 	ONLINE_ST_DP_H,							//UUID: 2A05,	VALUE: 
 	ONLINE_ST_DESC_H, 						//UUID: 2901,	VALUE: Online status descriptor
+	ONLINE_ST_CCB_H, 						//UUID: 2901,	VALUE: Online status descriptor
 #endif
 
 #if (DU_ENABLE)

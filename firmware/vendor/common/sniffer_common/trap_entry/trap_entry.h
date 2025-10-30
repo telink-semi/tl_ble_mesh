@@ -28,54 +28,53 @@
 
 #if (__PROJECT_SNIF_MAIN_NODE__ || __PROJECT_SNIF_SUB_NODE__)
 
-/* Save RISCV core GRegs FPU and additional CSR registers */
-#define SAVE_FPU_AND_ADDITIANL_REG_EN	0
+    /* Save RISCV core GRegs FPU and additional CSR registers */
+    #define SAVE_FPU_AND_ADDITIANL_REG_EN 0
 
-#if (SAVE_FPU_AND_ADDITIANL_REG_EN)
-/* RISCV core support FPU */
-#ifdef __riscv_flen
-#define ARCH_RISCV_FPU
-#define ARCH_RISCV_FPU_S
-#endif
-#endif
+    #if (SAVE_FPU_AND_ADDITIANL_REG_EN)
+        /* RISCV core support FPU */
+        #ifdef __riscv_flen
+            #define ARCH_RISCV_FPU
+            #define ARCH_RISCV_FPU_S
+        #endif
+    #endif
 
-/* Bytes of register width  */
-#ifdef ARCH_CPU_64BIT
-#define STORE                   sd
-#define LOAD                    ld
-#define REGBYTES                8
-#else
-#define STORE                   sw
-#define LOAD                    lw
-#define REGBYTES                4
-#endif
+    /* Bytes of register width  */
+    #ifdef ARCH_CPU_64BIT
+        #define STORE    sd
+        #define LOAD     ld
+        #define REGBYTES 8
+    #else
+        #define STORE    sw
+        #define LOAD     lw
+        #define REGBYTES 4
+    #endif
 
-/* FPU */
-#ifdef ARCH_RISCV_FPU
-	#ifdef ARCH_RISCV_FPU_D
-		#define FSTORE			fsd
-		#define FLOAD			fld
-		#define FREGBYTES		8
-		#define rv_floatreg_t	s64
-	#endif
-	#ifdef ARCH_RISCV_FPU_S
-		#define FSTORE			fsw
-		#define FLOAD			flw
-		#define FREGBYTES		4
-		#define rv_floatreg_t	s32
-	#endif
-#endif
+    /* FPU */
+    #ifdef ARCH_RISCV_FPU
+        #ifdef ARCH_RISCV_FPU_D
+            #define FSTORE        fsd
+            #define FLOAD         fld
+            #define FREGBYTES     8
+            #define rv_floatreg_t s64
+        #endif
+        #ifdef ARCH_RISCV_FPU_S
+            #define FSTORE        fsw
+            #define FLOAD         flw
+            #define FREGBYTES     4
+            #define rv_floatreg_t s32
+        #endif
+    #endif
 
-#if (SAVE_FPU_AND_ADDITIANL_REG_EN)
-/* Constants to define the additional CSRs. */
-#define mxstatus                0x7c4
-#define ucode                   0x801
+    #if (SAVE_FPU_AND_ADDITIANL_REG_EN)
+        /* Constants to define the additional CSRs. */
+        #define mxstatus 0x7c4
+        #define ucode    0x801
 
-/* One additional registers to save and restore, as per the #defines above. */
-#define ADDITIONAL_CSR_SIZE     2
-#endif
+        /* One additional registers to save and restore, as per the #defines above. */
+        #define ADDITIONAL_CSR_SIZE 2
+    #endif
 
 #endif /* the end of #if (__PROJECT_SNIF_MAIN_NODE__ || __PROJECT_SNIF_SUB_NODE__) */
 
 #endif /* APP_TRAP_IRQ_H_ */
-

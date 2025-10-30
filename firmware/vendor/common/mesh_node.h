@@ -1351,7 +1351,9 @@ typedef struct __attribute__((packed)) {
     u8 lc_mode;
     u8 lc_onoff;
     u8 lc_om; // Occupancy Mode
+    #if (SCENE_NOT_STORE_LC_PROPERTY_EN == 0)
 	light_lc_property_t lc_propty; // MMDL/SR/LLCS/BV-02-C
+    #endif
 #endif
 #if LIGHT_TYPE_CT_EN
     u8 ct_flag;
@@ -1789,6 +1791,7 @@ u32 mesh_app_key_get(u8 *list);
 void set_dev_key(u8 *dev_key);
 int is_exist_valid_network_key(void);
 void mesh_key_save(void);
+void appkey_bind_filter(int bind_flag, u16 ele_adr, u32 model_id, bool4 sig_model, u16 ak_idx, int fac_filter_en);
 void appkey_bind_all(int bind_flag, u16 ak_idx, int fac_filter_en);
 void mesh_key_flash_sector_init(void);
 u32 get_all_appkey_cnt(void);
@@ -1834,15 +1837,10 @@ int is_support_op_dst_VC_APP(u16 op, u16 adr_dst);
 u32 get_random_delay_pub_tick_ms(u32 interval_ms);
 void mesh_pub_period_proc(void);
 int is_tx_status_cmd2self(u16 op, u16 adr_dst);
-u8 mesh_sub_search_ele_and_set(u16 op, u16 ele_adr, u16 sub_adr, u8 *uuid, u32 model_id, bool4 sig_model);
 void mesh_service_change_report(u16 conn_handle);
 #define MESH_PARA_RETRIEVE_VAL      1
 #define MESH_PARA_STORE_VAL         0
 int mesh_par_retrieve_store_win32(u8 *in_out, u32 *p_adr, u32 adr_base, u32 size,u8 flag);
-void mesh_seg_rx_init(void);
-void mesh_seg_ack_poll_rx(void);
-int is_retrans_segment_done(void);
-void mesh_seg_ack_poll_tx(void);
 void blc_pm_select_none(void);
 
 void mesh_key_node_identity_init(void); // after power on ,we need to detect the flag ,and set timer part 
@@ -1873,10 +1871,6 @@ u32 get_blk_crc_tlk_type2(u32 crc_init, u8 *data, u32 len);
 int is_valid_tlk_fw_buf(u8 *p_flag);
 void power_on_io_proc(u8 i);
 unsigned char ble_module_id_is_kmadongle(void);
-void mesh_blc_ll_initExtendedAdv(void);
-u8 mesh_blc_ll_setExtAdvParamAndEnable(void);
-int mesh_blc_aux_adv_filter(u8 *raw_pkt);
-void mesh_blc_ll_setExtAdvData(u8 adv_pdu_len, u8 *data);
 void mesh_ivi_event_cb(u8 search_flag);
 void mesh_netkey_cb(u8 idx,u16 op);
 void send_and_wait_completed_reset_node_status(void);
@@ -1947,6 +1941,31 @@ typedef struct __attribute__((packed)) {
 }sw_version_big_endian_t;
 
 #if (MESH_RX_TEST || defined(WIN32))
+#ifndef WIN32
+#define MESH_RX_TEST_RF_POWER_ADDR      (FLASH_ADR_PAR_USER_MAX - FLASH_SECTOR_SIZE)
+    #if(MCU_CORE_TYPE == MCU_CORE_8258)
+#define MESH_RX_TEST_RF_POWER_P10dBm    RF_POWER_P10p01dBm
+#define MESH_RX_TEST_RF_POWER_P3dBm     RF_POWER_P3p01dBm
+#define MESH_RX_TEST_RF_POWER_P0dBm     RF_POWER_P0p04dBm
+#define MESH_RX_TEST_RF_POWER_N25dBm    RF_POWER_N25p18dBm
+    #elif(MCU_CORE_TYPE == MCU_CORE_8278)
+#define MESH_RX_TEST_RF_POWER_P10dBm    RF_POWER_P10p05dBm
+#define MESH_RX_TEST_RF_POWER_P3dBm     RF_POWER_P3p50dBm
+#define MESH_RX_TEST_RF_POWER_P0dBm     RF_POWER_N0p28dBm
+#define MESH_RX_TEST_RF_POWER_N25dBm    RF_POWER_N24p28dBm
+    #elif(MCU_CORE_TYPE == MCU_CORE_B91)
+#define MESH_RX_TEST_RF_POWER_P10dBm    RF_POWER_INDEX_P9p11dBm
+#define MESH_RX_TEST_RF_POWER_P3dBm     RF_POWER_INDEX_P3p25dBm
+#define MESH_RX_TEST_RF_POWER_P0dBm     RF_POWER_INDEX_P0p01dBm
+#define MESH_RX_TEST_RF_POWER_N25dBm    RF_POWER_INDEX_N23p54dBm
+    #elif(MCU_CORE_TYPE == MCU_CORE_TL321X)
+#define MESH_RX_TEST_RF_POWER_P10dBm    RF_POWER_INDEX_P9p97dBm
+#define MESH_RX_TEST_RF_POWER_P3dBm     RF_POWER_INDEX_P3p49dBm
+#define MESH_RX_TEST_RF_POWER_P0dBm     RF_POWER_INDEX_N0p07dBm
+#define MESH_RX_TEST_RF_POWER_N25dBm    RF_POWER_INDEX_N25p53dBm    
+	#endif
+#endif
+
 #define RX_TEST_BASE_TIME_SHIFT  	8 
 
 typedef struct __attribute__((packed)) {
@@ -2024,4 +2043,6 @@ int is_mesh_ota_distribute_100_flag(void);
 
 int is_valid_startup_flag(u32 flag_addr, int check_all_flag);
 bool blt_ota_software_check_flash_load_error(void);
-
+#if MESH_RX_TEST
+void mesh_rx_test_rf_power_init(void);
+#endif

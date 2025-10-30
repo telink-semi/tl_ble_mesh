@@ -44,7 +44,9 @@
 #define FLASH_P25Q32SU_SUPPORT_EN                               1
 #define FLASH_P25Q128H_SUPPORT_EN                               1
 
-
+#define FLASH_P25Q80SU_SUPPORT_EN                               1
+#define FLASH_GD25LE80E_SUPPORT_EN                              0
+#define FLASH_GD25LE16E_SUPPORT_EN                              0
 
 
 /**
@@ -57,7 +59,7 @@
 /**
  * @brief   MAC address burning on EFUSE
  */
-#define BUILT_IN_MAC_ON_EFUSE                                   0
+#define BUILT_IN_MAC_ON_DEVICE                                   0
 
 
 

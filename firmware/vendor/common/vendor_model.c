@@ -41,9 +41,11 @@
 #if PAIR_PROVISION_ENABLE
 #include "pair_provision.h"
 #endif
+#include "vendor/common/energy_harvest_eno.h"
 
 #if (VENDOR_MD_NORMAL_EN)
 model_vd_light_t       	model_vd_light;
+STATIC_ASSERT(sizeof(model_vd_light_t) <= (4096 - 48));    // only one sector to save
 
 #if (DUAL_VENDOR_EN)
 STATIC_ASSERT((VENDOR_MD_LIGHT_S && 0xffff) != VENDOR_ID_MI);
@@ -159,6 +161,8 @@ int cb_vd_group_g_get(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par)
     }
 }
 
+u8 g_vd_group_g_set_err_status = 0;
+
 int cb_vd_group_g_set(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par)
 {
     int err = -1;
@@ -167,6 +171,7 @@ int cb_vd_group_g_set(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par)
     vd_group_g_set_t *p_set = (vd_group_g_set_t *)par;
     u8 sub_op = p_set->sub_op;
 
+    g_vd_group_g_set_err_status = 0; // init
     if(!cb_par->retransaction){
         cb_vd_group_g_sub_set p_cb_set = (cb_vd_group_g_sub_set)search_vd_group_g_func(sub_op, SEARCH_VD_GROUP_G_FUNC_TYPE_SET);
         if(p_cb_set){
@@ -196,6 +201,7 @@ int cb_vd_group_g_set(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par)
         }
     }
     
+    g_vd_group_g_set_err_status = 0; // init
     return err;
 }
 
@@ -209,10 +215,15 @@ vd_group_g_func_t vd_group_g_func[] = {
 #if AUDIO_MESH_EN
     {VD_GROUP_G_MIC_TX_REQ,cb_vd_group_g_mic_tx_req, 0},
 #endif
+#if ENERGY_HARVEST_RX_EN
+    {VD_GROUP_G_EH_PAIR_MAC_AND_KEY_SET, vd_rx_group_g_eh_pair_mac_and_key_set, vd_rx_group_g_eh_pair_mac_and_key_status},
+    {VD_GROUP_G_EH_PUBLISH_SET, vd_rx_group_g_eh_pair_publish_generic_set, vd_rx_group_g_eh_pair_publish_generic_status},
+    {VD_GROUP_G_EH_PAIR_DELETE, vd_rx_group_g_eh_pair_delete, vd_rx_group_g_eh_pair_delete_status},
+#endif
 
     /* user use sub op from 0x80 to 0xff*/
 #if VENDOR_SUB_OP_USER_DEMO_EN
-	{VD_GROUP_G_SUB_OP_USER_DEMO, vd_rx_group_g_sub_op_user_demo_set, vd_rx_group_g_sub_op_user_demo_st}
+	{VD_GROUP_G_SUB_OP_USER_DEMO, vd_rx_group_g_sub_op_user_demo_set, vd_rx_group_g_sub_op_user_demo_st},
 #endif
     //{VD_GROUP_G_USER_START, , , },
 };

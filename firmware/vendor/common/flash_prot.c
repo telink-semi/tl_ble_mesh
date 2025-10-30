@@ -57,7 +57,7 @@ void blc_appRegisterStackFlashOperationCallback(flash_prot_op_callback_t cb)
 }
 
 
-#if 0 // (!MCU_SUPPORT_MULTI_PRIORITY_IRQ)
+#if (!MCU_SUPPORT_MULTI_PRIORITY_IRQ)
 /**
  * @brief 		this function is used to replace Flash driver API "flash_write_status", solving BLE connection issue on MCU do not support multiple priority IRQ
  * @param[in]  	type	- the type of status.8 bit or 16 bit.
@@ -94,7 +94,7 @@ void flash_protection_init(void)
 		#if (FLASH_ZB25WD40B_SUPPORT_EN) // 512K capacity
 			case MID13325E:
 				flash_lock_mid = (flash_lock_t)flash_lock_mid13325e;
-				flash_unlock_mid = flash_unlock_mid13325e;
+				flash_unlock_mid = (flash_unlock_t)flash_unlock_mid13325e;
 				flash_get_lock_status_mid = (flash_get_lock_status_t)flash_get_lock_block_mid13325e;
 				flash_unlock_status = FLASH_LOCK_NONE_MID13325E;
 				break;
@@ -103,26 +103,34 @@ void flash_protection_init(void)
 		#if (FLASH_ZB25WD80B_SUPPORT_EN) // 1M capacity
 			case MID14325E:
 				flash_lock_mid = (flash_lock_t)flash_lock_mid14325e;
-				flash_unlock_mid = flash_unlock_mid14325e;
+				flash_unlock_mid = (flash_unlock_t)flash_unlock_mid14325e;
 				flash_get_lock_status_mid = (flash_get_lock_status_t)flash_get_lock_block_mid14325e;
 				flash_unlock_status = FLASH_LOCK_NONE_MID14325E;
 				break;
 		#endif
 
+		#if (FLASH_P25D40SU_SUPPORT_EN) // 512K capacity
+			case MID136085:
+				flash_lock_mid = (flash_lock_t)flash_lock_mid136085;
+				flash_unlock_mid = (flash_unlock_t)flash_unlock_mid136085;
+				flash_get_lock_status_mid = (flash_get_lock_status_t)flash_get_lock_block_mid136085;
+				flash_unlock_status = FLASH_LOCK_NONE_MID136085;
+				break;
+		#endif
 
 		#if (FLASH_GD25LD40C_SUPPORT_EN || FLASH_GD25LD40E_SUPPORT_EN) // 512K capacity
 			case MID1360C8:
 				flash_lock_mid = (flash_lock_t)flash_lock_mid1360c8;
-				flash_unlock_mid = flash_unlock_mid1360c8;
+				flash_unlock_mid = (flash_unlock_t)flash_unlock_mid1360c8;
 				flash_get_lock_status_mid = (flash_get_lock_status_t)flash_get_lock_block_mid1360c8;
 				flash_unlock_status = FLASH_LOCK_NONE_MID1360C8;
 				break;
 		#endif
 
-		#if(FLASH_P25Q80U_SUPPORT_EN) // 1M capacity
+		#if(FLASH_P25Q80U_SUPPORT_EN || FLASH_P25Q80SU_SUPPORT_EN) // 1M capacity
 			case MID146085:
 				flash_lock_mid = (flash_lock_t)flash_lock_mid146085;
-				flash_unlock_mid = flash_unlock_mid146085;
+				flash_unlock_mid = (flash_unlock_t)flash_unlock_mid146085;
 				flash_get_lock_status_mid = (flash_get_lock_status_t)flash_get_lock_block_mid146085;
 				flash_unlock_status = FLASH_LOCK_NONE_MID146085;
 				break;
@@ -131,65 +139,84 @@ void flash_protection_init(void)
 		#if (FLASH_GD25LD80C_SUPPORT_EN || FLASH_GD25LD80E_SUPPORT_EN) // 1M capacity
 			case MID1460C8:
 				flash_lock_mid = (flash_lock_t)flash_lock_mid1460c8;
-				flash_unlock_mid = flash_unlock_mid1460c8;
+				flash_unlock_mid = (flash_unlock_t)flash_unlock_mid1460c8;
 				flash_get_lock_status_mid = (flash_get_lock_status_t)flash_get_lock_block_mid1460c8;
 				flash_unlock_status = FLASH_LOCK_NONE_MID1460C8;
 				break;
 		#endif
 	#else
-		#if(FLASH_P25Q80U_SUPPORT_EN) // 1M capacity
-			case MID146085:
-				flash_lock_mid = (flash_lock_t)flash_lock_mid146085;
-				flash_unlock_mid = flash_unlock_mid146085;
-				flash_get_lock_status_mid = (flash_get_lock_status_t)(size_t)flash_get_lock_block_mid146085;
-				flash_unlock_status = FLASH_LOCK_NONE_MID146085;
-				break;
-		#endif
-		#if (FLASH_P25Q16SU_SUPPORT_EN) // 2M capacity
-			case MID156085:
-				flash_lock_mid = (flash_lock_t)flash_lock_mid156085;
-				flash_unlock_mid = flash_unlock_mid156085;
-				flash_get_lock_status_mid = (flash_get_lock_status_t)(size_t)flash_get_lock_block_mid156085;
-				flash_unlock_status = FLASH_LOCK_NONE_MID156085;
-				break;
-		#endif
-		#if (FLASH_P25Q32SU_SUPPORT_EN) // 4M capacity
-			case MID166085:
-				flash_lock_mid = (flash_lock_t)flash_lock_mid166085;
-				flash_unlock_mid = flash_unlock_mid166085;
-				flash_get_lock_status_mid = (flash_get_lock_status_t)(size_t)flash_get_lock_block_mid166085;
-				flash_unlock_status = FLASH_LOCK_NONE_MID166085;
-				break;
-		#endif
-
-		#if 1//(MCU_CORE_TYPE == MCU_CORE_B92) //B92
-		#if (FLASH_P25Q128L_SUPPORT_EN) // 16M capacity
-			case MID186085:
-				flash_lock_mid = (flash_lock_t)flash_lock_mid186085;
-				flash_unlock_mid = flash_unlock_mid186085;
-				flash_get_lock_status_mid = (flash_get_lock_status_t)(size_t)flash_get_lock_block_mid186085;
-				flash_unlock_status = FLASH_LOCK_NONE_MID186085;
-				break;
-		#endif
-
-		#if (FLASH_P25Q128H_SUPPORT_EN)
-            case MID182085:
-                flash_lock_mid = flash_lock_mid182085;
-                flash_unlock_mid = flash_unlock_mid182085;
-                flash_get_lock_status_mid = (flash_get_lock_status_t)(size_t)flash_get_lock_block_mid182085;
-                flash_unlock_status = FLASH_LOCK_NONE_MID182085;
-                break;
+        #if (FLASH_P25Q80SU_SUPPORT_EN || FLASH_P25Q80U_SUPPORT_EN) // 1M capacity
+        case MID146085:
+            flash_lock_mid            = flash_lock_mid146085;
+            flash_unlock_mid          = flash_unlock_mid146085;
+            flash_get_lock_status_mid = (flash_get_lock_status_t)(size_t)flash_get_lock_block_mid146085;
+            flash_unlock_status       = FLASH_LOCK_NONE_MID146085;
+            break;
         #endif
-		
-		#if (FLASH_GD25LQ16E_SUPPORT_EN) // 2M capacity
-			case MID1560c8:
-				flash_lock_mid = (flash_lock_t)flash_lock_mid1560c8;
-				flash_unlock_mid = flash_unlock_mid1560c8;
-				flash_get_lock_status_mid = (flash_get_lock_status_t)(size_t)flash_get_lock_block_mid1560c8;
-				flash_unlock_status = FLASH_LOCK_NONE_MID1560c8;
-				break;
-		#endif
-		#endif
+
+        #if (FLASH_P25Q16SU_SUPPORT_EN) // 2M capacity
+        case MID156085:
+            flash_lock_mid            = flash_lock_mid156085;
+            flash_unlock_mid          = flash_unlock_mid156085;
+            flash_get_lock_status_mid = (flash_get_lock_status_t)(size_t)flash_get_lock_block_mid156085;
+            flash_unlock_status       = FLASH_LOCK_NONE_MID156085;
+            break;
+        #endif
+
+        #if (FLASH_GD25LE80E_SUPPORT_EN)
+        case MID1460C8:
+            flash_lock_mid            = flash_lock_mid1460c8;
+            flash_unlock_mid          = flash_unlock_mid1460c8;
+            flash_get_lock_status_mid = (flash_get_lock_status_t)(size_t)flash_get_lock_block_mid1460c8;
+            flash_unlock_status       = FLASH_LOCK_NONE_MID1460C8;
+            break;
+        #endif
+
+        #if (FLASH_GD25LE16E_SUPPORT_EN)
+        case MID1560C8:
+            flash_lock_mid            = flash_lock_mid1560c8;
+            flash_unlock_mid          = flash_unlock_mid1560c8;
+            flash_get_lock_status_mid = (flash_get_lock_status_t)(size_t)flash_get_lock_block_mid1560c8;
+            flash_unlock_status       = FLASH_LOCK_NONE_MID1560C8;
+            break;
+        #endif
+
+        #if (FLASH_P25Q32SU_SUPPORT_EN) // 4M capacity
+        case MID166085:
+            flash_lock_mid            = flash_lock_mid166085;
+            flash_unlock_mid          = flash_unlock_mid166085;
+            flash_get_lock_status_mid = (flash_get_lock_status_t)(size_t)flash_get_lock_block_mid166085;
+            flash_unlock_status       = FLASH_LOCK_NONE_MID166085;
+            break;
+        #endif
+
+        #if (FLASH_P25Q128L_SUPPORT_EN) // 16M capacity
+        case MID186085:
+            flash_lock_mid            = flash_lock_mid186085;
+            flash_unlock_mid          = flash_unlock_mid186085;
+            flash_get_lock_status_mid = (flash_get_lock_status_t)(size_t)flash_get_lock_block_mid186085;
+            flash_unlock_status       = FLASH_LOCK_NONE_MID186085;
+            break;
+        #endif
+
+        #if (FLASH_P25Q128H_SUPPORT_EN)
+        case MID182085:
+            flash_lock_mid            = flash_lock_mid182085;
+            flash_unlock_mid          = flash_unlock_mid182085;
+            flash_get_lock_status_mid = (flash_get_lock_status_t)(size_t)flash_get_lock_block_mid182085;
+            flash_unlock_status       = FLASH_LOCK_NONE_MID182085;
+            break;
+        #endif
+
+        #if (FLASH_GD25LQ16E_SUPPORT_EN) // 2M capacity
+        case MID1560C8:
+            flash_lock_mid            = flash_lock_mid1560c8;
+            flash_unlock_mid          = flash_unlock_mid1560c8;
+            flash_get_lock_status_mid = (flash_get_lock_status_t)(size_t)flash_get_lock_block_mid1560c8;
+            flash_unlock_status       = FLASH_LOCK_NONE_MID1560C8;
+            break;
+        #endif
+
 	#endif
 
 		default:
@@ -424,19 +451,6 @@ STATIC_ASSERT(FLASH_SIZE_MAX_SW >= FLASH_ADR_AREA_2_END);
 STATIC_ASSERT(MESH_FLASH_PROTECTION_EN == 0); // can not enable both.
 #endif
 
-#if (0 == __TLSR_RISCV_EN__)
-/**
- * @brief      This function is used to read current used multiple boot address.
- * 			   return value is set by API "blc ota_setFirmwareSizeAndBootAddress"
- * @param[in]  none
- * @return     multiple boot address
- */
-static inline u32  blc_ota_getCurrentUsedMultipleBootAddress(void)
-{
-	return ota_program_bootAddr;
-}
-#endif
-
 /**
  * @brief       This function will be called when ota begin to unlock flash.
  * @return      none
@@ -446,7 +460,7 @@ void app_flash_protection_ota_begin(void)
 {
 	if(flash_prot_op_cb){
 		/* ota write data, destroy old boot mark, so 0 ~ ota_program_bootAddr + ota_firmware_max_size */
-		flash_prot_op_cb(FLASH_OP_EVT_STACK_OTA_WRITE_NEW_FW_BEGIN, 0, ota_program_bootAddr + ota_firmware_size_k * 1024); // lock none due to both two firmware area need to be modify: new firmware and 4B of old fw.
+		flash_prot_op_cb(FLASH_OP_EVT_STACK_OTA_WRITE_NEW_FW_BEGIN, 0, ota_program_bootAddr + ota_firmware_max_size); // lock none due to both two firmware area need to be modify: new firmware and 4B of old fw.
 	}
 }
 
@@ -520,11 +534,15 @@ const flash_lock_area_support_t FLASH_LOCK_AREA_SUPPORT[] = { // area must be so
 	{MID14325E, {{FLASH_LOCK_LOW_768K_MID14325E, (768/4)}, {FLASH_LOCK_LOW_896K_MID14325E, (896/4)},
 			     {FLASH_LOCK_ALL_1M_MID14325E, 	(1024/4)}}},
 	#endif
+    #if FLASH_P25D40SU_SUPPORT_EN // 512K capacity
+    {MID136085, {{FLASH_LOCK_LOW_256K_MID136085, (256/4)}, {FLASH_LOCK_LOW_448K_MID136085, (448/4)},
+			     {FLASH_LOCK_ALL_512K_MID136085, (512/4)}}},
+    #endif
 	#if (FLASH_GD25LD40C_SUPPORT_EN || FLASH_GD25LD40E_SUPPORT_EN) //512K capacity
 	{MID1360C8, {{FLASH_LOCK_LOW_256K_MID1360C8, (256/4)}, {FLASH_LOCK_LOW_448K_MID1360C8, (448/4)},
 			     {FLASH_LOCK_ALL_512K_MID1360C8, (512/4)}}},
 	#endif
-	#if(FLASH_P25Q80U_SUPPORT_EN) //1M capacity
+	#if(FLASH_P25Q80U_SUPPORT_EN || FLASH_P25Q80SU_SUPPORT_EN) //1M capacity
 	{MID146085, {{FLASH_LOCK_LOW_128K_MID146085, (128/4)}, // use 128k for (FLASH_ADR_RESET_CNT 0x23000) of dual mode
 	             {FLASH_LOCK_LOW_512K_MID146085, (512/4)}, // use 512 but not 768(0xC0000), because of (FLASH_ADR_AREA_1_START 0xB4000)
 				 {FLASH_LOCK_LOW_896K_MID146085, (896/4)}, {FLASH_LOCK_ALL_1M_MID146085, (1024/4)}}},
@@ -534,14 +552,22 @@ const flash_lock_area_support_t FLASH_LOCK_AREA_SUPPORT[] = { // area must be so
 				 {FLASH_LOCK_ALL_1M_MID1460C8, 	(1024/4)}}},
 	#endif
 #else // B91 B92
-	#if (FLASH_P25Q80U_SUPPORT_EN) //1M capacity
+	#if (FLASH_P25Q80U_SUPPORT_EN || FLASH_P25Q80SU_SUPPORT_EN) //1M capacity
 	{MID146085, {{FLASH_LOCK_LOW_256K_MID146085, (256/4)}, {FLASH_LOCK_LOW_512K_MID146085, (512/4)},
 			     {FLASH_LOCK_LOW_896K_MID146085, (896/4)}, {FLASH_LOCK_ALL_1M_MID146085, (1024/4)}}},
 	#endif
+    #if (FLASH_GD25LE80E_SUPPORT_EN) //1M capacity
+    {MID1460C8, {{FLASH_LOCK_LOW_256K_MID1460C8, (256/4)}, {FLASH_LOCK_LOW_512K_MID1460C8, (512/4)},
+                 {FLASH_LOCK_LOW_896K_MID1460C8, (896/4)}, {FLASH_LOCK_ALL_1M_MID1460C8, (1024/4)}}},
+    #endif
 	#if (FLASH_P25Q16SU_SUPPORT_EN) // 2M capacity
 	{MID156085, {{FLASH_LOCK_LOW_256K_MID156085, (256/4)}, {FLASH_LOCK_LOW_512K_MID156085, (512/4)},
 			     {FLASH_LOCK_LOW_1M_MID156085, (1024/4)}, {FLASH_LOCK_ALL_2M_MID156085, (2048/4)}}},
 	#endif
+    #if (FLASH_GD25LE16E_SUPPORT_EN) //2M capacity
+    {MID1560C8, {{FLASH_LOCK_LOW_256K_MID1560C8, (256/4)}, {FLASH_LOCK_LOW_512K_MID1560C8, (512/4)},
+                 {FLASH_LOCK_LOW_1M_MID1560C8, (1024/4)}, {FLASH_LOCK_ALL_2M_MID1560C8, (2048/4)}}},
+    #endif
 	#if (FLASH_P25Q32SU_SUPPORT_EN) // 4M capacity
 	{MID166085, {{FLASH_LOCK_LOW_256K_MID166085, (256/4)}, {FLASH_LOCK_LOW_512K_MID166085, (512/4)},
 			     {FLASH_LOCK_LOW_1M_MID166085, (1024/4)}, {FLASH_LOCK_ALL_4M_MID166085, (4096/4)}}},

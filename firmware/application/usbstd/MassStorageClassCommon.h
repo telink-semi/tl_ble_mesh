@@ -1,12 +1,12 @@
 /********************************************************************************************************
  * @file    MassStorageClassCommon.h
  *
- * @brief   This is the header file for BLE SDK
+ * @brief   This is the header file for Telink RISC-V MCU
  *
- * @author  BLE GROUP
- * @date    06,2022
+ * @author  Driver Group
+ * @date    2019
  *
- * @par     Copyright (c) 2022, Telink Semiconductor (Shanghai) Co., Ltd. ("TELINK")
+ * @par     Copyright (c) 2019, Telink Semiconductor (Shanghai) Co., Ltd. ("TELINK")
  *
  *          Licensed under the Apache License, Version 2.0 (the "License");
  *          you may not use this file except in compliance with the License.
@@ -22,22 +22,19 @@
  *
  *******************************************************************************************************/
 #pragma once
-
-/* Includes: */
-#include <application/usbstd/stdDescriptors.h>
-#include "../common/types.h"
-
 /* Enable C linkage for C++ Compilers: */
 #if defined(__cplusplus)
-extern "C" {
+extern "C"
+{
 #endif
+/* Includes: */
+#include "stdDescriptors.h"
 
-#pragma pack(1)
 
-#define MS_CBW_SIGNATURE                               0x43425355UL
-#define MS_CSW_SIGNATURE                               0x53425355UL
-#define MS_COMMAND_DIR_DATA_OUT                        (0<<7)
-#define MS_COMMAND_DIR_DATA_IN                         (1<<7)
+#define MS_CBW_SIGNATURE                                  0x43425355UL
+#define MS_CSW_SIGNATURE                                  0x53425355UL
+#define MS_COMMAND_DIR_DATA_OUT                           (0 << 7)
+#define MS_COMMAND_DIR_DATA_IN                            (1 << 7)
 
 #define MS_SCSI_CMD_INQUIRY                               0x12
 #define MS_SCSI_CMD_REQUEST_SENSE                         0x03
@@ -85,93 +82,89 @@ extern "C" {
 #define MS_SCSI_ASENSEQ_INITIALIZING_COMMAND_REQUIRED     0x02
 #define MS_SCSI_ASENSEQ_OPERATION_IN_PROGRESS             0x07
 
-enum MS_Descriptor_ClassSubclassProtocol_t
-{
-	MS_CSCP_MassStorageClass = 0x08,
-	MS_CSCP_SCSITransparentSubclass = 0x06,
-	MS_CSCP_BulkOnlyTransportProtocol = 0x50,
-};
+    enum MS_Descriptor_ClassSubclassProtocol_t
+    {
+        MS_CSCP_MassStorageClass          = 0x08,
+        MS_CSCP_SCSITransparentSubclass   = 0x06,
+        MS_CSCP_BulkOnlyTransportProtocol = 0x50,
+    };
 
-enum MS_ClassRequests_t
-{
-	MS_REQ_GetMaxLUN = 0xFE,
-	MS_REQ_MassStorageReset,
-};
+    enum MS_ClassRequests_t
+    {
+        MS_REQ_GetMaxLUN = 0xFE,
+        MS_REQ_MassStorageReset,
+    };
 
-enum MS_CommandStatusCodes_t
-{
-	MS_MS_SCSI_COMMAND_Pass,
-	MS_MS_SCSI_COMMAND_Fail,
-	MS_MS_SCSI_COMMAND_PhaseError,
-};
+    enum MS_CommandStatusCodes_t
+    {
+        MS_MS_SCSI_COMMAND_Pass,
+        MS_MS_SCSI_COMMAND_Fail,
+        MS_MS_SCSI_COMMAND_PhaseError,
+    };
 
+    typedef struct
+    {
+        unsigned int  Signature;
+        unsigned int  Tag;
+        unsigned int  DataTransferLength;
+        unsigned char Flags;
+        unsigned char LUN;
+        unsigned char SCSICommandLength;
+        unsigned char SCSICommandData[16];
+    } __attribute__((packed)) MS_CommandBlockWrapper_t;
 
-typedef struct
-{
-	u32 Signature;
-	u32 Tag;
-	u32 DataTransferLength;
-	u8  Flags;
-	u8  LUN;
-	u8  SCSICommandLength;
-	u8  SCSICommandData[16];
-}  MS_CommandBlockWrapper_t;
+    typedef struct
+    {
+        unsigned int  Signature;
+        unsigned int  Tag;
+        unsigned int  DataTransferResidue;
+        unsigned char Status;
+    } __attribute__((packed)) MS_CommandStatusWrapper_t;
 
-typedef struct
-{
-	u32 Signature;
-	u32 Tag;
-	u32 DataTransferResidue;
-	u8  Status;
-}  MS_CommandStatusWrapper_t;
+    typedef struct
+    {
+        unsigned char ResponseCode;
+        unsigned char SegmentNumber;
+        unsigned char SenseKey : 4;
+        unsigned char Reserved : 1;
+        unsigned char ILI      : 1;
+        unsigned char EOM      : 1;
+        unsigned char FileMark : 1;
+        unsigned char Information[4];
+        unsigned char AdditionalLength;
+        unsigned char CmdSpecificInformation[4];
+        unsigned char AdditionalSenseCode;
+        unsigned char AdditionalSenseQualifier;
+        unsigned char FieldReplaceableUnitCode;
+        unsigned char SenseKeySpecific[3];
+    } __attribute__((packed)) MS_SCSI_Request_Sense_Response_t;
 
-typedef struct
-{
-	u8  ResponseCode;
-	u8  SegmentNumber;
-	u8 SenseKey            : 4;
-	u8 Reserved            : 1;
-	u8 ILI                 : 1;
-	u8 EOM                 : 1;
-	u8 FileMark            : 1;
-	u8  Information[4];
-	u8  AdditionalLength;
-	u8  CmdSpecificInformation[4];
-	u8  AdditionalSenseCode;
-	u8  AdditionalSenseQualifier;
-	u8  FieldReplaceableUnitCode;
-	u8  SenseKeySpecific[3];
-} MS_SCSI_Request_Sense_Response_t;
-
-
-typedef struct
-{
-	u8 DeviceType          : 5;
-	u8 PeripheralQualifier : 3;
-	u8 Reserved            : 7;
-	u8 Removable           : 1;
-	u8  Version;
-	u8 ResponseDataFormat  : 4;
-	u8 Reserved2           : 1;
-	u8 NormACA             : 1;
-	u8 TrmTsk              : 1;
-	u8 AERC                : 1;
-	u8  AdditionalLength;
-	u8  Reserved3[2];
-	u8 SoftReset           : 1;
-	u8 CmdQue              : 1;
-	u8 Reserved4           : 1;
-	u8 Linked              : 1;
-	u8 Sync                : 1;
-	u8 WideBus16Bit        : 1;
-	u8 WideBus32Bit        : 1;
-	u8 RelAddr             : 1;
-	u8 VendorID[8];
-	u8 ProductID[16];
-	u8 RevisionID[4];
-} MS_SCSI_Inquiry_Response_t;
-
-#pragma pack()
+    typedef struct
+    {
+        unsigned char DeviceType          : 5;
+        unsigned char PeripheralQualifier : 3;
+        unsigned char Reserved            : 7;
+        unsigned char Removable           : 1;
+        unsigned char Version;
+        unsigned char ResponseDataFormat : 4;
+        unsigned char Reserved2          : 1;
+        unsigned char NormACA            : 1;
+        unsigned char TrmTsk             : 1;
+        unsigned char AERC               : 1;
+        unsigned char AdditionalLength;
+        unsigned char Reserved3[2];
+        unsigned char SoftReset    : 1;
+        unsigned char CmdQue       : 1;
+        unsigned char Reserved4    : 1;
+        unsigned char Linked       : 1;
+        unsigned char Sync         : 1;
+        unsigned char WideBus16Bit : 1;
+        unsigned char WideBus32Bit : 1;
+        unsigned char RelAddr      : 1;
+        unsigned char VendorID[8];
+        unsigned char ProductID[16];
+        unsigned char RevisionID[4];
+    } __attribute__((packed)) MS_SCSI_Inquiry_Response_t;
 
 /* Disable C linkage for C++ Compilers: */
 #if defined(__cplusplus)

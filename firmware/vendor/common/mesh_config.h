@@ -178,9 +178,10 @@ extern "C" {
 	#if __PROJECT_MESH__ || __PROJECT_MESH_PRO__ 	// only for B91 mesh and gateway project
 #define AUDIO_MESH_EN					0
 		#if AUDIO_MESH_EN
-#define CODEC_ALGORITHM_SBC             0
-#define CODEC_ALGORITHM_LC3	            1
+#define CODEC_ALGORITHM_SBC             0   // CODEC_ALGORITHM enumeration
+#define CODEC_ALGORITHM_LC3	            1   // CODEC_ALGORITHM enumeration
 
+#define TEST_DEBUG_LEVEL                0
 #define AUDIO_MESH_MULTY_NODES_TX_EN	0	// only support audio LC3 + 8k sample rate now for multy nodes mode.
 		#if AUDIO_MESH_MULTY_NODES_TX_EN
 #define AUDIO_DATA_NO_TX_WHEN_SILENCE_EN		1
@@ -234,6 +235,20 @@ extern "C" {
 #define AUDIO_MESH_EN               0 // must 0
 #endif
 //------------ mesh audio config end -------------
+
+//------------ mesh audio config -------------
+#if __TLSR_RISCV_EN__
+	#if __PROJECT_MESH__ || __PROJECT_MESH_PRO__ 	// only for B91 mesh and gateway project
+#define ASR_EN                      0
+#define AUDIO_SAMPLE_RATE           AUDIO_8K // refer to APP_ASR_SAMPLE_RATE in APP.h
+    #endif
+#endif
+
+#ifndef ASR_EN
+#define ASR_EN                      0 // must 0
+#endif
+//------------ mesh audio config end-------------
+
 #ifndef PAIR_PROVISION_ENABLE
 #define PAIR_PROVISION_ENABLE       0
 #endif
@@ -249,8 +264,8 @@ extern "C" {
 #define MESH_SPIRIT_ENABLE			2	// use this mode should burn in the para in 0x78000,or use init para should enable the  con_sec_data
 #define MESH_AES_ENABLE 			3
 #define MESH_GN_ENABLE 		    	4
-#define MESH_MI_ENABLE          	5
-#define MESH_MI_SPIRIT_ENABLE   	6   // dual vendor
+#define MESH_MI_ENABLE          	5   // OBSOLETE: Had been removed
+#define MESH_MI_SPIRIT_ENABLE   	6   // OBSOLETE: Had been removed
 #define MESH_IRONMAN_MENLO_ENABLE   7   // include boot_loader.bin and light.bin
 #define MESH_ZB_BL_DUAL_ENABLE      8   // mesh && zigbee normal dual mode with bootloader
 #define MESH_PIPA_ENABLE        	9   // 
@@ -320,52 +335,9 @@ extern "C" {
 #elif(MESH_USER_DEFINE_MODE == MESH_GN_ENABLE)
 #define PROVISION_FLOW_SIMPLE_EN    1
 #elif(MESH_USER_DEFINE_MODE == MESH_MI_ENABLE)
-#define AIS_ENABLE					0
-#define PROVISION_FLOW_SIMPLE_EN    0
-#define MI_API_ENABLE               1
-#define MI_SWITCH_LPN_EN			0   // only support 825x serials 
-
-//#define MI_MESH_TEMPLATE_LIGHTNESS		0
-#define MI_MESH_TEMPLATE_LIGHTCTL			1
-//#define MI_MESH_TEMPLATE_ONE_KEY_SWITCH	2
-//#define MI_MESH_TEMPLATE_TWO_KEY_SWITCH	3
-//#define MI_MESH_TEMPLATE_THREE_KEY_SWITCH	4
-//#define MI_MESH_TEMPLATE_FAN				5
-
-#if  defined(MI_MESH_TEMPLATE_LIGHTNESS)
-#define MI_PRODUCT_TYPE				MI_PRODUCT_TYPE_LAMP
-#elif defined(MI_MESH_TEMPLATE_LIGHTCTL)
-#define MI_PRODUCT_TYPE				MI_PRODUCT_TYPE_CT_LIGHT
-#elif defined(MI_MESH_TEMPLATE_ONE_KEY_SWITCH)
-#define MI_PRODUCT_TYPE				MI_PRODUCT_TYPE_ONE_ONOFF
-#elif defined(MI_MESH_TEMPLATE_TWO_KEY_SWITCH)
-#define MI_PRODUCT_TYPE				MI_PRODUCT_TYPE_TWO_ONOFF
-#elif defined(MI_MESH_TEMPLATE_THREE_KEY_SWITCH)
-#define MI_PRODUCT_TYPE				MI_PRODUCT_TYPE_THREE_ONOFF
-#elif defined(MI_MESH_TEMPLATE_FAN)
-#define MI_PRODUCT_TYPE				MI_PRODUCT_TYPE_FANS
-#endif
-/*
-	#if MI_SWITCH_LPN_EN
-#define BLT_SOFTWARE_TIMER_ENABLE	1
-#define MI_PRODUCT_TYPE				LIGHT_TYPE_PANEL
-	#else
-#define MI_PRODUCT_TYPE				LIGHT_TYPE_CT	
-	#endif
-*/
+#error "not support mode!!!"
 #elif(MESH_USER_DEFINE_MODE == MESH_MI_SPIRIT_ENABLE)
-#define VENDOR_ID                   VENDOR_ID_MI // use mi vendor_id and mi mac by default
-#define AIS_ENABLE					1
-#define PROVISION_FLOW_SIMPLE_EN    1	
-#define ALI_MD_TIME_EN				0
-#define MI_API_ENABLE               1
-#define MI_SWITCH_LPN_EN			0   // only support 825x serials 
-	#if MI_SWITCH_LPN_EN
-#define BLT_SOFTWARE_TIMER_ENABLE	1
-#define MI_PRODUCT_TYPE				MI_PRODUCT_TYPE_ONE_ONOFF
-	#else
-#define MI_PRODUCT_TYPE				MI_PRODUCT_TYPE_CT_LIGHT	
-	#endif
+#error "not support mode!!!"
 #elif((MESH_USER_DEFINE_MODE == MESH_IRONMAN_MENLO_ENABLE)||(MESH_USER_DEFINE_MODE == MESH_ZB_BL_DUAL_ENABLE))
     #if __PROJECT_BOOTLOADER__
 #define FW_START_BY_LEGACY_BOOTLOADER_EN   0
@@ -421,7 +393,7 @@ extern "C" {
 										
 #if (MESH_USER_DEFINE_MODE == MESH_TAIBAI_ENABLE)
 #define DU_ENABLE 			1
-#define DU_LPN_EN			0
+#define DU_LPN_EN			0 // use spirit_lpn build config
 #define DU_ULTRA_PROV_EN	0	
 
 	#if DU_LPN_EN
@@ -482,16 +454,6 @@ extern "C" {
 #ifndef PROVISION_FLOW_SIMPLE_EN
 #define PROVISION_FLOW_SIMPLE_EN		0
 #endif
-
-#if MI_API_ENABLE
-	#if MCU_CORE_TYPE == MCU_CORE_8269
-	#define BLT_SOFTWARE_TIMER_ENABLE	0
-	#endif
-	#ifndef BLT_SOFTWARE_TIMER_ENABLE
-	#define BLT_SOFTWARE_TIMER_ENABLE 	1
-	#endif
-#endif
-
 
 #if __PROJECT_SPIRIT_LPN__
 #define SPIRIT_PRIVATE_LPN_EN			1 // must
@@ -593,23 +555,7 @@ extern "C" {
 #elif AUDIO_MESH_EN
 #define LIGHT_TYPE_SEL 				LIGHT_TYPE_DIM
 #else
-	#if MI_API_ENABLE
-		#if MI_PRODUCT_TYPE == MI_PRODUCT_TYPE_CT_LIGHT
-#define LIGHT_TYPE_SEL				LIGHT_TYPE_CT
-		#elif MI_PRODUCT_TYPE == MI_PRODUCT_TYPE_LAMP
-#define LIGHT_TYPE_SEL				LIGHT_TYPE_CT		
-		#elif (	MI_PRODUCT_TYPE == MI_PRODUCT_TYPE_ONE_ONOFF ||\
-				MI_PRODUCT_TYPE == MI_PRODUCT_TYPE_TWO_ONOFF ||\
-				MI_PRODUCT_TYPE == MI_PRODUCT_TYPE_THREE_ONOFF)
-#define LIGHT_TYPE_SEL				LIGHT_TYPE_PANEL
-		#elif (MI_PRODUCT_TYPE == MI_PRODUCT_TYPE_PLUG)
-#define LIGHT_TYPE_SEL				LIGHT_TYPE_PANEL
-		#elif (MI_PRODUCT_TYPE == MI_PRODUCT_TYPE_FANS)
-#define LIGHT_TYPE_SEL				LIGHT_TYPE_PANEL
-		#endif
-	#else
 #define LIGHT_TYPE_SEL				LIGHT_TYPE_CT	// 
-	#endif
 #endif
 #endif
 
@@ -629,9 +575,12 @@ extern "C" {
 */
 #if ((LIGHT_TYPE_SEL == LIGHT_TYPE_CT) || (LIGHT_TYPE_SEL == LIGHT_TYPE_HSL) || \
 	 (LIGHT_TYPE_SEL == LIGHT_TYPE_XYL) || (LIGHT_TYPE_SEL == LIGHT_TYPE_DIM))
-#define NLCP_BLC_EN					0	// BLCNLCP: Basic Lightness Controller Network Lighting Profile
+#define NLCP_BLC_EN					    0	// BLCNLCP: Basic Lightness Controller Network Lighting Profile
+    #if NLCP_BLC_EN
+#define SCENE_NOT_STORE_LC_PROPERTY_EN  0   // customized setting to not store light control property for scene to decrease parameter size.
+    #endif
 #else
-#define NLCP_BLC_EN					0	// must 0
+#define NLCP_BLC_EN					    0	// must 0
 #endif
 
 // other NLC profiles please refer to NLCP_DIC_EN, NLCP_BSS_EN, NLCP_TYPE_ALS, NLCP_TYPE_OCS, NLCP_TYPE_ENM in other files.
@@ -675,7 +624,6 @@ extern "C" {
 #define MD_LEVEL_EN                 0
 #elif ((LIGHT_TYPE_SEL == LIGHT_TYPE_NONE) || (LIGHT_TYPE_SEL == LIGHT_TYPE_PANEL) || (LIGHT_TYPE_SEL == TYPE_TOOTH_BRUSH))
 #define MD_LIGHTNESS_EN             0
-#define MD_LIGHTNESS_EN             0
 #define MD_LEVEL_EN                 0
 #elif (LIGHT_TYPE_SEL == LIGHT_TYPE_LPN_ONOFF_LEVEL)
 #define MD_LIGHTNESS_EN             0
@@ -716,11 +664,7 @@ extern "C" {
 #ifdef WIN32
 #define CERTIFY_BASE_ENABLE 	1
 #else
-	#if MI_API_ENABLE
-#define CERTIFY_BASE_ENABLE 	0		// must 0
-	#else
 #define CERTIFY_BASE_ENABLE		0
-	#endif
 #endif
 
 /**
@@ -732,8 +676,6 @@ extern "C" {
 #define MD_REMOTE_PROV              1
 #elif (MESH_USER_DEFINE_MODE == MESH_IRONMAN_MENLO_ENABLE)
 #define MD_REMOTE_PROV              0   // default disable
-#elif (MI_API_ENABLE)
-#define MD_REMOTE_PROV              0   // must 0
 #elif (__PROJECT_MESH__)
 #define MD_REMOTE_PROV              0   // dufault disable
 #elif (__PROJECT_MESH_PRO__)
@@ -1075,11 +1017,15 @@ extern "C" {
 #ifndef WIN32
 #define KEEP_ONOFF_STATE_AFTER_OTA			1
 #endif
-#define DF_TEST_MODE_EN  					(0 && MD_DF_CFG_SERVER_EN) // Path lifetime is 12 minute in test mode.
-#if DF_TEST_MODE_EN
-#define DF_TEST_EXHIBITION_EN	0	// It's for the trade show test, all led of the node participating in forwarding blinks
-#endif
 
+#if MD_DF_CFG_SERVER_EN
+#define CONFIG_ALWAYS_GET_ROUTE_FROM_FLASH         1  // store non-fixed forwarding table entry in flash to save ram, read fixed/non-fixed entry from flash every time.
+
+#define DF_TEST_MODE_EN  					(0 && MD_DF_CFG_SERVER_EN) // Path lifetime is 12 minute in test mode.
+    #if DF_TEST_MODE_EN
+#define DF_TEST_EXHIBITION_EN	            0	// It's for the trade show test, all led of the node participating in forwarding blinks
+    #endif
+#endif
 
 //----------------------------------------------------------------------------------
 

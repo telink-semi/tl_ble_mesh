@@ -407,12 +407,13 @@ void mesh_heartbeat_pub_poll(void)
 
     	u32 heartbeat_pb_per =0;
     	if(p_pub->per_log == 0){
-    		heartbeat_pb_per = 1;
+    		return ;
     	}else if (p_pub->per_log <=0x11){
     		heartbeat_pb_per = (1<<(p_pub->per_log-1));
     	}else{
     		return ;
     	}
+
     	if(p_pub->cnt_val && (!hb_sts_change)
     	&& clock_time_exceed_100ms(hb_pub_100ms,heartbeat_pb_per*10)){
     		hb_pub_100ms = clock_time_100ms();

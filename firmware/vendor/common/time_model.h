@@ -78,7 +78,7 @@ typedef struct __attribute__((packed)) {
 
 typedef struct __attribute__((packed)) {
 	u8 zone_offset_new;
-	u8 TAI_zone_change[5];
+	u8 TAI_zone_change[5];      // the time to active the new value
 }mesh_time_zone_set_t;
 
 typedef struct __attribute__((packed)) {
@@ -90,7 +90,7 @@ typedef struct __attribute__((packed)) {
 typedef struct __attribute__((packed)) {
 	u16 delta_new		:15;
 	u16 rsv				:1;
-	u8 TAI_delta_change[5];
+	u8 TAI_delta_change[5];     // the time to active the new value, such as a switch from winter to summer time.
 }mesh_time_TAI_UTC_delta_set_t;
 
 typedef struct __attribute__((packed)) {

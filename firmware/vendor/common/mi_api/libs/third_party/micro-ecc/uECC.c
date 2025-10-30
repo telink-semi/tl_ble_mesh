@@ -415,8 +415,8 @@ uECC_VLI_API void uECC_vli_mult(uECC_word_t *result,
                                 const uECC_word_t *right,
                                 wordcount_t num_words) {
 #if uECC_PLATFORM == uECC_telink
-    extern void mpn_mul (unsigned int * r, unsigned int * a, int na, unsigned int * b, int nb);
-    mpn_mul((unsigned int *)result,(unsigned int *)left,(int)num_words,
+    extern void tn_mpn_mul (unsigned int * r, unsigned int * a, int na, unsigned int * b, int nb);
+    tn_mpn_mul((unsigned int *)result,(unsigned int *)left,(int)num_words,
             (unsigned int *)right,(int)num_words);
 #else
     uECC_word_t r0 = 0;

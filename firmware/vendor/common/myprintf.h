@@ -25,11 +25,7 @@
 #ifndef MYPRINTF_H
 #define MYPRINTF_H
 
-#if __TLSR_RISCV_EN__
 #include "stack/ble/ble.h"
-#else
-#include "proj_lib/ble/service/ble_ll_ota.h"
-#endif
 
 #define SIMU_BAUD_115200    115200
 #define SIMU_BAUD_230400    230400

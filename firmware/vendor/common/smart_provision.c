@@ -153,7 +153,7 @@ void mesh_smart_provision_start(void)
 		mesh_smart_provision_st_set(SMART_CONFIG_SCAN_START);
 	}
 #if BLE_REMOTE_PM_ENABLE
-	app_enable_scan_all_device (); // enable scan	
+	mesh_set_scan_enable(1, 1); // enable scan	
 	bls_pm_setSuspendMask (SUSPEND_DISABLE); 
 #endif
 }
@@ -162,7 +162,7 @@ void mesh_smart_provision_stop(void)
 {
 	mesh_smart_provision_st_set(SMART_CONFIG_IDLE);
 #if BLE_REMOTE_PM_ENABLE
-	blc_ll_setScanEnable (0, 0);// disable scan to save power
+	mesh_set_scan_enable(0, 0);// disable scan to save power
 	ENABLE_SUSPEND_MASK;
 #endif 
 }

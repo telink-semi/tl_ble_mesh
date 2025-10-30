@@ -1,12 +1,12 @@
 /********************************************************************************************************
  * @file    CDCClassCommon.h
  *
- * @brief   This is the header file for BLE SDK
+ * @brief   This is the header file for Telink RISC-V MCU
  *
- * @author  BLE GROUP
- * @date    06,2022
+ * @author  Driver Group
+ * @date    2019
  *
- * @par     Copyright (c) 2022, Telink Semiconductor (Shanghai) Co., Ltd. ("TELINK")
+ * @par     Copyright (c) 2019, Telink Semiconductor (Shanghai) Co., Ltd. ("TELINK")
  *
  *          Licensed under the Apache License, Version 2.0 (the "License");
  *          you may not use this file except in compliance with the License.
@@ -21,17 +21,16 @@
  *          limitations under the License.
  *
  *******************************************************************************************************/
-#pragma once
-
-/* Includes: */
-#include "application/usbstd/stdDescriptors.h"
-#include "tl_common.h"
-
+#ifndef _CDC_CLASS_COMMON_H_
+#define _CDC_CLASS_COMMON_H_
 /* Enable C linkage for C++ Compilers: */
 #if defined(__cplusplus)
-extern "C" {
+extern "C"
+{
 #endif
 
+/* Includes: */
+#include "stdDescriptors.h"
 
 
 #define CDC_CONTROL_LINE_OUT_DTR         BIT(0)
@@ -44,136 +43,138 @@ extern "C" {
 #define CDC_CONTROL_LINE_IN_PARITYERROR  BIT(5)
 #define CDC_CONTROL_LINE_IN_OVERRUNERROR BIT(6)
 
-#define CDC_FUNCTIONAL_DESCRIPTOR(DataSize) \
-	 struct \
-	 { \
-		  USB_Descriptor_Hdr_t Header; \
-		  u8 SubType; \
-		  u8 Data[DataSize]; \
-	 }
+#define CDC_FUNCTIONAL_DESCRIPTOR(DataSize)  \
+    struct                                   \
+    {                                        \
+        USB_Descriptor_Hdr_t Header;         \
+        unsigned char        SubType;        \
+        unsigned char        Data[DataSize]; \
+    } __attribute__((packed))
 
-enum CDC_Descriptor_ClassSubclass_Protocol_t
-{
-	CDC_CSCP_NoSpecific_Subclass = 0x00,
-	CDC_CSCP_NoSpecific_Protocol = 0x00,
-	CDC_CSCP_NoData_Subclass = 0x00,
-	CDC_CSCP_NoData_Protocol = 0x00,
-	CDC_CSCP_ATCmd_Protocol = 0x01,
-	CDC_CSCP_CDC_Class = 0x02,
-	CDC_CSCP_ACM_Subclass = 0x02,
-	CDC_CSCP_CDCData_Class = 0x0A,
-	CDC_CSCP_VendorSpecific_Protocol = 0xFF,
-};
+    enum CDC_Descriptor_ClassSubclass_Protocol_t
+    {
+        CDC_CSCP_NoSpecific_Subclass     = 0x00,
+        CDC_CSCP_NoSpecific_Protocol     = 0x00,
+        CDC_CSCP_NoDataSubclass          = 0x00,
+        CDC_CSCP_NoDataProtocol          = 0x00,
+        CDC_CSCP_ATCmdProtocol           = 0x01,
+        CDC_CSCP_CDCClass                = 0x02,
+        CDC_CSCP_ACMSubclass             = 0x02,
+        CDC_CSCP_CDCDataClass            = 0x0A,
+        CDC_CSCP_VendorSpecific_Protocol = 0xFF,
+        CDC_CSCP_ATCommandProtocol       = 0x01,
+    };
 
-enum CDC_Class_Requests_t
-{
-	CDC_REQ_SendEncapsulated_Cmd,
-	CDC_REQ_GetEncapsulated_Rsp,
-	CDC_REQ_SetLine_Encoding = 0x20,
-	CDC_REQ_GetLine_Encoding,
-	CDC_REQ_SetControlLine_State,
-	CDC_REQ_SendBreak,
-};
+    enum CDC_Class_Requestions_t
+    {
+        CDC_REQ_SendEncapsulated_Cmd,
+        CDC_REQ_GetEncapsulated_Rsp,
+        CDC_REQ_SetLine_Encoding = 0x20,
+        CDC_REQ_GetLine_Encoding,
+        CDC_REQ_SetControlLine_State,
+        CDC_REQ_SendBreak,
+    };
 
-enum CDC_Class_Notifications_t
-{
-	CDC_NOTIF_Serial_State = 0x20,
-};
+    enum CDC_Class_Notifications_t
+    {
+        CDC_NOTIF_Serial_State = 0x20,
+    };
 
+    enum CDC_Descriptor_Subtypes_t
+    {
+        CDC_DSUBTYPE_CSInterface_Header,
+        CDC_DSUBTYPE_CSInterface_CallManagement,
+        CDC_DSUBTYPE_CSInterface_ACM,
+        CDC_DSUBTYPE_CSInterface_DirectLine,
+        CDC_DSUBTYPE_CSInterface_TelephoneRinger,
+        CDC_DSUBTYPE_CSInterface_TelephoneCall,
+        CDC_DSUBTYPE_CSInterface_Union,
+        CDC_DSUBTYPE_CSInterface_CountrySelection,
+        CDC_DSUBTYPE_CSInterface_TelephoneOpModes,
+        CDC_DSUBTYPE_CSInterface_USBTerminal,
+        CDC_DSUBTYPE_CSInterface_NetworkChannel,
+        CDC_DSUBTYPE_CSInterface_ProtocolUnit,
+        CDC_DSUBTYPE_CSInterface_ExtensionUnit,
+        CDC_DSUBTYPE_CSInterface_MultiChannel,
+        CDC_DSUBTYPE_CSInterface_CAPI,
+        CDC_DSUBTYPE_CSInterface_Ethernet,
+        CDC_DSUBTYPE_CSInterface_ATM,
+    };
 
-enum CDC_Descriptor_Subtypes_t
-{
-	CDC_DSUBTYPE_CSInterface_Header,
-	CDC_DSUBTYPE_CSInterface_CallManagement,
-	CDC_DSUBTYPE_CSInterface_ACM,
-	CDC_DSUBTYPE_CSInterface_DirectLine,
-	CDC_DSUBTYPE_CSInterface_TelephoneRinger,
-	CDC_DSUBTYPE_CSInterface_TelephoneCall,
-	CDC_DSUBTYPE_CSInterface_Union,
-	CDC_DSUBTYPE_CSInterface_CountrySelection,
-	CDC_DSUBTYPE_CSInterface_TelephoneOpModes,
-	CDC_DSUBTYPE_CSInterface_USBTerminal,
-	CDC_DSUBTYPE_CSInterface_NetworkChannel,
-	CDC_DSUBTYPE_CSInterface_ProtocolUnit,
-	CDC_DSUBTYPE_CSInterface_ExtensionUnit,
-	CDC_DSUBTYPE_CSInterface_MultiChannel,
-	CDC_DSUBTYPE_CSInterface_CAPI,
-	CDC_DSUBTYPE_CSInterface_Ethernet,
-	CDC_DSUBTYPE_CSInterface_ATM,
-};
+    enum CDC_LineEncoding_Formats_t
+    {
+        CDC_LINEENCODING_OneStopBit,
+        CDC_LINEENCODING_OneAndAHalfStopBits,
+        CDC_LINEENCODING_TwoStopBits,
+    };
 
-enum CDC_LineEncoding_Formats_t
-{
-	CDC_LINEENCODING_OneStopBit,
-	CDC_LINEENCODING_OneAndAHalfStopBits,
-	CDC_LINEENCODING_TwoStopBits,
-};
+    enum CDC_LineEncoding_Parity_t
+    {
+        CDC_PARITY_None,
+        CDC_PARITY_Odd,
+        CDC_PARITY_Even,
+        CDC_PARITY_Mark,
+        CDC_PARITY_Space,
+    };
 
-enum CDC_LineEncoding_Parity_t
-{
-	CDC_PARITY_None,
-	CDC_PARITY_Odd,
-	CDC_PARITY_Even,
-	CDC_PARITY_Mark,
-	CDC_PARITY_Space,
-};
+    typedef struct
+    {
+        USB_Descriptor_Hdr_t Header;
+        unsigned char        Subtype;
+        unsigned short       CDCSpecification;
+    } __attribute__((packed)) USB_CDC_Descriptor_FunctionalHeader_t;
 
-typedef struct
-{
-	USB_Descriptor_Hdr_t Header;
-	u8 Subtype;
-	u16 CDCSpecification;
-} USB_CDC_Descriptor_FunctionalHeader_t;
+    typedef struct
+    {
+        unsigned char  bFunctionLength;
+        unsigned char  bDescriptorType;
+        unsigned char  bDescriptorSubType;
+        unsigned short bcdCDC;
+    } __attribute__((packed)) USB_CDC_StdDescriptor_FunctionalHeader_t;
 
-typedef struct
-{
-	u8 bFunctionLength;
-	u8 bDescriptorType;
-	u8 bDescriptorSubType;
-	u16 bcdCDC;
-} USB_CDC_StdDescriptor_FunctionalHeader_t;
+    typedef struct
+    {
+        USB_Descriptor_Hdr_t Header;
+        unsigned char        Subtype;
+        unsigned char        Capabilities;
+    } __attribute__((packed)) USB_CDC_Descriptor_FunctionalACM_t;
 
-typedef struct
-{
-	USB_Descriptor_Hdr_t Header;
-	u8 Subtype;
-	u8 Capabilities;
-} USB_CDC_Descriptor_FunctionalACM_t;
+    typedef struct
+    {
+        unsigned char bFunctionLength;
+        unsigned char bDescriptorType;
+        unsigned char bDescriptorSubType;
+        unsigned char bmCapabilities;
+    } USB_CDC_StdDescriptor_FunctionalACM_t;
 
-typedef struct
-{
-	u8 bFunctionLength;
-	u8 bDescriptorType;
-	u8 bDescriptorSubType;
-	u8 bmCapabilities;
-} USB_CDC_StdDescriptor_FunctionalACM_t;
+    typedef struct
+    {
+        USB_Descriptor_Hdr_t Header;
+        unsigned char        Subtype;
+        unsigned char        MasterInterfaceNumber;
+        unsigned char        SlaveInterfaceNumber;
+    } __attribute__((packed)) USB_CDC_Descriptor_FunctionalUnion_t;
 
-typedef struct
-{
-	USB_Descriptor_Hdr_t Header;
-	u8 Subtype;
-	u8 MasterInterfaceNumber;
-	u8 SlaveInterfaceNumber;
-} USB_CDC_Descriptor_FunctionalUnion_t;
+    typedef struct
+    {
+        unsigned char bFunctionLength;
+        unsigned char bDescriptorType;
+        unsigned char bDescriptorSubType;
+        unsigned char bMasterInterface;
+        unsigned char bSlaveInterface0;
+    } __attribute__((packed)) USB_CDC_StdDescriptor_FunctionalUnion_t;
 
-typedef struct
-{
-	u8 bFunctionLength;
-	u8 bDescriptorType;
-	u8 bDescriptorSubType;
-	u8 bMasterInterface;
-	u8 bSlaveInterface0;
-} USB_CDC_StdDescriptor_FunctionalUnion_t;
-
-typedef struct
-{
-	u32 BaudRateBPS;
-	u8 CharFormat;
-	u8 ParityType;
-	u8 DataBits;
-} CDC_LineEncoding_t;
+    typedef struct
+    {
+        unsigned int  BaudRateBPS;
+        unsigned char CharFormat;
+        unsigned char ParityType;
+        unsigned char DataBits;
+    } __attribute__((packed)) CDC_LineEncoding_t;
 
 /* Disable C linkage for C++ Compilers: */
 #if defined(__cplusplus)
-	}
+}
+#endif
+
 #endif

@@ -25,14 +25,7 @@
 #ifndef __USER_ALI_H
 #define __USER_ALI_H
 #include "tl_common.h"
-#if __TLSR_RISCV_EN__
 #include "stack/ble/ble.h"
-#else
-#include "proj_lib/ble/ll/ll.h"
-#include "proj_lib/ble/service/ble_ll_ota.h"
-#endif
-#include "proj_lib/ble/blt_config.h"
-#include "vendor/common/user_config.h"
 
 #ifndef WIN32
 extern const char num2char[17];

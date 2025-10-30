@@ -47,19 +47,64 @@ STATIC_ASSERT(!(AUDIO_MESH_EN && SPEECH_ENABLE));	// can not enable at the same 
 
 s8 rssi_pkt;
 volatile int pkt_adv_pending = 0;
+#if EXTENDED_ADV_ENABLE
+u8 max_aux_offset_ms = 0;
+#endif
 
 int is_mesh_adv_tx_pending(void)
 {
     return pkt_adv_pending;
 }
 
-_attribute_ram_code_ int blt_send_adv_cb(void)
+/**
+ * @brief       When EXTENDED_ADV_ENABLE is disabled: This is the callback function for blt_send_adv(), used to check if there is any adv ready to be sent.
+                When EXTENDED_ADV_ENABLE is enable: This is the callback function for blt_send_legacy_adv(), used to check if there is any legacy adv to be sent.
+ * @return      
+ * @note        in extended adv mode, use 
+ */
+_attribute_ram_code_ int blt_send_adv_cb(u8 adv_idx)
 {
+#if EXTENDED_ADV_ENABLE
+    int adv_ready = 1; // must default true
+    if(GATT_ADV_HANDLE == adv_idx){
+        if(0 == gatt_adv_send_flag){
+            adv_ready = 0; // in extend adv mode, use GATT_ADV_HANDLE to keep adv timing for period wakeup, sometimes not need to send connectable adv.
+        }
+    }
+#else
 	int adv_ready = pkt_adv_pending;
 	pkt_adv_pending = 0;
+#endif
 	return adv_ready;
 }
 
+#if EXTENDED_ADV_ENABLE
+int mesh_set_custom_ext_adv_data(bool enable, uint8_t *data, uint16_t len)
+{
+    int ret = -1;
+
+    if(enable){
+        enable_custom_ext_adv_with_decision(MESH_ADV_HANDLE, 1);
+
+        if(len > 8){ // max length of decision data is 8
+            return ret;
+        }
+        ret = blc_ll_setDecisionData(MESH_ADV_HANDLE, 0, len, data);
+    }
+    else{
+        ret = enable_custom_ext_adv_with_decision(MESH_ADV_HANDLE, 0);
+    }
+
+    return ret;
+}
+#endif
+
+/**
+ * @brief       This function serves to set advertise data to be send.
+ * @return      0: no adv to be sent   1: adv to be sent
+ * @note        payload length of pkt_Adv is 31 in multiple connection sdk.
+                in extended adv mode, use blc_ll_setExtAdvData() to set data to sent.
+ */
 int mesh_adv_prepare_proc(void)
 {
     #if !EXTENDED_ADV_ENABLE
@@ -220,6 +265,11 @@ void	mz_mul2 (unsigned int * r, unsigned int * a, int na, unsigned int b)
 }
 
 // ota
+unsigned short crc16(const unsigned char *pD, int len)
+{
+    return blt_Crc16ComputeInternal((unsigned char *)pD, len);
+}
+
 int otaRead(u16 connHandle, void * p)
 {
 	return 0;
@@ -245,11 +295,6 @@ u8 get_fw_ota_value(void)
 }
 #endif
 
-_attribute_ram_code_ int  blc_ll_procScanPkt_mesh(u8 *raw_pkt, u8 *new_pkt)
-{
-	return adv_filter_proc(raw_pkt, 0);
-}
-
 /**
  * @brief      callback function of LinkLayer Event "BLT_EV_FLAG_SUSPEND_EXIT"
  * @param[in]  e - LinkLayer Event type
@@ -262,29 +307,6 @@ _attribute_ram_code_ void	task_suspend_exit (u8 e, u8 *p, int n)
 	rf_set_power_level_index (my_rf_power_index);
 }
 
-#if 0
-ll_procScanPkt_callback_t  blc_ll_procScanPktCb = NULL;
-u16 g_SCAN_PRICHN_RXFIFO_SIZE = SCAN_PRICHN_RXFIFO_SIZE; // move to scan_fifo_t later
-u16 g_SCAN_PRICHN_RXFIFO_NUM = SCAN_PRICHN_RXFIFO_NUM;
-
-void blc_ll_initScanning_module_mesh(void)	// do not use blc_ll_initScanning_module, because scan request is not required.
-{
-	blt_ll_initScanState();
-	blc_ll_procScanPktCb = blc_ll_procScanPkt_mesh;
-#if BLT_ADV_IN_CONN_SLAVE_EN
-	//blc_ll_addAdvertisingInConnSlaveRole(); // no need this mode.
-#endif
-
-	//smemcpy(pkt_scan_req.scanA, bltMac.macAddress_public, BLE_ADDR_LEN);
-	set_scan_interval(EXTENDED_ADV_ENABLE ? 50 : 9);
-
-#if EXTENDED_ADV_ENABLE
-	mesh_adv_extend_module = &adv_extend_module;
-#endif
-	
-	bls_app_registerEventCallback (BLT_EV_FLAG_SUSPEND_EXIT, &task_suspend_exit);	// b85m has added in lib.
-}
-#endif
 // ------ USB ------
 #define			USB_ENDPOINT_BULK_IN			8
 #define			USB_ENDPOINT_BULK_OUT			5
@@ -393,7 +415,7 @@ _attribute_ram_code_ void except_handler(void)
 	trap1_entry_ra = ra;	// return address
 	trap2_entry_sp = sp;	// stack pointer
 	trap3_entry_gp = gp;	// global pointer
-	trap4_mcause = read_csr(NDS_MCAUSE);//4148 	// 2 means invalid instruction, 7 means store access fault, such as write to RAM address 0x20004.
+	trap4_mcause = read_csr(NDS_MCAUSE);//4148 	// 2 means invalid instruction. 7 means store access fault, such as write to RAM address 0x20004. 5 means load access fault with mdcause(4 missaligned address), such as variable cross IRAM and DRAM.
 	trap5_mepc = read_csr(NDS_MEPC);//4147		// PC
 	trap6_mtvl = read_csr(NDS_MTVAL);//4147
 	trap7_mdcause = read_csr(NDS_MDCAUSE);
@@ -416,10 +438,6 @@ void main_loop_risv_sdk(void)
 {
 #if AUDIO_MESH_EN
 	app_audio_task();
-#endif
-#if UART_SECOND_EN
-    int uart_second_rx_data_proc (void);
-    uart_second_rx_data_proc();
 #endif
 }
 
@@ -450,13 +468,11 @@ void adc_drv_init(void){
 #endif
 
 #if (HCI_ACCESS==HCI_USE_UART)
-const uart_num_e UART_RX_NUM = UART_NUM_GET(UART_RX_PIN);
-const uart_num_e UART_TX_NUM = UART_NUM_GET(UART_TX_PIN);
-const u32 UART_IRQ_NUM = UART_IRQ_GET(UART_RX_PIN);
+const uart_num_e UART_NUM = UART_NUM_GET(UART_RX_PIN);
+const u32 UART_IRQ_NUM    = UART_IRQ_GET(UART_RX_PIN);
 
 #if UART_SECOND_EN
-const uart_num_e UART_RX_NUM_SECOND       = UART_NUM_GET(UART_RX_PIN_SECOND);
-const uart_num_e UART_TX_NUM_SECOND       = UART_NUM_GET(UART_TX_PIN_SECOND);
+const uart_num_e UART_NUM_SECOND = UART_NUM_GET(UART_RX_PIN_SECOND);
 const u32 UART_IRQ_NUM_SECOND    = UART_IRQ_GET(UART_RX_PIN_SECOND);
 //static volatile u32 uart_dma_sending_tick_2nd = 0;
 
@@ -464,37 +480,52 @@ const u32 UART_IRQ_NUM_SECOND    = UART_IRQ_GET(UART_RX_PIN_SECOND);
 #define HCI_RX_FIFO_SIZE_2              (UART_DATA_SIZE2 + 4 + 4)    // 4: sizeof DMA len;  4: margin reserve(can't receive valid data, because UART_DATA_SIZE is max value of DMA len)
 STATIC_ASSERT(HCI_RX_FIFO_SIZE_2 % 16 == 0);
 
-MYFIFO_INIT(hci_rx_fifo_second, HCI_RX_FIFO_SIZE_2, 4);   // max play load 382
-
-STATIC_ASSERT(UART_NUM_GET(UART_RX_PIN_SECOND) == UART_NUM_GET(UART_TX_PIN_SECOND)); // must be same now.
+STATIC_ASSERT_M(UART_NUM_GET(UART_RX_PIN_SECOND) == UART_NUM_GET(UART_TX_PIN_SECOND), use_UART_RX_PIN_SECOND_and_UART_TX_PIN_SECOND_with_the_same_uart_id); // must be same now.
+STATIC_ASSERT_M(((UART_NUM_GET(UART_RX_PIN_SECOND) == UART0) &&  UART0_ENABLE) || ((UART_NUM_GET(UART_RX_PIN_SECOND) == UART1) &&  UART1_ENABLE), enable_UART0_ENABLE_or_UART1_ENABLE_by_uart_pin_used);
 #endif
 
-static volatile u32 uart_dma_sending_tick = 0;
+#if UART_SECOND_EN
+static volatile u32 uart_dma_sending_tick[2] = {0};
+#else
+static volatile u32 uart_dma_sending_tick[1] = {0};
+#endif
 
-STATIC_ASSERT(UART_NUM_GET(UART_RX_PIN) == UART_NUM_GET(UART_TX_PIN)); // must be same now.
-STATIC_ASSERT(UART_NUM_USE == UART_NUM_GET(UART_RX_PIN));               // must be the same
+STATIC_ASSERT_M(UART_NUM_GET(UART_RX_PIN) == UART_NUM_GET(UART_TX_PIN), use_UART_RX_PIN_and_UART_TX_PIN_with_the_same_uart_id); // must be same now.
+STATIC_ASSERT_M(((UART_NUM_GET(UART_RX_PIN) == UART0) &&  UART0_ENABLE) || ((UART_NUM_GET(UART_RX_PIN) == UART1) &&  UART1_ENABLE), set_UART0_ENABLE_and_UART1_ENABLE_by_uart_pin_used);
+
+static inline void uart_dma_sending_tick_refresh(uart_num_e uart_num)
+{
+    uart_dma_sending_tick[uart_num % ARRAY_SIZE(uart_dma_sending_tick)] = clock_time() | 1;
+}
+
+static inline void uart_dma_sending_tick_clear(uart_num_e uart_num)
+{
+    uart_dma_sending_tick[uart_num % ARRAY_SIZE(uart_dma_sending_tick)] = 0;
+}
 
 void uart_tx_busy_timeout_poll(void)
 {
-	 if(uart_dma_sending_tick){
-		 if(clock_time_exceed(uart_dma_sending_tick, 500*1000)){
-			 uart_dma_sending_tick = 0;
-		 }
-	 }
+    foreach_arr(i, uart_dma_sending_tick){
+        if(uart_dma_sending_tick[i]){
+            if(clock_time_exceed(uart_dma_sending_tick[i], 500*1000)){
+                uart_dma_sending_tick[i] = 0;
+            }
+        }
+    }
 }
 
-unsigned char uart_tx_is_busy_dma_tick(void)
+unsigned char uart_tx_is_busy_dma_tick(uart_num_e uart_num)
 {
-	return (uart_dma_sending_tick != 0);
+    return (uart_dma_sending_tick[uart_num % ARRAY_SIZE(uart_dma_sending_tick)] != 0);
 }
 
-unsigned char uart_Send_dma_with_busy_hadle(unsigned char* data, unsigned int len)
+unsigned char uart_Send_dma_with_busy_hadle(uart_num_e uart_num, unsigned char* data, unsigned int len)
 {
-	int success = uart_send_dma(UART_TX_NUM, data, len);
+	int success = uart_send_dma(uart_num, data, len);
 	if(success){
-		uart_dma_sending_tick = clock_time() | 1;
+        uart_dma_sending_tick_refresh(uart_num);
 	}else{
-		uart_dma_sending_tick = 0;
+        uart_dma_sending_tick_clear(uart_num);
 	}
 
 	return success;
@@ -502,21 +533,21 @@ unsigned char uart_Send_dma_with_busy_hadle(unsigned char* data, unsigned int le
 
 unsigned char uart_ErrorCLR(void){
     int error = 0;
-	if((uart_get_irq_status(UART_RX_NUM, UART_RX_ERR))){
+	if((uart_get_irq_status(UART_NUM, UART_RX_ERR))){
         #if(MCU_CORE_TYPE == MCU_CORE_B91)
-    	uart_clr_irq_status(UART_RX_NUM, UART_CLR_RX);
+    	uart_clr_irq_status(UART_NUM, UART_CLR_RX);
         #else//(MCU_CORE_TYPE == MCU_CORE_TL321X)
-        uart_clr_irq_status(UART_MODULE_SEL,UART_RXBUF_IRQ_STATUS);// it will clear rx_fifo,clear hardware pointer and rx_err_irq ,rx_buff_irq,so it won't enter rx_buff_irq interrupt.
+        uart_clr_irq_status(UART_NUM,UART_RXBUF_IRQ_STATUS);// it will clear rx_fifo,clear hardware pointer and rx_err_irq ,rx_buff_irq,so it won't enter rx_buff_irq interrupt.
         #endif
 		error = 1;
     }
     
     #if UART_SECOND_EN
-    if(uart_get_irq_status(UART_RX_NUM_SECOND, UART_RX_ERR)){
+    if(uart_get_irq_status(UART_NUM_SECOND, UART_RX_ERR)){
         #if(MCU_CORE_TYPE == MCU_CORE_B91)
-    	uart_clr_irq_status(UART_RX_NUM_SECOND, UART_CLR_RX);
+    	uart_clr_irq_status(UART_NUM_SECOND, UART_CLR_RX);
         #else
-        uart_clr_irq_status(UART_RX_NUM_SECOND,UART_RXBUF_IRQ_STATUS);// it will clear rx_fifo,clear hardware pointer and rx_err_irq ,rx_buff_irq,so it won't enter rx_buff_irq interrupt.
+        uart_clr_irq_status(UART_NUM_SECOND,UART_RXBUF_IRQ_STATUS);// it will clear rx_fifo,clear hardware pointer and rx_err_irq ,rx_buff_irq,so it won't enter rx_buff_irq interrupt.
         #endif
 		error = 1;
     }
@@ -533,52 +564,58 @@ static u16 uart_tx_irq_2nd = 0, uart_rx_irq_2nd = 0;
 _attribute_ram_code_ void irq_uart_handle_fifo(void)
 {
     #if(MCU_CORE_TYPE == MCU_CORE_B91)
-    if(uart_get_irq_status(UART_RX_NUM, UART_RXDONE)) //A0-SOC can't use RX-DONE status,so this interrupt can noly used in A1-SOC.
+    if(uart_get_irq_status(UART_NUM, UART_RXDONE)) //A0-SOC can't use RX-DONE status,so this interrupt can noly used in A1-SOC.
     {
     	uart_rx_irq++;
 		/************************get the length of receive data****************************/
-        u32 rev_data_len = uart_get_dma_rev_data_len(UART_RX_NUM, UART_DMA_CHANNEL_RX);
+        u32 rev_data_len = uart_get_dma_rev_data_len(UART_NUM, UART_DMA_CHANNEL_RX);
     	/************************cll rx_irq****************************/
-    	uart_clr_irq_status(UART_RX_NUM, UART_CLR_RX);
+    	uart_clr_irq_status(UART_NUM, UART_CLR_RX);
     	u8* w = hci_rx_fifo.p + (hci_rx_fifo.wptr & (hci_rx_fifo.num-1)) * hci_rx_fifo.size;
 		memcpy(w, &rev_data_len, sizeof(rev_data_len));
 		my_fifo_next(&hci_rx_fifo);
 		u8* p = hci_rx_fifo.p + (hci_rx_fifo.wptr & (hci_rx_fifo.num-1)) * hci_rx_fifo.size;
-		uart_receive_dma(UART_RX_NUM, (unsigned char *)(p+OFFSETOF(uart_data_t, data)), (unsigned int)hci_rx_fifo.size);
+		uart_receive_dma(UART_NUM, (unsigned char *)(p+OFFSETOF(uart_data_t, data)), (unsigned int)hci_rx_fifo.size);
+    }
+
+    #if UART_SECOND_EN
+    if(uart_get_irq_status(UART_NUM_SECOND, UART_RXDONE)) //A0-SOC can't use RX-DONE status,so this interrupt can noly used in A1-SOC.
+    {
+    	uart_rx_irq_2nd++;
+		/************************get the length of receive data****************************/
+        u32 rev_data_len = uart_get_dma_rev_data_len(UART_NUM_SECOND, UART_DMA_CHANNEL_RX_2ND);
+    	/************************cll rx_irq****************************/
+    	uart_clr_irq_status(UART_NUM_SECOND, UART_CLR_RX);
+    	u8* w = hci_rx_fifo_2nd.p + (hci_rx_fifo_2nd.wptr & (hci_rx_fifo_2nd.num-1)) * hci_rx_fifo_2nd.size;
+		memcpy(w, &rev_data_len, sizeof(rev_data_len));
+		my_fifo_next(&hci_rx_fifo_2nd);
+		u8* p = hci_rx_fifo_2nd.p + (hci_rx_fifo_2nd.wptr & (hci_rx_fifo_2nd.num-1)) * hci_rx_fifo_2nd.size;
+		uart_receive_dma(UART_NUM_SECOND, (unsigned char *)(p+OFFSETOF(uart_data_t, data)), (unsigned int)hci_rx_fifo_2nd.size);
     }
     #endif
+    #endif
 
-	if(uart_get_irq_status(UART_TX_NUM, UART_TXDONE))
+	if(uart_get_irq_status(UART_NUM, UART_TXDONE))
 	{
 		uart_tx_irq++;
-    	uart_dma_sending_tick=0;
+        uart_dma_sending_tick_clear(UART_NUM);
         #if(MCU_CORE_TYPE == MCU_CORE_B91)
-	    uart_clr_tx_done(UART_TX_NUM);
+	    uart_clr_tx_done(UART_NUM);
         #else
-        uart_clr_irq_status(UART_MODULE_SEL,UART_TXDONE_IRQ_STATUS);
+        uart_clr_irq_status(UART_NUM,UART_TXDONE_IRQ_STATUS);
         #endif
 	}
     
 #if UART_SECOND_EN
-    if(uart_get_irq_status(UART_RX_NUM_SECOND, UART_RXDONE)) //A0-SOC can't use RX-DONE status,so this interrupt can noly used in A1-SOC.
-    {
-    	uart_rx_irq_2nd++;
-		/************************get the length of receive data****************************/
-        u32 rev_data_len = uart_get_dma_rev_data_len(UART_RX_NUM_SECOND, UART_DMA_CHANNEL_RX_2ND);
-    	/************************cll rx_irq****************************/
-    	uart_clr_irq_status(UART_RX_NUM_SECOND, UART_CLR_RX);
-    	u8* w = hci_rx_fifo_second.p + (hci_rx_fifo_second.wptr & (hci_rx_fifo_second.num-1)) * hci_rx_fifo_second.size;
-		memcpy(w, &rev_data_len, sizeof(rev_data_len));
-		my_fifo_next(&hci_rx_fifo_second);
-		u8* p = hci_rx_fifo_second.p + (hci_rx_fifo_second.wptr & (hci_rx_fifo_second.num-1)) * hci_rx_fifo_second.size;
-		uart_receive_dma(UART_RX_NUM_SECOND, (unsigned char *)(p+OFFSETOF(uart_data_t, data)), (unsigned int)hci_rx_fifo_second.size);
-    }
-
-	if(uart_get_irq_status(UART_TX_NUM_SECOND, UART_TXDONE))
+	if(uart_get_irq_status(UART_NUM_SECOND, UART_TXDONE))
 	{
 		uart_tx_irq_2nd++;
-    	uart_dma_sending_tick=0;
-	    uart_clr_tx_done(UART_TX_NUM_SECOND);
+    	uart_dma_sending_tick_clear(UART_NUM_SECOND);
+        #if(MCU_CORE_TYPE == MCU_CORE_B91)
+	    uart_clr_tx_done(UART_NUM_SECOND);
+        #else
+        uart_clr_irq_status(UART_NUM_SECOND,UART_TXDONE_IRQ_STATUS);
+        #endif
 	}
 #endif
 }
@@ -587,8 +624,16 @@ _attribute_ram_code_ void irq_uart_handle_fifo(void)
 void dma_irq_uart_rx_process(void){
     my_fifo_next(&hci_rx_fifo);
     u8* p = hci_rx_fifo.p + (hci_rx_fifo.wptr & (hci_rx_fifo.num-1)) * hci_rx_fifo.size;
-    uart_receive_dma(UART_MODULE_SEL, (unsigned char *)(p+OFFSETOF(uart_data_t, data)), (unsigned int)hci_rx_fifo.size);
+    uart_receive_dma(UART_NUM, (unsigned char *)(p+OFFSETOF(uart_data_t, data)), (unsigned int)hci_rx_fifo.size);
 }
+
+#if UART_SECOND_EN
+void dma_irq_uart_rx_process_2nd(void){
+    my_fifo_next(&hci_rx_fifo_2nd);
+    u8* p = hci_rx_fifo_2nd.p + (hci_rx_fifo_2nd.wptr & (hci_rx_fifo_2nd.num-1)) * hci_rx_fifo_2nd.size;
+    uart_receive_dma(UART_NUM_SECOND, (unsigned char *)(p+OFFSETOF(uart_data_t, data)), (unsigned int)hci_rx_fifo_2nd.size);
+}
+#endif
 
 /*
  * Scenario analysis, there are the following three situations:
@@ -602,108 +647,128 @@ void dma_irq_handler(void)
 {
     if(dma_get_tc_irq_status( BIT(UART_DMA_CHANNEL_RX))){
         uart_rx_irq++;
-        if((uart_get_irq_status(UART_MODULE_SEL,UART_RX_ERR)))
+        if((uart_get_irq_status(UART_NUM,UART_RX_ERR)))
         {
-            uart_clr_irq_status(UART_MODULE_SEL,UART_RXBUF_IRQ_STATUS);
+            uart_clr_irq_status(UART_NUM,UART_RXBUF_IRQ_STATUS);
         }
         dma_clr_tc_irq_status( BIT(UART_DMA_CHANNEL_RX));
         dma_irq_uart_rx_process();
     }
+
+    #if UART_SECOND_EN
+    if(dma_get_tc_irq_status( BIT(UART_DMA_CHANNEL_RX_2ND))){
+        uart_rx_irq_2nd++;
+        if((uart_get_irq_status(UART_NUM_SECOND,UART_RX_ERR)))
+        {
+            uart_clr_irq_status(UART_NUM_SECOND,UART_RXBUF_IRQ_STATUS);
+        }
+        dma_clr_tc_irq_status( BIT(UART_DMA_CHANNEL_RX_2ND));
+        dma_irq_uart_rx_process_2nd();
+    }
+    #endif
 }
 PLIC_ISR_REGISTER(dma_irq_handler, IRQ_DMA)
 #endif
 
-void uart_drv_init_B91m(void)
+void uart_drv_dma_init(void)
 {
 	unsigned short div;
 	unsigned char bwpc;
-	uart_reset(UART_RX_NUM);
+	uart_reset(UART_NUM);
+    
 #if(MCU_CORE_TYPE == MCU_CORE_B91)
 	uart_set_pin(UART_TX_PIN, UART_RX_PIN );// uart tx/rx pin set
 #else//(MCU_CORE_TYPE == MCU_CORE_TL321X)
-    uart_set_pin(UART_MODULE_SEL, UART_TX_PIN, UART_RX_PIN);
+    uart_set_pin(UART_NUM, UART_TX_PIN, UART_RX_PIN);
 #endif
+
 	uart_cal_div_and_bwpc(UART_DMA_BAUDRATE, sys_clk.pclk*1000*1000, &div, &bwpc);
 #if(MCU_CORE_TYPE == MCU_CORE_B91)
-	uart_set_rx_timeout(UART_RX_NUM, bwpc, 12, UART_BW_MUL2);
+	uart_set_rx_timeout(UART_NUM, bwpc, 12, UART_BW_MUL2);
 #else//(MCU_CORE_TYPE == MCU_CORE_TL321X)
-    uart_set_rx_timeout(UART_MODULE_SEL, bwpc, 12, UART_BW_MUL2,0);
+    uart_set_rx_timeout_with_exp(UART_NUM, bwpc, 12, UART_BW_MUL2, 0);
 #endif
-	uart_init(UART_RX_NUM, div, bwpc, UART_PARITY_NONE, UART_STOP_BIT_ONE);
+	uart_init(UART_NUM, div, bwpc, UART_PARITY_NONE, UART_STOP_BIT_ONE);
 
-	uart_clr_irq_mask(UART_RX_NUM, UART_RX_IRQ_MASK | UART_TX_IRQ_MASK | UART_TXDONE_MASK|UART_RXDONE_MASK);
+	uart_clr_irq_mask(UART_NUM, UART_RX_IRQ_MASK | UART_TX_IRQ_MASK | UART_TXDONE_MASK|UART_RXDONE_MASK);
 //	core_interrupt_enable();
 
-	uart_set_tx_dma_config(UART_TX_NUM, UART_DMA_CHANNEL_TX);
-	uart_set_rx_dma_config(UART_RX_NUM, UART_DMA_CHANNEL_RX);
+	uart_set_tx_dma_config(UART_NUM, UART_DMA_CHANNEL_TX);
+	uart_set_rx_dma_config(UART_NUM, UART_DMA_CHANNEL_RX);
 
 #if(MCU_CORE_TYPE == MCU_CORE_B91)
-	uart_clr_tx_done(UART_TX_NUM);
+	uart_clr_tx_done(UART_NUM);
 #endif
 	plic_interrupt_enable(UART_IRQ_NUM);
-	uart_set_irq_mask(UART_MODULE_SEL, UART_TXDONE_MASK);
+	uart_set_irq_mask(UART_NUM, UART_TXDONE_MASK);
 
 #if(MCU_CORE_TYPE == MCU_CORE_B91)
-	uart_set_irq_mask(UART_TX_NUM, UART_RXDONE_MASK);
+	uart_set_irq_mask(UART_NUM, UART_RXDONE_MASK);
 #else//(MCU_CORE_TYPE == MCU_CORE_TL321X)
     dma_set_irq_mask(UART_DMA_CHANNEL_RX, TC_MASK);
     plic_interrupt_enable(IRQ_DMA);
 #endif
 
 	u8 *uart_rx_addr = hci_rx_fifo.p + (hci_rx_fifo.wptr & (hci_rx_fifo.num-1)) * hci_rx_fifo.size;
-	uart_receive_dma(UART_RX_NUM, (unsigned char *)(uart_rx_addr+OFFSETOF(uart_data_t, data)), (unsigned int)hci_rx_fifo.size);
-    
-#if UART_SECOND_EN
-    uart_drv_init_B91m_2nd();
-#endif
+	uart_receive_dma(UART_NUM, (unsigned char *)(uart_rx_addr+OFFSETOF(uart_data_t, data)), (unsigned int)hci_rx_fifo.size);
 }
 
 #if UART_SECOND_EN
-void uart_drv_init_B91m_2nd()
+void uart_drv_dma_init_2nd()
 {
 	unsigned short div;
 	unsigned char bwpc;
-	uart_reset(UART_RX_NUM_SECOND);
+	uart_reset(UART_NUM_SECOND);
+    
+#if(MCU_CORE_TYPE == MCU_CORE_B91)
 	uart_set_pin(UART_TX_PIN_SECOND ,UART_RX_PIN_SECOND );// uart tx/rx pin set
-	uart_cal_div_and_bwpc(UART_DMA_BAUDRATE, sys_clk.pclk*1000*1000, &div, &bwpc);
-	uart_set_rx_timeout(UART_RX_NUM_SECOND, bwpc, 12, UART_BW_MUL1);
-	uart_init(UART_RX_NUM_SECOND, div, bwpc, UART_PARITY_NONE, UART_STOP_BIT_ONE);
+#else
+    uart_set_pin(UART_NUM_SECOND, UART_TX_PIN_SECOND ,UART_RX_PIN_SECOND );
+#endif
 
-	uart_clr_irq_mask(UART_RX_NUM_SECOND, UART_RX_IRQ_MASK | UART_TX_IRQ_MASK | UART_TXDONE_MASK|UART_RXDONE_MASK);
+	uart_cal_div_and_bwpc(UART_DMA_BAUDRATE, sys_clk.pclk*1000*1000, &div, &bwpc);
+#if(MCU_CORE_TYPE == MCU_CORE_B91)
+	uart_set_rx_timeout(UART_NUM_SECOND, bwpc, 12, UART_BW_MUL2);
+#else
+    uart_set_rx_timeout_with_exp(UART_NUM_SECOND, bwpc, 12, UART_BW_MUL2, 0);
+#endif
+	uart_init(UART_NUM_SECOND, div, bwpc, UART_PARITY_NONE, UART_STOP_BIT_ONE);
+
+	uart_clr_irq_mask(UART_NUM_SECOND, UART_RX_IRQ_MASK | UART_TX_IRQ_MASK | UART_TXDONE_MASK|UART_RXDONE_MASK);
 	//core_interrupt_enable(); // enable after user init()
 
-	uart_set_tx_dma_config(UART_TX_NUM_SECOND, UART_DMA_CHANNEL_TX_2ND);
-	uart_set_rx_dma_config(UART_RX_NUM_SECOND, UART_DMA_CHANNEL_RX_2ND);
+	uart_set_tx_dma_config(UART_NUM_SECOND, UART_DMA_CHANNEL_TX_2ND);
+	uart_set_rx_dma_config(UART_NUM_SECOND, UART_DMA_CHANNEL_RX_2ND);
 
-	uart_clr_tx_done(UART_TX_NUM_SECOND);
-	uart_set_irq_mask(UART_RX_NUM_SECOND, UART_RXDONE_MASK);
+#if(MCU_CORE_TYPE == MCU_CORE_B91)
+	uart_clr_tx_done(UART_NUM_SECOND);
+#endif
 
-	uart_set_irq_mask(UART_TX_NUM_SECOND, UART_TXDONE_MASK);
 	plic_interrupt_enable(UART_IRQ_NUM_SECOND);
+	uart_set_irq_mask(UART_NUM_SECOND, UART_TXDONE_MASK);
 
-	u8 *uart_rx_addr = hci_rx_fifo_second.p + (hci_rx_fifo_second.wptr & (hci_rx_fifo_second.num-1)) * hci_rx_fifo_second.size;
-	uart_receive_dma(UART_RX_NUM_SECOND, (unsigned char *)(uart_rx_addr+OFFSETOF(uart_data_t, data)), (unsigned int)hci_rx_fifo.size);
-}
+#if(MCU_CORE_TYPE == MCU_CORE_B91)
+	uart_set_irq_mask(UART_NUM_SECOND, UART_RXDONE_MASK);
+#else
+    dma_set_irq_mask(UART_DMA_CHANNEL_RX_2ND, TC_MASK);
+    plic_interrupt_enable(IRQ_DMA);
+#endif
 
-
-int uart_second_rx_data_proc (void)
-{
-	uart_ErrorCLR();
-	    
-    uart_data_t* p_2nd = (uart_data_t *)my_fifo_get(&hci_rx_fifo_second);
-    
-	if(p_2nd){
-		u32 rx_len = p_2nd->len & 0xff; //usually <= 255 so 1 byte should be sufficient
-		if (rx_len)
-		{
-            //uart_send(UART1, p_2nd->data, rx_len);// uart send
-			my_fifo_pop(&hci_rx_fifo_second);
-		}
-	}
-
-	return 0;
+	u8 *uart_rx_addr = hci_rx_fifo_2nd.p + (hci_rx_fifo_2nd.wptr & (hci_rx_fifo_2nd.num-1)) * hci_rx_fifo_2nd.size;
+	uart_receive_dma(UART_NUM_SECOND, (unsigned char *)(uart_rx_addr+OFFSETOF(uart_data_t, data)), (unsigned int)hci_rx_fifo_2nd.size);
 }
 #endif
+
+void uart_drv_init(void)
+{
+    uart_drv_dma_init();
+    
+#if UART_SECOND_EN
+    uart_drv_dma_init_2nd();
+#endif
+
+    return;
+}
 
 #endif
 
