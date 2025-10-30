@@ -649,8 +649,8 @@ int mesh_rc_data_layer_access2(u8 *ac, int len_ac, mesh_cmd_nw_t *p_nw)
         #endif
         {
             // this is for rx handle, if enter here, it means that not found correct model to handle this op.
-            // for example, if op is G_ONOFF_SET, it need onoff server model to handle this op, so gateway will print this log, becasue gateway not enable onoff server model by default.
-            // for example, if op is G_ONOFF_STATUS, it need onoff client model to handle this op, so mesh light node will print this log, becasue light node not enable onoff client model by default.
+            // for example, if op is G_ONOFF_SET, it need onoff server model to handle this op, so gateway will print this log, because gateway not enable onoff server model by default.
+            // for example, if op is G_ONOFF_STATUS, it need onoff client model to handle this op, so mesh light node will print this log, because light node not enable onoff client model by default.
             LOG_MSG_LIB(TL_LOG_NODE_BASIC,0, 0 ,"for RX flow, not need to handle, because not support this op or server/client model is not enable! src:0x%x dst:0x%x op:0x%x(%s)", p_nw->src, p_nw->dst, op, get_op_string(op,0));
         }
     }

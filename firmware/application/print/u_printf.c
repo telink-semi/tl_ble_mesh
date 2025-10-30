@@ -498,7 +498,7 @@ _PRINT_FUN_RAMCODE_ int printf_Bin2Text (char *lpD, int lpD_len_max, char *lpS, 
 	}
 
 	if(lpD_len_max >= d+2){
-    	lpD[d++] = '\r';    // lpS is always ture here. so can't distinguish whether there is buffer or not.
+    	lpD[d++] = '\r';    // lpS is always true here. so can't distinguish whether there is buffer or not.
     	lpD[d++] = '\n';
         // lpD[d++] = '\0';        // can't add 0, because some UART Tool will show error.
     }

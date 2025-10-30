@@ -56,7 +56,7 @@ service_uuid_t *get_service_uuid(u16 uuid, u8 *payload, u8 len)
 u32 mesh_on_demand_proxy_time = 0; // max 256s, clock_time() is enough
 
 /**
- * @brief       This function get if it is valid state to reveive solicitation PDU.
+ * @brief       This function get if it is valid state to receive solicitation PDU.
  * @return      1: yes. 0: no.
  * @note        
  */

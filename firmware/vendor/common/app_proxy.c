@@ -949,7 +949,7 @@ void set_proxy_adv_header(proxy_adv_node_identity * p_proxy)
 	GATT Proxy state must be set to Disabled.
 		GATT Proxy state		Private GATT Proxy state
 		not_supported			not_supported
-		 Enabled				diabled
+		 Enabled				disabled
 		 disabled				enabled
 		 disabled		        disabled
 		 enabled                enabled(not support)
@@ -963,7 +963,7 @@ void set_proxy_adv_header(proxy_adv_node_identity * p_proxy)
 	the Private Node Identity state to Enabled, the Node Identity state must be set to Disabled for all subnets
 		Node Identity 		    private Node Identity
 		not_supported			not_supported
-		 Enabled				diabled
+		 Enabled				disabled
 		 disabled				enabled
 		 disabled		        disabled
 		 enabled                enabled(not support)

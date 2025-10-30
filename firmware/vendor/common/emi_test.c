@@ -515,7 +515,7 @@ void emi_init(void)
     write_sram8(RSSI_ADDR, 0);                  // rssi
     write_sram32(RX_PACKET_NUM_ADDR, 0);        // rx_packet_num
 
-    /*diasble fast settle*/
+    /*disable fast settle*/
     rf_tx_fast_settle_dis();
     rf_rx_fast_settle_dis();
 }

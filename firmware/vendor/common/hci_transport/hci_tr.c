@@ -167,7 +167,7 @@ void HCI_TxHandler(void)
         #if (HCI_INTERFACE==HCI_UART)
             if (ext_hci_uartSendData(pBuf, len)) {
         #else
-            if(!tlk_n22_hci_send_message(TLK_SHARE_MEMOTY_MESSAGE_TYPE_BLE, pBuf, len)){
+            if(!tlk_n22_hci_send_message(TLK_SHARE_MEMORY_MESSAGE_TYPE_BLE, pBuf, len)){
         #endif
     #else
         if (ext_hci_uartSendData(pBuf, len)) {

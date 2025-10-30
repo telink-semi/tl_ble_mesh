@@ -271,7 +271,7 @@ void clear_reset_cnt (void)
 
 #if __TLSR_RISCV_EN__
 #define READ_SIZE_RESET_CNT 	(64)
-#define RESET_CNT_SIZE			(8)		// due to max 64 times for writing one page, and each count nead to be set and cleared, so one page can store 64/2 = 32 times, then RESET_CNT_SIZE = 256/32 = 8.
+#define RESET_CNT_SIZE			(8)		// due to max 64 times for writing one page, and each count need to be set and cleared, so one page can store 64/2 = 32 times, then RESET_CNT_SIZE = 256/32 = 8.
 STATIC_ASSERT(BIT_IS_POW2(READ_SIZE_RESET_CNT) && (READ_SIZE_RESET_CNT > RESET_CNT_SIZE));
 STATIC_ASSERT(BIT_IS_POW2(RESET_CNT_SIZE));
 #else

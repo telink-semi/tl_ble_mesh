@@ -71,15 +71,15 @@ void aid_memset(char* buf, char data, unsigned int len)
 #define MIC_SAMPLE_RATE			16000//set sample for mic
 
 
-#define MIC_CHANNLE_COUNT		1   //1 or 2
-#define	MIC_ENOCDER_ENABLE		0
+#define MIC_CHANNEL_COUNT		1   //1 or 2
+#define	MIC_ENCODER_ENABLE		0
 
 
-#define SPK_CHANNLE_COUNT		2
+#define SPK_CHANNEL_COUNT		2
 #define SPK_RESOLUTION_BIT		16
 
 #define MIC_SAMPLING_RATE   (MIC_SAMPLE_RATE== 8000) ?  AUDIO_8K :((MIC_SAMPLE_RATE== 16000) ?  AUDIO_16K :(  (MIC_SAMPLE_RATE== 32000) ?  AUDIO_32K :( (MIC_SAMPLE_RATE== 48000) ? AUDIO_48K : AUDIO_16K) ) )
-#define MIC_MONO_STEREO       ((MIC_CHANNLE_COUNT==1) ?  MONO_BIT_16 :STEREO_BIT_16 )
+#define MIC_MONO_STEREO       ((MIC_CHANNEL_COUNT==1) ?  MONO_BIT_16 :STEREO_BIT_16 )
 
 #define	MIC_BUFFER_SIZE			8192//2048
 #define MIC_DMA_CHN             DMA2

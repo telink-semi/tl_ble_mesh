@@ -116,7 +116,7 @@ void blt_firmware_completeness_check(void)
 {
 	//user can use flash_fw_check() to check whether firmware in flash is modified.
 	//Advice user to do it only when power on.
-	if(flash_fw_check(0xffffffff)){ //if retrun 0, flash fw crc check ok. if retrun 1, flash fw crc check fail
+	if(flash_fw_check(0xffffffff)){ //if return 0, flash fw crc check ok. if return 1, flash fw crc check fail
 		while(1);				    //Users can process according to the actual application.
 	}
 }

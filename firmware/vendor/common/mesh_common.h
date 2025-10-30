@@ -423,7 +423,7 @@ static inline int is_tlk_gatt_ota_busy(void){
 }
 
 #if (FW_START_BY_BOOTLOADER_EN)
-void bootloader_ota_setNewFirmwwareStorageAddress(void);
+void bootloader_ota_setNewFirmwareStorageAddress(void);
 #endif
 
 // adv_filter_proc()

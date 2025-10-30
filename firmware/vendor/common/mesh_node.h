@@ -316,7 +316,7 @@ typedef struct __attribute__((packed)) {
 }virtual_addr_t;
 #endif
 
-#define MODE_VIRTUAL_ADDR_STAND_ALONE_SIZE	(0x7f00) // use an unvalid group id to be compatible with legacy mode.
+#define MODE_VIRTUAL_ADDR_STAND_ALONE_SIZE	(0x7f00) // use an invalid group id to be compatible with legacy mode.
 
 typedef struct __attribute__((packed)) {
 	u16 mode; // legacy mode or virtual address stand alone mode.

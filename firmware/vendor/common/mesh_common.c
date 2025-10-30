@@ -1519,7 +1519,7 @@ void set_random_adv_delay(int en)   // 0-10ms for mesh network PDU random delay
 	__UNUSED u8 cnt = 0;
 	if(en){
 	    if((blc_ll_getCurrentState() == BLS_LINK_STATE_CONN)
-	    #if AUDIO_MESH_MULTY_NODES_TX_EN
+	    #if AUDIO_MESH_MULTI_NODES_TX_EN
 	    || audio_mesh_is_reduce_relay_random()
 	    #endif
 	    ){
@@ -1796,7 +1796,7 @@ int mesh_tx_cmd_add_packet(u8* p_bear)
 #endif
 #if FEATURE_LOWPOWER_EN
     if(use_mesh_adv_fifo_fn2lpn){
-        err = mesh_tx_cmd_add_packet_fn_poll_cahce(p_bear);
+        err = mesh_tx_cmd_add_packet_fn_poll_cache(p_bear);
     }
     else
 #endif
@@ -2739,7 +2739,7 @@ int app_hci_cmd_from_usb_handle (u8 *buff, int n) // for both usb and uart
 #define UART_HW_HEAD_LEN    (4 + 2) //4:uart dma_len,  2: uart margin
 
 #if(HCI_LOG_FW_EN)
-_align_4_ u8 uart_hw_tx_buf[160 + UART_HW_HEAD_LEN]; // not for user application buffer, but can redifine size.
+_align_4_ u8 uart_hw_tx_buf[160 + UART_HW_HEAD_LEN]; // not for user application buffer, but can redefine size.
 #else
 _align_4_ u8 uart_hw_tx_buf[HCI_TX_FIFO_SIZE_USABLE + UART_HW_HEAD_LEN]; // not for user application buffer;  2: sizeof(fifo.len)
 #endif
@@ -3120,7 +3120,7 @@ int is_bootloader_lock_state()
     return (0 == (reg_swire_ctrl1 & FLD_SWIRE_USB_EN));
 }
 
-void bootloader_ota_setNewFirmwwareStorageAddress()
+void bootloader_ota_setNewFirmwareStorageAddress()
 {
     ota_program_bootAddr = OTA_PROGRAM_BOOTADDR_USER;
     if(0 == ota_program_offset){

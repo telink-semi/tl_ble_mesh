@@ -473,7 +473,7 @@ void app_flash_protection_ota_begin(void)
 void app_flash_protection_ota_end(u32 ota_err_code)
 {
 	if(OTA_SUCCESS == ota_err_code){
-		// prevent this case: if new firmware disabe flash protect function unintentionally, it will can not ota any more.
+		// prevent this case: if new firmware disable flash protect function unintentionally, it will can not ota any more.
 		// if protect here, it may not support OTA downgrade firmware version.
 		// and it will protect flash in user init of new firmware.
 	}else{

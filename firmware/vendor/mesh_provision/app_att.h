@@ -164,7 +164,7 @@ typedef enum
 	PVT_PAIR_DESC_H, 						//UUID: 2901,	VALUE: private mesh pair service descriptor
 #endif
 
-#if MESH_CDTP_ENABLE//(BLC_AUDIO_OTP_ROLE_SWICH_ENABLE)
+#if MESH_CDTP_ENABLE//(BLC_AUDIO_OTP_ROLE_SWITCH_ENABLE)
 	//// OTS ////
 	/**********************************************************************************************/
 	#if 1//(BLC_AUDIO_OTS_ENABLE)

@@ -180,7 +180,7 @@ void mesh_proc_keyboard(u8 e, u8 *p, int n)
 				#endif
 				
 			if(KEY_SW2 == kb_event.keycode[0]){	
-				#if AUDIO_MESH_MULTY_NODES_TX_EN
+				#if AUDIO_MESH_MULTI_NODES_TX_EN
 				if(app_audio_is_valid_key_pressed() == 0){
 					return ;
 				}

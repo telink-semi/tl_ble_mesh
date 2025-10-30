@@ -182,8 +182,8 @@ extern "C" {
 #define CODEC_ALGORITHM_LC3	            1   // CODEC_ALGORITHM enumeration
 
 #define TEST_DEBUG_LEVEL                0
-#define AUDIO_MESH_MULTY_NODES_TX_EN	0	// only support audio LC3 + 8k sample rate now for multy nodes mode.
-		#if AUDIO_MESH_MULTY_NODES_TX_EN
+#define AUDIO_MESH_MULTI_NODES_TX_EN	0	// only support audio LC3 + 8k sample rate now for multiple nodes mode.
+		#if AUDIO_MESH_MULTI_NODES_TX_EN
 #define AUDIO_DATA_NO_TX_WHEN_SILENCE_EN		1
 			#if AUDIO_DATA_NO_TX_WHEN_SILENCE_EN
 #define AUDIO_RX_NODES_MAX				5	// define a node that can receive audio from how many nodes.

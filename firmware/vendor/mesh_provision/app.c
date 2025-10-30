@@ -490,7 +490,7 @@ _attribute_no_inline_ void user_init_normal(void)
 	#endif
 #endif
 	#if ADC_ENABLE
-	adc_drv_init();	// still init even though BATT_CHECK_ENABLE is enable, beause battery check may not be called in user init.
+	adc_drv_init();	// still init even though BATT_CHECK_ENABLE is enable, because battery check may not be called in user init.
 	#endif
 
 	u8 error_code = blc_contr_checkControllerInitialization();
@@ -593,7 +593,7 @@ _attribute_no_inline_ void user_init_normal(void)
 		blc_pm_setDeepsleepRetentionEnable(PM_DeepRetn_Enable);
 		blc_pm_setDeepsleepRetentionThreshold(95);
 
-	       /*!< early wakeup time with a threshold of approxiamtely 30us. */
+	       /*!< early wakeup time with a threshold of approximately 30us. */
         	#if (MCU_CORE_TYPE == MCU_CORE_B91)
 	    blc_pm_setDeepsleepRetentionEarlyWakeupTiming(620);
 	        #elif (MCU_CORE_TYPE == MCU_CORE_B92)

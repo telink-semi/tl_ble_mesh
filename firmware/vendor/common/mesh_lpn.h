@@ -70,7 +70,7 @@ int mesh_lpn_rcv_delay_wakeup(void);
 int mesh_lpn_poll_md_wakeup(void);
 int mesh_lpn_adv_interval_update(u8 adv_tick_refresh);
 void soft_timer_mesh_adv_proc(void);
-int mesh_tx_cmd_add_packet_fn_poll_cahce(u8 *p_bear);
+int mesh_tx_cmd_add_packet_fn_poll_cache(u8 *p_bear);
 int friend_subsc_list_retry_update(u8 type, u16 *p_sublist, int sub_cnt, int overwrite_flag);
 u32 get_lpn_poll_interval_ms(void);
 int set_lpn_poll_interval(int poll_ms);

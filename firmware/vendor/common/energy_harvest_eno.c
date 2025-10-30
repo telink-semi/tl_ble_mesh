@@ -365,7 +365,7 @@ void eh_publish_special_to_generic_info(eh_dev_publish_set_special_t *p_pub_set,
         p_pub_save->par.ac_layer_data[0] = U16_LO(G_ONOFF_SET_NOACK);
         p_pub_save->par.ac_layer_data[1] = U16_HI(G_ONOFF_SET_NOACK);
 		if(0 == index0_1){
-		    // have been copyed
+		    // have been copied
 		}else{
 			p_pub_save->par.ac_layer_data[2] = !p_pub_set->onoff.onoff;
 		}
@@ -373,7 +373,7 @@ void eh_publish_special_to_generic_info(eh_dev_publish_set_special_t *p_pub_set,
         p_pub_save->par.ac_layer_data[0] = U16_LO(G_DELTA_SET_NOACK);
         p_pub_save->par.ac_layer_data[1] = U16_HI(G_DELTA_SET_NOACK);
 		if(0 == index0_1){
-		    // have been copyed
+		    // have been copied
 		}else{
 		    s32 level = p_pub_set->delta.level * (-1);
             memcpy(&p_pub_save->par.ac_layer_data[2], &level, sizeof(p_pub_set->delta.level));

@@ -201,7 +201,7 @@ void friend_cmd_send_poll(void)
  * @return      0: success
  * @note        
  */
-int mesh_tx_cmd_add_packet_fn_poll_cahce(u8 *p_bear)
+int mesh_tx_cmd_add_packet_fn_poll_cache(u8 *p_bear)
 {
     mesh_cmd_bear_t *p_bear_tmp = (mesh_cmd_bear_t *)p_bear;
     bear_fn_poll_t *p_bear_poll = (bear_fn_poll_t *)&p_bear_tmp->tx_head;
@@ -432,7 +432,7 @@ void mesh_lpn_poll_retry_check(void)
 }
 
 /**
- * @brief       This function indicates that the LPN did not receive a message from its Friend Node during the receive window, and will triger poll retry.
+ * @brief       This function indicates that the LPN did not receive a message from its Friend Node during the receive window, and will trigger poll retry.
  * @param[io]   void- 
  * @return      
  * @note        

@@ -74,7 +74,7 @@ u8 ct_flag = 0; // always HSL
 #else
 #if (LIGHT_TYPE_SEL == LIGHT_TYPE_CT_HSL)
 const light_res_hw_t light_res_hw[LIGHT_CNT][4] = {
-	// "RES_HW_PWM_W" may report compile warining "comparison between 'enum <anonymous>' and 'enum <anonymous>'" if it is not a PWM pin. 
+	// "RES_HW_PWM_W" may report compile warning "comparison between 'enum <anonymous>' and 'enum <anonymous>'" if it is not a PWM pin. 
 	// warning means the two enum are not the same.
 	/*[0] = */{RES_HW_PWM_R, RES_HW_PWM_G, RES_HW_PWM_B, RES_HW_PWM_W}, // vc can't use "[0]="
 };

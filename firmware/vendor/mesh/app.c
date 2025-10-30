@@ -590,7 +590,7 @@ _attribute_no_inline_ void user_init_normal(void)
 		blc_pm_setDeepsleepRetentionEnable(PM_DeepRetn_Enable);
 		blc_pm_setDeepsleepRetentionThreshold(95);
 
-        /*!< early wakeup time with a threshold of approxiamtely 30us. */
+        /*!< early wakeup time with a threshold of approximately 30us. */
         #if (MCU_CORE_TYPE == MCU_CORE_B91)
 		blc_pm_setDeepsleepRetentionEarlyWakeupTiming(620);
 		    #elif (MCU_CORE_TYPE == MCU_CORE_B92)
@@ -611,7 +611,7 @@ _attribute_no_inline_ void user_init_normal(void)
 
     //////////// MESH Initialization /////////////////////////
     mesh_init_all();
-    mesh_scan_rsp_init(); // must after mesh_blc_ll_setExtAdvParamAndEnable() in entended adv mode.
+    mesh_scan_rsp_init(); // must after mesh_blc_ll_setExtAdvParamAndEnable() in extended adv mode.
     my_att_init (provision_mag.gatt_mode);
 
 	#if (BLE_OTA_SERVER_ENABLE)
@@ -645,7 +645,7 @@ _attribute_no_inline_ void user_init_normal(void)
 #endif
 
 #if ADC_ENABLE
-    adc_drv_init(); // still init even though BATT_CHECK_ENABLE is enable, beause battery check may not be called in user init.
+    adc_drv_init(); // still init even though BATT_CHECK_ENABLE is enable, because battery check may not be called in user init.
 #endif
     
 #if (LIGHT_TYPE_SEL == LIGHT_TYPE_NLC_SENSOR)

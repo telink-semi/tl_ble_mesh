@@ -28,11 +28,11 @@
 
 // ------ parameters setting ---------
 #define PAIR_PROV_SCAN_TIMEOUT_MS			(10*1000)
-#define PAIR_PROV_DISTRIBUTE_RETRY_CNT		(1)		// retry if provisionee did not receive distribute date. but make no sense if provisioner did not receive comfirm, because after provisionee send confirm, net key has been updated.
+#define PAIR_PROV_DISTRIBUTE_RETRY_CNT		(1)		// retry if provisionee did not receive distribute date. but make no sense if provisioner did not receive confirm, because after provisionee send confirm, net key has been updated.
 #define PAIR_PROV_ADDITIONAL_RETRANSMIT_CNT	(16)	// to make sure provisioner receive confirm command. so set to be a little more.
 
 #define PAIR_PROV_FIRST_NODE_ADDR			(1)		// first node will generate network
-#define PAIR_PROV_UUID_FLAG					{'M','P','a','i','r'};	// because auto triger provison, so need some special flag to identify whether support pair provision.
+#define PAIR_PROV_UUID_FLAG					{'M','P','a','i','r'};	// because auto trigger provison, so need some special flag to identify whether support pair provision.
 #define PAIR_PROV_UNPROV_ADDRESS_START		(0x7000)// element address of default network is between 0x7000 and 0x7fff
 
 

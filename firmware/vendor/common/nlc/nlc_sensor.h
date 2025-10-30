@@ -32,7 +32,7 @@
 // -------- sensor define ----------------
 #define SENSOR_NONE							0 // use BDT or button to simulate.
 #define SENSOR_ZSIR1000						1
-#define SENSOR_OCS_GPIO						2 // all sensors with GPIO detecte for occupancy sensor can use this type
+#define SENSOR_OCS_GPIO						2 // all sensors with GPIO detect for occupancy sensor can use this type
 
 #define NLC_SENSOR_SEL						SENSOR_NONE
 

@@ -75,7 +75,7 @@ static inline non_fixed_entry_t *get_non_fixed_entry_point(void){
 
 /**
  * @brief       This function serves to update g_non_fixed_entry
- * @param[in]   key_offset	- netowrk key offset
+ * @param[in]   key_offset	- network key offset
  * @param[in]   path_offset	- path offset
  * @return      none
  * @note        
@@ -91,7 +91,7 @@ static inline void update_non_fixed_entry_point(int key_offset, u16 path_offset)
 
 /**
  * @brief       This function serves to update g_fixed_entry
- * @param[in]   key_offset	- netowrk key offset
+ * @param[in]   key_offset	- network key offset
  * @param[in]   path_offset	- path offset
  * @return      none
  * @note        
@@ -142,7 +142,7 @@ int rebuild_fwd_tbl_entry(int is_fixed_path)
                 non_fixed_entry_state_t *p_non_fixed_state = &non_fixed_fwd_tbl_state[netkey_offset][path_offset];
                 #endif
                 if(is_fixed_path){
-                    valid_flag = p_fixed_state->vaild;
+                    valid_flag = p_fixed_state->valid;
                     entry_index = p_fixed_state->fwd_entry_index;
                 }
                 #if CONFIG_ALWAYS_GET_ROUTE_FROM_FLASH
@@ -247,7 +247,7 @@ int mesh_fwd_tbl_entry_save(int netkey_offset, path_entry_com_t *p_entry)
     // update corresponding forwarding table entry index in ram.
     u32 entry_index = GET_FWD_ENTRY_INDEX(*p_cur_addr - start_addr);
     if(p_entry->fixed_path){
-        g_fixed_entry.p_state->vaild = 1;
+        g_fixed_entry.p_state->valid = 1;
         g_fixed_entry.p_state->fwd_entry_index = entry_index;
     }
     #if CONFIG_ALWAYS_GET_ROUTE_FROM_FLASH
@@ -263,7 +263,7 @@ int mesh_fwd_tbl_entry_save(int netkey_offset, path_entry_com_t *p_entry)
 }
 
 /**
- * @brief       This function serves to delete fixed entry flag, because it need to find existed fixed entrys after power up in mesh_fwd_tbl_entry_init()
+ * @brief       This function serves to delete fixed entry flag, because it need to find existed fixed entries after power up in mesh_fwd_tbl_entry_init()
  * @param[in]   p	- pointer of fixed entry
  * @param[in]   fwd_entry_index	- entry index in flash
  * @return      
@@ -273,12 +273,12 @@ int mesh_fwd_tbl_entry_mark_invalid(path_entry_com_t *p, int fwd_entry_index)
 {
     if(p->fixed_path){
         u32 base_addr = FLASH_ADR_FIXED_FWD_TBL;
-        if((u32)fwd_entry_index > FIXED_ENTRY_SECTORS * FWD_ENTRYS_PER_SECTOR){
+        if((u32)fwd_entry_index > FIXED_ENTRY_SECTORS * FWD_ENTRIES_PER_SECTOR){
             return -1;
         }
 
         if(g_fixed_entry.p_state->fwd_entry_index == fwd_entry_index){
-            g_fixed_entry.p_state->vaild = 0; // mark invalid for add_new_path_in_fixed_fwd_tbl()
+            g_fixed_entry.p_state->valid = 0; // mark invalid for add_new_path_in_fixed_fwd_tbl()
         }
 
         u8 zero_flag = 0;
@@ -309,7 +309,7 @@ int mesh_fwd_tbl_entry_read(path_entry_com_t *p, int fwd_entry_index, int is_fix
 void mesh_non_fixed_fwd_tbl_entry_init(void)
 {
     for(int sector_offset = 0; sector_offset < NON_FIXED_ENTRY_SECTORS; sector_offset++){
-        for(u32 entry_offset = 0; entry_offset < FWD_ENTRYS_PER_SECTOR; entry_offset++){
+        for(u32 entry_offset = 0; entry_offset < FWD_ENTRIES_PER_SECTOR; entry_offset++){
             u32 save_flag = 0;
             u32 read_addr = FLASH_ADR_NON_FIXED_FWD_TBL + sector_offset * FLASH_SECTOR_SIZE + (entry_offset * FWD_ENTRY_SAVE_SIZE);
             flash_read_page(read_addr, sizeof(save_flag), (u8 *)&save_flag);
@@ -329,7 +329,7 @@ void mesh_fixed_fwd_tbl_entry_init(void)
     u16 fwd_entry_cnt[NET_KEY_MAX] = {0};
 
     for(int sector_offset = 0; sector_offset < FIXED_ENTRY_SECTORS; sector_offset++){
-        for(u32 entry_offset = 0; entry_offset < FWD_ENTRYS_PER_SECTOR; entry_offset++){
+        for(u32 entry_offset = 0; entry_offset < FWD_ENTRIES_PER_SECTOR; entry_offset++){
             u32 save_flag = 0;
             u32 read_addr = FLASH_ADR_FIXED_FWD_TBL + (sector_offset * FLASH_SECTOR_SIZE) + (entry_offset * FWD_ENTRY_SAVE_SIZE);
             path_entry_save_t path_entry;
@@ -345,8 +345,8 @@ void mesh_fixed_fwd_tbl_entry_init(void)
                     if(crc16(&path_entry.netkey_offset, sizeof(path_entry_save_t) - OFFSETOF(path_entry_save_t, netkey_offset)) == path_entry.head.crc){
                         if(fwd_entry_cnt[path_entry.netkey_offset] < MAX_FIXED_PATH){
                             fixed_entry_state_t *p_state = &fixed_fwd_tbl_state[path_entry.netkey_offset][fwd_entry_cnt[path_entry.netkey_offset]];
-                            p_state->vaild = 1;
-                            p_state->fwd_entry_index = sector_offset * FWD_ENTRYS_PER_SECTOR + entry_offset;
+                            p_state->valid = 1;
+                            p_state->fwd_entry_index = sector_offset * FWD_ENTRIES_PER_SECTOR + entry_offset;
                             fwd_entry_cnt[path_entry.netkey_offset]++;
                         }
                     }
@@ -568,7 +568,7 @@ path_entry_com_t * get_fixed_path_entry(u16 netkey_offset, u16 src_address, u16 
 		foreach(i, MAX_FIXED_PATH){
             update_fixed_entry_point(netkey_offset, i);
             #if CONFIG_ALWAYS_GET_ROUTE_FROM_FLASH
-            if(0 == g_fixed_entry.p_state->vaild){
+            if(0 == g_fixed_entry.p_state->valid){
                 continue;
             }
             mesh_fwd_tbl_entry_read(g_fixed_entry.p_entry, g_fixed_entry.p_state->fwd_entry_index, 1);
@@ -1130,7 +1130,7 @@ int delete_fixed_path(u16 netkey_offset, path_entry_com_t *p_entry)
 		foreach(i, MAX_FIXED_PATH){
             update_fixed_entry_point(netkey_offset, i);
             #if CONFIG_ALWAYS_GET_ROUTE_FROM_FLASH
-            if(0 == g_fixed_entry.p_state->vaild){
+            if(0 == g_fixed_entry.p_state->valid){
                 continue;
             }
             mesh_fwd_tbl_entry_read(g_fixed_entry.p_entry, g_fixed_entry.p_state->fwd_entry_index, 1);
@@ -1139,7 +1139,7 @@ int delete_fixed_path(u16 netkey_offset, path_entry_com_t *p_entry)
 			if((p_entry->path_origin == g_fixed_entry.p_entry->path_origin) &&
 				(p_entry->destination == g_fixed_entry.p_entry->destination)){
                 #if CONFIG_ALWAYS_GET_ROUTE_FROM_FLASH
-                g_fixed_entry.p_state->vaild = 0;
+                g_fixed_entry.p_state->valid = 0;
                 mesh_fwd_tbl_entry_mark_invalid(g_fixed_entry.p_entry, g_fixed_entry.p_state->fwd_entry_index);
                 #endif
                 memset(g_fixed_entry.p_entry, 0x00, sizeof(path_entry_com_t));
@@ -1187,7 +1187,7 @@ path_entry_com_t * add_new_path_in_fixed_fwd_tbl(u16 netkey_offset, path_entry_c
 	u16 path_index = 0;
 	for(path_index=0; path_index<MAX_FIXED_PATH; path_index++){
         update_fixed_entry_point(netkey_offset, path_index);
-        if(0 == g_fixed_entry.p_state->vaild)
+        if(0 == g_fixed_entry.p_state->valid)
 		{
 			break;
 		}
@@ -2292,7 +2292,7 @@ int mesh_cmd_sig_cfg_forwarding_tbl_entries_count_get(u8 *par, int par_len, mesh
 		foreach(path_offset, MAX_FIXED_PATH){
             update_fixed_entry_point(key_offset, path_offset);
             #if CONFIG_ALWAYS_GET_ROUTE_FROM_FLASH
-            if(0 == g_fixed_entry.p_state->vaild){
+            if(0 == g_fixed_entry.p_state->valid){
                 continue;
             }
             mesh_fwd_tbl_entry_read(g_fixed_entry.p_entry, g_fixed_entry.p_state->fwd_entry_index, 0);
@@ -2459,7 +2459,7 @@ int mesh_cmd_sig_cfg_forwarding_tbl_entries_get(u8 *par, int par_len, mesh_cb_fu
                 if(is_fix_path){
                     update_fixed_entry_point(key_offset, path_offset);
                     #if CONFIG_ALWAYS_GET_ROUTE_FROM_FLASH
-                    if(0 == g_fixed_entry.p_state->vaild){
+                    if(0 == g_fixed_entry.p_state->valid){
                         continue;
                     }
                     mesh_fwd_tbl_entry_read(g_fixed_entry.p_entry, g_fixed_entry.p_state->fwd_entry_index, 1);
@@ -4063,7 +4063,7 @@ path_entry_com_t * get_fixed_path_entry_by_origin(u16 netkey_offset, u16 path_or
 		foreach(i, MAX_FIXED_PATH){
             update_fixed_entry_point(netkey_offset, i);
             #if CONFIG_ALWAYS_GET_ROUTE_FROM_FLASH
-            if(0 == g_fixed_entry.p_state->vaild){
+            if(0 == g_fixed_entry.p_state->valid){
                 continue;
             }
             mesh_fwd_tbl_entry_read(g_fixed_entry.p_entry, g_fixed_entry.p_state->fwd_entry_index, 1);

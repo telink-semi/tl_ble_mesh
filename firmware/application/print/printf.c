@@ -61,7 +61,7 @@ __attribute__((used)) int _write(int fd, const unsigned char *buf, int size)
 
 #define UART_DEBUG_TX_PIN_REG	((0x140303 + ((DEBUG_INFO_TX_PIN>>8)<<3)))
 /**
- * @brief      This function serves to foramt string by GPIO simulate uart.
+ * @brief      This function serves to format string by GPIO simulate uart.
  * @param[in]  byte  -  a byte need to print
  * @return     none.
  */

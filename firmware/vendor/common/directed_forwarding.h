@@ -36,13 +36,13 @@
 
 #if MD_DF_CFG_SERVER_EN
 #define FWD_ENTRY_SAVE_SIZE                 ((sizeof(path_entry_save_t) + 15) / 16 * 16)    // 16 bytes align in flash.
-#define FWD_ENTRYS_PER_SECTOR               (FLASH_SECTOR_SIZE / FWD_ENTRY_SAVE_SIZE)       // max entrys save in 1 sector
-#define NON_FIXED_ENTRY_SECTORS             ((FLASH_ADR_NON_FIXED_FWD_TBL_END - FLASH_ADR_NON_FIXED_FWD_TBL) / FLASH_SECTOR_SIZE)   // sectors num to save non-fixed entrys
-#define FIXED_ENTRY_SECTORS                 ((FLASH_ADR_FIXED_FWD_TBL_END - FLASH_ADR_FIXED_FWD_TBL) / FLASH_SECTOR_SIZE)           // sectors num to save fixed entrys
+#define FWD_ENTRIES_PER_SECTOR               (FLASH_SECTOR_SIZE / FWD_ENTRY_SAVE_SIZE)       // max entries save in 1 sector
+#define NON_FIXED_ENTRY_SECTORS             ((FLASH_ADR_NON_FIXED_FWD_TBL_END - FLASH_ADR_NON_FIXED_FWD_TBL) / FLASH_SECTOR_SIZE)   // sectors num to save non-fixed entries
+#define FIXED_ENTRY_SECTORS                 ((FLASH_ADR_FIXED_FWD_TBL_END - FLASH_ADR_FIXED_FWD_TBL) / FLASH_SECTOR_SIZE)           // sectors num to save fixed entries
 
-#define GET_FWD_SECTOR_INDEX(fwd_entry_index)       ((fwd_entry_index) / FWD_ENTRYS_PER_SECTOR) // get forwarding table entry sector index by fwd_entry_index
-#define GET_FWD_ENTRY_OFFSET(fwd_entry_index)       ((GET_FWD_SECTOR_INDEX(fwd_entry_index) * FLASH_SECTOR_SIZE) + (((fwd_entry_index) % FWD_ENTRYS_PER_SECTOR) * FWD_ENTRY_SAVE_SIZE)) // get entry flash offset
-#define GET_FWD_ENTRY_INDEX(entry_flash_offset)       ((((entry_flash_offset) / FLASH_SECTOR_SIZE) * FWD_ENTRYS_PER_SECTOR) + (((entry_flash_offset) % FLASH_SECTOR_SIZE) / FWD_ENTRY_SAVE_SIZE))
+#define GET_FWD_SECTOR_INDEX(fwd_entry_index)       ((fwd_entry_index) / FWD_ENTRIES_PER_SECTOR) // get forwarding table entry sector index by fwd_entry_index
+#define GET_FWD_ENTRY_OFFSET(fwd_entry_index)       ((GET_FWD_SECTOR_INDEX(fwd_entry_index) * FLASH_SECTOR_SIZE) + (((fwd_entry_index) % FWD_ENTRIES_PER_SECTOR) * FWD_ENTRY_SAVE_SIZE)) // get entry flash offset
+#define GET_FWD_ENTRY_INDEX(entry_flash_offset)       ((((entry_flash_offset) / FLASH_SECTOR_SIZE) * FWD_ENTRIES_PER_SECTOR) + (((entry_flash_offset) % FLASH_SECTOR_SIZE) / FWD_ENTRY_SAVE_SIZE))
 #endif
 
 #define MAX_DSC_TBL							4
@@ -525,8 +525,8 @@ typedef struct __attribute__((packed)) {
 }non_fixed_entry_t;
 
 typedef struct __attribute__((packed)) {
-    u16 fwd_entry_index:15; // use to record entry in flash address, delete and rebuild entrys in flash.
-    u16 vaild:1;
+    u16 fwd_entry_index:15; // use to record entry in flash address, delete and rebuild entries in flash.
+    u16 valid:1;
 }fixed_entry_state_t;
 
 typedef struct __attribute__((packed)) {

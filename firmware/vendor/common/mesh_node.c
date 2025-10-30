@@ -2551,7 +2551,7 @@ static int flash_map_auto_exchange_sectors_action()
 {
     LOG_FLASH_MAP_AUTO_EXCHANGE_DEBUG(0, 0, "exchange flash map start...");
 
-#if (OTA_ADD_MORE_CHECK_BEFORE_ERASE_FM_BAKUP_AREA)
+#if 1 // OTA_ADD_MORE_CHECK_BEFORE_ERASE_FM_BACKUP_AREA was define in lib
     blt_ota_software_check_flash_load_error(); // if any errors are found, will reboot inside
 #endif
 
@@ -2578,7 +2578,7 @@ static int flash_map_auto_exchange_sectors_action()
         u32 flag = FLASH_MAP_AUTO_EXCHANGE_ACTIVE_FLAG_VAL;
         flash_write_page(FLASH_MAP_AUTO_EXCHANGE_ACTIVE_FLAG_ADDRESS, sizeof(flag), (u8 *)&flag);
     }else{
-        LOG_FLASH_MAP_AUTO_EXCHANGE_DEBUG(0, 0, "exchange flash map backup ok flag is ture");
+        LOG_FLASH_MAP_AUTO_EXCHANGE_DEBUG(0, 0, "exchange flash map backup ok flag is true");
     }
 
     // recover

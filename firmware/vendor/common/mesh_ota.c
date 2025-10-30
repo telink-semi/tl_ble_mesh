@@ -2899,7 +2899,7 @@ void mesh_ota_master_proc(void)
                     	fw_distribut_srv_proc.distribut_update_phase = DISTRIBUT_PHASE_COMPLETED;
                     }
 		            /* if distributor fw need to be updated, then it will call set_mesh_ota_distribute_100_flag_() when receive fw update apply, then reboot.
-		               after reboot, App will send  FW_DISTRIBUT_RECEIVERS_GET commnad to get transfer_progress with 50, 
+		               after reboot, App will send  FW_DISTRIBUT_RECEIVERS_GET command to get transfer_progress with 50, 
 		               which means distributor OTA flow has completed and has cleared mesh ota flow. then App can get firmware version at this time.
 
 		               if distributor no need to be updated, distributor will not automatically reboot, 

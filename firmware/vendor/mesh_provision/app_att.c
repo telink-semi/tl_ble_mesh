@@ -305,7 +305,7 @@ const u8  my_userderdefine[4] = {'U', 'S', 'E','R'};
 const u8  my_userdefine_UUID[16]= WRAPPING_BRACES(TELINK_USERDEFINE_UUID);
 #endif
 
-const u16  mi_gerneric_service  = SERVICE_UUID_GENERIC_ATTRIBUTE;
+const u16  mi_generic_service  = SERVICE_UUID_GENERIC_ATTRIBUTE;
 const u16 mi_service_change_uuid = 0x2a05;
 static const u8 mi_service_change_prop[] = {
 	CHAR_PROP_INDICATE,
@@ -391,8 +391,8 @@ u8 ais_data_buf[2];
 #endif
 
 #if(ONLINE_STATUS_EN)
-const u8 online_st_service_uuid[16] = WRAPPING_BRACES(TELINK_ONLINE_ST_UUID_SERVICE);  // comfirm later
-const u8 online_st_data_uuid[16] = WRAPPING_BRACES(TELINK_ONLINE_ST_DATA_UUID);               // comfirm later
+const u8 online_st_service_uuid[16] = WRAPPING_BRACES(TELINK_ONLINE_ST_UUID_SERVICE);
+const u8 online_st_data_uuid[16] = WRAPPING_BRACES(TELINK_ONLINE_ST_DATA_UUID);
 const u8 online_st_prop[] = {
 	CHAR_PROP_READ | CHAR_PROP_WRITE | CHAR_PROP_WRITE_WITHOUT_RSP | CHAR_PROP_NOTIFY,
 	U16_LO(ONLINE_ST_DP_H), U16_HI(ONLINE_ST_DP_H),	
@@ -550,7 +550,7 @@ const u8 ONLINE_ST_ATT_HANDLE_SLAVE = (ATT_NUM_START_ONLINE_ST + 2);
 #endif
 
 #define MY_ATTRIBUTE_SERVICE_CHANGE                        \
-	{MAX_SERVICE_CHANGE_ATT_NUM,ATT_PERMISSIONS_READ,2,2,(u8*)(&my_primaryServiceUUID),	(u8*)(&mi_gerneric_service), 0},\
+	{MAX_SERVICE_CHANGE_ATT_NUM,ATT_PERMISSIONS_READ,2,2,(u8*)(&my_primaryServiceUUID),	(u8*)(&mi_generic_service), 0},\
 	{0,ATT_PERMISSIONS_READ, 2, 1,(u8*)(&my_characterUUID), 	(u8*)mi_service_change_prop, 0}, /*prop*/   \
 	{0,ATT_PERMISSIONS_READ, 2,sizeof(mi_service_change_buf),(u8*)(&mi_service_change_uuid), (mi_service_change_buf), 0, 0}, /*value*/   \
 	{0,ATT_PERMISSIONS_READ, 2,sizeof (mi_service_change_str),(u8*)(&userdesc_UUID), (u8*)(mi_service_change_str), 0},  \
@@ -601,7 +601,7 @@ const u8 ONLINE_ST_ATT_HANDLE_SLAVE = (ATT_NUM_START_ONLINE_ST + 2);
 
 #if (MESH_CDTP_ENABLE)
 #include "./mesh_cdtp.h"
-#if 1//(BLC_AUDIO_OTP_ROLE_SWICH_ENABLE)	
+#if 1//(BLC_AUDIO_OTP_ROLE_SWITCH_ENABLE)	
 	////////////////////////////////////// OTS /////////////////////////////////////////////////////
 	#if 1//(BLC_AUDIO_OTS_ENABLE)
 		#if (CDTP_SMP_LEVEL == 3)
@@ -755,7 +755,7 @@ STATIC_ASSERT(CDTP_SMP_LEVEL >= 3);
 	u16 my_OtsObjectChangedCCC = 0;
 
 	#endif
-#endif //#if (BLC_AUDIO_OTP_ROLE_SWICH_ENABLE)
+#endif //#if (BLC_AUDIO_OTP_ROLE_SWITCH_ENABLE)
 #endif
 
 
@@ -806,7 +806,7 @@ static const attribute_t my_Attributes[] = {
 	MY_ATTRIBUTE_PRIVATE_MESH
 #endif
 
-#if (MESH_CDTP_ENABLE)//(BLC_AUDIO_OTP_ROLE_SWICH_ENABLE)
+#if (MESH_CDTP_ENABLE)//(BLC_AUDIO_OTP_ROLE_SWITCH_ENABLE)
 	////////////////////////////////////// OTS /////////////////////////////////////////////////////
 	#if 1//(BLC_AUDIO_OTS_ENABLE)
 	//	OTS_PS_H, // 0x2c(44)
@@ -851,7 +851,7 @@ static const attribute_t my_Attributes[] = {
 	{0, 			   0x00,2,sizeof(my_OtsObjectChangedValue),(u8*)(&my_OtsObjectChangedUUID), (u8*)(&my_OtsObjectChangedValue), 0, 0},
 	{0,CDTP_ATT_PERMISSIONS_RDWR,2,sizeof(my_OtsObjectChangedCCC),(u8*)(&clientCharacterCfgUUID), (u8*)(&my_OtsObjectChangedCCC), 0},
 	#endif
-#endif //#if (BLC_AUDIO_OTP_ROLE_SWICH_ENABLE)
+#endif //#if (BLC_AUDIO_OTP_ROLE_SWITCH_ENABLE)
 };
 
 #if DU_ENABLE
@@ -918,11 +918,11 @@ void app_audio_gatt_init(void)
 	//bls_att_setAttributeTable((u8 *)my_Attributes);
 
 	ret = 0;
-	#if 1//(BLC_AUDIO_OTP_ROLE_SWICH_ENABLE)
+	#if 1//(BLC_AUDIO_OTP_ROLE_SWITCH_ENABLE)
 		#if 1//(BLC_AUDIO_OTS_ENABLE)
 			ret += blc_audio_setServiceByRole(BLC_AUDIO_ROLE_SERVER, BLC_AUDIO_SERVICE_OTS, (attribute_t*)&my_Attributes[OTS_PS_H]);
 		#endif //(BLC_AUDIO_TBS_ENABLE)
-	#endif //#if (BLC_AUDIO_OTP_ROLE_SWICH_ENABLE)
+	#endif //#if (BLC_AUDIO_OTP_ROLE_SWITCH_ENABLE)
 	if(ret != 0){
 		
 	}
