@@ -136,7 +136,7 @@ class FUDistributor implements BlobTransferCallback {
         this.appKeyIndex = configuration.getAppKeyIndex();
         this.connectedAddress = connectedAddress;
         this.isContinue = isContinue;
-        log("begin - " + configuration.getUpdatingDevices().size() + " -- isContinue? " + isContinue);
+        log("distribute begin - " + configuration.getUpdatingDevices().size() + " -- isContinue? " + isContinue);
         this.nodes = configuration.getUpdatingDevices();
         BlobTransferType transferType;
         int directAddress;
@@ -197,9 +197,9 @@ class FUDistributor implements BlobTransferCallback {
     }
 
     public void onDistributeCommandFailed(int opcode) {
-
         if ((step == STEP_UPDATE_START && opcode == Opcode.FIRMWARE_UPDATE_START.value)
-                || (step == STEP_UPDATE_APPLY && opcode == Opcode.FIRMWARE_UPDATE_APPLY.value)) {
+                || (step == STEP_UPDATE_APPLY && opcode == Opcode.FIRMWARE_UPDATE_APPLY.value)
+                || (step == STEP_UPDATE_GET && opcode == Opcode.FIRMWARE_UPDATE_GET.value)) {
             // to updating nodes
             onDeviceFail(nodes.get(nodeIndex), "command send to updating node fail");
             nodeIndex++;
@@ -363,12 +363,19 @@ class FUDistributor implements BlobTransferCallback {
                 return;
             }
         }
-        if ((opcode == Opcode.FIRMWARE_UPDATE_STATUS)
-        ) {
+        if ((opcode == Opcode.FIRMWARE_UPDATE_STATUS)) {
             onFirmwareUpdateStatus((FirmwareUpdateStatusMessage) message.getStatusMessage());
         } else if (step == STEP_BLOB_TRANSFER) {
             transfer.onTransferNotification(message);
         }
+    }
+
+    public void onMulticastMessageComplete(int opcode, List<Integer> remainingNodes) {
+        if (step != STEP_BLOB_TRANSFER) {
+            log("multi complete -> distributor -> not at blob transfer");
+            return;
+        }
+        transfer.onMulticastMessageComplete(opcode);
     }
 
     private void onDeviceApplySuccess(MeshUpdatingDevice device) {
@@ -399,7 +406,7 @@ class FUDistributor implements BlobTransferCallback {
                     || (step == STEP_UPDATE_APPLY && phase == FirmwareUpdateStatusMessage.PHASE_IDLE);*/
             final UpdatePhase phase = UpdatePhase.valueOf(firmwareUpdateStatusMessage.getPhase() & 0xFF);
             if (step == STEP_UPDATE_CONTINUE) {
-                boolean pass = phase == UpdatePhase.TRANSFER_ACTIVE;
+                boolean pass = phase == UpdatePhase.TRANSFER_ACTIVE || phase == UpdatePhase.APPLY_SUCCESS;
                 if (pass) {
                     this.step = STEP_BLOB_TRANSFER;
                     nextAction();
@@ -456,8 +463,12 @@ class FUDistributor implements BlobTransferCallback {
     }
 
 
+    private void log(String logInfo, int logLevel) {
+        actionHandler.onActionLog(LOG_TAG, logInfo, logLevel);
+    }
+
     private void log(String logInfo) {
-        MeshLogger.log(logInfo, LOG_TAG, MeshLogger.LEVEL_DEBUG);
+        log(logInfo, MeshLogger.DEFAULT_LEVEL);
     }
 
 }

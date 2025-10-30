@@ -241,6 +241,11 @@
           "id": "14:750515626164944415",
           "name": "provisionerNodes",
           "targetId": "8:6579166990100229747"
+        },
+        {
+          "id": "21:5931722229074439041",
+          "name": "nlcUnions",
+          "targetId": "22:7173425189561808579"
         }
       ]
     },
@@ -275,7 +280,7 @@
     },
     {
       "id": "8:6579166990100229747",
-      "lastPropertyId": "39:7693211708187749355",
+      "lastPropertyId": "41:7820475330566572047",
       "name": "NodeInfo",
       "properties": [
         {
@@ -454,6 +459,16 @@
           "type": 11,
           "flags": 520,
           "relationTarget": "NodeLcProps"
+        },
+        {
+          "id": "40:4441134400433341182",
+          "name": "isFromNfc",
+          "type": 1
+        },
+        {
+          "id": "41:7820475330566572047",
+          "name": "lcEnabled",
+          "type": 1
         }
       ],
       "relations": [
@@ -471,6 +486,16 @@
           "id": "18:2800170913470506993",
           "name": "sensorStateList",
           "targetId": "19:765136782566086494"
+        },
+        {
+          "id": "19:6621293427924621283",
+          "name": "switchActions",
+          "targetId": "20:839164006716664773"
+        },
+        {
+          "id": "20:8776073561661086280",
+          "name": "switchStates",
+          "targetId": "21:1757578571605161902"
         }
       ]
     },
@@ -873,11 +898,114 @@
         }
       ],
       "relations": []
+    },
+    {
+      "id": "20:839164006716664773",
+      "lastPropertyId": "6:6111512810088194790",
+      "name": "SwitchAction",
+      "properties": [
+        {
+          "id": "1:8217245479811766788",
+          "name": "id",
+          "type": 6,
+          "flags": 1
+        },
+        {
+          "id": "2:3581968955511298008",
+          "name": "keyIndex",
+          "type": 5
+        },
+        {
+          "id": "3:4815286057996567955",
+          "name": "keyCount",
+          "type": 5
+        },
+        {
+          "id": "4:1016585704589702453",
+          "name": "action",
+          "type": 5
+        },
+        {
+          "id": "5:7220518909455598265",
+          "name": "value",
+          "type": 5
+        },
+        {
+          "id": "6:6111512810088194790",
+          "name": "publishAddress",
+          "type": 5
+        }
+      ],
+      "relations": []
+    },
+    {
+      "id": "21:1757578571605161902",
+      "lastPropertyId": "3:2849552986958274864",
+      "name": "SwitchState",
+      "properties": [
+        {
+          "id": "1:2738360793618603628",
+          "name": "id",
+          "type": 6,
+          "flags": 1
+        },
+        {
+          "id": "2:3778514213387849567",
+          "name": "lightAddress",
+          "type": 5
+        },
+        {
+          "id": "3:2849552986958274864",
+          "name": "state",
+          "type": 5
+        }
+      ],
+      "relations": []
+    },
+    {
+      "id": "22:7173425189561808579",
+      "lastPropertyId": "5:3686245750603969887",
+      "name": "NlcUnion",
+      "properties": [
+        {
+          "id": "1:3430390754560945270",
+          "name": "id",
+          "type": 6,
+          "flags": 1
+        },
+        {
+          "id": "2:8362607130005983668",
+          "name": "name",
+          "type": 9
+        },
+        {
+          "id": "3:1017672178756847103",
+          "name": "publishPeriod",
+          "type": 6
+        },
+        {
+          "id": "4:3437305109585779255",
+          "name": "publishAddress",
+          "type": 5
+        },
+        {
+          "id": "5:3686245750603969887",
+          "name": "selected",
+          "type": 1
+        }
+      ],
+      "relations": [
+        {
+          "id": "22:7284142745649475943",
+          "name": "sensors",
+          "targetId": "8:6579166990100229747"
+        }
+      ]
     }
   ],
-  "lastEntityId": "19:765136782566086494",
+  "lastEntityId": "22:7173425189561808579",
   "lastIndexId": "4:4106015631498752348",
-  "lastRelationId": "18:2800170913470506993",
+  "lastRelationId": "22:7284142745649475943",
   "lastSequenceId": "0:0",
   "modelVersion": 5,
   "modelVersionParserMinimum": 5,

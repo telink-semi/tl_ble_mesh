@@ -38,6 +38,7 @@ import com.telink.ble.mesh.demo.R;
 import com.telink.ble.mesh.foundation.MeshService;
 import com.telink.ble.mesh.model.AppSettings;
 import com.telink.ble.mesh.model.NodeInfo;
+import com.telink.ble.mesh.ui.BaseActivity;
 
 import java.util.List;
 
@@ -48,15 +49,22 @@ import java.util.List;
 public class SwitchListAdapter extends BaseRecyclerViewAdapter<SwitchListAdapter.ViewHolder> {
 
 
-    List<Integer> mAdrList;
-    Context mContext;
-    NodeInfo mNode;
-    int address;
+    private List<Integer> mAdrList;
+    private Context mContext;
+    private NodeInfo mNode;
+    /**
+     * is support light control
+     */
+    private int lcEleAdr;
 
     public SwitchListAdapter(Context context, List<Integer> adrList, NodeInfo nodeInfo) {
         mContext = context;
         mAdrList = adrList;
         this.mNode = nodeInfo;
+    }
+
+    public void setLcEleAdr(int lcEleAdr) {
+        this.lcEleAdr = lcEleAdr;
     }
 
     @Override
@@ -95,6 +103,9 @@ public class SwitchListAdapter extends BaseRecyclerViewAdapter<SwitchListAdapter
         int appKeyIndex = TelinkMeshApplication.getInstance().getMeshInfo().getDefaultAppKeyIndex();
         OnOffSetMessage message = OnOffSetMessage.getSimple(adr, appKeyIndex, (byte) (isChecked ? 1 : 0), ack, rspMax);
         MeshService.getInstance().sendMeshMessage(message);
+        if (lcEleAdr == adr && !mNode.lcEnabled) {
+            ((BaseActivity) mContext).showTipDialog("please turn on light control mode first");
+        }
     };
 
 

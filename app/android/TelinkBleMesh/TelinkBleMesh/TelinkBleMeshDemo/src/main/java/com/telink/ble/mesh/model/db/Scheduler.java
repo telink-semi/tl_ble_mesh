@@ -277,6 +277,8 @@ public final class Scheduler implements Serializable, Parcelable {
          */
         private short sceneId;
 
+        private int elementOffset;
+
         public Builder setIndex(byte index) {
             this.index = index;
             return this;
@@ -332,6 +334,11 @@ public final class Scheduler implements Serializable, Parcelable {
             return this;
         }
 
+        public Builder setElementOffset(int elementOffset) {
+            this.elementOffset = elementOffset;
+            return this;
+        }
+
         public Scheduler build() {
             SchedulerRegister register = new SchedulerRegister(
                     this.year,
@@ -348,6 +355,7 @@ public final class Scheduler implements Serializable, Parcelable {
             Scheduler scheduler = new Scheduler();
             scheduler.index = index;
             scheduler.register.setTarget(register);
+            scheduler.elementOffset = elementOffset;
             return scheduler;
 //            return new Scheduler(this.index, register);
         }

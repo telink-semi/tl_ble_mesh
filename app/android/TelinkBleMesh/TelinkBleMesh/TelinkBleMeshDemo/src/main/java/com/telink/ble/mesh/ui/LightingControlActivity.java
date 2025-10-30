@@ -58,6 +58,7 @@ import com.telink.ble.mesh.foundation.Event;
 import com.telink.ble.mesh.foundation.EventListener;
 import com.telink.ble.mesh.foundation.MeshService;
 import com.telink.ble.mesh.foundation.event.StatusNotificationEvent;
+import com.telink.ble.mesh.model.LcPropItem;
 import com.telink.ble.mesh.model.MeshInfo;
 import com.telink.ble.mesh.model.NodeInfo;
 import com.telink.ble.mesh.model.NodeLcProps;
@@ -72,7 +73,7 @@ import java.util.List;
 /**
  * device firmware update by gatt ota
  */
-public class LightingControlActivity extends BaseActivity implements View.OnClickListener, EventListener<String> {
+public class LightingControlActivity extends BaseActivity implements View.OnClickListener, EventListener<String>, LcPropertyListAdapter.LcPropActionHandler {
 
     //    private Button btn_back;
     private Switch switch_mode, switch_lc_om, switch_set_on_off;
@@ -145,7 +146,7 @@ public class LightingControlActivity extends BaseActivity implements View.OnClic
         switch_set_on_off.setChecked(false);
         switch_set_on_off.setOnCheckedChangeListener(SWITCH_CHECK_LSN);
 
-        adapter = new LcPropertyListAdapter(this, lcPropItems);
+        adapter = new LcPropertyListAdapter(this, lcPropItems, this);
 
         RecyclerView rv_lc_prop = findViewById(R.id.rv_lc_prop);
         rv_lc_prop.setLayoutManager(new LinearLayoutManager(this));
@@ -172,7 +173,7 @@ public class LightingControlActivity extends BaseActivity implements View.OnClic
         MeshInfoService.getInstance().updateNodeLcProps(nodeLcProps);
     }
 
-    public void onGetTap(int position) {
+    public void onGetHandle(int position) {
         MeshLogger.d("get tap : " + position);
         LcPropItem config = lcPropItems.get(position);
         String name = config.property.name;
@@ -188,7 +189,7 @@ public class LightingControlActivity extends BaseActivity implements View.OnClic
         }
     }
 
-    public void onSetTap(int position) {
+    public void onSetHandle(int position) {
         MeshLogger.d("set tap : " + position);
         LcPropItem item = lcPropItems.get(position);
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
@@ -320,7 +321,10 @@ public class LightingControlActivity extends BaseActivity implements View.OnClic
             //
             LcModeStatusMessage statusMessage = (LcModeStatusMessage) ((StatusNotificationEvent) event).getNotificationMessage().getStatusMessage();
             lcEnabled = statusMessage.getMode() == 1;
-
+            if (lcEnabled != nodeInfo.lcEnabled) {
+                nodeInfo.lcEnabled = lcEnabled;
+                nodeInfo.save();
+            }
             runOnUiThread(() -> {
                 switch_mode.setChecked(lcEnabled);
             });
@@ -359,14 +363,4 @@ public class LightingControlActivity extends BaseActivity implements View.OnClic
         }
         return false;
     }
-
-
-    public class LcPropItem {
-        public DeviceProperty property;
-
-        public boolean expanded = false;
-
-        public int value;
-    }
-
 }

@@ -241,6 +241,11 @@
           "id": "14:750515626164944415",
           "name": "provisionerNodes",
           "targetId": "8:6579166990100229747"
+        },
+        {
+          "id": "21:5931722229074439041",
+          "name": "nlcUnions",
+          "targetId": "22:7173425189561808579"
         }
       ]
     },
@@ -275,7 +280,7 @@
     },
     {
       "id": "8:6579166990100229747",
-      "lastPropertyId": "40:4441134400433341182",
+      "lastPropertyId": "41:7820475330566572047",
       "name": "NodeInfo",
       "properties": [
         {
@@ -458,6 +463,11 @@
         {
           "id": "40:4441134400433341182",
           "name": "isFromNfc",
+          "type": 1
+        },
+        {
+          "id": "41:7820475330566572047",
+          "name": "lcEnabled",
           "type": 1
         }
       ],
@@ -951,11 +961,85 @@
         }
       ],
       "relations": []
+    },
+    {
+      "id": "22:7173425189561808579",
+      "lastPropertyId": "5:3686245750603969887",
+      "name": "NlcUnion",
+      "properties": [
+        {
+          "id": "1:3430390754560945270",
+          "name": "id",
+          "type": 6,
+          "flags": 1
+        },
+        {
+          "id": "2:8362607130005983668",
+          "name": "name",
+          "type": 9
+        },
+        {
+          "id": "3:1017672178756847103",
+          "name": "publishPeriod",
+          "type": 6
+        },
+        {
+          "id": "4:3437305109585779255",
+          "name": "publishAddress",
+          "type": 5
+        },
+        {
+          "id": "5:3686245750603969887",
+          "name": "selected",
+          "type": 1
+        }
+      ],
+      "relations": [
+        {
+          "id": "22:7284142745649475943",
+          "name": "sensors",
+          "targetId": "8:6579166990100229747"
+        }
+      ]
+    },
+    {
+      "id": "23:3662870255381477007",
+      "lastPropertyId": "5:7541068732985346497",
+      "name": "PrivateDevice",
+      "properties": [
+        {
+          "id": "1:8320711946253681075",
+          "name": "id",
+          "type": 6,
+          "flags": 1
+        },
+        {
+          "id": "2:4827503575784135903",
+          "name": "name",
+          "type": 9
+        },
+        {
+          "id": "3:6973420006591970136",
+          "name": "vid",
+          "type": 5
+        },
+        {
+          "id": "4:3327159469867110567",
+          "name": "pid",
+          "type": 5
+        },
+        {
+          "id": "5:7541068732985346497",
+          "name": "cpsData",
+          "type": 23
+        }
+      ],
+      "relations": []
     }
   ],
-  "lastEntityId": "21:1757578571605161902",
+  "lastEntityId": "23:3662870255381477007",
   "lastIndexId": "4:4106015631498752348",
-  "lastRelationId": "20:8776073561661086280",
+  "lastRelationId": "22:7284142745649475943",
   "lastSequenceId": "0:0",
   "modelVersion": 5,
   "modelVersionParserMinimum": 5,

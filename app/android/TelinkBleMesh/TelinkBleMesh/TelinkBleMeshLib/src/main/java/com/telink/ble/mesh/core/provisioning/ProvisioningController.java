@@ -372,7 +372,7 @@ public class ProvisioningController {
         delayHandler.postDelayed(provisioningTimeoutTask, TIMEOUT_PROVISIONING);
 
         final int oobInfo = device.getOobInfo();
-        if (MeshUtils.isCertSupported(oobInfo) && MeshUtils.isPvRecordSupported(oobInfo)) {
+        if ( MeshUtils.isCertSupported(oobInfo) && MeshUtils.isPvRecordSupported(oobInfo)) {
             provisionRecordsGet();
         } else {
             provisionInvite();
@@ -538,7 +538,8 @@ public class ProvisioningController {
      * It then updates the provisioning state to "Invite" and sends the invitePDU using the sendProvisionPDU method.
      */
     private void provisionInvite() {
-        byte attention = 0;
+//        byte attention = 0;
+        byte attention = mProvisioningDevice.getAttentionDuration();
         invitePDU = new ProvisioningInvitePDU(attention);
         updateProvisioningState(STATE_INVITE, "Invite");
         sendProvisionPDU(invitePDU);

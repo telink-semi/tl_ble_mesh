@@ -148,6 +148,7 @@ public class DeviceControlFragment extends BaseFragment implements EventListener
             rv_switch.setVisibility(View.VISIBLE);
             rv_switch.setLayoutManager(new GridLayoutManager(getActivity(), 4));
             SwitchListAdapter switchListAdapter = new SwitchListAdapter(getActivity(), onOffEleAdrList, deviceInfo);
+            switchListAdapter.setLcEleAdr(lcEleAdr);
             rv_switch.setAdapter(switchListAdapter);
         }
 

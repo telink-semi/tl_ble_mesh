@@ -78,10 +78,12 @@ public interface NetworkingBridge {
      *
      * @param success  True if the response was received, false otherwise.
      * @param opcode   The command opcode.
+     * @param destAdr  The command destination address.
      * @param rspMax   The maximum expected response count.
      * @param rspCount The received response count.
+     * @param rspArr   The replied address array
      */
-    void onReliableMessageComplete(boolean success, int opcode, int rspMax, int rspCount);
+    void onReliableMessageComplete(boolean success, int opcode, int destAdr, int rspMax, int rspCount, Integer[] rspArr);
 
     /**
      * This method is called when a segment message is complete.

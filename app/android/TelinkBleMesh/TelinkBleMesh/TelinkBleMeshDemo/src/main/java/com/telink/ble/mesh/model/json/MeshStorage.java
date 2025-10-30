@@ -217,6 +217,8 @@ public class MeshStorage {
         public long transTime;
         public int sceneId;
 
+        public int elementOffset;
+
         public static NodeScheduler fromScheduler(Scheduler scheduler) {
             NodeScheduler nodeScheduler = new NodeScheduler();
             nodeScheduler.index = scheduler.getIndex();
@@ -232,6 +234,7 @@ public class MeshStorage {
             nodeScheduler.action = register.getAction();
             nodeScheduler.transTime = register.getTransTime();
             nodeScheduler.sceneId = register.getSceneId();
+            nodeScheduler.elementOffset = scheduler.elementOffset;
             return nodeScheduler;
         }
     }

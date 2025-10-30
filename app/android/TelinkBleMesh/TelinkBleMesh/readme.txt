@@ -2,6 +2,17 @@
 version record:
 versionName - version code - date
 
+
+V4.1.0.4 - 11 - 20251029 (released by tl_ble_mesh)
+
+- feat(android): support provision confirm mode
+- feat(android): support setting scheduler on the specified element
+- feat(android): support nlc union function
+- feat(android): support adding and editing private device
+- optimise(android):  optimize the sending mechanism of the multicast reliable command
+
+----------------
+
 V4.1.0.3 - 10 - 202401101 (released by tl_ble_mesh)
 
 - feat(android): add support for cloud url editable

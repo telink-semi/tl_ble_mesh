@@ -229,9 +229,9 @@ public class IntervalTestActivity extends BaseActivity implements View.OnClickLi
     private void clearLog() {
         logs.clear();
         logInfoAdapter.notifyDataSetChanged();
-        if (autoScroll) {
-            rv_log.smoothScrollToPosition(logs.size() - 1);
-        }
+//        if (autoScroll) {
+//            rv_log.smoothScrollToPosition(logs.size() - 1);
+//        }
     }
 
 

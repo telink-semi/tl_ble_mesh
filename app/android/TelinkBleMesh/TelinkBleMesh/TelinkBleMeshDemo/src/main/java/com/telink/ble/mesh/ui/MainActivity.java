@@ -226,6 +226,22 @@ public class MainActivity extends BaseActivity implements BottomNavigationView.O
 
     }
 
+    /**
+     * check whether the node is switch(remote), if true  disconnect
+     */
+    private boolean checkConnection(AutoConnectEvent event) {
+        int address = event.getConnectedAddress();
+        NodeInfo node = TelinkMeshApplication.getInstance().getMeshInfo().getDeviceByElementAddress(address);
+        if (node != null && node.compositionData != null && AppSettings.isRemote(node.compositionData.pid)) {
+            // if direct connected device is remote-control, disconnect
+            MeshService.getInstance().idle(true);
+            MeshService.getInstance().autoConnect(new AutoConnectParameters());
+            return false;
+        } else {
+            return true;
+        }
+    }
+
 
     @Override
     public void performed(Event<String> event) {
@@ -233,6 +249,10 @@ public class MainActivity extends BaseActivity implements BottomNavigationView.O
         if (event.getType().equals(MeshEvent.EVENT_TYPE_MESH_EMPTY)) {
             MeshLogger.log(TAG + "#EVENT_TYPE_MESH_EMPTY");
         } else if (event.getType().equals(AutoConnectEvent.EVENT_TYPE_AUTO_CONNECT_LOGIN)) {
+            // check connection
+            if (!checkConnection((AutoConnectEvent) event)) {
+                return;
+            }
             // get all device on off status when auto connect success
             AppSettings.ONLINE_STATUS_ENABLE = MeshService.getInstance().getOnlineStatus();
             if (!AppSettings.ONLINE_STATUS_ENABLE) {
@@ -398,7 +418,6 @@ public class MainActivity extends BaseActivity implements BottomNavigationView.O
         MeshLogger.d("main - onSaveInstanceState");
         outState.putInt(KEY_NAV_ITEM, bottom_nav.getSelectedItemId());
     }
-
 
 
     private static final int PERMISSION_REQUEST_CODE_CAMERA = 0x01;

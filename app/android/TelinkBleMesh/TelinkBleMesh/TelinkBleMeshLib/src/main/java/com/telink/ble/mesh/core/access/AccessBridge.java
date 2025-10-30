@@ -45,6 +45,8 @@ public interface AccessBridge {
 
     int MODE_FAST_PROVISION = 4;
 
+    int MODE_MSG_BROKER = 5;
+
     /**
      * prepared to send mesh message
      *

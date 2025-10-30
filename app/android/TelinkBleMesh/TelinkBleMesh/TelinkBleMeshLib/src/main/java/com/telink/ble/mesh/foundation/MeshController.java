@@ -203,6 +203,8 @@ public final class MeshController implements ProvisioningBridge, NetworkingBridg
      */
     private GattOtaController mGattOtaController;
 
+    private MulticastMessageBroker mMulticastMessageBroker;
+
     /**
      * current active action
      */
@@ -528,7 +530,7 @@ public final class MeshController implements ProvisioningBridge, NetworkingBridg
      */
     private void initGattConnection(HandlerThread handlerThread) {
         mGattConnection = new GattConnection(mContext, handlerThread);
-        mGattConnection.setConnectionCallback(connectionCallback);
+        mGattConnection.setConnectionCallback(GATT_CONNECTION_CB);
     }
 
     /**
@@ -539,7 +541,7 @@ public final class MeshController implements ProvisioningBridge, NetworkingBridg
      */
     private void initGattOtaController() {
         mGattOtaController = new GattOtaController(mGattConnection);
-        mGattOtaController.setCallback(gattOtaCallback);
+        mGattOtaController.setCallback(GATT_OTA_CB);
     }
 
     /**
@@ -583,6 +585,9 @@ public final class MeshController implements ProvisioningBridge, NetworkingBridg
 
         mFastProvisioningController = new FastProvisioningController(handlerThread);
         mFastProvisioningController.register(this);
+
+        mMulticastMessageBroker = new MulticastMessageBroker(handlerThread);
+        mMulticastMessageBroker.register(this);
     }
 
     /**
@@ -744,8 +749,10 @@ public final class MeshController implements ProvisioningBridge, NetworkingBridg
 
     boolean continueProvision(int address) {
         if (actionMode != Mode.PROVISION) {
+            MeshLogger.d("continue provision fail : not in provision action -> " + actionMode );
             return false;
         }
+        log(String.format("continue provision : %04X" , address));
         this.mProvisioningController.continueProvision(address);
         return true;
     }
@@ -1070,6 +1077,7 @@ public final class MeshController implements ProvisioningBridge, NetworkingBridg
      */
     private boolean validateActionMode(Mode targetMode) {
         if (actionMode == targetMode) {
+            MeshLogger.w("mode not changed : " + actionMode);
             return false;
         } else {
             if (actionMode == Mode.REMOTE_PROVISION) {
@@ -1185,8 +1193,11 @@ public final class MeshController implements ProvisioningBridge, NetworkingBridg
      * @param rspCount  response count
      * @param desc      description
      */
-    private void onReliableMessageProcessEvent(String eventType, boolean success, int opcode, int rspMax, int rspCount, String desc) {
+    private void onReliableMessageProcessEvent(String eventType, boolean success, int opcode, int dest,
+                                               int rspMax, int rspCount, Integer[] rspArr, String desc) {
         ReliableMessageProcessEvent event = new ReliableMessageProcessEvent(this, eventType, success, opcode, rspMax, rspCount, desc);
+        event.setDest(dest);
+        event.setRspArr(rspArr);
         onEventPrepared(event);
     }
 
@@ -1271,6 +1282,10 @@ public final class MeshController implements ProvisioningBridge, NetworkingBridg
                 + " isReliable: " + meshMessage.isReliable()
                 + " retryCnt: " + meshMessage.getRetryCnt()
                 + " rspMax: " + meshMessage.getResponseMax());
+        if (meshMessage.useMultiMessageBroker()) {
+            return mMulticastMessageBroker.sendMessage(meshMessage);
+        }
+
         final boolean sent = mNetworkingController.sendMeshMessage(meshMessage);
         if (meshMessage.isReliable()) {
             if (sent) {
@@ -1278,16 +1293,20 @@ public final class MeshController implements ProvisioningBridge, NetworkingBridg
                 onReliableMessageProcessEvent(ReliableMessageProcessEvent.EVENT_TYPE_MSG_PROCESSING,
                         false,
                         meshMessage.getOpcode(),
+                        meshMessage.getDestinationAddress(),
                         meshMessage.getResponseMax(),
                         0,
+                        null,
                         "mesh message processing");
             } else {
                 // busy
                 onReliableMessageProcessEvent(ReliableMessageProcessEvent.EVENT_TYPE_MSG_PROCESS_ERROR,
                         false,
                         meshMessage.getOpcode(),
+                        meshMessage.getDestinationAddress(),
                         meshMessage.getResponseMax(),
                         0,
+                        null,
                         "mesh message send fail");
             }
         }
@@ -1770,6 +1789,7 @@ public final class MeshController implements ProvisioningBridge, NetworkingBridg
             // waiting for gatt disconnected callback
             log("ota complete -> waiting for gatt disconnect cb");
             isGattOtaDisconnectWaiting = true;
+            mDelayHandler.removeCallbacks(GATT_OTA_SUCCESS_TASK);
             mDelayHandler.postDelayed(GATT_OTA_SUCCESS_TASK, 5 * 1000); // To prevent the event not being triggered because the gatt not disconnected
         } else {
             resetAction();
@@ -1788,7 +1808,7 @@ public final class MeshController implements ProvisioningBridge, NetworkingBridg
 
     private void onOtaSuccess() {
         mDelayHandler.removeCallbacks(GATT_OTA_SUCCESS_TASK);
-        isGattOtaDisconnectWaiting = true;
+        isGattOtaDisconnectWaiting = false;
         resetAction();
         this.idle(false);
         String evenType = GattOtaEvent.EVENT_TYPE_OTA_SUCCESS;
@@ -1827,7 +1847,7 @@ public final class MeshController implements ProvisioningBridge, NetworkingBridg
      * <p>
      * onNotify() method is implemented and handles notifications received from the Bluetooth GATT service.
      */
-    private GattConnection.ConnectionCallback connectionCallback = new GattConnection.ConnectionCallback() {
+    private GattConnection.ConnectionCallback GATT_CONNECTION_CB = new GattConnection.ConnectionCallback() {
         @Override
         public void onConnected() { /* ignore */}
 
@@ -1863,11 +1883,11 @@ public final class MeshController implements ProvisioningBridge, NetworkingBridg
         @Override
         public void onNotify(UUID serviceUUID, UUID charUUID, byte[] data) {
             if (charUUID.equals(UUIDInfo.CHARACTERISTIC_ONLINE_STATUS)) {
-                log("online status encrypted data: " + Arrays.bytesToHexString(data, ":"));
-                MeshLogger.d("online data: " + Arrays.bytesToHexString(data));
-                MeshLogger.d("online key: " + Arrays.bytesToHexString(networkBeaconKey));
+//                log("online status encrypted data: " + Arrays.bytesToHexString(data, ":"));
+//                MeshLogger.d("online data: " + Arrays.bytesToHexString(data));
+//                MeshLogger.d("online key: " + Arrays.bytesToHexString(networkBeaconKey));
                 byte[] decrypted = Encipher.decryptOnlineStatus(data, networkBeaconKey);
-                MeshLogger.d("online dec: " + Arrays.bytesToHexString(decrypted));
+//                MeshLogger.d("online dec: " + Arrays.bytesToHexString(decrypted));
                 if (decrypted != null) {
                     log("online status decrypted data: " + Arrays.bytesToHexString(decrypted, ":"));
                     onOnlineStatusNotify(decrypted);
@@ -1885,7 +1905,7 @@ public final class MeshController implements ProvisioningBridge, NetworkingBridg
     /**
      * handle the OTA state changed during OTA processing
      */
-    private GattOtaController.GattOtaCallback gattOtaCallback = new GattOtaController.GattOtaCallback() {
+    private GattOtaController.GattOtaCallback GATT_OTA_CB = new GattOtaController.GattOtaCallback() {
 
         @Override
         public void onOtaStateChanged(int state) {
@@ -2327,7 +2347,7 @@ public final class MeshController implements ProvisioningBridge, NetworkingBridg
         @Override
         public void onLeScan(BluetoothDevice device, int rssi, byte[] scanRecord) {
             log("scan:" + device.getName() + " --mac: " + device.getAddress() + " --record: " + Arrays.bytesToHexString(scanRecord, ":"));
-//            if (!device.getAddress().contains("FF:FF:BB:CC:DD:81")) return;
+//            if (!device.getAddress().contains("FF:FF:BB:CC:DD:72")) return;
             onScanFilter(device, rssi, scanRecord);
         }
 
@@ -2583,7 +2603,8 @@ public final class MeshController implements ProvisioningBridge, NetworkingBridg
      * @param rspCount received response count
      */
     @Override
-    public void onReliableMessageComplete(boolean success, int opcode, int rspMax, int rspCount) {
+    public void onReliableMessageComplete(boolean success, int opcode, int dest,
+                                          int rspMax, int rspCount, Integer[] rspArr) {
         if (actionMode == Mode.MODE_BIND) {
             mBindingController.onBindingCommandComplete(success, opcode, rspMax, rspCount);
         } else if (actionMode == Mode.MESH_OTA) {
@@ -2594,11 +2615,14 @@ public final class MeshController implements ProvisioningBridge, NetworkingBridg
         } else if (actionMode == Mode.FAST_PROVISION) {
             mFastProvisioningController.onFastProvisioningCommandComplete(success, opcode, rspMax, rspCount);
         }
+        if (mMulticastMessageBroker.isBrokerBusy()) {
+            mMulticastMessageBroker.onMessageComplete(success, opcode, rspArr);
+        }
         if (!success) {
             onInnerMessageFailed(opcode);
         }
         onReliableMessageProcessEvent(ReliableMessageProcessEvent.EVENT_TYPE_MSG_PROCESS_COMPLETE,
-                success, opcode, rspMax, rspCount, "mesh message send complete");
+                success, opcode, dest, rspMax, rspCount, rspArr, "mesh message send complete");
     }
 
     /**
@@ -2751,7 +2775,7 @@ public final class MeshController implements ProvisioningBridge, NetworkingBridg
         } else if (actionMode == Mode.FAST_PROVISION) {
             mFastProvisioningController.onMessageNotification(notificationMessage);
         }
-
+        mMulticastMessageBroker.onMessageNotification(notificationMessage);
         String eventType;
         StatusMessage statusMessage = notificationMessage.getStatusMessage();
 
@@ -2924,6 +2948,8 @@ public final class MeshController implements ProvisioningBridge, NetworkingBridg
             }
         } else if (actionMode == Mode.FAST_PROVISION && mode == AccessBridge.MODE_FAST_PROVISION) {
             onFastPvStateChanged(state, desc, obj);
+        } else if (mode == AccessBridge.MODE_MSG_BROKER) {
+            onMulticastMsgBrokerStateChanged(state, desc, obj);
         }
     }
 
@@ -3063,6 +3089,17 @@ public final class MeshController implements ProvisioningBridge, NetworkingBridg
         }
     }
 
+    private void onMulticastMsgBrokerStateChanged(int state, String desc, Object obj) {
+        if (state == MulticastMessageBroker.ACCESS_ST_NODE_LOST) {
+            // post lost event
+        } else if (state == MulticastMessageBroker.ACCESS_ST_BRK_MSG_COMPLETE) {
+            MulticastMessageBroker.Result re = (MulticastMessageBroker.Result) obj;
+            if (actionMode == Mode.MESH_OTA) {
+                fuController.onMulticastMessageComplete(re.opcode, re.remainingNodes);
+            }
+        }
+    }
+
     /**
      * Sets the event callback for this object.
      *
@@ -3102,7 +3139,6 @@ public final class MeshController implements ProvisioningBridge, NetworkingBridg
      * - MESH_OTA: Represents the mode for mesh firmware updating, specifically for mesh OTA updates.
      * - GATT_CONNECTION: Represents the mode for establishing a GATT connection with a target device.
      * <p>
-     * Please let me know if you need any further clarification.
      */
     public enum Mode {
 
@@ -3121,6 +3157,7 @@ public final class MeshController implements ProvisioningBridge, NetworkingBridg
          * MODE_PROVISION: auto scan, connect, provision
          */
         PROVISION,
+
 
         /**
          * MODE_AUTO_CONNECT: auto scan, connect, get device state

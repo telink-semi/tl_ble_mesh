@@ -6,14 +6,17 @@ android {
         applicationId "com.telink.ble.mesh.demo.rels"
         minSdkVersion 21
         targetSdkVersion 26
-        versionCode 10
-        versionName "4.1.0.3"
+        versionCode 11
+        versionName "4.1.0.4"
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
     }
     buildTypes {
         release {
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+        }
+        debug {
+            debuggable true
         }
     }
     compileOptions {

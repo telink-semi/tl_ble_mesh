@@ -23,6 +23,9 @@
 package com.telink.ble.mesh.model;
 
 
+import com.telink.ble.mesh.entity.ModelPublication;
+import com.telink.ble.mesh.entity.TransitionTime;
+
 import java.io.Serializable;
 
 import io.objectbox.annotation.Entity;
@@ -103,6 +106,18 @@ public class PublishModel implements Serializable {
     // lower 3 bit
     public int getTransmitCount() {
         return (transmit & 0xFF) & 0b111;
+    }
+
+    public static PublishModel fromPublication(ModelPublication publication) {
+        PublishModel publishModel = new PublishModel();
+        publishModel.elementAddress = publication.elementAddress;
+        publishModel.address = publication.publishAddress;
+        publishModel.modelId = publication.modelId;
+        publishModel.transmit = (byte) ((publication.retransmitCount & 0b111) | (publication.retransmitIntervalSteps << 3));
+        publishModel.period = TransitionTime.getTimeMilliseconds(publication.period);
+        publishModel.credential = publication.credentialFlag;
+        publishModel.ttl = publication.ttl;
+        return publishModel;
     }
 
 

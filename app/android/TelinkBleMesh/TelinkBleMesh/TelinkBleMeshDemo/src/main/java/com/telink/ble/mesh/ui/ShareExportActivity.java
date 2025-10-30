@@ -198,7 +198,7 @@ public class ShareExportActivity extends BaseActivity implements View.OnClickLis
     }
 
     private void exportToFile(List<MeshNetKey> selectedKeys) {
-        MeshInfo meshInfo = TelinkMeshApplication.getInstance().getMeshInfo();
+        MeshInfo meshInfo = this.meshInfo;
         File file = MeshStorageService.getInstance().exportMeshToJson(
                 exportDir,
                 MeshStorageService.JSON_FILE,
@@ -244,7 +244,7 @@ public class ShareExportActivity extends BaseActivity implements View.OnClickLis
 
     private List<MeshNetKey> getSelectedNetKeys() {
         List<MeshNetKey> meshNetKeyList = new ArrayList<>();
-        final List<MeshNetKey> netKeyList = TelinkMeshApplication.getInstance().getMeshInfo().meshNetKeyList;
+        final List<MeshNetKey> netKeyList = meshInfo.meshNetKeyList;
         final List<Boolean> selectList = adapter.getSelectList();
         for (int i = 0; i < selectList.size(); i++) {
             if (selectList.get(i)) {

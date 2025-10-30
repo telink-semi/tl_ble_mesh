@@ -55,11 +55,11 @@ import java.util.List;
  */
 public class FileSelectActivity extends AppCompatActivity {
 
-    public static final String KEY_SUFFIX = "com.telink.file.selector.suffix";
+    public static final String EXTRA_SUFFIX = "com.telink.file.selector.EXTRA_SUFFIX";
 
-    public static final String KEY_TITLE = "com.telink.file.selector.title";
+    public static final String EXTRA_TITLE = "com.telink.file.selector.EXTRA_TITLE";
 
-    public static final String KEY_RESULT = "Result";
+    public static final String EXTRA_RESULT = "com.telink.file.selector.EXTRA_RESULT";
 
     private static final int REQUEST_CODE_SEARCH = 0x01;
 
@@ -108,10 +108,10 @@ public class FileSelectActivity extends AppCompatActivity {
         setContentView(R.layout.activity_file_select);
 
         Intent intent = getIntent();
-        if (intent.hasExtra(KEY_SUFFIX)) {
-            fileSuffix = intent.getStringExtra(KEY_SUFFIX);
+        if (intent.hasExtra(EXTRA_SUFFIX)) {
+            fileSuffix = intent.getStringExtra(EXTRA_SUFFIX);
         }
-        initTitle(intent.getStringExtra(KEY_TITLE));
+        initTitle(intent.getStringExtra(EXTRA_TITLE));
         initView();
         getCacheDirPath();
         update();
@@ -200,7 +200,7 @@ public class FileSelectActivity extends AppCompatActivity {
                     FileSelectorCache.saveDirPath(FileSelectActivity.this, mCurrentDir.getAbsolutePath());
                     String filePath = mFiles.get(position).getAbsolutePath();
                     Intent intent = new Intent();
-                    intent.putExtra(KEY_RESULT, filePath);
+                    intent.putExtra(EXTRA_RESULT, filePath);
                     setResult(RESULT_OK, intent);
                     finish();
                 }

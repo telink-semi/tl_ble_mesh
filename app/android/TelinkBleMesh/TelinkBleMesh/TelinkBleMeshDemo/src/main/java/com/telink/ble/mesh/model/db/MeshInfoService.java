@@ -25,9 +25,11 @@ package com.telink.ble.mesh.model.db;
 import com.telink.ble.mesh.model.GroupInfo;
 import com.telink.ble.mesh.model.MeshInfo;
 import com.telink.ble.mesh.model.MeshInfo_;
+import com.telink.ble.mesh.model.NlcUnion;
 import com.telink.ble.mesh.model.NodeInfo;
 import com.telink.ble.mesh.model.NodeLcProps;
 import com.telink.ble.mesh.model.OobInfo;
+import com.telink.ble.mesh.model.PrivateDevice;
 import com.telink.ble.mesh.model.Scene;
 import com.telink.ble.mesh.ui.eh.SwitchAction;
 import com.telink.ble.mesh.util.Arrays;
@@ -40,6 +42,7 @@ import io.objectbox.BoxStore;
 import io.objectbox.query.Query;
 import io.objectbox.query.QueryBuilder;
 
+// todo, rename to DbService
 public class MeshInfoService {
     private static MeshInfoService instance = new MeshInfoService();
     private Box<MeshInfo> meshInfoBox;
@@ -51,6 +54,9 @@ public class MeshInfoService {
     private Query<MeshInfo> meshInfoQuery;
     private Query<OobInfo> oobInfoQuery;
     private Box<SwitchAction> switchActionBox;
+    private Box<NlcUnion> nlcUnionBox;
+    private Box<PrivateDevice> privateDeviceBox;
+
 
     private MeshInfoService() {
     }
@@ -69,6 +75,8 @@ public class MeshInfoService {
         groupInfoBox = store.boxFor(GroupInfo.class);
         switchActionBox = store.boxFor(SwitchAction.class);
         oobInfoQuery = oobInfoBox.query().build();
+        nlcUnionBox = store.boxFor(NlcUnion.class);
+        privateDeviceBox = store.boxFor(PrivateDevice.class);
     }
 
     public MeshInfo getById(long id) {
@@ -121,7 +129,6 @@ public class MeshInfoService {
         MeshLogger.d("updateSwitchAction - " + action.id);
         switchActionBox.put(action);
     }
-
 
 
     public void updateNodeLcProps(NodeLcProps props) {
@@ -184,5 +191,45 @@ public class MeshInfoService {
 
     public void removeNodes(List<NodeInfo> nodes) {
         nodeInfoBox.remove(nodes);
+    }
+
+    public void removeNlcUnion(NlcUnion nlcUnion) {
+        nlcUnionBox.remove(nlcUnion);
+    }
+
+    public void updateNlcUnion(NlcUnion nlcUnion) {
+        MeshLogger.d("updateNlcUnion - " + nlcUnion.id);
+        nlcUnionBox.put(nlcUnion);
+    }
+
+
+    public PrivateDevice getPrivateDevice(long id) {
+        return privateDeviceBox.get(id);
+    }
+
+    public PrivateDevice getPrivateDevice(int pid, int vid) {
+//        privateDeviceBox.query().equal(PrivateDevice_)
+        return null;
+    }
+
+    public PrivateDevice getPrivateDevice(byte[] deviceUUID) {
+        if (deviceUUID.length < 4) return null;
+        int vid = (deviceUUID[0] & 0xFF) + (((deviceUUID[1] & 0xFF) << 8));
+        int pid = (deviceUUID[2] & 0xFF) + (((deviceUUID[3] & 0xFF) << 8));
+
+//        return privateDeviceBox.query().equal(PrivateDevice_);
+        return null;
+    }
+
+    public List<PrivateDevice> getAllPrivateDevices() {
+        return privateDeviceBox.getAll();
+    }
+
+    public void updatePrivateDevice(PrivateDevice... privateDevice) {
+        privateDeviceBox.put(privateDevice);
+    }
+
+    public void removePrivateDevice(PrivateDevice... privateDevices) {
+        privateDeviceBox.remove(privateDevices);
     }
 }

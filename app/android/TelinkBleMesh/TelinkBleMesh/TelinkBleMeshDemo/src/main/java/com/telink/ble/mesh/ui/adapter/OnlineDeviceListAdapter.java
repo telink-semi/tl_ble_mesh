@@ -84,6 +84,7 @@ public class OnlineDeviceListAdapter extends BaseRecyclerViewAdapter<OnlineDevic
         holder.img_icon.setImageResource(IconGenerator.getIcon(device));
         holder.tv_name.setText(device.getName());
         if (device.meshAddress == MeshService.getInstance().getDirectConnectedNodeAddress()) {
+            MeshLogger.d("set primary color : " + device.meshAddress);
             holder.tv_pid.setTextColor(mContext.getResources().getColor(R.color.colorPrimary));
             holder.tv_name.setTextColor(mContext.getResources().getColor(R.color.colorPrimary));
         } else {

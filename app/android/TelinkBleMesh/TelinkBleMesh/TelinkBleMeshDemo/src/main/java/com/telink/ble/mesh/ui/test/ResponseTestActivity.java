@@ -22,7 +22,6 @@
  *******************************************************************************************************/
 package com.telink.ble.mesh.ui.test;
 
-import android.content.DialogInterface;
 import android.os.Bundle;
 import android.os.Handler;
 import android.text.TextUtils;
@@ -100,6 +99,8 @@ public class ResponseTestActivity extends BaseActivity implements View.OnClickLi
      * on/off status received every round
      */
     private int roundRcvCnt = 0;
+
+    private int successCnt = 0;
 
     private long roundStartTime = 0;
 
@@ -210,6 +211,7 @@ public class ResponseTestActivity extends BaseActivity implements View.OnClickLi
             return;
         }
         targetCnt = Integer.parseInt(countInput);
+        successCnt = 0;
         enableUI(false);
         roundStart();
     }
@@ -234,41 +236,41 @@ public class ResponseTestActivity extends BaseActivity implements View.OnClickLi
         cmdType = cmdType == 0 ? 1 : 0;
         int rspMax = TelinkMeshApplication.getInstance().getMeshInfo().getOnlineCountInAll();
         OnOffSetMessage offSetMessage = OnOffSetMessage.getSimple(0xFFFF, appKeyIndex, cmdType, true, rspMax);
+        offSetMessage.setRetryCnt(0);
         offSetMessage.setComplete(true);
         if (!MeshService.getInstance().sendMeshMessage(offSetMessage)) {
             addLog("err: cmd send fail");
-            onRoundComplete(0);
+            onRoundComplete(0, false);
         }
     }
 
-    private Runnable nextRoundTask = new Runnable() {
-        @Override
-        public void run() {
-            roundStart();
-        }
-    };
+    private Runnable nextRoundTask = this::roundStart;
 
     private void clearLog() {
         logs.clear();
         logInfoAdapter.notifyDataSetChanged();
-        if (autoScroll) {
-            rv_log.smoothScrollToPosition(logs.size() - 1);
-        }
+//        if (autoScroll) {
+//            rv_log.smoothScrollToPosition(0);
+//        }
     }
 
 
     /**
      * round complete, prepare for next round
      */
-    private void onRoundComplete(long timeSpent) {
-        addLog("time spent(ms) : " + timeSpent);
-        addLog(String.format(Locale.getDefault(), "round complete (%d) \n\n", testCnt + 1));
+    private void onRoundComplete(long timeSpent, boolean isSuccess) {
+        addLog(String.format(Locale.getDefault(), "time spent(ms) : %d - %s", timeSpent, isSuccess ? "success" : "fail"));
+        if (isSuccess) {
+            successCnt += 1;
+        }
+        addLog(String.format(Locale.getDefault(), "round complete (%d) - success(%d) \n\n", testCnt + 1, successCnt));
         testCnt++;
         if (testCnt < targetCnt) {
             mHandler.postDelayed(nextRoundTask, interval);
         } else {
             addLog(" ===== test complete ===== \n\n");
             testCnt = 0;
+            successCnt = 0;
             enableUI(true);
         }
     }
@@ -303,7 +305,7 @@ public class ResponseTestActivity extends BaseActivity implements View.OnClickLi
             }
             addLog(String.format(Locale.getDefault(), "on/off msg complete :   rspCnt: %d rspMax: %d  success: %b",
                     msgPcEvent.getRspCount(), msgPcEvent.getRspMax(), msgPcEvent.isSuccess()));
-            onRoundComplete(System.currentTimeMillis() - roundStartTime);
+            onRoundComplete(System.currentTimeMillis() - roundStartTime, success);
         }
     }
 

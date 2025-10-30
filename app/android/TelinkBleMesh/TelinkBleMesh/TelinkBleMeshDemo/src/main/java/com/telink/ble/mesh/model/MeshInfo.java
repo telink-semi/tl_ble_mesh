@@ -32,6 +32,7 @@ import com.telink.ble.mesh.SharedPreferenceHelper;
 import com.telink.ble.mesh.TelinkMeshApplication;
 import com.telink.ble.mesh.core.MeshUtils;
 import com.telink.ble.mesh.core.networking.NetworkLayerPDU;
+import com.telink.ble.mesh.core.networking.SolicitationPDU;
 import com.telink.ble.mesh.demo.R;
 import com.telink.ble.mesh.entity.CompositionData;
 import com.telink.ble.mesh.foundation.MeshConfiguration;
@@ -46,8 +47,10 @@ import com.telink.ble.mesh.util.MeshLogger;
 
 import java.io.Serializable;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Locale;
 
 import io.objectbox.annotation.Entity;
@@ -166,19 +169,28 @@ public class MeshInfo implements Serializable, Cloneable {
 
     /**
      * excluded nodes, not show on UI
+     * the deleted device by kick out
      */
     public ToMany<NodeInfo> excludedNodes;
 
-
+    /**
+     * provisioner nodes
+     */
     public ToMany<NodeInfo> provisionerNodes;
 
-    // solicitation sequence number
+    /**
+     * solicitation sequence number
+     * used when sending {@link SolicitationPDU} over ble adv
+     */
     public int solSeq = 1;
 
+
     /**
-     * static-oob info
+     * nlc unions , configured in {@link com.telink.ble.mesh.ui.fragment.NlcUnionListFragment} or import from json.
+     * should export to json
      */
-//    public ToMany<OobInfo> oobInfos;
+    public ToMany<NlcUnion> nlcUnions;
+
     public MeshNetKey getDefaultNetKey() {
         return meshNetKeyList.get(0);
     }
@@ -228,6 +240,10 @@ public class MeshInfo implements Serializable, Cloneable {
         if (local != null) {
             this.removeDeviceByUUID(deviceInfo.deviceUUID);
         }
+
+        if (deviceInfo.name == null) {
+            deviceInfo.addDefaultName();
+        }
         nodes.add(deviceInfo);
         if (updatePvIndex) {
             increaseProvisionIndex(deviceInfo.elementCnt);
@@ -235,7 +251,6 @@ public class MeshInfo implements Serializable, Cloneable {
             saveOrUpdate();
         }
     }
-
 
     public void removeNode(NodeInfo node) {
         if (this.nodes.size() == 0) return;
@@ -245,7 +260,8 @@ public class MeshInfo implements Serializable, Cloneable {
             }
         }
         this.nodes.remove(node);
-        MeshInfoService.getInstance().removeNodeInfo(node);
+        this.excludedNodes.add(node);
+//        MeshInfoService.getInstance().removeNodeInfo(node);
         saveOrUpdate();
     }
 
@@ -280,6 +296,39 @@ public class MeshInfo implements Serializable, Cloneable {
         }
 
         return result;
+    }
+
+    /**
+     * get all online nodes
+     */
+    public List<NodeInfo> getOnlineNodes() {
+        List<NodeInfo> re = new ArrayList<>();
+        if (nodes == null || nodes.size() == 0) {
+            return re;
+        }
+        for (NodeInfo device : nodes) {
+            if (!device.isOffline()) {
+                re.add(device);
+            }
+        }
+        return re;
+    }
+
+
+    /**
+     * get all online nodes
+     */
+    public List<Integer> getOnlineAddresses() {
+        List<Integer> re = new ArrayList<>();
+        if (nodes == null || nodes.size() == 0) {
+            return re;
+        }
+        for (NodeInfo device : nodes) {
+            if (!device.isOffline()) {
+                re.add(device.meshAddress);
+            }
+        }
+        return re;
     }
 
     /**
@@ -585,5 +634,10 @@ public class MeshInfo implements Serializable, Cloneable {
         }
         return null;
     }
+
+    /****************************************************************
+     * nlc union apis
+     ****************************************************************/
+
 }
 

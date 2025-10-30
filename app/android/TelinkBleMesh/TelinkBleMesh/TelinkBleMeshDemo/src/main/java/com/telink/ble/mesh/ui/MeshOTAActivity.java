@@ -478,7 +478,7 @@ public class MeshOTAActivity extends BaseActivity implements View.OnClickListene
                 mDeviceAdapter.setAll(!mDeviceAdapter.allSelected());
                 break;
             case R.id.tv_file_path:
-                startActivityForResult(new Intent(this, FileSelectActivity.class).putExtra(FileSelectActivity.KEY_SUFFIX, ".bin"), REQUEST_CODE_GET_FILE);
+                startActivityForResult(new Intent(this, FileSelectActivity.class).putExtra(FileSelectActivity.EXTRA_SUFFIX, ".bin"), REQUEST_CODE_GET_FILE);
                 break;
         }
     }
@@ -623,7 +623,7 @@ public class MeshOTAActivity extends BaseActivity implements View.OnClickListene
         if (resultCode != Activity.RESULT_OK)
             return;
         if (requestCode == REQUEST_CODE_GET_FILE) {
-            String mPath = data.getStringExtra(FileSelectActivity.KEY_RESULT);
+            String mPath = data.getStringExtra(FileSelectActivity.EXTRA_RESULT);
             MeshLogger.log("select: " + mPath);
             readFirmware(mPath);
         } else if (requestCode == REQUEST_CODE_SELECT_DEVICE) {

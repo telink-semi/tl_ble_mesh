@@ -55,4 +55,14 @@ public class GroupInfo implements Serializable {
     public static int getExtendAddress(int address, int offset) {
         return (address - 0xC000) * 0x10 + 0xD000 + offset; // 0xC000 -> 0xD000
     }
+
+    /**
+     * get formatted name and address
+     * %s(%04X)
+     *
+     * @return
+     */
+    public String getFmtNameAdr() {
+        return String.format("%s(0x%04X)", name, address);
+    }
 }

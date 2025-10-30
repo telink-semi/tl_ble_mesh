@@ -34,6 +34,7 @@ import android.widget.TextView;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.telink.ble.mesh.demo.R;
+import com.telink.ble.mesh.model.LcPropItem;
 import com.telink.ble.mesh.ui.LightingControlActivity;
 
 import java.util.List;
@@ -43,13 +44,17 @@ import java.util.List;
  * Created by Administrator on 2016/10/25.
  */
 public class LcPropertyListAdapter extends BaseRecyclerViewAdapter<LcPropertyListAdapter.ViewHolder> {
-    private List<LightingControlActivity.LcPropItem> propertyList;
+    private List<LcPropItem> propertyList;
     private Context mContext;
+    private LcPropActionHandler actionHandler;
 
-    public LcPropertyListAdapter(Context context, List<LightingControlActivity.LcPropItem> configList) {
+    public LcPropertyListAdapter(Context context, List<LcPropItem> configList, LcPropActionHandler actionHandler) {
         mContext = context;
         this.propertyList = configList;
+        this.actionHandler = actionHandler;
     }
+
+
 
     @Override
     public ViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
@@ -74,7 +79,7 @@ public class LcPropertyListAdapter extends BaseRecyclerViewAdapter<LcPropertyLis
     @Override
     public void onBindViewHolder(ViewHolder holder, int position) {
         super.onBindViewHolder(holder, position);
-        LightingControlActivity.LcPropItem lcProp = propertyList.get(position);
+        LcPropItem lcProp = propertyList.get(position);
         holder.tv_lc_prop_name.setText(lcProp.property.name);
         String def = lcProp.property.def + "\n" + "Characteristic: " + lcProp.property.characteristic;
         holder.tv_prop_def.setText(def);
@@ -105,9 +110,9 @@ public class LcPropertyListAdapter extends BaseRecyclerViewAdapter<LcPropertyLis
         public void onClick(View v) {
             int position = (int) v.getTag();
             if (v.getId() == R.id.btn_get) {
-                ((LightingControlActivity) mContext).onGetTap(position);
+                actionHandler.onGetHandle(position);
             } else if (v.getId() == R.id.btn_set) {
-                ((LightingControlActivity) mContext).onSetTap(position);
+                actionHandler.onSetHandle(position);
             } else if (v.getId() == R.id.ll_expand) {
                 propertyList.get(position).expanded = !propertyList.get(position).expanded;
                 notifyDataSetChanged();
@@ -127,5 +132,11 @@ public class LcPropertyListAdapter extends BaseRecyclerViewAdapter<LcPropertyLis
         public ViewHolder(View itemView) {
             super(itemView);
         }
+    }
+
+    public interface LcPropActionHandler {
+        void onGetHandle(int position);
+
+        void onSetHandle(int position);
     }
 }

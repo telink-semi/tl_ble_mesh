@@ -94,6 +94,8 @@ public class SharedPreferenceHelper {
 
     public static final int PROVISION_MODE_FAST = 3;
 
+    public static final int PROVISION_MODE_NORMAL_CONFIRM = 4;
+
     public static final int DEFAULT_PROVISION_MODE = PROVISION_MODE_NORMAL_SELECTABLE;
 
     public static final int IMPORT_COMPLETE_ACTION_DEFAULT = 0;
@@ -104,6 +106,15 @@ public class SharedPreferenceHelper {
      * sort type
      */
     private static final String KEY_NODE_SORT_TYPE = "com.telink.bluetooth.light.KEY_NODE_SORT_TYPE";
+
+    public static boolean isFirstLoad(Context context) {
+        SharedPreferences sharedPreferences = context.getSharedPreferences(SHARE_PREFERENCE_NAME, Context.MODE_PRIVATE);
+        if (sharedPreferences.contains(KEY_FIRST_LOAD)) {
+            return false;
+        }
+        sharedPreferences.edit().putBoolean(KEY_FIRST_LOAD, false).apply();
+        return true;
+    }
 
     public static boolean isLocationIgnore(Context context) {
         SharedPreferences sharedPreferences = context.getSharedPreferences(SHARE_PREFERENCE_NAME, Context.MODE_PRIVATE);

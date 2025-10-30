@@ -160,6 +160,12 @@
                             android:text="normal(auto)" />
 
                         <RadioButton
+                            android:id="@+id/rb_pv_normal_confirm"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="normal(confirm)" />
+
+                        <RadioButton
                             android:id="@+id/rb_pv_remote"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"

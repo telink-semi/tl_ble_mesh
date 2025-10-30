@@ -123,6 +123,8 @@ public class Parameters {
     public static final String ACTION_MESH_OTA_FIRMWARE = "com.telink.ble.mesh.light.ACTION_MESH_OTA_FIRMWARE";
 
 
+
+
     protected Map<String, Object> mParams;
 
     protected Parameters() {

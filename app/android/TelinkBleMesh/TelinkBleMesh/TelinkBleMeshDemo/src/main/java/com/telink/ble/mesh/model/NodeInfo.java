@@ -26,6 +26,8 @@ import android.os.Handler;
 import android.util.SparseArray;
 import android.util.SparseBooleanArray;
 
+import androidx.annotation.Nullable;
+
 import com.telink.ble.mesh.TelinkMeshApplication;
 import com.telink.ble.mesh.core.MeshUtils;
 import com.telink.ble.mesh.core.message.MeshSigModel;
@@ -43,6 +45,7 @@ import java.io.Serializable;
 import java.nio.ByteOrder;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 import io.objectbox.annotation.Convert;
 import io.objectbox.annotation.Entity;
@@ -208,9 +211,16 @@ public class NodeInfo implements Serializable {
     /**
      * lighting control enabled
      */
+    public boolean lcEnabled = true;
+
+    /**
+     * lighting control properties
+     */
     public ToOne<NodeLcProps> nodeLcProps;
 
-
+    /**
+     *
+     */
     public ToMany<NodeSensorState> sensorStateList;
 
 
@@ -224,6 +234,9 @@ public class NodeInfo implements Serializable {
      */
     public ToMany<SwitchState> switchStates;
 
+    /**
+     * only used for enocean switch device
+     */
     public boolean isFromNfc = false;
 
     @Transient
@@ -255,13 +268,31 @@ public class NodeInfo implements Serializable {
         return publishModel.getTarget() != null;
     }
 
-    public String getName(){
+    public String getName() {
         return name == null ? "Node" : name;
+    }
+
+    public String getFmtNameAdr() {
+        return String.format("%s(0x%04X)", getName(), meshAddress);
     }
 
     public void updateName(String newName) {
         this.name = newName;
         TelinkMeshApplication.getInstance().dispatchEvent(new NodeStatusChangedEvent(TelinkMeshApplication.getInstance(), NodeStatusChangedEvent.EVENT_TYPE_NODE_STATUS_CHANGED, NodeInfo.this));
+    }
+
+    public void addDefaultName() {
+        String addressFormat;
+        if (this.meshAddress <= 0xFF) {
+            addressFormat = String.format("%02X", this.meshAddress);
+        } else {
+            addressFormat = String.format("%04X", this.meshAddress);
+        }
+        if (isSensor()) {
+            this.name = "sensor-" + addressFormat;
+        } else {
+            this.name = "node-" + addressFormat;
+        }
     }
 
     /**
@@ -558,8 +589,26 @@ public class NodeInfo implements Serializable {
         }
     }
 
+
+    /**
+     * the sensor device contains sensor server model, and do not contains lightness server model
+     *
+     * @return
+     */
     public boolean isSensor() {
-        return getTargetEleAdr(MeshSigModel.SIG_MD_SENSOR_S.modelId) != -1;
+        return getTargetEleAdr(MeshSigModel.SIG_MD_SENSOR_S.modelId) != -1
+                && getTargetEleAdr(MeshSigModel.SIG_MD_LIGHTNESS_S.modelId) == -1;
+    }
+
+    /**
+     * contains sensor server model and lightness server model,
+     * because the sensor dose not contains lightness function
+     *
+     * @return
+     */
+    public boolean isGateway() {
+        return getTargetEleAdr(MeshSigModel.SIG_MD_SENSOR_S.modelId) != -1
+                && getTargetEleAdr(MeshSigModel.SIG_MD_LIGHTNESS_S.modelId) != -1;
     }
 
     public NodeSensorState getFirstSensorState() {
@@ -639,6 +688,11 @@ public class NodeInfo implements Serializable {
         } else {
             switchState.state = state;
         }
+    }
+
+
+    public boolean isIdEquals(NodeInfo node){
+        return this.id == node.id;
     }
 
 }

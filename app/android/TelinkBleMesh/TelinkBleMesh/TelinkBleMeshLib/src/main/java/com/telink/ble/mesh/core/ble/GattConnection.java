@@ -1154,6 +1154,19 @@ public class GattConnection extends BluetoothGattCallback {
         }
     }
 
+    /**
+     * this is hidden callback in {@link BluetoothGattCallback}
+     * @param gatt
+     * @param interval
+     * @param latency
+     * @param timeout
+     * @param status
+     */
+    public void onConnectionUpdated(BluetoothGatt gatt, int interval, int latency, int timeout,
+                                    int status) {
+        log(String.format(Locale.getDefault(), "gatt connect updated : interval=%d latency=%d timeout=%d st=%d" , interval, latency, timeout, status));
+    }
+
     boolean refreshed = false;
 
     /**

@@ -22,14 +22,18 @@
  *******************************************************************************************************/
 package com.telink.ble.mesh.core.message;
 
+import androidx.annotation.NonNull;
+
+import com.telink.ble.mesh.core.MeshUtils;
 import com.telink.ble.mesh.core.networking.AccessLayerPDU;
 import com.telink.ble.mesh.core.networking.AccessType;
+import com.telink.ble.mesh.foundation.MulticastMessageBroker;
 
 /**
  * Created by kee on 2019/8/14.
  * This class represents a mesh message.
  */
-public class MeshMessage {
+public class MeshMessage implements Cloneable {
 
     /**
      * access message
@@ -144,6 +148,11 @@ public class MeshMessage {
     protected int tidPosition = -1;
 
     protected boolean isSegmented = false;
+
+    /**
+     * used to set whether the message needs to use a group
+     */
+    protected MulticastMessageBroker.Config brokerConfig;
 
     /**
      * Checks if the message is reliable.
@@ -441,5 +450,30 @@ public class MeshMessage {
      */
     public void setRetryInterval(long retryInterval) {
         this.retryInterval = retryInterval;
+    }
+
+    public boolean useMultiMessageBroker() {
+        return !MeshUtils.validUnicastAddress(getDestinationAddress()) && isReliable() && brokerConfig != null;
+    }
+
+    public MulticastMessageBroker.Config getBrokerConfig() {
+        return brokerConfig;
+    }
+
+    public void setBrokerConfig(MulticastMessageBroker.Config brokerConfig) {
+        this.brokerConfig = brokerConfig;
+    }
+
+    @NonNull
+    @Override
+    public MeshMessage clone() {
+        MeshMessage ist = null;
+        try {
+            ist = (MeshMessage) super.clone();
+        } catch (CloneNotSupportedException e) {
+            e.printStackTrace();
+            ist = this;
+        }
+        return ist;
     }
 }

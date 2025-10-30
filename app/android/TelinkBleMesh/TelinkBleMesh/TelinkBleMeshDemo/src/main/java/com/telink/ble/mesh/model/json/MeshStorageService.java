@@ -35,6 +35,7 @@ import com.telink.ble.mesh.model.GroupInfo;
 import com.telink.ble.mesh.model.MeshAppKey;
 import com.telink.ble.mesh.model.MeshInfo;
 import com.telink.ble.mesh.model.MeshNetKey;
+import com.telink.ble.mesh.model.NlcUnion;
 import com.telink.ble.mesh.model.NodeInfo;
 import com.telink.ble.mesh.model.PublishModel;
 import com.telink.ble.mesh.model.Scene;
@@ -110,29 +111,38 @@ public class MeshStorageService {
             activity.toastMsg("import failed");
             return null;
         }
-
+        syncNlcUnions(newMesh);
         return newMesh;
+    }
 
-        /*MeshInfo localMesh = TelinkMeshApplication.getInstance().getMeshInfo();
-
-        if (localMesh.meshUUID.equalsIgnoreCase(newMesh.meshUUID)) {
-            MeshService.getInstance().idle(true);
-            TelinkMeshApplication.getInstance().setupMesh(newMesh);
-            activity.showTipDialog("Tip",
-                    "import mesh success, mesh UUID is the same, back to home page to reconnect",
-                    (dialog, which) -> {
-                        activity.setResult(Activity.RESULT_OK);
-                        activity.finish();
-                    });
-        } else {
-            activity.showConfirmDialog("import mesh success, mesh UUID is different, switch to the new mesh?", (dialog, which) -> {
-                MeshService.getInstance().idle(true);
-                TelinkMeshApplication.getInstance().setupMesh(newMesh);
-                activity.setResult(Activity.RESULT_OK);
-                activity.finish();
-            });
+    /**
+     * sync {@link com.telink.ble.mesh.model.NlcUnion}
+     *
+     * @param mesh
+     */
+    private void syncNlcUnions(MeshInfo mesh) {
+        List<NlcUnion> unions = mesh.nlcUnions;
+        for (NodeInfo node : mesh.nodes) {
+            if (!node.isSensor()) continue;
+            PublishModel publishModel = node.getPublishModel().getTarget();
+            if (publishModel == null) continue;
+            NlcUnion nlcUnion = getUnionByPubAddress(unions, publishModel.address);
+            if (nlcUnion == null) {
+                nlcUnion = new NlcUnion();
+                nlcUnion.publishPeriod = publishModel.period;
+                nlcUnion.publishAddress = publishModel.address;
+            }
+            nlcUnion.addSensor(node);
         }
-        return true;*/
+    }
+
+    private NlcUnion getUnionByPubAddress(List<NlcUnion> unions, int pubAdr) {
+        for (NlcUnion union : unions) {
+            if (union.publishAddress == pubAdr) {
+                return union;
+            }
+        }
+        return null;
     }
 
 
@@ -773,7 +783,7 @@ public class MeshStorageService {
                     // find the offset ? (C000 + 1000 + ?)
                     MeshSigModel[] levelAssociatedModels = MeshSigModel.getLevelAssociatedList();
                     int levelModelIndex = -1;
-                    if (levelServiceEnable){
+                    if (levelServiceEnable) {
                         for (int j = 0; j < levelAssociatedModels.length; j++) {
                             if (ele.sigModels.contains(MeshSigModel.SIG_MD_G_LEVEL_S.modelId) && ele.sigModels.contains(levelAssociatedModels[j].modelId)) {
                                 levelModelIndex = j;
@@ -1013,7 +1023,8 @@ public class MeshStorageService {
                 .setWeek((byte) nodeScheduler.week)
                 .setAction((byte) nodeScheduler.action)
                 .setTransTime((byte) nodeScheduler.transTime)
-                .setSceneId((short) nodeScheduler.sceneId).build();
+                .setSceneId((short) nodeScheduler.sceneId)
+                .setElementOffset(nodeScheduler.elementOffset).build();
     }
 
 }
