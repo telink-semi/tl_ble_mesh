@@ -83,10 +83,10 @@ typedef struct __attribute__((packed)) {
 
 typedef struct{
 	u32 start_time_s;
-	u32  tick;
-	u32  inter;
-	u8  conn_beacon_flag;
-	u8 	en;
+	u32 tick;
+	u32 inter;
+	u16 conn_handle;
+	u8  en;
 }beacon_send_str;
 
 #define MESH_UNPROVISION_BEACON_WITHOUT_URI	0

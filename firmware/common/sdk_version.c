@@ -29,28 +29,14 @@
  * the replace rules is: "$$$B85m_driver_sdk_"#sdk_version_num"$$$", The "#sdk_version_num"
  * will replace with this macro value.
  */
-#if 0
+#if 1
 volatile __attribute__((section(".sdk_version"))) unsigned char sdk_version[] = {SDK_VERSION(SDK_VERSION_NUM)};
 
-#if(PATCH_NUM)
+#if (PATCH_NUM)
 volatile __attribute__((section(".sdk_version"))) unsigned char patch_version[] = {PATCH_VERSION(PATCH_NUM)};
 #endif
 
-#if(CUSTOM_MAJOR_VERSION||CUSTOM_MINOR_VERSION)
+#if (CUSTOM_MAJOR_VERSION || CUSTOM_MINOR_VERSION)
 volatile __attribute__((section(".sdk_version"))) unsigned char custom_version[] = {CUSTOM_VERSION(CUSTOM_VERSION_NUM)};
 #endif
 #endif
-
-// BLE_SRC_TELINK_MESH_EN
-#define SDK_VER_FLAG	'$','$','$'
-#define SDK_VER_NAME	'b','9','1','_','s','i','g','_','m','e','s','h','_','m','u','l','t','i','_','c','o','n','n','_','s','d','k'
-#define SDK_VER_CHAR	'V',VER_NUM2CHAR(SDK_VER_SPEC),'.',VER_NUM2CHAR(SDK_VER_MAJOR),'.',VER_NUM2CHAR(SDK_VER_MINOR),'.',VER_NUM2CHAR(SDK_VER_2ND_MINOR)
-
-#if SDK_VER_PATCH
-#define SDK_VER_CHAR_PATCH	'.',VER_NUM2CHAR(SDK_VER_PATCH),
-#else
-#define SDK_VER_CHAR_PATCH	
-#endif
-
-volatile __attribute__((section(".sdk_version"))) const unsigned char const_sdk_version[] = {SDK_VER_FLAG,SDK_VER_NAME,'_',SDK_VER_CHAR,SDK_VER_CHAR_PATCH  SDK_VER_FLAG}; // can not extern, due to no loading in cstartup.
-

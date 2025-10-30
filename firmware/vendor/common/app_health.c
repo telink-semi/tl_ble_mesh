@@ -140,6 +140,7 @@ int mesh_cmd_sig_fault_clr(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par)
 		//clear fault sts 
 		memset(model_sig_health.srv.health_mag.fault_sts.fault_array,0,HEALTH_TEST_LEN);
 		model_sig_health.srv.health_mag.fault_sts.cur_fault_idx = 0;
+        mesh_common_store(FLASH_ADR_MD_HEALTH);
 	}
 	if(HEALTH_FAULT_CLEAR_NOACK != cb_par->op){
         err = mesh_tx_cmd_rsp(HEALTH_FAULT_STATUS,(u8 *)(&model_sig_health.srv.health_mag.fault_sts.test_id),OFFSETOF(mesh_health_fault_sts_t,fault_array),p_model->com.ele_adr,cb_par->adr_src,0,0);
@@ -200,6 +201,8 @@ int mesh_cmd_sig_period_set(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par)
 	int err =-1;
 	model_health_common_t *p_model = (model_health_common_t *)cb_par->model;
 	model_sig_health.srv.health_mag.period_sts.fast_period_log = par[0];
+
+    mesh_common_store(FLASH_ADR_MD_HEALTH);
 	if(HEALTH_PERIOD_SET_NOACK != cb_par->op){
 		err = mesh_tx_cmd_rsp(HEALTH_PERIOD_STATUS,(u8 *)(&model_sig_health.srv.health_mag.period_sts.fast_period_log),sizeof(mesh_health_period_status_t),p_model->com.ele_adr,cb_par->adr_src,0,0);
 	}
@@ -242,6 +245,8 @@ int mesh_cmd_sig_attention_set(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par)
 
 	model_health_common_t *p_model = (model_health_common_t *)cb_par->model;
 	model_sig_health.srv.health_mag.attention_timer = par[0];
+
+    mesh_common_store(FLASH_ADR_MD_HEALTH);
 	if(HEALTH_ATTENTION_SET_NOACK != cb_par->op){
 		err = mesh_tx_cmd_rsp(HEALTH_ATTENTION_STATUS,(u8 *)(&model_sig_health.srv.health_mag.attention_timer),1,p_model->com.ele_adr,cb_par->adr_src,0,0);
 	}

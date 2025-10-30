@@ -597,7 +597,11 @@ enum{
 #endif
 
 typedef struct __attribute__((packed)) {
+#if((MCU_CORE_TYPE == MCU_CORE_8258) || (MCU_CORE_TYPE == MCU_CORE_8278) || (MCU_CORE_TYPE == MCU_CORE_B91)) // compatible with previous version.
     u8  rfu[0x41];
+#else
+    u8  rfu[8];
+#endif
     u8  dual_vendor_st;    // only use for dual vendor
 	u8 	gatt_mode; 
 	u8  pro_stop_flag;

@@ -34,6 +34,8 @@
 #if (LIGHT_TYPE_SEL == LIGHT_TYPE_XYL)
 model_light_xyl_t       model_sig_light_xyl;
 
+STATIC_ASSERT(sizeof(model_light_xyl_t) <= (4096 - 48));    // only one sector to save
+
 /*
 	lighting model command callback function ----------------
 */

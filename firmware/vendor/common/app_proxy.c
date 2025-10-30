@@ -326,16 +326,21 @@ int proxy_out_ccc_cb(u16 connHandle, void *p)
 int proxy_out_ccc_cb(void *p)
 #endif
 {
+    #if !BLE_MULTIPLE_CONNECTION_ENABLE
+    u16 connHandle = BLS_CONN_HANDLE;
+    #endif
+
 	rf_packet_att_data_t *pw = (rf_packet_att_data_t *)p;
 	proxy_Out_ccc[0] = pw->dat[0];
 	proxy_Out_ccc[1] = pw->dat[1];
-	beacon_send.conn_beacon_flag =1;
+	beacon_send.conn_handle = connHandle;
 	beacon_send.tick = clock_time();
 
+#if 0 // move to mesh_beacon_send_proc() in loop to avoid service discovery busy in extended adv mode
 	if (proxy_Out_ccc[0]==1 && proxy_Out_ccc[1]==0){
 		if(is_provision_success()){
 			mesh_tx_sec_private_beacon_proc(1);// send conn beacon to the provisioner		 
-			beacon_send.conn_beacon_flag =0;						
+			beacon_send.conn_handle =0;						
 		}
 					
 		#if (MD_DF_CFG_SERVER_EN && !defined(WIN32))
@@ -345,7 +350,8 @@ int proxy_out_ccc_cb(void *p)
 		mesh_directed_proxy_capa_report_upon_connection(connHandle); // report after security network beacon.
 		#endif
 	}
-	
+#endif
+
 	return 1;	
 }
 

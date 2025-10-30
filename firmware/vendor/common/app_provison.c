@@ -23,7 +23,7 @@
  *
  *******************************************************************************************************/
 #include "tl_common.h"
-#include "proj_lib/ble/blt_config.h"
+#include "stack/ble/ble.h"
 #include "app_provison.h"
 #include "app_beacon.h"
 #include "proj_lib/mesh_crypto/le_crypto.h"
@@ -58,7 +58,7 @@ pro_para_mag  provision_mag;
 u8 prov_link_cls_code;
 u8 prov_link_uuid[16];
 u8 para_pro[PROVISION_GATT_MAX_LEN]; //it's also used in proxy_gatt_Write(), but network payload is less then 31, because it will be relayed directly.
-u8 para_len;
+u8 para_len = 0;
 
 #define OFFSET_START	0x1F
 #define OFFSET_CON		0x17
@@ -187,7 +187,7 @@ int set_adv_provisioner(rf_packet_adv_t * p)
 	#endif
 	
 	p->header.type = LL_TYPE_ADV_IND;
-	memcpy(p->advA,tbl_mac,6);
+	set_adv_addr(GATT_ADV_HANDLE, tbl_mac, BLE_ADDR_PUBLIC);
 	memcpy(p->data, provisioner_advData, sizeof(provisioner_advData));
 	p->rf_len = 6 + sizeof(provisioner_advData);
 	p->dma_len = p->rf_len + 2;	
@@ -216,7 +216,7 @@ int set_adv_solicitation(rf_packet_adv_t * p)
 		memcpy(&soli_pkt.service_data, &soli_service_data, sizeof(soli_pkt.service_data));
 		
 		p->header.type = LL_TYPE_ADV_NONCONN_IND;
-		memcpy(p->advA,tbl_mac,6);	
+		set_adv_addr(GATT_ADV_HANDLE, tbl_mac, BLE_ADDR_PUBLIC);
 		memcpy(p->data, &soli_pkt, sizeof(soli_pkt));
 		p->rf_len = 6 + sizeof(soli_pkt);
 		p->dma_len = p->rf_len + 2;	
@@ -235,7 +235,7 @@ void set_adv_provision(rf_packet_adv_t * p)
     blc_ll_setExtAdvEnable(BLC_ADV_ENABLE, GATT_ADV_HANDLE, 0, 0);
 #else
 	p->header.type = LL_TYPE_ADV_IND;
-	memcpy(p->advA,tbl_mac,6);
+    set_adv_addr(GATT_ADV_HANDLE, tbl_mac, BLE_ADDR_PUBLIC);
 	p->rf_len = 6 + 29;
 	p->dma_len = p->rf_len + 2;	
 #endif
@@ -246,7 +246,7 @@ void set_adv_provision(rf_packet_adv_t * p)
 void set_adv_uri_unprov_beacon(rf_packet_adv_t * p)
 {
 	p->header.type = LL_TYPE_ADV_NONCONN_IND;
-	memcpy(p->advA,tbl_mac,6);
+    set_adv_addr(GATT_ADV_HANDLE, tbl_mac, BLE_ADDR_PUBLIC);
 	u8 uri_data[]=URI_DATA;
 	p->data[0]=1+sizeof(uri_data);
 	p->data[1]=AD_TYPE_URI;
@@ -257,15 +257,6 @@ void set_adv_uri_unprov_beacon(rf_packet_adv_t * p)
 #endif
 
 #ifndef WIN32
-#if !BLE_MULTIPLE_CONNECTION_ENABLE
-void set_adv_addr(u8 *addr, u8 addr_type)
-{
-    pkt_adv.header.txAddr = pkt_scan_rsp.header.txAddr = addr_type;
-    memcpy(pkt_adv.advA,     addr, BLE_ADDR_LEN);
-    memcpy(pkt_scan_rsp.advA, addr, BLE_ADDR_LEN);
-}
-#endif
-
 u8 set_adv_proxy(rf_packet_adv_t * p)
 {
 	u8 dat_len =0;
@@ -283,11 +274,11 @@ u8 set_adv_proxy(rf_packet_adv_t * p)
 		p->header.type = LL_TYPE_ADV_IND;
 		#if (MD_PRIVACY_BEA && PRIVATE_PROXY_FUN_EN) // set to be RPA in private mode.
 		if(mesh_get_proxy_privacy_para()){
-            set_adv_addr(prov_para.priv_non_resolvable, BLE_ADDR_RANDOM);
+            set_adv_addr(GATT_ADV_HANDLE, prov_para.priv_non_resolvable, BLE_ADDR_RANDOM);
 		}else
 		#endif
 		{
-		    set_adv_addr(tbl_mac, BLE_ADDR_PUBLIC);
+		    set_adv_addr(GATT_ADV_HANDLE, tbl_mac, BLE_ADDR_PUBLIC);
 		}
         
         #if (BLE_MULTIPLE_CONNECTION_ENABLE && EXTENDED_ADV_ENABLE)
@@ -331,7 +322,7 @@ void set_private_mesh_adv(rf_packet_adv_t * p)
 	memcpy(p_manu->mac, tbl_mac, 4);
 
 	p->header.type = LL_TYPE_ADV_IND;
-	memcpy(p->advA,tbl_mac,6);
+    set_adv_addr(GATT_ADV_HANDLE, tbl_mac, BLE_ADDR_PUBLIC);
 	p->rf_len = 6 + p_adv->flag_len+p_adv->name_len+p_manu->manu_len+3;
 	p->dma_len = p->rf_len + 2; 
 }

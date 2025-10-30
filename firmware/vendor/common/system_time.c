@@ -23,8 +23,7 @@
  *
  *******************************************************************************************************/
 #include "tl_common.h"
-#include "proj_lib/ble/blt_config.h"
-#include "vendor/common/user_config.h"
+#include "stack/ble/ble.h"
 #include "app_health.h"
 #include "proj_lib/sig_mesh/app_mesh.h"
 #include "vendor/common/time_model.h"
@@ -47,7 +46,7 @@
 #define __PROJECT_MESH_SWITCH__     0
 #endif
 
-#if GW_SMART_PROVISION_REMOTE_CONTROL_PM_EN
+#if ((FEATURE_LOWPOWER_EN && LPN_LONG_SLEEP_WAKEUP_EN) || GW_SMART_PROVISION_REMOTE_CONTROL_PM_EN)
 #define MESH_LONG_SLEEP_WAKEUP_EN	1
 #endif
 
@@ -77,9 +76,9 @@ u32 system_time_tick;
 #elif MESH_LONG_SLEEP_WAKEUP_EN
 #define CHECK_INTERVAL      (32)  		 // 32k tick of 1ms
 #elif RTC_USE_32K_RC_ENABLE
-#define CHECK_INTERVAL      (500*CLOCK_16M_SYS_TIMER_CLK_1MS)
+#define CHECK_INTERVAL      (500*CLOCK_SYS_TIMER_CLK_1MS)
 #else
-#define CHECK_INTERVAL      (1 * CLOCK_SYS_CLOCK_1MS) // must 1ms, because light_transition_proc() need 1ms tick.
+#define CHECK_INTERVAL      (1 * CLOCK_SYS_TIMER_CLK_1MS) // must 1ms, because light_transition_proc() need 1ms tick.
 #endif
 
 #define RTC_LEFT_MS 	(system_time_ms%1000+(tick_32k-tick_32k_begin)/32)
@@ -189,13 +188,13 @@ void system_time_run(void){
 			delta = 0; // not necessary. due to have been sure not happen here. // skip this round and wait until (tick_16m_begin > tick_last).
 		}
 		
-		u32 interval_cnt = delta/CLOCK_SYS_CLOCK_1MS;
+		u32 interval_cnt = delta/CLOCK_SYS_TIMER_CLK_1MS;
 		if(interval_cnt){		
-			tick_32k_to_16m += interval_cnt*CLOCK_SYS_CLOCK_1MS;
-			if(rtc_adjust_flag){ // Note: if no sleep for a long time, no need compentation.
-				rtc_adjust_flag = 0;
-				interval_cnt -= 13;// minus 13ms per minute				
-			}
+			tick_32k_to_16m += interval_cnt*CLOCK_SYS_TIMER_CLK_1MS;
+//			if(rtc_adjust_flag){ // Note: if no sleep for a long time, no need compentation.
+//				rtc_adjust_flag = 0;
+//				interval_cnt -= 13;// minus 13ms per minute				
+//			}
 		}
 		#else
         u32 interval_cnt = t_delta/CHECK_INTERVAL;

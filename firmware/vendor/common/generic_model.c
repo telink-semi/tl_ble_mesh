@@ -1896,8 +1896,6 @@ int mesh_search_model_id_by_op(mesh_op_resource_t *op_res, u16 op, u8 tx_flag)
         }else{
             return mesh_search_model_id_by_op_vendor(op_res, op, tx_flag);
         }
-#elif (VENDOR_MD_MI_EN)
-        return mi_mesh_search_model_id_by_op_vendor(op_res, op, tx_flag);
 #else
         return mesh_search_model_id_by_op_vendor(op_res, op, tx_flag);
 #endif
@@ -1926,8 +1924,6 @@ int is_cmd_with_tid(u8 *tid_pos_out, u16 op, u8 *par, u8 tid_pos_vendor_app)
         }else{
             cmd_with_tid = is_cmd_with_tid_vendor(tid_pos_out, op, par, tid_pos_vendor_app);
         }
-#elif (VENDOR_MD_MI_EN)
-        cmd_with_tid = is_mi_cmd_with_tid_vendor(tid_pos_out, op, tid_pos_vendor_app);
 #else
         cmd_with_tid = is_cmd_with_tid_vendor(tid_pos_out, op, par, tid_pos_vendor_app);
 #endif
@@ -2412,33 +2408,16 @@ u8* mesh_find_ele_resource_in_model(u16 ele_adr, u32 model_id, bool4 sig_model, 
         IF_find_ele_resource(p_model,g_vendor_md_light_vc_c,model_vd_light.clnt);
     #endif
 #else
-    #if (VENDOR_MD_MI_EN)
-        u32 model_vd_id_srv = MIOT_SEPC_VENDOR_MODEL_SRV;
-        u32 model_vd_id_srv2 = MIOT_VENDOR_MD_SRV;
-        #if MD_CLIENT_VENDOR_EN
-        u32 model_vd_id_clnt = MIOT_SEPC_VENDOR_MODEL_CLI;
-        #endif
-        #if (DUAL_VENDOR_EN)
-        if(DUAL_VENDOR_ST_ALI == provision_mag.dual_vendor_st){
-            model_vd_id_srv = VENDOR_MD_LIGHT_S;
-            model_vd_id_srv2 = VENDOR_MD_LIGHT_S2;
-            #if MD_CLIENT_VENDOR_EN
-            model_vd_id_clnt = VENDOR_MD_LIGHT_C;
-            #endif
-        }
-        #endif
-    #else
-        #if MD_SERVER_EN
-        u32 model_vd_id_srv = VENDOR_MD_LIGHT_S;
-            #if MD_VENDOR_2ND_EN
-        u32 model_vd_id_srv2 = VENDOR_MD_LIGHT_S2;
-            #endif
-        #endif
-        #if MD_CLIENT_VENDOR_EN
-        u32 model_vd_id_clnt = VENDOR_MD_LIGHT_C;
+    #if MD_SERVER_EN
+    u32 model_vd_id_srv = VENDOR_MD_LIGHT_S;
+        #if MD_VENDOR_2ND_EN
+    u32 model_vd_id_srv2 = VENDOR_MD_LIGHT_S2;
         #endif
     #endif
-    
+    #if MD_CLIENT_VENDOR_EN
+    u32 model_vd_id_clnt = VENDOR_MD_LIGHT_C;
+    #endif
+
     #if MD_SERVER_EN
         IF_find_ele_resource(p_model,model_vd_id_srv,model_vd_light.srv);
         #if MD_VENDOR_2ND_EN
@@ -2558,11 +2537,7 @@ void mesh_model_cb_pub_st_register(void)
 			#endif
 		#endif
     	#if MD_VENDOR_2ND_EN
-            #if (VENDOR_MD_MI_EN)
-    MODEL_PUB_ST_CB_INIT(model_vd_light.srv2, &mi_vd_light_onoff_st_publish2);
-            #else // (VENDOR_MD_NORMAL_EN)
 	//MODEL_PUB_ST_CB_INIT(model_vd_light.srv2, &vd_light_onoff_st_publish2); // active later
-	        #endif
     	#endif
     #endif
 }

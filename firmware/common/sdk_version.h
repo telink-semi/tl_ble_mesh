@@ -28,56 +28,41 @@
  * It is only used by SDK, and the customer is not allowed to modify it
  */
 
+/*****************************ble stack version**************************/
 // Version : CERTIFICATION_MARK.SOFT_STRUCTURE.Major.Minor Patch
-#define CERTIFICATION_MARK          4
-#define SOFT_STRUCTURE              0
-#define MAJOR_VERSION               4
-#define MINOR_VERSION               1
-#define PATCH_NUM                   0
+#define CERTIFICATION_MARK   4
+#define SOFT_STRUCTURE       0
+#define MAJOR_VERSION        4
+#define MINOR_VERSION        4
 
-#define CUSTOM_MAJOR_VERSION        0
-#define CUSTOM_MINOR_VERSION        0
+/*****************************mesh stack version************************/
+// mesh stack version. // BLE_SRC_TELINK_MESH_EN
+#define SDK_VER_SPEC         4 // SDK version, don't change!!! //"3" means SIG MESH 1.0.x
+#define SDK_VER_MAJOR        2 // SDK version, don't change!!! 
+#define SDK_VER_MINOR        0 // SDK version, don't change!!! 
+#define SDK_VER_2ND_MINOR    2 // SDK version, don't change!!!    // second minor
+#define PATCH_NUM            0
+
+#define CUSTOM_MAJOR_VERSION 0
+#define CUSTOM_MINOR_VERSION 0
 
 /*
  * Release Tool need to change this macro to match the release version,
  * the replace rules is: "$$$B91m_driver_sdk_"#sdk_version_num"$$$", The "#sdk_version_num"
  * will replace with this macro value.
  */
-#if (MCU_CORE_TYPE == MCU_CORE_B91)
-    #define B91_SDK_VERSION_NUM             CERTIFICATION_MARK.SOFT_STRUCTURE.MAJOR_VERSION.MINOR_VERSION
-    #define SDK_VERSION_NUM                 B91_SDK_VERSION_NUM
+#define TL_BLE_MESH_VERSION_NUM             SDK_VER_SPEC.SDK_VER_MAJOR.SDK_VER_MINOR.SDK_VER_2ND_MINOR
+#define SDK_VERSION_NUM                     TL_BLE_MESH_VERSION_NUM
 
-    #define SDK_VERSION1(sdk_version_num)   "$$$B91_ble_multiple_connection_sdk_V"#sdk_version_num"$$$"
-#elif (MCU_CORE_TYPE == MCU_CORE_B92)
-    #define B92_SDK_VERSION_NUM             CERTIFICATION_MARK.SOFT_STRUCTURE.MAJOR_VERSION.MINOR_VERSION
-    #define SDK_VERSION_NUM                 B92_SDK_VERSION_NUM
-
-    #define SDK_VERSION1(sdk_version_num)   "$$$B92_ble_multiple_connection_sdk_V"#sdk_version_num"$$$"
-#elif (MCU_CORE_TYPE == MCU_CORE_TL751X)
-    #define B92_SDK_VERSION_NUM             CERTIFICATION_MARK.SOFT_STRUCTURE.MAJOR_VERSION.MINOR_VERSION
-    #define SDK_VERSION_NUM                 B92_SDK_VERSION_NUM
-
-    #define SDK_VERSION1(sdk_version_num)   "$$$TL751X_ble_multiple_connection_sdk_V"#sdk_version_num"$$$"
-#else //tercel and buteo
-    #define TL_BLE_SDK_VERSION_NUM              CERTIFICATION_MARK.SOFT_STRUCTURE.MAJOR_VERSION.MINOR_VERSION
-    #define SDK_VERSION_NUM                     TL_BLE_SDK_VERSION_NUM
-
-    #define SDK_VERSION1(sdk_version_num)   "$$$tl_ble_sdk_V"#sdk_version_num"$$$"
-#endif
+#define SDK_VERSION1(sdk_version_num)       "$$$tl_ble_mesh_V"#sdk_version_num"$$$"
 
 
-#define SDK_VERSION(sdk_version_num)                SDK_VERSION1(sdk_version_num)
+#define SDK_VERSION(sdk_version_num)         SDK_VERSION1(sdk_version_num)
 
-#define PATCH_VERSION1(patch_num)                   "$$$patch_"#patch_num"$$$"
-#define PATCH_VERSION(patch_num)                    PATCH_VERSION1(patch_num)
+#define PATCH_VERSION1(patch_num)            "$$$patch_" #patch_num "$$$"
+#define PATCH_VERSION(patch_num)             PATCH_VERSION1(patch_num)
 
-#define CUSTOM_VERSION_NUM                          CUSTOM_MAJOR_VERSION.CUSTOM_MINOR_VERSION
+#define CUSTOM_VERSION_NUM                   CUSTOM_MAJOR_VERSION.CUSTOM_MINOR_VERSION
 
-#define CUSTOM_VERSION1(cunstom_version_num)        "$$$custom_"#cunstom_version_num"$$$"
-#define CUSTOM_VERSION(cunstom_version_num)         CUSTOM_VERSION1(cunstom_version_num)
-
-// BLE_SRC_TELINK_MESH_EN
-#define SDK_VER_SPEC			(4)		// SDK version, don't change!!! //"3" means SIG MESH 1.0.x
-#define SDK_VER_MAJOR			(2)		// SDK version, don't change!!! 
-#define SDK_VER_MINOR			(0)		// SDK version, don't change!!! 
-#define SDK_VER_2ND_MINOR		(1)		// SDK version, don't change!!!	// second minor
+#define CUSTOM_VERSION1(cunstom_version_num) "$$$custom_" #cunstom_version_num "$$$"
+#define CUSTOM_VERSION(cunstom_version_num)  CUSTOM_VERSION1(cunstom_version_num)

@@ -21,7 +21,7 @@
  *          limitations under the License.
  *
  *******************************************************************************************************/
-#pragma  once
+#pragma once
 
 
 #include "common/types.h"
@@ -29,30 +29,29 @@
 
 
 /**
- * @brief		This function serves to get the available heap size.
- * @param[in]	none.
+ * @brief       This function serves to get the available heap size.
+ * @param[in]   none.
  * @return      Size of available heap.
  */
 u32 tlk_get_available_heap_size(void);
 
 /**
- * @brief		This function serves to get the used heap size.
- * @param[in]	none.
+ * @brief       This function serves to get the used heap size.
+ * @param[in]   none.
  * @return      Used heap size.
  */
 u32 tlk_get_used_heap_size(void);
 
 /**
- * @brief		This function serves alloc heap memory.
- * @param[in]	size - heap memory need to allocated.
+ * @brief       This function serves alloc heap memory.
+ * @param[in]   size - heap memory need to allocated.
  * @return      none.
  */
 u8 tlk_heap_alloc(u32 size);
 
 /**
- * @brief		This function serves get next available heap memory.
- * @param[in]	none.
+ * @brief       This function serves get next available heap memory.
+ * @param[in]   none.
  * @return      Address of the start of heap memory.
  */
 void *tlk_get_heap_free_startAddr(void);
-

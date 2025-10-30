@@ -451,7 +451,7 @@ int pairRead(u16 connHandle, void* p)
 #define MAX_SERVICE_PROVISION           (9)
 #define MAX_SERVICE_PROXY               (9)
 #define MAX_USER_DEFINE_SET_CCC_ATT_NUM (USER_DEFINE_SET_CCC_ENABLE ? 4 : 0)
-#define MAX_MI_ATT_NUM                  (MI_API_ENABLE ? 41 : 0)
+#define MAX_MI_ATT_NUM                  (0)
 #define MAX_SERVICE_CHANGE_ATT_NUM      (5)
 #define MAX_SERVICE_PRIVATE_MESH		(DUAL_MESH_SIG_PVT_EN ? 4 : 0)
 #if DU_ENABLE

@@ -31,6 +31,7 @@
 #if(MD_SENSOR_EN || MD_BATTERY_EN || MD_LOCATION_EN) 
 u32 mesh_md_sensor_addr = FLASH_ADR_MD_SENSOR;
 model_sensor_t			model_sig_sensor;
+STATIC_ASSERT(sizeof(model_sensor_t) <= (4096 - 48));    // only one sector to save
 #endif
 
 #if(MD_SENSOR_EN)

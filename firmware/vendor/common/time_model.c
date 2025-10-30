@@ -306,7 +306,7 @@ u32 get_local_TAI(void)
     return (g_TAI_sec + get_time_zone_offset_min(mesh_time.time.zone_offset)*60);
 }
 
-#define MESH_TIME_CHECK_INTERVAL    (1 * CLOCK_SYS_CLOCK_1S)
+#define MESH_TIME_CHECK_INTERVAL    (1 * CLOCK_SYS_TIMER_CLK_1S)
 
 void mesh_time_proc(void)
 {

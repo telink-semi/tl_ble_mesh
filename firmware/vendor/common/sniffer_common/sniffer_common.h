@@ -27,9 +27,9 @@
 
 /**
  * @brief      This function is used to set memory buffer's value (like memset)
- * @param[in]  pd:		Start address of destination buffer
- * @param[in]  val: 	set value
- * @param[in]  len:		set value length
+ * @param[in]  pd:      Start address of destination buffer
+ * @param[in]  val:     set value
+ * @param[in]  len:     set value length
  * @param[in]  dst_max_len: destination buffer's max length
  * @param[in]  error_code: default error code used if set value length greater than destination buffer's max length
  * @return     none:
@@ -39,14 +39,19 @@ void blc_app_memory_set(void *pd, int val, unsigned int len, unsigned int dst_ma
 
 /**
  * @brief      This function is used to copy memory buffer's value (like memcpy)
- * @param[in]  pd:		Start address of destination buffer
- * @param[in]  ps:		Start address of the source buffer
- * @param[in]  len: 	copy data length
+ * @param[in]  pd:      Start address of destination buffer
+ * @param[in]  ps:      Start address of the source buffer
+ * @param[in]  len:     copy data length
  * @param[in]  dst_max_len: destination buffer's max length
  * @param[in]  error_code: default error code used if copy data length greater than destination buffer's max length
  * @return     none:
  */
 void blc_app_memory_copy(void *pd, const void *ps, unsigned int len, unsigned int dst_max_len, unsigned int error_code);
 
+/**
+ * @brief      This function is used to user operate reboot at the application layer
+ * @return     none:
+ */
+void app_start_reboot(void);
 
 #endif /* VENDOR_COMMON_SNF_COMMON_H_ */

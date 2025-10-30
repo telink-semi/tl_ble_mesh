@@ -46,7 +46,7 @@ void uart_debug_init(void)
     uart_clr_irq_status(DEBUG_UART_CHANNEL,UART_TXDONE_IRQ_STATUS);
     dma_clr_irq_mask(TLKAPI_DEBUG_UART_TX_DMA, TC_MASK|ABT_MASK|ERR_MASK);
 
-    //uart_set_rx_timeout(DEBUG_UART_CHANNEL, bwpc, 12, UART_BW_MUL1);
+    //uart_set_rx_timeout_with_exp(DEBUG_UART_CHANNEL, bwpc, 12, UART_BW_MUL1);
 
     uart_set_irq_mask(DEBUG_UART_CHANNEL, UART_TXDONE_MASK);
     if (DEBUG_UART_CHANNEL == UART0){

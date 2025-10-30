@@ -28,6 +28,13 @@
 #include "types.h"
 
 
+#ifndef USE_DRIVER_PM
+    #define USE_DRIVER_PM  0
+#endif
+
+#ifndef _2P4G_DEMO_
+    #define _2P4G_DEMO_  0
+#endif
 
 #define DEEPSLEEP_RAM_SIZE_TO_MODE(ram_size)  ram_size==0x8000? DEEPSLEEP_MODE_RET_SRAM_LOW32K: (ram_size==0x10000)? DEEPSLEEP_MODE_RET_SRAM_LOW64K:DEEPSLEEP_MODE_RET_SRAM_LOW96K
 
@@ -35,7 +42,7 @@ typedef int (*cpu_pm_handler_t)(pm_sleep_mode_e sleep_mode,  pm_sleep_wakeup_src
 extern  cpu_pm_handler_t            cpu_sleep_wakeup;
 
 
-#define DEFAULT_DEEPSLEEP_MODE_RET_SRAM_SIZE  DEEPSLEEP_MODE_RET_SRAM_LOW96K // DEEPSLEEP_MODE_RET_SRAM_LOW64K // BLE_SRC_TELINK_MESH_EN
+#define DEFAULT_DEEPSLEEP_MODE_RET_SRAM_SIZE  DEEPSLEEP_MODE_RET_SRAM_LOW96K // BLE_SRC_TELINK_MESH_EN
 
 /**
  * @brief   deepsleep wakeup by external xtal

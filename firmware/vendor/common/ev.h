@@ -111,7 +111,7 @@ typedef struct ev_loop_ctrl_t{
 }ev_loop_ctrl_t;
 
 #endif 
-enum { EV_TIMER_SAFE_MARGIN_US = 40000000, EV_TIMER_SAFE_MARGIN = (EV_TIMER_SAFE_MARGIN_US * CLOCK_SYS_CLOCK_1US) };		// in us,  
+enum { EV_TIMER_SAFE_MARGIN_US = 40000000, EV_TIMER_SAFE_MARGIN = (EV_TIMER_SAFE_MARGIN_US * CLOCK_SYS_TIMER_CLK_1US) };		// in us,  
 typedef enum{
 	EV_SUSPEND_NOTIFY,
 	EV_WAKEUP_NOTIFY,

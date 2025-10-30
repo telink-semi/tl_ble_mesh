@@ -23,12 +23,7 @@
  *******************************************************************************************************/
 #include "tl_common.h"
 #include "drivers.h"
-#if(MCU_CORE_TYPE == MCU_CORE_8278)
-#include "stack/ble_8278/ble.h"
-#else
 #include "stack/ble/ble.h"
-#endif
-#include "app.h"
 #include "app_ui.h"
 #include "proj_lib/sig_mesh/app_mesh.h"
 #include "vendor/common/subnet_bridge.h"
@@ -185,17 +180,38 @@ void mesh_proc_keyboard(u8 e, u8 *p, int n)
 			#if (DF_TEST_MODE_EN)
 			static u8 onoff;	
 			if(KEY_SW2 == kb_event.keycode[0]){ // dispatch just when you press the button 
-				foreach(i, MAX_FIXED_PATH){
-					path_entry_com_t *p_fwd_entry = &model_sig_g_df_sbr_cfg.df_cfg.fixed_fwd_tbl[0].path[i];
-					if(is_ele_in_node(ele_adr_primary, p_fwd_entry->path_origin, p_fwd_entry->path_origin_snd_ele_cnt+1)){
-						access_cmd_onoff(p_fwd_entry->destination, 0, onoff, CMD_NO_ACK, 0);
-						onoff = !onoff;
-						break;
-					}
-				}
+                path_entry_com_t *p_fwd_entry = get_fixed_path_entry_by_origin(0, ele_adr_primary);
+                if(p_fwd_entry){
+                    access_cmd_onoff(p_fwd_entry->destination, 0, onoff, CMD_NO_ACK, 0);
+                    onoff = !onoff;
+                }
 			}
 			#endif
 
+            #if (MESH_RX_TEST)
+            if(KEY_SW1 == kb_event.keycode[0]){
+                if(MESH_RX_TEST_RF_POWER_P10dBm == my_rf_power_index){
+                    rf_set_power_level_index (MESH_RX_TEST_RF_POWER_P3dBm);
+                    my_rf_power_index = MESH_RX_TEST_RF_POWER_P3dBm;
+                }
+                else if(MESH_RX_TEST_RF_POWER_P3dBm == my_rf_power_index){
+                    rf_set_power_level_index (MESH_RX_TEST_RF_POWER_P0dBm); 
+                    my_rf_power_index = MESH_RX_TEST_RF_POWER_P0dBm;
+                }
+                else if(MESH_RX_TEST_RF_POWER_P0dBm == my_rf_power_index){
+                    rf_set_power_level_index (MESH_RX_TEST_RF_POWER_N25dBm);
+                    my_rf_power_index = MESH_RX_TEST_RF_POWER_N25dBm;
+                }
+                else if(MESH_RX_TEST_RF_POWER_N25dBm == my_rf_power_index){
+                    rf_set_power_level_index (MESH_RX_TEST_RF_POWER_P10dBm);
+                    my_rf_power_index = MESH_RX_TEST_RF_POWER_P10dBm;
+                }
+
+                flash_erase_sector(MESH_RX_TEST_RF_POWER_ADDR);
+                flash_write_page(MESH_RX_TEST_RF_POWER_ADDR, sizeof(my_rf_power_index), &my_rf_power_index);
+			}
+            #endif
+            
 			#if IV_UPDATE_TEST_EN
 			mesh_iv_update_test_initiate(kb_event.keycode[0]);
 			#endif

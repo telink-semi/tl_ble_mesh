@@ -53,17 +53,16 @@
  **/
 const flash_hal_handler_t flash_list[] = {
     //1M
-    {0x146085,flash_get_lock_block_mid146085, flash_unlock_mid146085, flash_lock_mid146085,FLASH_LOCK_LOW_512K_MID146085,flash_write_status_mid146085,FLASH_WRITE_STATUS_QE_MID146085,FLASH_QE_ENABLE_MID146085,FLASH_QE_DISABLE_MID146085},
+    {0x146085, flash_get_lock_block_mid146085, flash_unlock_mid146085, flash_lock_mid146085, FLASH_LOCK_LOW_512K_MID146085, flash_write_status_mid146085, FLASH_WRITE_STATUS_QE_MID146085, FLASH_QE_ENABLE_MID146085, FLASH_QE_DISABLE_MID146085},
     //2M
-    {0x156085,flash_get_lock_block_mid156085, flash_unlock_mid156085, flash_lock_mid156085,FLASH_LOCK_LOW_1M_MID156085,flash_write_status_mid156085,FLASH_WRITE_STATUS_QE_MID156085,FLASH_QE_ENABLE_MID156085,FLASH_QE_DISABLE_MID156085},
+    {0x156085, flash_get_lock_block_mid156085, flash_unlock_mid156085, flash_lock_mid156085, FLASH_LOCK_LOW_1M_MID156085,   flash_write_status_mid156085, FLASH_WRITE_STATUS_QE_MID156085, FLASH_QE_ENABLE_MID156085, FLASH_QE_DISABLE_MID156085},
     //4M
-    {0x166085,flash_get_lock_block_mid166085, flash_unlock_mid166085, flash_lock_mid166085,FLASH_LOCK_LOW_2M_MID166085,flash_write_status_mid166085,FLASH_WRITE_STATUS_QE_MID166085,FLASH_QE_ENABLE_MID166085,FLASH_QE_DISABLE_MID166085},
+    {0x166085, flash_get_lock_block_mid166085, flash_unlock_mid166085, flash_lock_mid166085, FLASH_LOCK_LOW_2M_MID166085,   flash_write_status_mid166085, FLASH_WRITE_STATUS_QE_MID166085, FLASH_QE_ENABLE_MID166085, FLASH_QE_DISABLE_MID166085},
     //16M
-    {0x182085,flash_get_lock_block_mid182085, flash_unlock_mid182085, flash_lock_mid182085,FLASH_LOCK_LOW_8M_MID182085,flash_write_status_mid182085,FLASH_WRITE_STATUS_QE_MID182085,FLASH_QE_ENABLE_MID182085,FLASH_QE_DISABLE_MID182085}
+    {0x182085, flash_get_lock_block_mid182085, flash_unlock_mid182085, flash_lock_mid182085, FLASH_LOCK_LOW_8M_MID182085,   flash_write_status_mid182085, FLASH_WRITE_STATUS_QE_MID182085, FLASH_QE_ENABLE_MID182085, FLASH_QE_DISABLE_MID182085}
 };
 
-const unsigned int FLASH_CNT = sizeof(flash_list)/sizeof(flash_hal_handler_t);
-
+const unsigned int FLASH_CNT = sizeof(flash_list) / sizeof(flash_hal_handler_t);
 
 /**
  * @brief       This function serves to read flash mid and uid,and check the correctness of mid and uid.
@@ -82,29 +81,29 @@ const unsigned int FLASH_CNT = sizeof(flash_list)/sizeof(flash_hal_handler_t);
  */
 _attribute_text_sec_ int flash_read_mid_uid_with_check(unsigned int *flash_mid, unsigned char *flash_uid)
 {
-    unsigned char no_uid[16]={0x51,0x01,0x51,0x01,0x51,0x01,0x51,0x01,0x51,0x01,0x51,0x01,0x51,0x01,0x51,0x01};
-    unsigned int i,f_cnt=0;
+    unsigned char no_uid[16] = {0x51, 0x01, 0x51, 0x01, 0x51, 0x01, 0x51, 0x01, 0x51, 0x01, 0x51, 0x01, 0x51, 0x01, 0x51, 0x01};
+    unsigned int  i, f_cnt = 0;
     *flash_mid = flash_read_mid();
 
-    for(i=0; i<FLASH_CNT; i++){
-        if(flash_list[i].mid == *flash_mid){
+    for (i = 0; i < FLASH_CNT; i++) {
+        if (flash_list[i].mid == *flash_mid) {
             flash_read_uid(FLASH_READ_UID_CMD_GD_PUYA_ZB_TH, (unsigned char *)flash_uid);
             break;
         }
     }
-    if(i == FLASH_CNT){
+    if (i == FLASH_CNT) {
         return 0;
     }
 
-    for(i=0; i<16; i++){
-        if(flash_uid[i] == no_uid[i]){
+    for (i = 0; i < 16; i++) {
+        if (flash_uid[i] == no_uid[i]) {
             f_cnt++;
         }
     }
 
-    if(f_cnt == 16){    //no uid flash
+    if (f_cnt == 16) { //no uid flash
         return 0;
-    }else{
+    } else {
         return 1;
     }
 }
@@ -116,10 +115,10 @@ _attribute_text_sec_ int flash_read_mid_uid_with_check(unsigned int *flash_mid, 
  */
 unsigned char flash_4line_en(unsigned int flash_mid)
 {
-    unsigned int i=0;
+    unsigned int i = 0;
 
-    for(i=0; i<FLASH_CNT; i++){
-        if(flash_list[i].mid == flash_mid){
+    for (i = 0; i < FLASH_CNT; i++) {
+        if (flash_list[i].mid == flash_mid) {
             return flash_list[i].flash_write_status(flash_list[i].qe_en, flash_list[i].flash_qe_mask);
         }
     }
@@ -133,10 +132,10 @@ unsigned char flash_4line_en(unsigned int flash_mid)
  */
 unsigned char flash_4line_dis(unsigned int flash_mid)
 {
-    unsigned int i=0;
+    unsigned int i = 0;
 
-    for(i=0; i<FLASH_CNT; i++){
-        if(flash_list[i].mid == flash_mid){
+    for (i = 0; i < FLASH_CNT; i++) {
+        if (flash_list[i].mid == flash_mid) {
             return flash_list[i].flash_write_status(flash_list[i].qe_dis, flash_list[i].flash_qe_mask);
         }
     }

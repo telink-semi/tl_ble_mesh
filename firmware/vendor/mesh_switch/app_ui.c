@@ -24,22 +24,13 @@
 #include "tl_common.h"
 #include "app_ui.h"
 #include "drivers.h"
-#if(MCU_CORE_TYPE == MCU_CORE_8278)
-#include "stack/ble_8278/ble.h"
-#else
 #include "stack/ble/ble.h"
-#endif
 #include "proj_lib/sig_mesh/app_mesh.h"
-#if !__TLSR_RISCV_EN__
-#include "proj/drivers/keyboard.h"
-#endif
+#include "application/keyboard/keyboard.h"
 #include "vendor/common/blt_soft_timer.h"
 
-#if(MCU_CORE_TYPE == MCU_CORE_TL321X)
-#define SLEEP_MAX_S						(2*60)	// TL321X not support long sleep now.
-#else
 #define SLEEP_MAX_S						(32*60*60)	// max 37 hours,but use 32 to be multiplied of SWITCH_IV_SEARCHING_INVL_S
-#endif
+
 #if IV_UPDATE_TEST_EN
 #define SWITCH_IV_SEARCHING_INTERVLAL_S	(IV_UPDATE_KEEP_TMIE_MIN_RX_S)
 #else
@@ -82,7 +73,7 @@ int soft_timer_rcv_beacon_timeout(void)
 {
 	if(SWITCH_MODE_NORMAL == switch_mode){
 		ENABLE_SUSPEND_MASK;
-		blc_ll_setScanEnable (0, 0);
+		mesh_set_scan_enable(0, 0);
 	}
 	return -1;
 }
@@ -92,7 +83,7 @@ void switch_trigger_iv_search_mode(int force)
 	if(force || clock_time_exceed_s(switch_iv_updata_s, SWITCH_IV_SEARCHING_INVL_S)){
 		LOG_MSG_INFO(TL_LOG_IV_UPDATE,0, 0,"switch enter iv update search mode time_s:%d", clock_time_s());
 		switch_iv_update_time_refresh();		
-		app_enable_scan_all_device ();
+		mesh_set_scan_enable(1, 1);
 		bls_pm_setSuspendMask (SUSPEND_DISABLE);
 		mesh_beacon_poll_1s();
 		blt_soft_timer_add(&soft_timer_rcv_beacon_timeout, SWITCH_IV_RCV_WINDOW_S*1000*1000);
@@ -236,12 +227,27 @@ void mesh_proc_keyboard(u8 e, u8 *p, int n)
 	//			key change:pressed or released
 	///////////////////////////////////////////////////////////////////////////////////////
 	if (det_key) 	{
-		#if (!KB_LINE_MODE)
-		if(key_released && (SWITCH_MODE_GATT == switch_mode)){
-			switch_mode_set(SWITCH_MODE_NORMAL); // press any key can exit adv mode
+
+		if(key_released){
+            #if KB_LINE_MODE
+            // reuse reset button in keyboard line mode, short press KEY_RESET to enter send conn adv mode(long press 3S to reset self), press any key to exit if in send conn adv mode.
+            if(kb_event.keycode[0] == KEY_RESET){
+                if(!del_node_tick){ 
+                    if(SWITCH_MODE_NORMAL == switch_mode){
+                        switch_mode_set(SWITCH_MODE_GATT);
+                    }
+                    else{
+                        switch_mode_set(SWITCH_MODE_NORMAL);
+                    }
+                }
+            }
+            else
+            #endif
+            if(SWITCH_MODE_GATT == switch_mode){
+			    switch_mode_set(SWITCH_MODE_NORMAL); // press any key can exit send conn adv mode
+            }
 		}
-		#endif
-		
+
 		if(kb_event.cnt)
 		{
 			// key was detected pressed. MCU run the code here one time for one press action.  
@@ -322,7 +328,7 @@ void mesh_proc_keyboard(u8 e, u8 *p, int n)
 					#endif
 	    			}else{
 	    				// invalid key
-	    				memset4(&kb_event, 0, sizeof(kb_event));
+	    				memset(&kb_event, 0, sizeof(kb_event));
 						key_released = 0;
 	    				return;
 	    			}
@@ -343,16 +349,7 @@ void mesh_proc_keyboard(u8 e, u8 *p, int n)
 		//////////////////////////////////////////////////////////////////////////////////
 		else {
 			// key was released . MCU run the code here one time for one release action.  
-			#if KB_LINE_MODE
-			if(!del_node_tick && (kb_last[0] == KEY_RESET)){ // reuse reset button in keyboard line mode, short press enter/exit adv mode
-				if(SWITCH_MODE_NORMAL == switch_mode){
-					switch_mode_set(SWITCH_MODE_GATT);
-				}
-				else{
-					switch_mode_set(SWITCH_MODE_NORMAL);
-				}
-			}
-			#endif
+
 			rc_repeat_key = 0;
 			key_released = 1;
 		}
@@ -453,7 +450,7 @@ void switch_check_and_enter_sleep(void)
 		#endif
 	){
 		#if BLE_MULTIPLE_CONNECTION_ENABLE
-		blc_ll_setAdvEnable(BLC_ADV_ENABLE);
+		mesh_set_adv_enable(1);
 		#endif
 		// wait pending event 
 	}
@@ -467,20 +464,20 @@ void switch_check_and_enter_sleep(void)
 			if(sleep_s < SWITCH_LONG_SLEEP_TIME_S){
 				sleep_s = SWITCH_LONG_SLEEP_TIME_S - sleep_s;
 			}
-			else{
-				sleep_s = 1;
+			else if(sleep_s < SWITCH_IV_SEARCHING_INTERVLAL_S){
+				sleep_s = SWITCH_LONG_SLEEP_TIME_S;
 			}
+			else{
+                sleep_s = 1; // iv search time expired, wakeup to enter switch_trigger_iv_search_mode()
+            }
+
 			// user can set wakeup_tick of 32k rc by self. 
 			#if BLE_MULTIPLE_CONNECTION_ENABLE
-			blc_ll_setAdvEnable(BLC_ADV_DISABLE);
+			mesh_set_adv_enable(0);
 			if(blc_ll_isBleTaskIdle())
 			#endif
 			{
-			    #if(MCU_CORE_TYPE == MCU_CORE_TL321X)
-                cpu_sleep_wakeup(RETENTION_RAM_SIZE_USE, wakeup_src, clock_time() + sleep_s * 1000 * 1000 * sys_tick_per_us); // long sleep to be done.
-                #else
 				cpu_long_sleep_wakeup(RETENTION_RAM_SIZE_USE, wakeup_src, sleep_s*1000*32);
-                #endif
 			}
 		}
 	}
@@ -548,14 +545,6 @@ int mesh_switch_send_mesh_adv(void)
 	return ret;
 }
 
-void global_reset_new_key_wakeup(void)
-{
-    rc_key_pressed = 0;
-    rc_long_pressed = rc_repeat_key = 0;
-    memset(&kb_event, 0, sizeof(kb_event));
-    global_var_no_ret_init_kb();
-}
-
 void switch_mode_set(int mode)
 {
 #if SWITCH_ALWAYS_MODE_GATT_EN
@@ -570,18 +559,18 @@ void switch_mode_set(int mode)
 		#if (SWITCH_PB_ADV_EN || SWITCH_ALWAYS_MODE_GATT_EN)
 		beacon_str_init();
 		if(0 == switch_provision_ok || SWITCH_ALWAYS_MODE_GATT_EN){
-			app_enable_scan_all_device (); // support pb adv
+			mesh_set_scan_enable(1, 0); // support pb adv
 			bls_pm_setSuspendMask (SUSPEND_DISABLE); 
 		}
 		#endif
         switch_mode_tick = clock_time();
 		
 		#if BLE_MULTIPLE_CONNECTION_ENABLE
-		blc_ll_setAdvEnable(BLC_ADV_ENABLE);
+		mesh_set_adv_enable(1);
 		#endif
 		LOG_MSG_INFO(TL_LOG_NODE_SDK,0, 0,"enter GATT mode", 0);
     }else if(SWITCH_MODE_NORMAL == mode){
-		blc_ll_setScanEnable (0, 0);// disable scan to save power
+        mesh_set_scan_enable(0, 0);
 		beacon_send.en = 0;
         switch_mode = SWITCH_MODE_NORMAL;
         switch_mode_tick = 0;

@@ -35,6 +35,8 @@
 model_light_hsl_t       model_sig_light_hsl;
 u32 mesh_md_light_hsl_addr = FLASH_ADR_MD_LIGHT_HSL;
 
+STATIC_ASSERT(sizeof(model_light_hsl_t) <= (4096 - 48));    // only one sector to save
+
 #if MD_SERVER_EN
 
 s16 get_Hue_delta_value(u16 hue_target, u16 hue_present) // hue is a circular parameter from 0~360 degree

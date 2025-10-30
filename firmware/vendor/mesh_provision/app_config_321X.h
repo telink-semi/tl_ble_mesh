@@ -88,7 +88,16 @@
 #if (HCI_ACCESS==HCI_USE_UART)
 #define UART_TX_PIN				GPIO_FC_PC4
 #define UART_RX_PIN				GPIO_FC_PC5
-#define UART_NUM_USE            0
+
+#define UART_SECOND_EN          0
+    #if UART_SECOND_EN
+#define UART_TX_PIN_SECOND      GPIO_FC_PC6
+#define UART_RX_PIN_SECOND      GPIO_FC_PC7
+    #endif
+
+#define UART0_ENABLE    1 // enable uart0 depend on uart pin used. uart pin are define as enumeration types, cannot be used during the preprocessing stage.
+#define UART1_ENABLE    0 // enable uart1 depend on uart pin used.
+
 #define UART_DMA_BAUDRATE		115200
 #endif
 #endif
@@ -153,7 +162,7 @@
 #endif
 
 ///////////////////////// UI Configuration ////////////////////////////////////////////////////
-#if (AUDIO_MESH_EN || GATT_LPN_EN || DF_TEST_MODE_EN || IV_UPDATE_TEST_EN)
+#if (AUDIO_MESH_EN || GATT_LPN_EN || DF_TEST_MODE_EN || IV_UPDATE_TEST_EN || MESH_RX_TEST)
 #define	UI_KEYBOARD_ENABLE							1
 #endif
 
@@ -265,7 +274,7 @@
 #define	CLOCK_PWM_CLOCK_1US     (CLOCK_PWM_CLOCK_1S / 1000000)
 
 /////////////////// watchdog  //////////////////////////////
-#define MODULE_WATCHDOG_ENABLE		0
+#define MODULE_WATCHDOG_ENABLE		1
 #define WATCHDOG_INIT_TIMEOUT		2000
 
 ///////////////////////// DEBUG  Configuration ////////////////////////////////////////////////

@@ -152,7 +152,7 @@ void ev_reset_timer(ev_time_event_t *e){
 
 void ev_set_timer(ev_time_event_t *e, int t_us){
 	assert(t_us < (CLOCK_MAX_US - EV_TIMER_SAFE_MARGIN_US));	// about 143000 in 30M clock, about 2 minutes
-	e->interval = t_us * CLOCK_SYS_CLOCK_1US;
+	e->interval = t_us * CLOCK_SYS_TIMER_CLK_1US;
 	ev_reset_timer(e);
 }
 
@@ -233,7 +233,7 @@ void ev_start_timer(ev_time_event_t * e){
 
 void ev_on_timer(ev_time_event_t * e, u32 t_us){
 	assert(t_us < (CLOCK_MAX_US - EV_TIMER_SAFE_MARGIN_US));	// about 143000 in 30M clock, about 2 minutes
-    e->interval = t_us * CLOCK_SYS_CLOCK_1US;
+    e->interval = t_us * CLOCK_SYS_TIMER_CLK_1US;
 	ev_start_timer(e);
 }
 
@@ -268,7 +268,7 @@ static void ev_process_timer(){
 				p_time_evt->t = now + p_time_evt->interval;	// becare of overflow
 			}else{
 				p_time_evt->cb(p_time_evt->data);
-				p_time_evt->interval = t * CLOCK_SYS_CLOCK_1US;
+				p_time_evt->interval = t * CLOCK_SYS_TIMER_CLK_1US;
 				p_time_evt->t = now + p_time_evt->interval;	// becare of overflow
 			}
 			if(prev_head != loop->timer_head){

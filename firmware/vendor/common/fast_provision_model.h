@@ -40,7 +40,7 @@ typedef struct __attribute__((packed)) {
 extern _align_4_ my_fifo_t fast_prov_mac_fifo;
 
 void start_fast_provision_state_machine(u16 pid);
-void mesh_device_key_set_default(void);
+void mesh_fast_device_key_set(void);
 void mesh_fast_prov_start(u16 pid, u16 start_addr);
 void mesh_fast_prov_rsp_handle(mesh_rc_rsp_t *rsp);
 int mesh_fast_prov_sts_set(u8 sts_set);

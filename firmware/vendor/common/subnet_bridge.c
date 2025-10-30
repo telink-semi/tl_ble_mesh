@@ -34,6 +34,7 @@ model_g_df_sbr_t model_sig_g_df_sbr_cfg;
 u32 mesh_md_df_sbr_addr = FLASH_ADR_MD_DF_SBR;
 #ifndef WIN32
 STATIC_ASSERT(MD_PROPERTY_EN == 0); // use the same flash sector to save par in mesh_md_adr_map, so can not enable at the same time.
+STATIC_ASSERT(sizeof(model_g_df_sbr_t) <= (4096 - 48));    // only one sector to save
 #if GATEWAY_ENABLE
 STATIC_ASSERT(FLASH_ADR_MD_DF_SBR != FLASH_ADR_VC_NODE_INFO);
 #endif

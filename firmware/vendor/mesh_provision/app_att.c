@@ -391,8 +391,8 @@ u8 ais_data_buf[2];
 #endif
 
 #if(ONLINE_STATUS_EN)
-const u8 online_st_service_uuid[16] = TELINK_ONLINE_ST_UUID_SERVICE;  // comfirm later
-const u8 online_st_data_uuid[16] = TELINK_ONLINE_ST_DATA_UUID;               // comfirm later
+const u8 online_st_service_uuid[16] = WRAPPING_BRACES(TELINK_ONLINE_ST_UUID_SERVICE);  // comfirm later
+const u8 online_st_data_uuid[16] = WRAPPING_BRACES(TELINK_ONLINE_ST_DATA_UUID);               // comfirm later
 const u8 online_st_prop[] = {
 	CHAR_PROP_READ | CHAR_PROP_WRITE | CHAR_PROP_WRITE_WITHOUT_RSP | CHAR_PROP_NOTIFY,
 	U16_LO(ONLINE_ST_DP_H), U16_HI(ONLINE_ST_DP_H),	
@@ -403,7 +403,7 @@ const u8 online_st_service_desc[]="Online Status";
 
 u8 online_st_att_data_buf[4];
 
-int online_st_att_write(u16 connHandle, ais_otaWritevoid *pw)
+int online_st_att_write(u16 connHandle, void *pw)
 {
     if(!pair_login_ok){
         return 1;
@@ -452,7 +452,7 @@ int pairRead(u16 connHandle, void* p)
 #define MAX_SERVICE_PROVISION           (9)
 #define MAX_SERVICE_PROXY               (9)
 #define MAX_USER_DEFINE_SET_CCC_ATT_NUM (USER_DEFINE_SET_CCC_ENABLE ? 4 : 0)
-#define MAX_MI_ATT_NUM                  (MI_API_ENABLE ? 41 : 0)
+#define MAX_MI_ATT_NUM                  (0)
 #define MAX_SERVICE_CHANGE_ATT_NUM      (5)
 #define MAX_SERVICE_PRIVATE_MESH		(DUAL_MESH_SIG_PVT_EN ? 4 : 0)
 #if DU_ENABLE

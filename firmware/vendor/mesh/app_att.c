@@ -399,6 +399,7 @@ const u8 online_st_prop[] = {
 };
 	
 const u8 online_st_service_desc[]="Online Status";
+const u8 online_st_ccc[2];
 
 u8 online_st_att_data_buf[4];
 
@@ -451,7 +452,7 @@ int pairRead(u16 connHandle, void* p)
 #define MAX_SERVICE_PROVISION           (9)
 #define MAX_SERVICE_PROXY               (9)
 #define MAX_USER_DEFINE_SET_CCC_ATT_NUM (USER_DEFINE_SET_CCC_ENABLE ? 4 : 0)
-#define MAX_MI_ATT_NUM                  (MI_API_ENABLE ? 41 : 0)
+#define MAX_MI_ATT_NUM                  (0)
 #define MAX_SERVICE_CHANGE_ATT_NUM      (5)
 #define MAX_SERVICE_PRIVATE_MESH		(DUAL_MESH_SIG_PVT_EN ? 4 : 0)
 #if DU_ENABLE
@@ -459,7 +460,7 @@ int pairRead(u16 connHandle, void* p)
 #else
 #define MAX_AIS_ATT_NUM 	            (AIS_ENABLE ? 12 : 0)
 #endif
-#define MAX_ONLINE_ST_ATT_NUM 	        (ONLINE_STATUS_EN ? 4 : 0)
+#define MAX_ONLINE_ST_ATT_NUM 	        (ONLINE_STATUS_EN ? 5 : 0)
 #define MAX_DU_ATT_NUM					(DU_ENABLE?6:0)
 //---
 #define ATT_NUM_START_GAP                   (1)     // line of ATT, start from 0.
@@ -584,7 +585,8 @@ const u8 ONLINE_ST_ATT_HANDLE_SLAVE = (ATT_NUM_START_ONLINE_ST + 2);
 	{MAX_ONLINE_ST_ATT_NUM,ATT_PERMISSIONS_READ, 2,16,(u8*)(&my_primaryServiceUUID),	(u8*)(online_st_service_uuid), 0},\
 	{0,ATT_PERMISSIONS_READ, 2, 1,(u8*)(&my_characterUUID),		(u8*)online_st_prop, 0}, /*prop*/   \
 	{0,ATT_PERMISSIONS_RDWR,16,sizeof(online_st_att_data_buf),(u8*)(online_st_data_uuid),	(online_st_att_data_buf), &online_st_att_write, 0}, /*value*/   \
-	{0,ATT_PERMISSIONS_READ, 2,sizeof (online_st_service_desc),(u8*)(&userdesc_UUID), (u8*)(online_st_service_desc), 0},
+	{0,ATT_PERMISSIONS_READ, 2,sizeof (online_st_service_desc),(u8*)(&userdesc_UUID), (u8*)(online_st_service_desc), 0}, \
+	{0,ATT_PERMISSIONS_RDWR, 2, sizeof(online_st_ccc),(u8*)(&clientCharacterCfgUUID),	(u8*)(online_st_ccc), 0}, /*value*/
 #endif      
 
 #if (DU_ENABLE)

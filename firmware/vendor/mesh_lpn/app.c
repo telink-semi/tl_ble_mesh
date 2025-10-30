@@ -29,8 +29,9 @@
 #include "app_buffer.h"
 #include "app_att.h"
 #include "app_ui.h"
-
-
+#include "vendor/common/subnet_bridge.h"
+#include "vendor/common/remote_prov.h"
+#include "vendor/common/mesh_access_layer.h"
 
 #if DU_ENABLE
 #include "vendor/common/user_du.h"
@@ -45,41 +46,40 @@ int app_event_handler (u32 h, u8 *p, int n)
 	if (h == (HCI_FLAG_EVENT_BT_STD | HCI_EVT_LE_META))		//LE event
 	{
 		u8 subcode = p[0];
-		#if MI_API_ENABLE
-		telink_ble_mi_app_event(subcode,p,n);
-		#endif 
 	//------------ ADV packet --------------------------------------------
-		if (subcode == HCI_SUB_EVT_LE_ADVERTISING_REPORT)	// ADV packet
+		if ((subcode == HCI_SUB_EVT_LE_ADVERTISING_REPORT)	// ADV packet
+		    || (subcode == HCI_SUB_EVT_LE_EXTENDED_ADVERTISING_REPORT))
 		{
 			event_adv_report_t *pa = (event_adv_report_t *)p;
-			#if MD_REMOTE_PROV
-				#if REMOTE_PROV_SCAN_GATT_EN
-			mesh_cmd_conn_prov_adv_cb(pa);// only for the remote gatt-provision proc part.
+
+            #if (EXTENDED_ADV_ENABLE)
+            // modify the structure to event_adv_report_t to make it compatible with adv_report_extend_t for retrieving RSSI and timestamp.
+            if(subcode == HCI_SUB_EVT_LE_EXTENDED_ADVERTISING_REPORT){
+                hci_le_extAdvReportEvt_t *pExtAdvRpt = (hci_le_extAdvReportEvt_t *)p;
+                extAdvEvt_info_t *pExtAdvInfo = (extAdvEvt_info_t *)(pExtAdvRpt->advEvtInfo);
+                pa = (event_adv_report_t *)(pExtAdvInfo->data - OFFSETOF(event_adv_report_t, data));
+                pa->event_type = pExtAdvInfo->event_type;
+                memcpy(pa->mac, pExtAdvInfo->address, 6);
+                pa->data[pa->len] = pExtAdvInfo->rssi;
+            }
+            #endif
+            rssi_pkt = pa->data[pa->len];
+
+			if((LL_TYPE_ADV_IND != (pa->event_type & 0x0F)) || VENDOR_IOS_SOLI_PDU_EN){
+				#if MD_ON_DEMAND_PROXY_EN
+				if(mesh_soli_pdu_handle(pa->data, pa->len)){
+					return 0;
+				}
 				#endif
-			mesh_cmd_extend_loop_cb(pa);
-			#endif
-			
+			}
+
 			if(ADV_REPORT_EVENT_TYPE_NONCONN_IND != (pa->event_type & 0x0F)){
 				#if DU_ULTRA_PROV_EN
-				app_event_handler_ultra_prov(pa->data);
+				if(app_event_handler_ultra_prov(pa->data)){
+                    return 0;
+                }
 				#endif
-				
-				return 0;
 			}
-            
-			#if TEST_FORWARD_ADDR_FILTER_EN
-			if(!find_mac_in_filter_list(pa->mac)){
-				return 0;
-			}
-			#endif
-            
-			#if 0 // TESTCASE_FLAG_ENABLE
-			u8 mac_pts[] = {0xDA,0xE2,0x08,0xDC,0x1B,0x00};	// 0x001BDC08E2DA
-			u8 mac_pts2[] = {0xDB,0xE2,0x08,0xDC,0x1B,0x00};	// 0x001BDC08E2DA
-			if(memcmp(pa->mac, mac_pts,6) && memcmp(pa->mac, mac_pts2,6)){
-				return 0;
-			}
-			#endif
 
 			#if DEBUG_MESH_DONGLE_IN_VC_EN
 			send_to_hci = (0 == mesh_dongle_adv_report2vc(pa->data, MESH_ADV_PAYLOAD));
@@ -97,35 +97,7 @@ int app_event_handler (u32 h, u8 *p, int n)
 			#endif
 			{		
 				mesh_ble_connect_cb(subcode, p, n);
-				
-				#if MI_SWITCH_LPN_EN
-				mi_mesh_switch_sys_mode(48000000);
-				bls_ll_setAdvParam( ADV_INTERVAL_MIN, ADV_INTERVAL_MAX, \
-				 	 	 	 	 	     ADV_TYPE_CONNECTABLE_UNDIRECTED, OWN_ADDRESS_PUBLIC, \
-				 	 	 	 	 	     0,  NULL,  BLT_ENABLE_ADV_ALL, ADV_FP_NONE);
-				#endif
-				#if MI_API_ENABLE
-				mible_status_t status = MI_SUCCESS;
-	            if (NULL == mible_conn_timer){
-	                status = mible_timer_create(&mible_conn_timer, mible_conn_timeout_cb,
-	                                                               MIBLE_TIMER_SINGLE_SHOT);
-	            }
-				if (MI_SUCCESS != status){
-	                MI_LOG_ERROR("mible_conn_timer: fail, timer is not created");
-	            }else{
-	        		mible_conn_handle = 1;
-	                mible_timer_start(mible_conn_timer, 20*1000, NULL);
-	                MI_LOG_DEBUG("mible_conn_timer: succ, timer is created");
-	            }
-				#endif
 
-				#if DU_LPN_EN
-		        LOG_MSG_INFO(TL_LOG_NODE_SDK,0,0,"connect suc",0);	
-					#if !LPN_CONTROL_EN
-				blc_ll_setScanEnable (0, 0);
-				mi_mesh_state_set(0);
-					#endif
-				#endif
 				#if DEBUG_BLE_EVENT_ENABLE
 				rf_link_light_event_callback(LGT_CMD_BLE_CONN);
 				#endif
@@ -137,13 +109,9 @@ int app_event_handler (u32 h, u8 *p, int n)
 				#if 0 // FEATURE_FRIEND_EN
 				fn_update_RecWin(get_RecWin_connected());
 				#endif
-                
+
 				#if !DU_ENABLE
 				mesh_service_change_report(pConnEvt->connHandle);
-				#endif
-                
-				#if LPN_CONTROL_EN
-				bls_l2cap_requestConnParamUpdate (pConnEvt->connHandle, 48, 56, 10, 500);
 				#endif
 			}
 		}
@@ -160,15 +128,8 @@ int app_event_handler (u32 h, u8 *p, int n)
 	//------------ disconnect -------------------------------------
 	else if (h == (HCI_FLAG_EVENT_BT_STD | HCI_EVT_DISCONNECTION_COMPLETE))		//disconnect
 	{
-		#if MI_SWITCH_LPN_EN
-		mi_mesh_switch_sys_mode(16000000);
-		#endif
 		#if DU_ENABLE
-			#if BLE_MULTIPLE_CONNECTION_ENABLE
-		blc_ll_setScanEnable (BLC_SCAN_ENABLE, DUP_FILTER_DISABLE);
-			#else
-		blc_ll_setScanEnable (BLS_FLAG_SCAN_ENABLE | BLS_FLAG_ADV_IN_SLAVE_MODE, 0);
-			#endif
+        mesh_set_scan_enable(1, 0);
 		if(p_ota->ota_suc){
 			//LOG_MSG_INFO(TL_LOG_NODE_SDK,0,0,"ota reboot ,when ble is disconnct!",0);
 			du_ota_suc_reboot();			
@@ -176,11 +137,6 @@ int app_event_handler (u32 h, u8 *p, int n)
 		#endif
 		event_disconnection_t	*pd = (event_disconnection_t *)p;
 		//app_led_en (pd->handle, 0);
-		#if MI_API_ENABLE
-		telink_ble_mi_app_event(HCI_EVT_DISCONNECTION_COMPLETE,p,n);
-		mible_conn_handle = 0xffff;
-		mible_timer_stop(mible_conn_timer);
-		#endif 
 		//terminate reason
 		if(pd->reason == HCI_ERR_CONN_TIMEOUT){
 
@@ -363,6 +319,18 @@ int app_gatt_data_handler (u16 connHandle, u8 *pkt)
 	return 0;
 }
 
+#if (PM_DEEPSLEEP_RETENTION_ENABLE)
+_attribute_ram_code_ 
+#endif
+void user_init_peripheral(int retention_flag)
+{
+	//unprovision:ADV_INTERVAL_MIN;  provision but not friendship:FRI_REQ_TIMEOUT_MS  friendship ok:FRI_POLL_INTERVAL_MS
+	if(BLS_LINK_STATE_ADV == blc_ll_getCurrentState()){
+		mesh_lpn_adv_interval_update(0);
+	}
+	lpn_node_io_init();
+}
+
 /**
  * @brief      callBack function of LinkLayer Event "BLT_EV_FLAG_SUSPEND_EXIT"
  * @param[in]  e - LinkLayer Event type
@@ -372,7 +340,9 @@ int app_gatt_data_handler (u16 connHandle, u8 *pkt)
  */
 _attribute_ram_code_ void user_set_flag_suspend_exit(u8 e, u8 *p, int n)
 {
-	blc_ll_setDefaultTxPowerLevel(MY_RF_POWER_INDEX);
+    (void)e;
+    (void)p;
+    (void)n;
 }
 
 /**
@@ -432,16 +402,9 @@ _attribute_no_inline_ void user_init_normal(void)
 	
 	mesh_global_var_init();
 	lpn_provision_ok = is_net_key_save();
-	
-	#if (DUAL_MODE_WITH_TLK_MESH_EN)
-	dual_mode_en_init();	 // must before proc_telink_mesh_to_sig_mesh_, because "dual_mode_state" is used in it.
-	#endif
 
-	#if (0 == __TLSR_RISCV_EN__) // TODO
-	proc_telink_mesh_to_sig_mesh();	 // must at first
-	set_blc_hci_flag_fun(0);// disable the hci part of for the lib .
-	#endif
-	
+	int flag_after_ota = is_state_after_ota(); // read first, because flag will be clear in pwm init.
+
 	#if (DUAL_MODE_ADAPT_EN)
 	dual_mode_en_init();	 // must before factory_reset_handle, because "dual_mode_state" is used in it.
 	#endif
@@ -457,10 +420,10 @@ _attribute_no_inline_ void user_init_normal(void)
 	usb_dp_pullup_en (1);  //open USB enum
 	#endif
 //////////////////////////// BLE stack Initialization  Begin //////////////////////////////////
-	#if (DUAL_VENDOR_EN)
+    #if (DUAL_VENDOR_EN)
 	mesh_common_retrieve(FLASH_ADR_PROVISION_CFG_S);
 	if(DUAL_VENDOR_ST_ALI != provision_mag.dual_vendor_st)
-#endif
+    #endif
 	{ble_mac_init();
 	}
 
@@ -469,9 +432,14 @@ _attribute_no_inline_ void user_init_normal(void)
 
 	blc_ll_initStandby_module(tbl_mac);
 
+    #if EXTENDED_ADV_ENABLE
+    mesh_blc_ll_initExtendedAdv();
+    blc_ll_initExtendedScanning_module(); // blc_ll_init2MPhyCodedPhy_feature() was called in it.
+    blc_ll_removeFeature_0(BIT(8)); // default not need 2M phy, ios may switches to 2M phy actively if enable.
+    #else
     blc_ll_initLegacyAdvertising_module();
-
     blc_ll_initLegacyScanning_module();
+    #endif
 
 	blc_ll_initAclConnection_module();
 
@@ -491,15 +459,21 @@ _attribute_no_inline_ void user_init_normal(void)
 	blc_hci_registerControllerDataHandler (blc_l2cap_pktHandler);
 
 	blc_hci_registerControllerEventHandler(app_event_handler); //controller hci event to host all processed in this func
-	blc_register_advertise_prepare (blt_send_adv_cb);
-	blc_register_adv_scan_proc(blc_ll_procScanPkt_mesh);
+
+	blc_register_advertise_prepare(blt_send_adv_cb);
+	blc_register_leg_adv_scan_proc(blc_ll_leg_adv_scan_mesh);
+    #if EXTENDED_ADV_ENABLE
+    blc_register_ext_adv_scan_proc(blc_ll_ext_adv_scan_mesh);
+    #endif
+
 	//bluetooth event
 	blc_hci_setEventMask_cmd (HCI_EVT_MASK_DISCONNECTION_COMPLETE);
 
 	//bluetooth low energy(LE) event
 	blc_hci_le_setEventMask_cmd(		HCI_LE_EVT_MASK_CONNECTION_COMPLETE  \
 									|	HCI_LE_EVT_MASK_ADVERTISING_REPORT \
-									|   HCI_LE_EVT_MASK_CONNECTION_UPDATE_COMPLETE);
+									|   HCI_LE_EVT_MASK_CONNECTION_UPDATE_COMPLETE \
+									|   HCI_LE_EVT_MASK_EXTENDED_ADVERTISING_REPORT);
 
 #if (HCI_ACCESS != HCI_USE_NONE)
 	#if (HCI_ACCESS==HCI_USE_USB)
@@ -521,6 +495,7 @@ _attribute_no_inline_ void user_init_normal(void)
 	if(error_code != INIT_SUCCESS){
 		/* It's recommended that user set some UI alarm to know the exact error, e.g. LED shine, print log */
 		write_log32(0x88880000 | error_code);
+		#if JTAG_DEBUG_DISABLE
 		#if (TLKAPI_DEBUG_ENABLE)
 			tlkapi_send_string_data(APP_LOG_EN, "[APP][INI] Controller INIT ERROR", &error_code, 1);
 			while(1){
@@ -528,6 +503,7 @@ _attribute_no_inline_ void user_init_normal(void)
 			}
 		#else
 			while(1);
+		#endif
 		#endif
 	}
 	//////////// HCI Initialization  End /////////////////////////
@@ -554,8 +530,6 @@ _attribute_no_inline_ void user_init_normal(void)
 		blc_smp_setSecurityLevel_periphr(Unauthenticated_Pairing_with_Encryption);  //LE_Security_Mode_1_Level_2
 		blc_smp_smpParamInit();
 		blc_smp_configSecurityRequestSending(SecReq_IMM_SEND, SecReq_PEND_SEND, 1000); //if not set, default is:  send "security request" immediately after link layer connection established(regardless of new connection or reconnection)
-	#else
-		blc_smp_setSecurityLevel_periphr(No_Security);
 	#endif
 
 	//host(GAP/SMP/GATT/ATT) event process: register host event callback and set event mask
@@ -567,48 +541,64 @@ _attribute_no_inline_ void user_init_normal(void)
 	//////////// Host Initialization  End /////////////////////////
 
 //////////////////////////// BLE stack Initialization  End //////////////////////////////////
-	mesh_init_all();
-	mesh_scan_rsp_init();
-	my_att_init (provision_mag.gatt_mode);
-
 
 //////////////////////////// User Configuration for BLE application ////////////////////////////
-	blc_ll_setAdvParam(ADV_INTERVAL_10MS, ADV_INTERVAL_10MS, ADV_TYPE_CONNECTABLE_UNDIRECTED, OWN_ADDRESS_PUBLIC, 0, NULL, BLT_ENABLE_ADV_ALL, ADV_FP_NONE);
+    #if EXTENDED_ADV_ENABLE
+    mesh_blc_ll_setExtAdvParamAndEnable();
+
+    blc_ll_setExtScanParam(OWN_ADDRESS_PUBLIC, SCAN_FP_ALLOW_ADV_ANY, (BLE_PHY_MODE == BLE_PHY_1M) ? SCAN_PHY_1M:SCAN_PHY_CODED,
+                                            SCAN_TYPE_PASSIVE, SCAN_INTERVAL_50MS, SCAN_WINDOW_50MS,
+                                            SCAN_TYPE_PASSIVE, SCAN_INTERVAL_50MS, SCAN_WINDOW_50MS);
+    
+    blc_ll_setExtScanEnable(BLC_SCAN_ENABLE, DUPE_FLTR_DISABLE, SCAN_DURATION_CONTINUOUS, SCAN_WINDOW_CONTINUOUS);
+    blc_ll_extScan_startMeshCustomReportEvent(1);
+    #else
+    blc_ll_setAdvParam(ADV_INTERVAL_10MS, ADV_INTERVAL_10MS, ADV_TYPE_CONNECTABLE_UNDIRECTED, OWN_ADDRESS_PUBLIC, 0, NULL, BLT_ENABLE_ADV_ALL, ADV_FP_NONE);
 	blc_ll_setAdvEnable(BLC_ADV_ENABLE);  //ADV enable
 
 	blc_ll_setScanParameter(SCAN_TYPE_PASSIVE, SCAN_INTERVAL_10MS, SCAN_WINDOW_10MS, OWN_ADDRESS_PUBLIC, SCAN_FP_ALLOW_ADV_ANY);
 	if(!lpn_provision_ok){
 		blc_ll_setScanEnable (BLC_SCAN_ENABLE, DUP_FILTER_DISABLE);
 	}
+    #endif
 
-	blc_ll_setDefaultTxPowerLevel(MY_RF_POWER_INDEX);
+	rf_set_power_level_index(my_rf_power_index);
 
 	#if (BLE_APP_PM_ENABLE)
 		blc_ll_initPowerManagement_module();
+		blc_pm_setSleepMask(PM_SLEEP_LEG_ADV  | PM_SLEEP_EXT_ADV | PM_SLEEP_ACL_PERIPHR);
 
 		#if (PM_DEEPSLEEP_RETENTION_ENABLE)
-			blc_pm_setDeepsleepRetentionEnable(PM_DeepRetn_Enable);
-			blc_pm_setDeepsleepRetentionThreshold(95);
+        blc_app_setDeepsleepRetentionSramSize();
+		blc_pm_setDeepsleepRetentionEnable(PM_DeepRetn_Enable);
+		blc_pm_setDeepsleepRetentionThreshold(95);
 
-            /*!< early wakeup time with a threshold of approxiamtely 30us. */
-            #if(MCU_CORE_TYPE == MCU_CORE_B91)
-                                                blc_pm_setDeepsleepRetentionEarlyWakeupTiming(530);
-            #elif(MCU_CORE_TYPE == MCU_CORE_B92)
-                                                blc_pm_setDeepsleepRetentionEarlyWakeupTiming(1100);
-            #elif(MCU_CORE_TYPE == MCU_CORE_TL321X)
-                                                blc_pm_setDeepsleepRetentionEarlyWakeupTiming(460);
-            #elif(MCU_CORE_TYPE == MCU_CORE_TL721X)
-                                                blc_pm_setDeepsleepRetentionEarlyWakeupTiming(560);
-            #endif
+        /*!< early wakeup time with a threshold of approxiamtely 30us. */
+      	#if (MCU_CORE_TYPE == MCU_CORE_B91)
+		blc_pm_setDeepsleepRetentionEarlyWakeupTiming(620);
+		    #elif (MCU_CORE_TYPE == MCU_CORE_B92)
+		blc_pm_setDeepsleepRetentionEarlyWakeupTiming(655);
+		    #elif (MCU_CORE_TYPE == MCU_CORE_TL321X)
+		blc_pm_setDeepsleepRetentionEarlyWakeupTiming(540);
+		    #elif (MCU_CORE_TYPE == MCU_CORE_TL721X)
+		blc_pm_setDeepsleepRetentionEarlyWakeupTiming(580);
+		   #elif (MCU_CORE_TYPE == MCU_CORE_TL322X)
+		blc_pm_setDeepsleepRetentionEarlyWakeupTiming(920);
+		    #endif
 		#else
-			blc_pm_setDeepsleepRetentionEnable(PM_DeepRetn_Disable);
+		blc_pm_setDeepsleepRetentionEnable(PM_DeepRetn_Disable);
 		#endif
 
-		blc_ll_registerTelinkControllerEventCallback(BLT_EV_FLAG_SUSPEND_ENTER, &lpn_set_sleep_wakeup);			
+		blc_ll_registerTelinkControllerEventCallback(BLT_EV_FLAG_SUSPEND_ENTER, &mesh_set_sleep_wakeup);
 		blc_ll_registerTelinkControllerEventCallback(BLT_EV_FLAG_SUSPEND_EXIT, &user_set_flag_suspend_exit);
 		blc_ll_registerTelinkControllerEventCallback(BLT_EV_FLAG_GPIO_EARLY_WAKEUP, &lpn_proc_keyboard);
 	#endif
 	blc_pm_setSleepMask(PM_SLEEP_DISABLE);
+
+    //////////// MESH Initialization /////////////////////////
+    mesh_init_all();
+    mesh_scan_rsp_init(); // must after mesh_blc_ll_setExtAdvParamAndEnable() in entended adv mode.
+    my_att_init (provision_mag.gatt_mode);
 
 	#if (BLE_OTA_SERVER_ENABLE)
 		#if (TLKAPI_DEBUG_ENABLE)
@@ -621,12 +611,27 @@ _attribute_no_inline_ void user_init_normal(void)
 		blc_ota_registerOtaResultIndicationCb(show_ota_result);
 	#endif
 
+    #if PA_ENABLE
+    rf_pa_init();
+    #endif
+
+    system_time_init();
+
 #if (BLT_SOFTWARE_TIMER_ENABLE)
 	blt_soft_timer_init();
 	//blt_soft_timer_add(&soft_timer_test0, 200*1000);
 #endif
 
-	lpn_node_io_init();
+	user_init_peripheral(0);
+
+	mesh_lpn_gatt_adv_refresh();
+	if(flag_after_ota){
+		if(is_ota_gatt_connected_flag_lpn()){ // connectable adv send flag after mesh ota, set in mesh_ota_reboot_proc().
+			clr_ota_gatt_connected_flag_lpn(); 
+			// enter GATT ADV mode for APP to check the new version value.
+			lpn_mode_set(LPN_MODE_GATT_OTA);	// must after mesh_lpn_gatt_adv_refresh_
+		}
+	}
 
 #if __TLSR_RISCV_EN__
 	user_init_risv_sdk();	// at last should be better.
@@ -650,14 +655,12 @@ void user_init_deepRetn(void)
 
 	blc_ll_initBasicMCU();   //mandatory
 
-	blc_ll_setDefaultTxPowerLevel(MY_RF_POWER_INDEX);
-
 	blc_ll_recoverDeepRetention();
 
 	DBG_CHN0_HIGH;    //debug
 	irq_enable();
 
-	lpn_node_io_init();
+	user_init_peripheral(1);
 
 #if (HCI_ACCESS == HCI_USE_UART)	//uart
 	uart_drv_init();

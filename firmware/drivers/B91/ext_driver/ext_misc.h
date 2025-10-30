@@ -40,7 +40,7 @@
 #include "types.h"
 #include "compiler.h"
 #include "../compatibility_pack/cmpt.h"
-#include "common/static_assert.h" 			   // BLE_SRC_TELINK_MESH_EN
+#include "common/static_assert.h"    // BLE_SRC_TELINK_MESH_EN
 
 
 /******************************* dbgErrorCode start ******************************************************************/
@@ -55,6 +55,7 @@
 /******************************* dbgErrorCode end ********************************************************************/
 
 
+#define HW_AES_CCM_ALG_EN                                       0
 
 
 /******************************* analog_start ******************************************************************/
@@ -67,7 +68,7 @@
 /******************************* core_start ******************************************************************/
 #define  irq_disable        core_interrupt_disable
 #define  irq_enable         core_interrupt_enable
-#define  irq_restore(en)	do{STATIC_ASSERT(sizeof(en) == sizeof(unsigned int)); core_restore_interrupt(en);}while(0) // BLE_SRC_TELINK_MESH_EN
+#define  irq_restore(en)    do{STATIC_ASSERT(sizeof(en) == sizeof(unsigned int)); core_restore_interrupt(en);}while(0) // BLE_SRC_TELINK_MESH_EN
 /******************************* core_end ********************************************************************/
 
 
@@ -143,7 +144,7 @@ void rf_drv_ble_init(void);
 
 
 /******************************* trng_start ******************************************************************/
-#define rand                        trng_rand
+
 #define random_generator_init       trng_init
 
 

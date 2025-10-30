@@ -84,7 +84,16 @@
 #if (HCI_ACCESS==HCI_USE_UART)
 #define UART_TX_PIN				GPIO_FC_PC4
 #define UART_RX_PIN				GPIO_FC_PC5
-#define UART_NUM_USE            0
+
+#define UART_SECOND_EN          0
+    #if UART_SECOND_EN
+#define UART_TX_PIN_SECOND      GPIO_FC_PC6
+#define UART_RX_PIN_SECOND      GPIO_FC_PC7
+    #endif
+
+#define UART0_ENABLE    1 // enable uart0 depend on uart pin used. uart pin are define as enumeration types, cannot be used during the preprocessing stage.
+#define UART1_ENABLE    0 // enable uart1 depend on uart pin used.
+
 #define UART_DMA_BAUDRATE		115200
 #endif
 #endif
@@ -120,13 +129,7 @@
 #if (MESH_RX_TEST || (!MD_DEF_TRANSIT_TIME_EN) || SPEECH_ENABLE)
 #define TRANSITION_TIME_DEFAULT_VAL (0)
 #else
-	#if MI_API_ENABLE
-#define TRANSITION_TIME_DEFAULT_VAL	0
-	#elif LPN_CONTROL_EN
-#define TRANSITION_TIME_DEFAULT_VAL	0
-	#else
 #define TRANSITION_TIME_DEFAULT_VAL (GET_TRANSITION_TIME_WITH_STEP(1, TRANSITION_STEP_RES_1S)) // (0x41)  // 0x41: 1 second // 0x00: means no default transition time
-	#endif
 #endif
 #endif
 
@@ -156,11 +159,11 @@
 #define BOARD_321X_EVK_C1T335A20    0x335A20
 
 #ifndef BOARD_SELECT // user can define in user_app_config.h
-#define BOARD_SELECT                BOARD_321X_EVK_C1T313A20
+#define BOARD_SELECT                BOARD_321X_EVK_C1T335A20
 #endif
 
 ///////////////////////// UI Configuration ////////////////////////////////////////////////////
-#if (AUDIO_MESH_EN || GATT_LPN_EN || DU_ENABLE || DF_TEST_MODE_EN || IV_UPDATE_TEST_EN)
+#if (AUDIO_MESH_EN || GATT_LPN_EN || DU_ENABLE || DF_TEST_MODE_EN || IV_UPDATE_TEST_EN || MESH_RX_TEST)
 #define	UI_KEYBOARD_ENABLE							1
 #endif
 
@@ -191,7 +194,7 @@
 #define	KB_REPEAT_KEY_INTERVAL_MS		200
 #define KB_REPEAT_KEY_NUM				1
 
-#if (BOARD_SELECT == BOARD_321X_EVK_C1T313A20)
+#if (BOARD_SELECT == BOARD_321X_EVK_C1T335A20)
 // key mode, KB_LINE_MODE default 0(key matrix), set to 1 in button mode.
 #define KB_LINE_MODE			0
 
@@ -239,7 +242,7 @@
 #endif
 
 //---------------  LED / PWM
-#if(BOARD_SELECT == BOARD_321X_EVK_C1T313A20)
+#if(BOARD_SELECT == BOARD_321X_EVK_C1T335A20)
 #define PWM_R       GPIO_PB1        //red
 #define PWM_G       GPIO_PB0        //green
 #define PWM_B       GPIO_PB2        //blue
@@ -272,7 +275,7 @@
 #define	CLOCK_PWM_CLOCK_1US     (CLOCK_PWM_CLOCK_1S / 1000000)
 
 /////////////////// watchdog  //////////////////////////////
-#define MODULE_WATCHDOG_ENABLE		0
+#define MODULE_WATCHDOG_ENABLE		1
 #define WATCHDOG_INIT_TIMEOUT		2000
 
 ///////////////////////// DEBUG  Configuration ////////////////////////////////////////////////
@@ -318,37 +321,18 @@
  */
 #if (JTAG_DEBUG_DISABLE)
 	//JTAG will cost some power
-	#if (MCU_CORE_TYPE == MCU_CORE_B91)
-		#define PE4_FUNC			AS_GPIO
-		#define PE5_FUNC			AS_GPIO
-		#define PE6_FUNC			AS_GPIO
-		#define PE7_FUNC			AS_GPIO
-
-		#define PE4_INPUT_ENABLE	0
-		#define PE5_INPUT_ENABLE	0
-		#define PE6_INPUT_ENABLE	0
-		#define PE7_INPUT_ENABLE	0
-
-		#define PULL_WAKEUP_SRC_PE4	0
-		#define PULL_WAKEUP_SRC_PE5	0
-		#define PULL_WAKEUP_SRC_PE6	0
-		#define PULL_WAKEUP_SRC_PE7	0
-	#elif (MCU_CORE_TYPE == MCU_CORE_B92)
-		#define PC4_FUNC			AS_GPIO
-		#define PC5_FUNC			AS_GPIO
-		#define PC6_FUNC			AS_GPIO
-		#define PC7_FUNC			AS_GPIO
-
-		#define PC4_INPUT_ENABLE	0
-		#define PC5_INPUT_ENABLE	0
-		#define PC6_INPUT_ENABLE	0
-		#define PC7_INPUT_ENABLE	0
-
-		#define PULL_WAKEUP_SRC_PC4	0
-		#define PULL_WAKEUP_SRC_PC5	0
-		#define PULL_WAKEUP_SRC_PC6	0
-		#define PULL_WAKEUP_SRC_PC7	0
-	#endif
+#else
+    #define PC4_FUNC            AS_TDI
+    #define PC5_FUNC            AS_TDO
+    #define PC6_FUNC            AS_TMS
+    #define PC7_FUNC            AS_TCK
+    #define PC4_INPUT_ENABLE	1
+	#define PC5_INPUT_ENABLE	1
+	#define PC6_INPUT_ENABLE	1
+	#define PC7_INPUT_ENABLE    1
+    #define PULL_WAKEUP_SRC_PC4 GPIO_PIN_PULLDOWN_100K
+    #define PULL_WAKEUP_SRC_PC6 GPIO_PIN_PULLUP_10K
+    #define PULL_WAKEUP_SRC_PC7 GPIO_PIN_PULLUP_10K
 #endif
 
 

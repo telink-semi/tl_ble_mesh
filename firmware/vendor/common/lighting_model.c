@@ -40,11 +40,12 @@
   * @{
   */
 
-
-
 model_lightness_t       model_sig_lightness;
+STATIC_ASSERT(sizeof(model_lightness_t) <= (4096 - 48));    // only one sector to save
+
 #if (LIGHT_TYPE_CT_EN)
 model_light_ctl_t       model_sig_light_ctl;
+STATIC_ASSERT(sizeof(model_light_ctl_t) <= (4096 - 48));    // only one sector to save
 #endif
 
 /*

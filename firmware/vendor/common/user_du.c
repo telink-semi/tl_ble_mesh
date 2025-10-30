@@ -27,12 +27,11 @@
 #include "user_du.h"
 #include "app_health.h"
 #include "proj_lib/sig_mesh/app_mesh.h"
+#include "proj_lib/mesh_crypto/le_crypto.h"
 #include "proj_lib/mesh_crypto/sha256_telink.h"
 #include "vendor_model.h"
 #include "fast_provision_model.h"
-#if (!__TLSR_RISCV_EN__)
-#include "proj_lib/ble/service/ble_ll_ota.h"
-#endif
+#include "stack/ble/ble.h"
 #include "proj_lib/mesh_crypto/aes_cbc.h"
 #include "vendor/common/mi_api/telink_sdk_mible_api.h"
 #include "vendor/common/mesh_ota.h"
@@ -636,7 +635,7 @@ void du_busy_proc(void)
 				du_enable_gateway_adr(DU_BIND_CHECK_EN);
 				LOG_MSG_INFO(TL_LOG_NODE_SDK,0,0,"store gateway adr");
 			}
-			du_loop_tick = clock_time()-60*CLOCK_SYS_CLOCK_1S;
+			du_loop_tick = clock_time()-60*CLOCK_SYS_TIMER_CLK_1S;
 		}
 					
 		#if DU_BIND_CHECK_EN
@@ -810,10 +809,13 @@ void du_ui_proc_init(void)
 	du_prov_bind_check();
 #endif
 
+#if (0)
 	gpio_set_wakeup (SW1_GPIO, Level_Low, 1);
 	cpu_set_gpio_wakeup (SW1_GPIO, Level_Low,1);  //drive pin pad high wakeup deepsleep
 	bls_pm_setWakeupSource(PM_WAKEUP_PAD);  // GPIO_WAKEUP_MODULE needs to be wakened
 	bls_app_registerEventCallback (BLT_EV_FLAG_SUSPEND_ENTER, (blt_event_callback_t)&du_lpn_suspend_enter);
+#endif
+
 	if(du_ota_get_reboot_flag()){
 		
 		#if DU_LPN_EN
@@ -836,9 +838,11 @@ void du_ui_proc_init(void)
 
 void du_ui_proc_init_deep(void)
 {
+#if (0)
 	gpio_set_wakeup (SW1_GPIO, Level_Low, 1);
 	cpu_set_gpio_wakeup (SW1_GPIO, Level_Low,1);  //drive pin pad high wakeup deepsleep
 	bls_pm_setWakeupSource(PM_WAKEUP_PAD);	// GPIO_WAKEUP_MODULE needs to be wakened
+#endif
 }
 
 void magic_code_chk_proc(u8* pbuf)
@@ -968,6 +972,7 @@ void du_time_req_start_proc(void)
 	#endif
 }
 
+#if DU_LPN_EN
 vd_du_event_t vd_du;
 
 int soft_timer_proc_event()
@@ -1040,6 +1045,7 @@ void du_vd_send_loop_proc(void)
 		du_vd_temp_event_send(&du_event);
 	}
 }
+#endif
 
 #if DU_ULTRA_PROV_EN
 #define dev_key_pad		pro_random
@@ -1228,9 +1234,11 @@ int mesh_du_rcv_prov_data(u8 *p_payload)
 	net_info.flags = p_prov_data->flag;
 	memcpy(net_info.iv_index+2, p_prov_data->iv_index, 2);
 	net_info.unicast_address = p_prov_data->unicast_addr;
-	mesh_provision_par_handle((u8 *)&net_info);
+	mesh_provision_par_handle(&net_info);
 	#endif
 
+    // change prov and config state
+    prov_para.provison_rcv_state = STATE_PRO_SUC;
 	mesh_du_ble_adv(p_manu_data->data_type+1, prov_para.device_uuid, 16);
 	return 0;
 }
@@ -1330,53 +1338,96 @@ int genie_manu_nw_package(genie_nw_cache_t *p)
 	return 0;
 }
 
-int app_event_handler_ultra_prov(u8 *p_payload)
+ble_adv_data_t *get_ultra_adv_data(u8 *payload, int len)
 {
-	genie_manu_factor_data_t *p_manu_data = (genie_manu_factor_data_t *)p_payload;
+	ble_adv_data_t *p_adv = 0; 
+	int offset = 0;
+
+	while(offset < len){
+		p_adv = (ble_adv_data_t *)(payload + offset);
+
+		if((p_adv->length < 2) || ((p_adv->data_type > GAP_ADTYPE_SERVICE_DATA_UUID_128BIT) && (p_adv->data_type != GAP_ADTYPE_MANUFACTURER_SPECIFIC))){
+			return 0;
+		}
+
+        if((GAP_ADTYPE_MANUFACTURER_SPECIFIC == p_adv->data_type)
+            #if DU_ENABLE
+    		&& (p_adv->cid == VENDOR_ID)
+    		#elif AIS_ENABLE
+    		&& (p_adv->cid == HTON16(VENDOR_ID))
+    		#endif
+        ){   // android
+            return p_adv;
+        }
+        else if(GAP_ADTYPE_128BIT_COMPLETE == p_adv->data_type){
+            u16 cid = p_adv->data[14] + (p_adv->data[15] << 8);
+            #if DU_ENABLE
+            endianness_swap_u16((u8 *)&cid);
+            #endif
+
+            if(cid == VENDOR_ID){
+                endianness_swap_u128(p_adv->data);
+                return p_adv;
+            }
+        }
+
+        offset += (p_adv->length + 1);
+    }
+
+    return 0;
+}
+
+int app_event_handler_ultra_prov(u8 *p_payload, int len)
+{
+    int is_ultra_adv = 0;
+	ble_adv_data_t *p_ultra_adv = get_ultra_adv_data(p_payload, len);
 	#if DU_APP_ADV_CONTROL_EN
 	u8 is_control = 0;
 	#endif
-	ios_app_data_t *p_ios_data = (ios_app_data_t *)p_payload;
-	if((GAP_ADTYPE_MANUFACTURER_SPECIFIC==p_manu_data->manu_type) && (VENDOR_ID == p_manu_data->cid)){//Manufacturer Specific Data
-		du_manu_data_t *p_du = (du_manu_data_t *) &p_manu_data->manu_len;
-		if(p_du->data_type < DU_ANDROID_CONTROL){
-			mesh_du_adv_proc(&p_manu_data->manu_len);
-		}
-		#if DU_APP_ADV_CONTROL_EN
-		else if((DU_ANDROID_CONTROL == p_du->data_type) && (p_du->nw.nid == mesh_key.net_key[0][0].nid_m)){
-			if(genie_manu_nw_package((genie_nw_cache_t *)&p_du->nw.msg_id)){
-				is_control = 1;
-			}
-		}
-		#endif
-	}
-	else if((p_ios_data->uuid_type == GAP_ADTYPE_128BIT_COMPLETE) && (VENDOR_ID == p_ios_data->cid) ){// 128-bit service UUIDs		
-		if(p_ios_data->msg_type < DU_ANDROID_CONTROL){
-			if(0 == memcmp(p_ios_data->ios_prov.mac, tbl_mac, 2)){ 
-				if(genie_manu_nw_package((genie_nw_cache_t *)&p_ios_data->ios_prov.msg_id)){
-					p_ios_data->uuid_len = genie_nw_cache.len_payload + 4;
-					memcpy(&p_ios_data->data, genie_nw_cache.payload, genie_nw_cache.len_payload);  
-					mesh_du_adv_proc(&p_ios_data->uuid_len);
-				}
-			}
-		}
-		#if DU_APP_ADV_CONTROL_EN
-		else if((DU_ANDROID_CONTROL == p_ios_data->msg_type) && (p_ios_data->ios_nw.nid == mesh_key.net_key[0][0].nid_m)){
-			if(genie_manu_nw_package((genie_nw_cache_t *)&p_ios_data->ios_nw.msg_id)){
-				is_control = 1;
-			}
-		}
-		#endif
-	}
-	#if DU_APP_ADV_CONTROL_EN
-	if(is_control){
-		genie_nw_cache.pkt_num = genie_nw_cache.len_payload+1;
-		genie_nw_cache.len_payload = MESH_ADV_TYPE_MESSAGE;						
-		mesh_rc_data_layer_network(&genie_nw_cache.pkt_num, MESH_BEAR_GATT, TRANSMIT_DEF_PAR);
-	}
-	#endif
+	if(p_ultra_adv){
+        is_ultra_adv = 1;
+        ios_app_data_t *p_ios_data = (ios_app_data_t *)p_ultra_adv;
+        if(GAP_ADTYPE_MANUFACTURER_SPECIFIC == p_ultra_adv->data_type){//Manufacturer Specific Data
+            du_manu_data_t *p_du = (du_manu_data_t *) &p_ultra_adv->length;
+            if(p_du->data_type < DU_ANDROID_CONTROL){
+                mesh_du_adv_proc(&p_ultra_adv->length);
+            }
+    		#if DU_APP_ADV_CONTROL_EN
+    		else if((DU_ANDROID_CONTROL == p_du->data_type) && (p_du->nw.nid == mesh_key.net_key[0][0].nid_m)){
+    			if(genie_manu_nw_package((genie_nw_cache_t *)&p_du->nw.msg_id)){
+    				is_control = 1;
+    			}
+    		}
+    		#endif
+    	}
+    	else if((p_ios_data->uuid_type == GAP_ADTYPE_128BIT_COMPLETE) && (VENDOR_ID == p_ios_data->cid) ){// 128-bit service UUIDs		
+    		if(p_ios_data->msg_type < DU_ANDROID_CONTROL){
+    			if(0 == memcmp(p_ios_data->ios_prov.mac, tbl_mac, 2)){ 
+    				if(genie_manu_nw_package((genie_nw_cache_t *)&p_ios_data->ios_prov.msg_id)){
+    					p_ios_data->uuid_len = genie_nw_cache.len_payload + 4;
+    					memcpy(&p_ios_data->data, genie_nw_cache.payload, genie_nw_cache.len_payload);  
+    					mesh_du_adv_proc(&p_ios_data->uuid_len);
+    				}
+    			}
+    		}
+    		#if DU_APP_ADV_CONTROL_EN
+    		else if((DU_ANDROID_CONTROL == p_ios_data->msg_type) && (p_ios_data->ios_nw.nid == mesh_key.net_key[0][0].nid_m)){
+    			if(genie_manu_nw_package((genie_nw_cache_t *)&p_ios_data->ios_nw.msg_id)){
+    				is_control = 1;
+    			}
+    		}
+    		#endif
+    	}
+    	#if DU_APP_ADV_CONTROL_EN
+    	if(is_control){
+    		genie_nw_cache.pkt_num = genie_nw_cache.len_payload+1;
+    		genie_nw_cache.len_payload = MESH_ADV_TYPE_MESSAGE;						
+    		mesh_rc_data_layer_network(&genie_nw_cache.pkt_num, MESH_BEAR_GATT, TRANSMIT_DEF_PAR);
+    	}
+    	#endif
+    }
 
-	return 1;
+	return is_ultra_adv;
 }
 
 void du_sample_data_run()

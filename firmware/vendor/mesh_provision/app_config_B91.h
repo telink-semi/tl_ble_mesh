@@ -88,7 +88,16 @@
 #if (HCI_ACCESS==HCI_USE_UART)
 #define UART_TX_PIN				UART0_TX_PB2
 #define UART_RX_PIN				UART0_RX_PB3
-#define UART_NUM_USE            0
+
+#define UART_SECOND_EN          0
+    #if UART_SECOND_EN
+#define UART_TX_PIN_SECOND      UART1_TX_PC6
+#define UART_RX_PIN_SECOND      UART1_RX_PC7
+    #endif
+
+#define UART0_ENABLE    1 // enable uart0 depend on uart pin used. uart pin are define as enumeration types, cannot be used during the preprocessing stage.
+#define UART1_ENABLE    0 // enable uart1 depend on uart pin used.
+
 #define UART_DMA_BAUDRATE		115200
 #elif (HCI_ACCESS==HCI_USE_USB)
 ////////////USB DP DM///////////////////////////////////////
@@ -161,7 +170,7 @@
 #endif
 
 ///////////////////////// UI Configuration ////////////////////////////////////////////////////
-#if (AUDIO_MESH_EN || GATT_LPN_EN || DF_TEST_MODE_EN || IV_UPDATE_TEST_EN)
+#if (AUDIO_MESH_EN || GATT_LPN_EN || DF_TEST_MODE_EN || IV_UPDATE_TEST_EN || MESH_RX_TEST)
 #define	UI_KEYBOARD_ENABLE							1
 #endif
 
@@ -336,8 +345,6 @@
 #define CLOCK_SYS_CLOCK_HZ  	96000000
 #elif DUAL_MESH_ZB_BL_EN // keep same with zb
 #define CLOCK_SYS_CLOCK_HZ  	32000000
-#elif (MI_API_ENABLE)
-#define CLOCK_SYS_CLOCK_HZ  	48000000
 #elif SPEECH_ENABLE
 #define CLOCK_SYS_CLOCK_HZ  	48000000
 #else
@@ -350,7 +357,7 @@
 #define	CLOCK_PWM_CLOCK_1US     (CLOCK_PWM_CLOCK_1S / 1000000)
 
 /////////////////// watchdog  //////////////////////////////
-#define MODULE_WATCHDOG_ENABLE		0
+#define MODULE_WATCHDOG_ENABLE		1
 #define WATCHDOG_INIT_TIMEOUT		2000
 
 ///////////////////////// DEBUG  Configuration ////////////////////////////////////////////////

@@ -1,10 +1,10 @@
 /********************************************************************************************************
- * @file     config.h
+ * @file    config.h
  *
- * @brief    This is the header file for BLE SDK
+ * @brief   This is the header file for BLE SDK
  *
- * @author	 BLE GROUP
- * @date         06,2022
+ * @author  BLE GROUP
+ * @date    06,2022
  *
  * @par     Copyright (c) 2022, Telink Semiconductor (Shanghai) Co., Ltd. ("TELINK")
  *
@@ -19,19 +19,13 @@
  *          WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  *          See the License for the specific language governing permissions and
  *          limitations under the License.
+ *
  *******************************************************************************************************/
-
 #ifndef CONFIG_H_
 #define CONFIG_H_
-#pragma once
 
-#ifndef CHIP_TYPE
-#if(WIN32)
-#define	CHIP_TYPE 			CHIP_TYPE_8269
-#else
-#define	CHIP_TYPE 			1000
-#endif
-#endif
+
+#pragma once
 
 #define	CHIP_TYPE_8266  	1
 #define	CHIP_TYPE_8366  	2
@@ -41,13 +35,13 @@
 #define CHIP_TYPE_8261		6
 #define CHIP_TYPE_8269		7
 #define	CHIP_TYPE_8258		8
+#define	CHIP_TYPE_825x      CHIP_TYPE_8258
 #define	CHIP_TYPE_8278		9
+#define CHIP_TYPE_827x      CHIP_TYPE_8278
 #define	CHIP_TYPE_9518		10
 #define CHIP_TYPE_B91		CHIP_TYPE_9518
-#define CHIP_TYPE_B92       11
-#define CHIP_TYPE_TL751X    12
-#define CHIP_TYPE_TL721X    13
-#define CHIP_TYPE_TL321X    14
+#define CHIP_TYPE_TL321X    11
+#define CHIP_TYPE_TC321X	12
 
 #define	MCU_CORE_8266 		1
 #define	MCU_CORE_8366 		2
@@ -57,36 +51,26 @@
 #define MCU_CORE_8261 		6
 #define MCU_CORE_8269 		7
 #define MCU_CORE_8258 		8
+#define	MCU_CORE_825x       MCU_CORE_8258
 #define MCU_CORE_8278 		9
+#define MCU_CORE_827x       MCU_CORE_8278
 #define	MCU_CORE_9518 		10
 #define MCU_CORE_B91 		MCU_CORE_9518
-#define MCU_CORE_B92        11
-#define MCU_CORE_TL751X     12
-#define MCU_CORE_TL721X     13
-#define MCU_CORE_TL321X     14
+#define MCU_CORE_TL321X     11
+#define MCU_CORE_TC321X     12
 
-#if(CHIP_TYPE == CHIP_TYPE_8266)
-	#define MCU_CORE_TYPE	MCU_CORE_8266
-#elif(CHIP_TYPE == CHIP_TYPE_8267)
-	#define MCU_CORE_TYPE	MCU_CORE_8267
-#elif(CHIP_TYPE == CHIP_TYPE_8366)
-	#define MCU_CORE_TYPE	MCU_CORE_8366
-#elif(CHIP_TYPE == CHIP_TYPE_8368)
-	#define MCU_CORE_TYPE	MCU_CORE_8368
-#elif(CHIP_TYPE == CHIP_TYPE_8263)
-	#define MCU_CORE_TYPE	MCU_CORE_8263
-#elif(CHIP_TYPE == CHIP_TYPE_8261)
-	#define MCU_CORE_TYPE	MCU_CORE_8261
-#elif(CHIP_TYPE == CHIP_TYPE_8269)
-	#define MCU_CORE_TYPE	MCU_CORE_8269
-#elif(CHIP_TYPE == CHIP_TYPE_8258)
-	#define MCU_CORE_TYPE	MCU_CORE_8258
-#elif(CHIP_TYPE == CHIP_TYPE_8278)
-	#define MCU_CORE_TYPE	MCU_CORE_8278
+#ifndef CHIP_TYPE
+#define	CHIP_TYPE 			CHIP_TYPE_825x
+#endif
+
+#if(CHIP_TYPE == CHIP_TYPE_TC321X)
+	#define MCU_CORE_TYPE	MCU_CORE_TC321X
+#elif(CHIP_TYPE == CHIP_TYPE_825x)
+	#define MCU_CORE_TYPE	MCU_CORE_825x
+#elif(CHIP_TYPE == CHIP_TYPE_827x)
+	#define MCU_CORE_TYPE	MCU_CORE_827x
 #elif(CHIP_TYPE == CHIP_TYPE_9518)
 	#define MCU_CORE_TYPE	MCU_CORE_9518
-#elif(CHIP_TYPE == CHIP_TYPE_B92)
-    #define MCU_CORE_TYPE	MCU_CORE_B92
 #elif(CHIP_TYPE == CHIP_TYPE_TL751X)
     #define MCU_CORE_TYPE   MCU_CORE_TL751X
 #elif(CHIP_TYPE == CHIP_TYPE_TL721X)
@@ -96,13 +80,6 @@
 #else
 	#define MCU_CORE_TYPE	1000
 #endif
-
-#define FREERTOS_ENABLE		0
-
-#ifndef CHIP_TYPE
-#define	CHIP_TYPE 			1000
-#endif
-
 
 
 

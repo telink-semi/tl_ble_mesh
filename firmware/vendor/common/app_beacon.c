@@ -72,6 +72,21 @@ int mesh_beacon_send_proc(void)
 {
 	int err = -1;
 #ifndef WIN32
+    if(blc_ll_getCurrentState() == BLS_LINK_STATE_CONN){
+        if (proxy_Out_ccc[0]==1 && proxy_Out_ccc[1]==0){
+            if(is_provision_success() && beacon_send.conn_handle){
+                err = mesh_tx_sec_private_beacon_proc(1);// send conn beacon to the provisioner
+
+                if(0 == err){
+                    beacon_send.conn_handle = 0;
+                    #if (MD_DF_CFG_SERVER_EN)
+                    mesh_directed_proxy_capa_report_upon_connection(beacon_send.conn_handle); // report after security network beacon.
+                    #endif
+                }
+            }
+        }
+    }
+
 	// dispatch when connected whether it need to send the unprovisioned beacon 
 	if(beacon_send.en && clock_time_exceed(beacon_send.tick ,beacon_send.inter)&&!is_provision_success()){
 		beacon_send.tick = clock_time();
@@ -334,7 +349,7 @@ Proxy Privacy parameter				Behavior
 int mesh_tx_sec_nw_beacon_all_net(u8 blt_sts)
 {
 	int err = 0;
-	if(!is_provision_success()|| is_iv_index_invalid() || MI_API_ENABLE){// if not provisioned it will not send secure beacon .
+	if(!is_provision_success() || is_iv_index_invalid()){// if not provisioned it will not send secure beacon .
 		return err;
 	}
 	
@@ -351,7 +366,7 @@ int mesh_tx_sec_nw_beacon_all_net(u8 blt_sts)
 		/* in the pts private beacon proxy bv-07c , it should not send 
 		two secure beacon on gatt connection , other wise the filter sts will fail*/
 		err = mesh_tx_sec_nw_beacon(p_netkey_base, blt_sts);
-		if(blt_sts && beacon_send.conn_beacon_flag ){
+		if(blt_sts && beacon_send.conn_handle ){
 			break;
 		}
 		#else

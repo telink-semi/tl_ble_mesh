@@ -28,8 +28,7 @@
 #if __TLSR_RISCV_EN__
 #include "stack/ble/ble.h"
 #else
-#include "proj_lib/ble/ll/ll.h"
-#include "proj_lib/ble/ble_common.h"
+#include "stack/ble/ble.h"
 #endif
 #include "proj_lib/ble/blt_config.h"
 
@@ -415,10 +414,7 @@ extern const u8	const_tbl_scanRsp [9] ;
 
 #define ADV_INTERVAL_1_2_S		1920 //625*1920 = 1.2s
 
-#if MI_SWITCH_LPN_EN
-#define ADV_INTERVAL_MIN		(ADV_INTERVAL_1_2_S)
-#define ADV_INTERVAL_MAX		(ADV_INTERVAL_1_2_S)
-#elif DU_LPN_EN
+#if DU_LPN_EN
 #define ADV_INTERVAL_MIN		(DU_ADV_INTER_VAL-(DU_ADV_INTER_VAL/10))
 #define ADV_INTERVAL_MAX		(DU_ADV_INTER_VAL+(DU_ADV_INTER_VAL/10))
 #elif SPIRIT_PRIVATE_LPN_EN
@@ -440,18 +436,7 @@ extern const u8	const_tbl_scanRsp [9] ;
 #define ADV_INTERVAL_MAX		(ADV_INTERVAL_UNIT)
 #endif
 
-#if MI_API_ENABLE
-	#if MI_SWITCH_LPN_EN
-#define ADV_INTERVAL_MS			(20)   // no random 20ms
-#define ADV_INTERVAL_MS_PROVED	(20)
-	#elif DU_LPN_EN
-#define ADV_INTERVAL_MS			(20)   // no random 40ms
-#define ADV_INTERVAL_MS_PROVED	(20)	
-	#else
-#define ADV_INTERVAL_MS			(105-20)   // with random (0~30ms)
-#define ADV_INTERVAL_MS_PROVED	(120-20)   // change it send more frequently 
-	#endif
-#elif HOMEKIT_EN	
+#if HOMEKIT_EN	
 #define ADV_INTERVAL_MS			(ADV_INTERVAL_30MS)
 #define ADV_SWITCH_MESH_TIMES 	(4)
 #else
@@ -471,14 +456,7 @@ extern const u8	const_tbl_scanRsp [9] ;
 	#endif
 #endif
 
-#if MI_API_ENABLE
-#define TRANSMIT_CNT_DEF		(7)
-#define TRANSMIT_INVL_STEPS_DEF	(0)	
-	#if(AIS_ENABLE)//MI AIS dual mode
-	#define AIS_TRANSMIT_CNT_DEF		(5)
-	#define AIS_TRANSMIT_INVL_STEPS_DEF	(2)	
-	#endif
-#elif SPIRIT_PRIVATE_LPN_EN
+#if SPIRIT_PRIVATE_LPN_EN
 #define TRANSMIT_CNT_DEF		(7)
 #define TRANSMIT_INVL_STEPS_DEF	(0)
 #elif DU_ENABLE
@@ -501,17 +479,9 @@ extern const u8	const_tbl_scanRsp [9] ;
 #define TRANSMIT_DEF_PAR		(model_sig_cfg_s.nw_transmit.val)
 #define TRANSMIT_CNT			(model_sig_cfg_s.nw_transmit.count)
 #define TRANSMIT_INVL_STEPS		(model_sig_cfg_s.nw_transmit.invl_steps)
-	#if MI_API_ENABLE
-#define TRANSMIT_CNT_DEF_RELAY  (2)
-#define TRANSMIT_INVL_STEPS_DEF_RELAY	(4)
-		#if(AIS_ENABLE)
-		#define AIS_TRANSMIT_CNT_DEF_RELAY  (AIS_TRANSMIT_CNT_DEF)
-		#define AISTRANSMIT_INVL_STEPS_DEF_RELAY	(AIS_TRANSMIT_INVL_STEPS_DEF)
-		#endif
-	#else
+
 #define TRANSMIT_CNT_DEF_RELAY          (TRANSMIT_CNT_DEF) // (3)
 #define TRANSMIT_INVL_STEPS_DEF_RELAY	(TRANSMIT_INVL_STEPS_DEF) // (0)
-	#endif
 
 #define CMD_RAND_DELAY_MAX_MS   (10)
 #define CMD_INTERVAL_MS         ((u32)((GET_ADV_INTERVAL_MS(ADV_INTERVAL_UNIT)*(TRANSMIT_INVL_STEPS+1) + CMD_RAND_DELAY_MAX_MS) * (TRANSMIT_CNT + 1)))
@@ -540,11 +510,8 @@ extern const u8	const_tbl_scanRsp [9] ;
 #define SAR_ACK_DELAY_INC						((SAR_ACK_DELAY_INC_DEF*10 + 15)/10)
 #endif
 #define SAR_ACK_RETRANS_INVL_MS					((mesh_rx_seg_par.seg_cnt == (mesh_rx_seg_par.seg_N+1))?(SAR_RCV_SEG_INVL_STEP_MS*SAR_ACK_DELAY_INC):SAR_RCV_SEG_INVL_STEP_MS)
-#if MI_API_ENABLE
-#define SEG_RX_ACK_IDLE_MS						200
-#else
 #define SEG_RX_ACK_IDLE_MS						((mesh_rx_seg_par.seg_ack_cnt == SAR_ACK_RETRANS_CNT)? SAR_ACK_DELAY_MS(mesh_rx_seg_par.seg_N):SAR_ACK_RETRANS_INVL_MS)
-#endif
+
 // sar transmitter
 #define SAR_SEG_INVL_STEP_DEF						1 // unit:10ms
 #define SAR_UNICAST_RETRANS_CNT_DEF					7 // max 4bit	
@@ -600,11 +567,8 @@ extern const u8	const_tbl_scanRsp [9] ;
 #endif
 
 #define TTL_TEST_ACK            (0x0b)
-#if MI_API_ENABLE
-#define TTL_DEFAULT             (5)
-#else
 #define TTL_DEFAULT             (10)         // max relay count = TTL_DEFAULT - 1
-#endif
+
 #define TTL_MAX                 (0x7F)
 #define TTL_PUB_USE_DEFAULT     (0xFF)
 
@@ -701,6 +665,12 @@ typedef struct __attribute__((packed)) {
 	u8 par_type;	// bear_tx_par_type_t // it's better that the first byte is not a variable in bit filed format.
 	u16 conn_handle; // connection handle.
 }bear_conn_handle_t;
+
+typedef struct __attribute__((packed)) {
+    u8 par_type;	// bear_tx_par_type_t // it's better that the first byte is not a variable in bit filed format.
+    u8 low_sno;     // lowest byte of mesh_adv_tx_cmd_sno.
+    u8 fsn;         // next FSN in friend poll.
+}bear_fn_poll_t;
 
 #define MESH_CONN_HANDLE_AUTO	0 // auto choose connection handle by check destination address in proxy filter list.
 
@@ -873,7 +843,7 @@ typedef struct __attribute__((packed)) {
 #if IV_UPDATE_SKIP_96HOUR_EN
 #define SEC_NW_BC_INV_DEF_1S       		(2)		// security network beacon interval default
 #else
-	#if (MI_API_ENABLE || SPIRIT_PRIVATE_LPN_EN)
+	#if (SPIRIT_PRIVATE_LPN_EN)
 #define SEC_NW_BC_INV_DEF_1S       		(20)   	// set the mi secure beacon to 20s	
 	#else
 		#if FEATURE_LOWPOWER_EN
@@ -921,6 +891,12 @@ typedef struct __attribute__((packed)) {
 	u16 obo     :1;     // Friend on behalf of a Low Power node
 	u8 seg_map[4];		// bit numbers of seg_map and max value of (mesh_cmd_lt_ctl_seg_t->segN) limit that the max UT length is 380.
 }mesh_cmd_lt_ctl_seg_ack_t;
+
+typedef struct{
+	u8 opcode   :7;
+	u8 seg      :1;
+	u8 TransNo;
+}mesh_cmd_lt_ctl_subs_conf_t; // mesh command Lower transport layer control Friend Subscription List Confirm
 
 //----------------------------------- network layer
 typedef struct __attribute__((packed)) {     // need little endianness to big
@@ -995,6 +971,7 @@ typedef struct __attribute__((packed)) {
                 mesh_cmd_lt_ctl_unseg_t lt_ctl_unseg;
                 mesh_cmd_lt_ctl_seg_t lt_ctl_seg;
                 mesh_cmd_lt_ctl_seg_ack_t lt_ctl_ack;
+				mesh_cmd_lt_ctl_subs_conf_t lt_ctl_subs_conf;
             };
         };
         mesh_beacon_t beacon;
@@ -1033,6 +1010,8 @@ typedef struct __attribute__((packed)) {
 #else
 #define DELTA_EXTEND_AND_NORMAL_ALIGN4_BUF  0
 #endif
+
+#define MESH_CMD_BEAR_SIZE  		(sizeof(mesh_cmd_bear_t)+DELTA_EXTEND_AND_NORMAL_ALIGN4_BUF)
 
 #define TELINK_RELAY_TEST_EN		0 // for telink internal
 
@@ -1245,9 +1224,19 @@ void mesh_seg_tx_set_one_pkt_completed(mesh_tx_seg_dst_type dst_type);
 #define FRI_LPN_WAIT_SEG_ACK_MS     (500)	// 
 
 #define LPN_MIN_CACHE_SIZE_LOG      (1)     // at lease 2 messages
-#define LPN_POLL_TIMEOUT_100MS      (10*10) // unit: 100ms, 0x0A~0x34BBFF
-#define FRI_POLL_INTERVAL_MS        (2000)	// auto send poll interval
-#define FRI_POLL_INTERVAL_MS_MESH_OTA	(400)		// used when mesh ota activated
+
+#define FRI_POLL_INTERVAL_MS        (2 * 1000) // auto send poll interval. User can use mesh_lpn_poll_interval_set() to update poll interval.
+#define FRI_POLL_INTERVAL_MS_MESH_OTA   (400)  // used when mesh ota activated
+
+#define LPN_POLL_TIMEOUT_100MS      ((FRI_POLL_INTERVAL_MS << 2) / (10*10)) // unit: 100ms, 0x0A~0x34BBFF
+#define LPN_POLL_TIMING_MARGIN_MS   (100)
+#define LPN_LONG_SLEEP_THRES_MS     (40 * 1000) // don't modify, because intervalMin in bls_ll_setAdvInterval is u16, max is (0xffff*625)us = 40s. Must use long sleep when poll interval > 40s.
+
+#if (FRI_POLL_INTERVAL_MS > LPN_LONG_SLEEP_THRES_MS)
+#define LPN_LONG_SLEEP_WAKEUP_EN    1 // don't modify
+#else
+#define LPN_LONG_SLEEP_WAKEUP_EN    0
+#endif
 
 #define FRI_REQ_TIMEOUT_MS          (2000)  // must larger than 1100ms
 #define FRI_REQ_RETRY_IDLE_MS       (FRI_REQ_TIMEOUT_MS - FRI_ESTABLISH_PERIOD_MS)	// auto trigger next FRI_REQ_RETRY_MAX request interval 
@@ -1291,10 +1280,12 @@ typedef struct{
 
 typedef struct{
     u32 req_tick;
-    u32 poll_tick;
+    u32 poll_time_ms;
     u32 poll_retry;
     u8 status;
     u8 req_retrys;
+    u8 last_op;
+    u8 poll_md_pending; // poll more data pending
 }mesh_fri_ship_proc_lpn_t;
 
 typedef struct{
@@ -1387,32 +1378,23 @@ typedef struct __attribute__((packed)) {
 	u16 adr[SUB_LIST_MAX_LPN];
 }mesh_lpn_subsc_list_t;
 
-typedef struct{
+typedef struct __attribute__((packed)) {
     u32 tick;
     u8 retry_type;
     u8 retry_cnt;
     u8 subsc_cnt;
+    u8 total_cnt;
     u8 TransNo;
 	u16 adr[SUB_LIST_MAX_IN_ONE_MSG];
 }mesh_subsc_list_retry_t;
 
-typedef struct{
-    u32 tick;
-    u8 *poll_rsp;
-    u16 adr_dst;
-    u16 par_val;
-    u8 nk_array_idx;    // pkt decryption key
-    u8 delay_type;
-}fn_ctl_rsp_delay_t;
+typedef struct __attribute__((packed)) {
+    u32 tx_tick;
+    u8 is_fn_update;
+	u8 data[MESH_CMD_BEAR_SIZE];
+}mesh_fn2lpn_tx_buf_t;
 
-typedef struct{
-    u32 tick_tx;
-    u32 sleep_ms;      // sleep time ms
-    u16 op;
-    u8 sleep_ready;
-}mesh_lpn_sleep_t;
-
-typedef struct{
+typedef struct __attribute__((packed)){
     u16 LPNAdr;
     u16 FriAdr;
 	mesh_ctl_fri_req_t req;
@@ -1420,6 +1402,8 @@ typedef struct{
 	mesh_ctl_fri_poll_t poll;
 	mesh_ctl_fri_update_t update;
     u8 link_ok;
+	u8 fsn_update;
+    u8 long_sleep_flag;
 }mesh_lpn_par_t;
 
 //--------------directed forwarding-------------------//
@@ -1603,13 +1587,13 @@ typedef struct{
 
 //-------------------------
 extern _align_4_ my_fifo_t mesh_fri_cache_fifo[MAX_LPN_NUM];
+extern _align_4_ mesh_fn2lpn_tx_buf_t mesh_fn2lpn_tx_buf[];
 extern _align_4_ mesh_ctl_fri_poll_t fn_poll[MAX_LPN_NUM];
 extern _align_4_ mesh_ctl_fri_update_t fn_update[MAX_LPN_NUM];
 extern _align_4_ mesh_ctl_fri_req_t fn_req[MAX_LPN_NUM];
 extern _align_4_ mesh_ctl_fri_offer_t fn_offer[MAX_LPN_NUM];
 
 extern _align_4_ mesh_fri_ship_other_t fn_other_par[];
-extern _align_4_ fn_ctl_rsp_delay_t fn_ctl_rsp_delay[MAX_LPN_NUM];
 extern _align_4_ mesh_fri_ship_proc_fn_t fri_ship_proc_fn[MAX_LPN_NUM];
 extern _align_4_ mesh_fri_ship_proc_lpn_t fri_ship_proc_lpn;
 extern _align_4_ mesh_lpn_par_t mesh_lpn_par;
@@ -1684,7 +1668,7 @@ int key_refresh_phase_set_by_index(u16 nk_idx, u8 phase_set);
 #endif
 
 #if MESH_TX_RX_SELF_EN
-#define RPL_PROTECT_SNO_DELTA			4
+#define RPL_PROTECT_SNO_DELTA			16
 #endif
 
 typedef struct __attribute__((packed)) {
@@ -1934,6 +1918,7 @@ void mesh_lpn_sleep_prepare(u16 op);
 void mesh_friend_ship_proc_init_lpn(void);
 
 void suspend_enter(u32 sleep_ms, int deep_retention_flag);
+int mesh_tx_cmd_layer_upper_ctl_ll(material_tx_cmd_t *p_mat, u8 filter_cfg);
 int mesh_tx_cmd_layer_upper_ctl2(u16 conn_handle, u8 op, u8 *par, u32 len_par, u16 adr_src, u16 adr_dst,u8 is_proxy_cfg, u8 nk_array_idx);
 int mesh_tx_cmd_layer_upper_ctl(u8 op, u8 *par, u32 len_par, u16 adr_src, u16 adr_dst,u8 is_proxy_cfg);
 int mesh_tx_cmd_layer_proxy_cfg_primary(u16 conn_handle, u8 op, u8 *par, u32 len_par, u16 adr_dst);
@@ -2536,6 +2521,7 @@ void update_nw_notify_num(u8 * p_rf_pkt, u8 next_buffer);
 #endif
 //--------------- include
 #include "vendor/common/mesh_network_layer.h"
+#include "vendor/common/mesh_transport_layer.h"
 #include "vendor/common/mesh_node.h"
 #include "proj_lib/mesh_crypto/mesh_crypto.h"
 #include "vendor/common/config_model.h"
@@ -2547,10 +2533,6 @@ void update_nw_notify_num(u8 * p_rf_pkt, u8 next_buffer);
 #include "vendor/common/mesh_common.h"
 #include "vendor/common/vendor_model.h"
 #include "vendor/common/fast_provision_model.h"
-#if MI_API_ENABLE
-#include "vendor/common/mi_api/mi_vendor/vendor_model_mi.h"
-#include "mi_config.h"
-#endif
 #include "vendor/common/cmd_interface.h"
 #include "vendor/common/op_agg_model.h"
 

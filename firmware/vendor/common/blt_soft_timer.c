@@ -23,14 +23,8 @@
  *
  *******************************************************************************************************/
 #include "tl_common.h"
-#if (BLT_SOFTWARE_TIMER_ENABLE && (MCU_CORE_TYPE != MCU_CORE_8269))
-#if(MCU_CORE_TYPE == MCU_CORE_8258)
+#if (BLT_SOFTWARE_TIMER_ENABLE)
 #include "stack/ble/ble.h"
-#elif(MCU_CORE_TYPE == MCU_CORE_8278)
-#include "stack/ble_8278/ble.h"
-#elif(MCU_CORE_TYPE == MCU_CORE_9518)
-#include "stack/ble/ble.h"
-#endif
 #include "blt_soft_timer.h"
 #include "proj_lib/sig_mesh/app_mesh.h"
 
@@ -94,7 +88,7 @@ int blt_soft_timer_add(blt_timer_callback_t func, u32 interval_us)
 	}
 	else{
 		blt_timer.timer[blt_timer.currentNum].cb = func;
-		blt_timer.timer[blt_timer.currentNum].interval = interval_us * CLOCK_16M_SYS_TIMER_CLK_1US;
+		blt_timer.timer[blt_timer.currentNum].interval = interval_us * CLOCK_SYS_TIMER_CLK_1US;
 		blt_timer.timer[blt_timer.currentNum].t = now + blt_timer.timer[blt_timer.currentNum].interval;
 		blt_timer.currentNum ++;
 
@@ -225,7 +219,7 @@ void  	blt_soft_timer_process(int type)
 				}
 				else{  //set new timer interval
 					change_flg = 1;
-					blt_timer.timer[i].interval = result * CLOCK_16M_SYS_TIMER_CLK_1US;
+					blt_timer.timer[i].interval = result * CLOCK_SYS_TIMER_CLK_1US;
 					blt_timer.timer[i].t = now + blt_timer.timer[i].interval;
 				}
 			}

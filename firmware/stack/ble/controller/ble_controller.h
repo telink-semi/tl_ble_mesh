@@ -25,7 +25,6 @@
 #define BLE_CONTROLLER_H_
 
 
-
 #include "stack/ble/ble_common.h"
 #include "stack/ble/ble_format.h"
 
@@ -38,6 +37,7 @@
 #include "stack/ble/controller/ll/ll.h"
 #include "stack/ble/controller/ll/ll_pm.h"
 
+#include "stack/ble/controller/ll/fsu/ll_fsu.h"
 #include "stack/ble/controller/ll/acl_conn/acl_conn.h"
 #include "stack/ble/controller/ll/acl_conn/acl_peripheral.h"
 #include "stack/ble/controller/ll/acl_conn/acl_central.h"
@@ -52,6 +52,7 @@
 #include "stack/ble/controller/ll/scan/scan.h"
 #include "stack/ble/controller/ll/scan/leg_scan.h"
 #include "stack/ble/controller/ll/scan/ext_scan.h"
+#include "stack/ble/controller/ll/scan/mon_adv.h"
 
 
 #include "stack/ble/controller/ll/init/init.h"
@@ -70,7 +71,7 @@
 
 #include "stack/ble/controller/phy/phy.h"
 #include "stack/ble/controller/phy/phy_test.h"
-
+#include "stack/ble/controller/phy/hdt_phy_test.h"
 
 
 #include "stack/ble/controller/contr_comp.h"
@@ -81,5 +82,9 @@
 
 #include "algorithm/algorithm.h"
 
+#include "stack/ble/controller/ll/hdt/hdt.h"
+
+
+#include "stack/ble/ble_ext/ext_ble.h" // BLE_SRC_TELINK_MESH_EN
 
 #endif /* BLE_H_ */

@@ -84,13 +84,15 @@
 #if (HCI_ACCESS==HCI_USE_UART)
 #define UART_TX_PIN				UART0_TX_PB2
 #define UART_RX_PIN				UART0_RX_PB3
-#define UART_NUM_USE            0
 
 #define UART_SECOND_EN          0
     #if UART_SECOND_EN
 #define UART_TX_PIN_SECOND		UART1_TX_PC6
 #define UART_RX_PIN_SECOND		UART1_RX_PC7
     #endif
+
+#define UART0_ENABLE    1 // enable uart0 depend on uart pin used. uart pin are define as enumeration types, cannot be used during the preprocessing stage.
+#define UART1_ENABLE    0 // enable uart1 depend on uart pin used.
 
 #define UART_DMA_BAUDRATE		115200
 #endif
@@ -127,13 +129,7 @@
 #if (MESH_RX_TEST || (!MD_DEF_TRANSIT_TIME_EN) || SPEECH_ENABLE)
 #define TRANSITION_TIME_DEFAULT_VAL (0)
 #else
-	#if MI_API_ENABLE
-#define TRANSITION_TIME_DEFAULT_VAL	0
-	#elif LPN_CONTROL_EN
-#define TRANSITION_TIME_DEFAULT_VAL	0
-	#else
 #define TRANSITION_TIME_DEFAULT_VAL (GET_TRANSITION_TIME_WITH_STEP(1, TRANSITION_STEP_RES_1S)) // (0x41)  // 0x41: 1 second // 0x00: means no default transition time
-	#endif
 #endif
 #endif
 
@@ -169,7 +165,7 @@
 #endif
 
 ///////////////////////// UI Configuration ////////////////////////////////////////////////////
-#if (AUDIO_MESH_EN || GATT_LPN_EN || DU_ENABLE || DF_TEST_MODE_EN || IV_UPDATE_TEST_EN)
+#if (AUDIO_MESH_EN || GATT_LPN_EN || DU_ENABLE || DF_TEST_MODE_EN || IV_UPDATE_TEST_EN || MESH_RX_TEST)
 #define	UI_KEYBOARD_ENABLE							1
 #endif
 
@@ -344,8 +340,6 @@
 #define CLOCK_SYS_CLOCK_HZ  	96000000
 #elif DUAL_MESH_ZB_BL_EN // keep same with zb
 #define CLOCK_SYS_CLOCK_HZ  	32000000
-#elif (MI_API_ENABLE)
-#define CLOCK_SYS_CLOCK_HZ  	48000000
 #elif SPEECH_ENABLE
 #define CLOCK_SYS_CLOCK_HZ  	48000000
 #else
@@ -358,7 +352,7 @@
 #define	CLOCK_PWM_CLOCK_1US     (CLOCK_PWM_CLOCK_1S / 1000000)
 
 /////////////////// watchdog  //////////////////////////////
-#define MODULE_WATCHDOG_ENABLE		0
+#define MODULE_WATCHDOG_ENABLE		1
 #define WATCHDOG_INIT_TIMEOUT		2000
 
 ///////////////////////// DEBUG  Configuration ////////////////////////////////////////////////
@@ -404,116 +398,73 @@
  */
 #if (JTAG_DEBUG_DISABLE)
 	//JTAG will cost some power
-	#if (MCU_CORE_TYPE == MCU_CORE_B91)
-		#define PE4_FUNC			AS_GPIO
-		#define PE5_FUNC			AS_GPIO
-		#define PE6_FUNC			AS_GPIO
-		#define PE7_FUNC			AS_GPIO
+	#define PE4_FUNC			AS_GPIO
+	#define PE5_FUNC			AS_GPIO
+	#define PE6_FUNC			AS_GPIO
+	#define PE7_FUNC			AS_GPIO
 
-		#define PE4_INPUT_ENABLE	0
-		#define PE5_INPUT_ENABLE	0
-		#define PE6_INPUT_ENABLE	0
-		#define PE7_INPUT_ENABLE	0
+	#define PE4_INPUT_ENABLE	0
+	#define PE5_INPUT_ENABLE	0
+	#define PE6_INPUT_ENABLE	0
+	#define PE7_INPUT_ENABLE	0
 
-		#define PULL_WAKEUP_SRC_PE4	0
-		#define PULL_WAKEUP_SRC_PE5	0
-		#define PULL_WAKEUP_SRC_PE6	0
-		#define PULL_WAKEUP_SRC_PE7	0
-	#elif (MCU_CORE_TYPE == MCU_CORE_B92)
-		#define PC4_FUNC			AS_GPIO
-		#define PC5_FUNC			AS_GPIO
-		#define PC6_FUNC			AS_GPIO
-		#define PC7_FUNC			AS_GPIO
-
-		#define PC4_INPUT_ENABLE	0
-		#define PC5_INPUT_ENABLE	0
-		#define PC6_INPUT_ENABLE	0
-		#define PC7_INPUT_ENABLE	0
-
-		#define PULL_WAKEUP_SRC_PC4	0
-		#define PULL_WAKEUP_SRC_PC5	0
-		#define PULL_WAKEUP_SRC_PC6	0
-		#define PULL_WAKEUP_SRC_PC7	0
-	#endif
+	#define PULL_WAKEUP_SRC_PE4	0
+	#define PULL_WAKEUP_SRC_PE5	0
+	#define PULL_WAKEUP_SRC_PE6	0
+	#define PULL_WAKEUP_SRC_PE7	0
+#else
+    #define PE4_FUNC            AS_TDI
+    #define PE5_FUNC            AS_TDO
+    #define PE6_FUNC            AS_TMS
+    #define PE7_FUNC            AS_TCK
+    #define PE4_INPUT_ENABLE	1
+	#define PE5_INPUT_ENABLE	1
+	#define PE6_INPUT_ENABLE	1
+	#define PE7_INPUT_ENABLE    1
+    #define PULL_WAKEUP_SRC_PE4 GPIO_PIN_PULLDOWN_100K
+    #define PULL_WAKEUP_SRC_PE6 GPIO_PIN_PULLUP_10K
+    #define PULL_WAKEUP_SRC_PE7 GPIO_PIN_PULLUP_10K
 #endif
 
 
+
 #if (DEBUG_GPIO_ENABLE)
-	#if (MCU_CORE_TYPE == MCU_CORE_B91)
-		#define GPIO_CHN0							GPIO_PE1
-		#define GPIO_CHN1							GPIO_PE2
-		#define GPIO_CHN2							GPIO_PA0
-		#define GPIO_CHN3							GPIO_PA4
-		#define GPIO_CHN4							GPIO_PA3
-		#define GPIO_CHN5							GPIO_PB0
-		#define GPIO_CHN6							GPIO_PB2
-		#define GPIO_CHN7							GPIO_PE0
+	#define GPIO_CHN0							GPIO_PE1
+	#define GPIO_CHN1							GPIO_PE2
+	#define GPIO_CHN2							GPIO_PA0
+	#define GPIO_CHN3							GPIO_PA4
+	#define GPIO_CHN4							GPIO_PA3
+	#define GPIO_CHN5							GPIO_PB0
+	#define GPIO_CHN6							GPIO_PB2
+	#define GPIO_CHN7							GPIO_PE0
 
-		#define GPIO_CHN8							GPIO_PA2
-		#define GPIO_CHN9							GPIO_PA1
-		#define GPIO_CHN10							GPIO_PB1
-		#define GPIO_CHN11							GPIO_PB3
-		#define GPIO_CHN12							GPIO_PC7
-		#define GPIO_CHN13							GPIO_PC6
-		#define GPIO_CHN14							GPIO_PC5
-		#define GPIO_CHN15							GPIO_PC4
-
-
-		#define PE1_OUTPUT_ENABLE					1
-		#define PE2_OUTPUT_ENABLE					1
-		#define PA0_OUTPUT_ENABLE					1
-		#define PA4_OUTPUT_ENABLE					1
-		#define PA3_OUTPUT_ENABLE					1
-		#define PB0_OUTPUT_ENABLE					1
-		#define PB2_OUTPUT_ENABLE					1
-		#define PE0_OUTPUT_ENABLE					1
-
-		#define PA2_OUTPUT_ENABLE					1
-		#define PA1_OUTPUT_ENABLE					1
-		#define PB1_OUTPUT_ENABLE					1
-		#define PB3_OUTPUT_ENABLE					1
-		#define PC7_OUTPUT_ENABLE					1
-		#define PC6_OUTPUT_ENABLE					1
-		#define PC5_OUTPUT_ENABLE					1
-		#define PC4_OUTPUT_ENABLE					1
-	#elif (MCU_CORE_TYPE == MCU_CORE_B92)
-		#define GPIO_CHN0							GPIO_PA1
-		#define GPIO_CHN1							GPIO_PA2
-		#define GPIO_CHN2							GPIO_PA3
-		#define GPIO_CHN3							GPIO_PA4
-		#define GPIO_CHN4							GPIO_PB1
-		#define GPIO_CHN5							GPIO_PB2
-		#define GPIO_CHN6							GPIO_PB3
-		#define GPIO_CHN7							GPIO_PB4
-
-		#define GPIO_CHN8							GPIO_PB5
-		#define GPIO_CHN9							GPIO_PB6
-		#define GPIO_CHN10							GPIO_PB7
-		#define GPIO_CHN11							GPIO_PC0
-		#define GPIO_CHN12							GPIO_PE0
-		#define GPIO_CHN13							GPIO_PE1
-		#define GPIO_CHN14							GPIO_PE2
-		#define GPIO_CHN15							GPIO_PE3
+	#define GPIO_CHN8							GPIO_PA2
+	#define GPIO_CHN9							GPIO_PA1
+	#define GPIO_CHN10							GPIO_PB1
+	#define GPIO_CHN11							GPIO_PB3
+	#define GPIO_CHN12							GPIO_PC7
+	#define GPIO_CHN13							GPIO_PC6
+	#define GPIO_CHN14							GPIO_PC5
+	#define GPIO_CHN15							GPIO_PC4
 
 
-		#define PA1_OUTPUT_ENABLE					1
-		#define PA2_OUTPUT_ENABLE					1
-		#define PA3_OUTPUT_ENABLE					1
-		#define PA4_OUTPUT_ENABLE					1
-		#define PB1_OUTPUT_ENABLE					1
-		#define PB2_OUTPUT_ENABLE					1
-		#define PB3_OUTPUT_ENABLE					1
-		#define PB4_OUTPUT_ENABLE					1
+	#define PE1_OUTPUT_ENABLE					1
+	#define PE2_OUTPUT_ENABLE					1
+	#define PA0_OUTPUT_ENABLE					1
+	#define PA4_OUTPUT_ENABLE					1
+	#define PA3_OUTPUT_ENABLE					1
+	#define PB0_OUTPUT_ENABLE					1
+	#define PB2_OUTPUT_ENABLE					1
+	#define PE0_OUTPUT_ENABLE					1
 
-		#define PB5_OUTPUT_ENABLE					1
-		#define PB6_OUTPUT_ENABLE					1
-		#define PB7_OUTPUT_ENABLE					1
-		#define PC0_OUTPUT_ENABLE					1
-		#define PE0_OUTPUT_ENABLE					1
-		#define PE1_OUTPUT_ENABLE					1
-		#define PE2_OUTPUT_ENABLE					1
-		#define PE3_OUTPUT_ENABLE					1
-	#endif
+	#define PA2_OUTPUT_ENABLE					1
+	#define PA1_OUTPUT_ENABLE					1
+	#define PB1_OUTPUT_ENABLE					1
+	#define PB3_OUTPUT_ENABLE					1
+	#define PC7_OUTPUT_ENABLE					1
+	#define PC6_OUTPUT_ENABLE					1
+	#define PC5_OUTPUT_ENABLE					1
+	#define PC4_OUTPUT_ENABLE					1
 #endif  //end of DEBUG_GPIO_ENABLE
 
 

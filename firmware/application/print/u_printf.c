@@ -506,56 +506,6 @@ _PRINT_FUN_RAMCODE_ int printf_Bin2Text (char *lpD, int lpD_len_max, char *lpS, 
 	return d;
 }
 
-#if 0
-extern int my_fifo_push_hci_tx_fifo (unsigned char *p, unsigned short n, unsigned char *head, unsigned char head_len);
-#if HCI_LOG_FW_EN
-char hex_dump_buf[MAX_PRINT_STRING_CNT];
-unsigned char printf_uart[512];
-#endif
-extern unsigned char  mi_ota_is_busy();
-
-int my_printf_uart_hexdump(unsigned char *p_buf,int len )
-{
-    #if HCI_LOG_FW_EN
-        #if MI_API_ENABLE
-	if(mi_ota_is_busy()){
-		return 1;
-	}
-	    #endif
-	int dump_len ;
-	dump_len = printf_Bin2Text(hex_dump_buf, sizeof(hex_dump_buf), (char*)p_buf,len);
-    uart_simu_send_bytes((unsigned char *)hex_dump_buf,dump_len);
-    #endif
-	return 1;
-	#if 0
-	u8 head[2] = {HCI_LOG};
-	head[1]= dump_len+2;
-	return	my_fifo_push_hci_tx_fifo((unsigned char *)hex_dump_buf,dump_len,head,2);
-	#endif
-}
-
-int my_printf_uart(const char *format,va_list args)
-{
-    #if HCI_LOG_FW_EN
-        #if MI_API_ENABLE
-	if(mi_ota_is_busy()){
-		return 1;
-	}
-	    #endif
-	unsigned char **pp_buf;
-	unsigned char *p_buf;
-	unsigned int len =0;
-	p_buf = printf_uart;
-	pp_buf = &(p_buf);
-	//va_start( args, format );
-	len = print((char **)pp_buf, format, args);
-	uart_simu_send_bytes(printf_uart,len);
-	#endif
-	return 1;
-	
-}
-#endif
-
 #if (__TLSR_RISCV_EN__)
 int my_printf(const char *format, ...);
 #else

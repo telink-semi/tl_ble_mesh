@@ -481,6 +481,11 @@ int factory_reset(void) // 1M flash for b85m, 2M flash for B91m
 	flash_erase_sector(DU_STORE_ADR);
 	flash_erase_sector(DU_OTA_REBOOT_ADR);
 	#endif
+    
+	#if SAVE_SNO_CACHE_EN
+	flash_erase_sector(FLASH_ADR_SNO_CACHE);
+	#endif
+
 	CB_USER_FACTORY_RESET_ADDITIONAL();
     flash_erase_sector(FLASH_ADR_RESET_CNT);    // at last should be better, when power off during factory reset erase.
 
@@ -532,19 +537,7 @@ int factory_reset(void){
 #endif
 
 	for(int i = 1; i < (FLASH_ADR_PAR_USER_MAX - (CFG_SECTOR_ADR_CALIBRATION_CODE)) / 4096; ++i){
-		#if XIAOMI_MODULE_ENABLE
-		if(i < (((FLASH_ADR_PAR_USER_MAX - (CFG_SECTOR_ADR_CALIBRATION_CODE)) / 4096) - 1)){ // the last sector is FLASH_ADR_MI_AUTH
-            u32 adr = (CFG_SECTOR_ADR_CALIBRATION_CODE + i*0x1000);
-		    #if DUAL_VENDOR_EN
-		    if(adr != FLASH_ADR_THREE_PARA_ADR)
-		    #endif
-		    {
-			    flash_erase_sector(adr);
-			}
-		}
-		#else
 		//flash_erase_sector(CFG_SECTOR_ADR_CALIBRATION_CODE + i*0x1000);
-		#endif
 	}
 
 	#if DU_ENABLE
@@ -558,12 +551,21 @@ int factory_reset(void){
 	}
 	#endif
 
+	#if SAVE_SNO_CACHE_EN
+	flash_erase_sector(FLASH_ADR_SNO_CACHE);
+	#endif
+
 	CB_USER_FACTORY_RESET_ADDITIONAL();
     flash_erase_sector(FLASH_ADR_RESET_CNT);    // at last should be better, when power off during factory reset erase.
-
-#if (APP_FLASH_PROTECTION_ENABLE)
-	app_flash_protection_mesh_par_modify_much_sectors_end(backup_addr);
+#ifdef FLASH_ADR_EH_DEVICE_LIST
+#if (ENERGY_HARVEST_RX_EN)
+    flash_erase_sector(FLASH_ADR_EH_DEVICE_LIST);
 #endif
+#endif
+
+    #if (APP_FLASH_PROTECTION_ENABLE)
+	app_flash_protection_mesh_par_modify_much_sectors_end(backup_addr);
+    #endif
 
     irq_restore(r);
 	return 0;

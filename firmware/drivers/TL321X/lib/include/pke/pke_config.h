@@ -24,17 +24,14 @@
 #ifndef PKE_CONFIG_H
 #define PKE_CONFIG_H
 
-
+#include "chip_config.h"
 #include "lib/include/crypto_common/common_config.h"
 
 
-
 #ifdef __cplusplus
-extern "C" {
+extern "C"
+{
 #endif
-
-
-
 
 
 /************************************************************************************
@@ -60,7 +57,7 @@ extern "C" {
  *function: pke IP base address
  *caution:
  */
-//#define PKE_BASE_ADDR            (0x80110000)  //PKE register base address
+// #define PKE_BASE_ADDR            (0x80000000U)  //PKE register base address
 
 
 /*
@@ -68,7 +65,11 @@ extern "C" {
  *caution:
  */
 #define OPERAND_MAX_BIT_LEN                   (4096u)
-#define ECCP_MAX_BIT_LEN                      (521u)
+#if(COMPATIBLE_WITH_TL321X_AND_TL323X == 0)
+#define ECCP_MAX_BIT_LEN    (512u)
+#else
+#define ECCP_MAX_BIT_LEN    (256u)
+#endif
 #define RSA_MAX_BIT_LEN                       OPERAND_MAX_BIT_LEN
 #define DH_MAX_BIT_LEN                        OPERAND_MAX_BIT_LEN
 
@@ -77,19 +78,22 @@ extern "C" {
  *function: supported pke_lp algorithms
  *caution:
  */
+#if(COMPATIBLE_WITH_TL321X_AND_TL323X == 0)
 #define SUPPORT_RSA
-//#define SUPPORT_DH
+#define SUPPORT_DH
+#endif
 #define SUPPORT_ECDH
 #define SUPPORT_ECDSA
-//#define SUPPORT_ECIES
+#define SUPPORT_ECIES
 //#define SUPPORT_SM2
 //#define SUPPORT_SM9
-//#define SUPPORT_C25519
-
+#if(COMPATIBLE_WITH_TL321X_AND_TL323X == 0)
+#define SUPPORT_C25519
+#endif
 
 #ifdef SUPPORT_RSA
 //#define SUPPORT_RSAES_OAEP
-//#define SUPPORT_RSASSA_PSS
+#define SUPPORT_RSASSA_PSS
 #endif
 
 

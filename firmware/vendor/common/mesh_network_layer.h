@@ -37,3 +37,12 @@ void mesh_update_rpl(u8 *p, int idx);
 void mesh_add_rpl(u8 *p);
 int is_exist_in_cache(u8 *p, u8 friend_key_flag, int save);
 u16 get_mesh_current_cache_num(void); // Note, there may be several elements in a node, but there is often only one element that is in cache.
+void mesh_copy_tx_sno(mesh_cmd_nw_t *p_nw);
+
+#if SAVE_SNO_CACHE_EN
+extern u16 g_cache_idx;
+
+void mesh_sno_cache_retrieve(void);
+void mesh_sno_cache_store(const cache_buf_t *in);
+#endif
+

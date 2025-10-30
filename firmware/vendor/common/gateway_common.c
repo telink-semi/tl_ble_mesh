@@ -23,11 +23,7 @@
  *
  *******************************************************************************************************/
 #include "gateway_common.h"
-#if __TLSR_RISCV_EN__
 #include "stack/ble/ble.h"
-#else
-#include "proj_lib/ble/service/ble_ll_ota.h"
-#endif
 #include "proj_lib/sig_mesh/app_mesh.h"
 #include "remote_prov.h"
 #include "mesh_ota.h"
@@ -71,7 +67,7 @@ void gateway_trigger_iv_search_mode(int force)
 {	
 	if(force || clock_time_exceed_s(gateway_iv_updata_s, GATEWAY_IV_SEARCHING_INVL_S)){
 		gateway_iv_update_time_refresh();		
-		app_enable_scan_all_device (); 	// enable scan
+		mesh_set_scan_enable(1, 1); 	// enable scan
 		bls_pm_setSuspendMask (SUSPEND_DISABLE);
 		mesh_beacon_poll_1s();
 		#if GW_SMART_PROVISION_REMOTE_CONTROL_PM_EN
@@ -653,29 +649,20 @@ u8 gateway_cmd_from_host_ota(u8 *p, u16 len )
 	rf_packet_att_data_t local_ota;
 	u8 dat_len ;
 	dat_len = p[0];
-#if (0 == __TLSR_RISCV_EN__)
-	local_ota.dma_len = dat_len+9;
-#endif
 	local_ota.type = 0;
 	local_ota.rf_len = dat_len+7;
 	local_ota.l2cap = dat_len+3;
 	local_ota.chanid = 4;
 	local_ota.att = 0;
-#if (__TLSR_RISCV_EN__)
 	local_ota.handle = 0;
-#else
-	local_ota.hl = 0;
-	local_ota.hh = 0;
-#endif
+
 	memcpy(local_ota.dat,p+1,dat_len);
 	// enable ota flag 
 	pair_login_ok = 1;
 	u16 ota_adr =  local_ota.dat[0] | (local_ota.dat[1]<<8);
 	if(ota_adr == CMD_OTA_START){
 //		u32 irq_en = irq_disable();
-		#if __TLSR_RISCV_EN__
 		blt_ota_reset();
-		#endif
 		bls_ota_clearNewFwDataArea(0);
 //		irq_restore(irq_en);
 	}

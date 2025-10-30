@@ -28,7 +28,4 @@
 
 //ECC for BLE
 
-
-
-
 #endif /* ALGORITHM_H_ */

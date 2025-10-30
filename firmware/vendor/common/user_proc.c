@@ -163,7 +163,7 @@ void user_node_oob_set(void)
 #if MD_SERVER_EN
 void user_power_on_proc(void)
 {
-    #if ((MESH_USER_DEFINE_MODE != MESH_SPIRIT_ENABLE)&&(MESH_USER_DEFINE_MODE != MESH_TAIBAI_ENABLE)&&!MI_API_ENABLE)
+    #if ((MESH_USER_DEFINE_MODE != MESH_SPIRIT_ENABLE)&&(MESH_USER_DEFINE_MODE != MESH_TAIBAI_ENABLE))
     foreach(i,LIGHT_CNT){
         __UNUSED u16 adr_src = ele_adr_primary + (ELE_CNT_EVERY_LIGHT * i);
 		mesh_key.netkey_sel_dec = 0; // make sure key is valid when call mesh_tx_cmd_rsp()

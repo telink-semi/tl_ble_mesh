@@ -272,7 +272,7 @@ int is_cmd2lpn(u16 adr_dst)
 int friend_cache_check_replace(u8 lpn_idx, mesh_cmd_bear_t *bear_big)
 {
     int replace = FN_CACHE_REPLACE_NONE; //0;
-	u32 r = irq_disable();
+//	u32 r = irq_disable();
     mesh_cmd_bear_t *p_buf_bear;
     my_fifo_t *p_cache_fifo = fn_other_par[lpn_idx].p_cache;
     u8 cnt = my_fifo_data_cnt_get(p_cache_fifo);
@@ -282,6 +282,7 @@ int friend_cache_check_replace(u8 lpn_idx, mesh_cmd_bear_t *bear_big)
 		// is big endianness in cache buff
 		if(p_buf_bear->nw.ctl){
             u8 op_buf = p_buf_bear->lt_ctl_unseg.opcode;
+			#if 0 // not need to check friend update, friend update will pop directly after push, refer to mesh_friend_prepare_lpn_msg().
     		if(CMD_CTL_UPDATE == op_buf){
     			if(0 == i){
 					// if "update" is the last one, replaced should be better, because "update" was already pushed to fifo when receive poll, 
@@ -300,30 +301,31 @@ int friend_cache_check_replace(u8 lpn_idx, mesh_cmd_bear_t *bear_big)
                 	// should not replace directly, because of sno cache, and can be discarded only.
 					// it will be discarded in "FN Cache retry" of mesh_friend_ship_proc_FN_() when receive "POLL".
 				}
-    		}else if(CMD_CTL_ACK == op_buf){// the first one should be also replaced.
-			    if(bear_big->nw.ctl && (CMD_CTL_ACK == bear_big->lt_ctl_unseg.opcode)){
-    				if((bear_big->nw.src == p_buf_bear->nw.src) && (p_buf_bear->lt_ctl_ack.seqzero == bear_big->lt_ctl_ack.seqzero)){// replace old seg ack						
+    		}else
+    		#endif
+			if(bear_big->nw.ctl && (bear_big->nw.src == p_buf_bear->nw.src)){
+	    		if(CMD_CTL_ACK == bear_big->lt_ctl_unseg.opcode){
+    				if((CMD_CTL_ACK == op_buf) && (p_buf_bear->lt_ctl_ack.seqzero == bear_big->lt_ctl_ack.seqzero)){// replace old seg ack						
 						replace = FN_CACHE_REPLACE_FINISH;
 						if(!memcmp(&p_buf_bear->lt_ctl_ack.seg_map, &bear_big->lt_ctl_ack.seg_map, 4)){
 							break;
 						}
 						
-						if(0 == i){// take it have been send
-							replace = FN_CACHE_REPLACE_AND_OVERWRITE;
-							my_fifo_pop(p_cache_fifo);
-							my_fifo_push_adv(p_cache_fifo, (u8 *)bear_big, mesh_bear_len_get(bear_big), 0);
-						}
-						else{
-	    				 	// memcpy(p_buf_bear->nw.sno, bear_big->nw.sno, 3); // should not change sno because sno cache.
-	                        memcpy(&p_buf_bear->lt_ctl_ack.seg_map, &bear_big->lt_ctl_ack.seg_map, 4);
-						}
+    				 	// memcpy(p_buf_bear->nw.sno, bear_big->nw.sno, 3); // should not change sno because sno cache.
+                        memcpy(&p_buf_bear->lt_ctl_ack.seg_map, &bear_big->lt_ctl_ack.seg_map, 4);
+						break;
+    				}
+	    		}
+				else if(CMD_CTL_SUBS_LIST_CONF == bear_big->lt_ctl_unseg.opcode){
+					if((CMD_CTL_SUBS_LIST_CONF == op_buf) && (p_buf_bear->lt_ctl_subs_conf.TransNo == bear_big->lt_ctl_subs_conf.TransNo)){
+                        replace = FN_CACHE_REPLACE_FINISH; // already exist, not need to push again.
 						break;
     				}
     			}
     		}
 		}
 	}
-	irq_restore(r);
+//	irq_restore(r);
     return replace;
 }
 
@@ -348,17 +350,11 @@ mesh_fri_ship_other_t * mesh_fri_cmd2cache(u8 *p_bear_big, u8 len_nw, u8 adv_typ
 		    // big endianness and not encryption in FIFO
 		    int replace = friend_cache_check_replace(i, p_br_big);
 		    if(FN_CACHE_REPLACE_NONE == replace){
-				int overwrite = (my_fifo_free_cnt_get(p_other->p_cache) == 0);
+//				int overwrite = (my_fifo_free_cnt_get(p_other->p_cache) == 0);
 		        err = my_fifo_push_adv(p_other->p_cache, (u8 *)p_br_big, mesh_bear_len_get(p_br_big), 1);
-				if(!err){
-					if(overwrite){
-						p_other->cache_overwrite = 1;
-					}
-		        }else{
+				if(err){					
 					p_other = 0;
 		        }
-		    }else if(FN_CACHE_REPLACE_AND_OVERWRITE == replace){
-                p_other->cache_overwrite = 1; // because fn record the rsp pointer when receive poll, and sent this rsp pointer directly when 150ms arrive. so need to re-get cache when there is pop action in friend_cache_check_replace_() 
 		    }
 	    }
     }
@@ -523,7 +519,6 @@ void mesh_friend_ship_clear_FN(u8 lpn_idx)
     memset(fn_other_par+lpn_idx, 0, sizeof(fn_other_par[0]));
     memset(fn_req+lpn_idx, 0, sizeof(fn_req[0]));
     memset(fn_poll+lpn_idx, 0, sizeof(fn_poll[0]));
-    memset(fn_ctl_rsp_delay+lpn_idx, 0, sizeof(fn_ctl_rsp_delay[0]));
     mesh_fri_cache_fifo[lpn_idx].wptr = mesh_fri_cache_fifo[lpn_idx].rptr = 0;
 }
 
@@ -616,83 +611,8 @@ void mesh_reset_poll_timeout_timer(u8 lpn_idx)
     fri_ship_proc_fn[lpn_idx].poll_tick = clock_time_100ms();
 }
 
-enum{
-    DELAY_POLL = 1,
-    DELAY_SUBSC_LIST,
-    DELAY_CLEAR_CONF,
-};
 
-void mesh_friend_set_delay_par_poll(u8 lpn_idx, u8 *rsp, u32 timeStamp)
-{
-    fn_ctl_rsp_delay_t *p_delay = &fn_ctl_rsp_delay[lpn_idx];
-    p_delay->delay_type = DELAY_POLL;
-    p_delay->tick = timeStamp;
-    p_delay->poll_rsp = rsp;
-
-	mesh_friend_logmsg((mesh_cmd_bear_t *)rsp, ((mesh_cmd_bear_t *)rsp)->len + 2);
-}
-
-void mesh_friend_set_delay_par(u8 delay_type, u8 lpn_idx, u16 adr_dst, u16 par_val)
-{
-    fn_ctl_rsp_delay_t *p_delay = &fn_ctl_rsp_delay[lpn_idx];
-    p_delay->delay_type = delay_type;
-    p_delay->tick = clock_time();
-    p_delay->adr_dst = adr_dst;
-    p_delay->par_val = par_val;
-}
-
-u8 * get_cache_buf_for_poll(u32 lpn_idx, int poll_retry_flag, int check_again_flag)
-{
-	u32 i = lpn_idx;
-	my_fifo_t *f_cache = fn_other_par[i].p_cache;
-	u8 *p_br_cache = mesh_friend_ship_cache_check(f_cache);
-	
-	if(0 == poll_retry_flag){
-		if(p_br_cache){
-			if(fn_other_par[i].cache_overwrite){
-				fn_other_par[i].cache_overwrite = 0;
-			}else{
-				my_fifo_pop(f_cache);
-			}
-		}
-		p_br_cache = mesh_friend_ship_cache_check(f_cache);
-		if(p_br_cache){
-			LOG_MSG_LIB(TL_LOG_FRIEND,p_br_cache+OFFSETOF(mesh_cmd_bear_t, len), 16,"FN Cache message of NW(Big endian):");
-		}else{
-			#if FN_PRIVATE_SEG_CACHE_EN
-			if(is_friend_seg_cache_busy()){
-				friend_seg_cache2friend_cache(BIT(i));
-			}else
-			#endif
-			{
-				friend_cmd_send_fn(i, CMD_CTL_UPDATE);	  // push to cache
-			}
-			p_br_cache = mesh_friend_ship_cache_check(f_cache);
-		}
-	}else{
-		if(check_again_flag){
-			LOG_MSG_LIB(TL_LOG_FRIEND,0, 0,"FN Cache check again");
-		}else{
-			LOG_MSG_LIB(TL_LOG_FRIEND,0, 0,"FN Cache retry");
-		}
-		
-		if(fn_other_par[i].cache_overwrite){
-			fn_other_par[i].cache_overwrite = 0;
-		}
-		
-		if(my_fifo_data_cnt_get(f_cache) > 1){
-			mesh_cmd_bear_t *p_bear_tmp = (mesh_cmd_bear_t *)p_br_cache;
-			if(p_bear_tmp->nw.ctl && (CMD_CTL_UPDATE == p_bear_tmp->lt_ctl_unseg.opcode)){
-				my_fifo_pop(f_cache);
-				p_br_cache = mesh_friend_ship_cache_check(f_cache);
-			}
-		}					
-	}
-
-	return p_br_cache;
-}
-
-static inline int is_change_iv_just_before_push_cache(fn_ctl_rsp_delay_t *p_delay)
+static inline int is_change_iv_just_before_push_cache(mesh_cmd_bear_t *p_bear_cache)
 {
 	int iv_change_flag = 0;
 #if 0
@@ -700,7 +620,7 @@ static inline int is_change_iv_just_before_push_cache(fn_ctl_rsp_delay_t *p_dela
 	// then mesh_friend_set_delay_par_poll_ will not record correct iv_low, then fail to return iv_change_flag as 1.
 	if(p_delay->iv_low != (iv_idx_st.iv_tx & 0xff))
 #else
-	mesh_cmd_bear_t *p_org_big = (mesh_cmd_bear_t *)p_delay->poll_rsp; // be careful, poll_rsp is big endianness here.
+	mesh_cmd_bear_t *p_org_big = p_bear_cache; // be careful, p_bear_cache is big endianness here.
 	u32 sno_cache_little = 0;
 	u16 src_addr_little = 0;
 	swap24((u8 *)&sno_cache_little, p_org_big->nw.sno); 			// get little endianness of sno.
@@ -717,73 +637,104 @@ static inline int is_change_iv_just_before_push_cache(fn_ctl_rsp_delay_t *p_dela
 	return iv_change_flag;
 }
 
+int mesh_update_fn2lpn_tx_buf(u32 lpn_idx)
+{
+	my_fifo_t *f_cache = fn_other_par[lpn_idx].p_cache;
+	mesh_cmd_bear_t *p_bear_cache = (mesh_cmd_bear_t *)mesh_friend_ship_cache_check(f_cache);
+	mesh_cmd_bear_t *p_bear_tx = (mesh_cmd_bear_t *)mesh_fn2lpn_tx_buf[lpn_idx].data;
+
+	if(p_bear_cache){
+		u16 bear_tx_len = mesh_bear_len_get(p_bear_cache);	
+	    if(bear_tx_len <= SIZEOF_MEMBER(mesh_fn2lpn_tx_buf_t, data)){
+			int iv_change_flag = is_change_iv_just_before_push_cache(p_bear_cache);
+			if(iv_change_flag){
+				iv_idx_st.iv_tx--;
+			}
+			
+			memcpy(p_bear_tx, p_bear_cache, bear_tx_len);
+	        mesh_sec_msg_enc_nw_rf_buf((u8 *)(&p_bear_tx->nw), mesh_lt_len_get_by_bear(p_bear_cache), FRIENDSHIP, lpn_idx, 0, fn_other_par[lpn_idx].nk_sel_dec_fn, 0);
+			
+			if(iv_change_flag){
+				iv_idx_st.iv_tx++; // restore
+			}
+
+			if(p_bear_cache->nw.ctl && (CMD_CTL_UPDATE == p_bear_cache->lt_ctl_unseg.opcode)){
+				mesh_fn2lpn_tx_buf[lpn_idx].is_fn_update = 1;
+			}
+			else{
+				mesh_fn2lpn_tx_buf[lpn_idx].is_fn_update = 0;
+			}
+
+	    }else{
+	        LOG_MSG_ERR(TL_LOG_MESH,0, 0 ,"fn rsp len err");
+	        //  TODO: DLE
+	    }
+
+		my_fifo_pop(f_cache);
+	}
+	
+	return 0;
+}
+
+int mesh_friend_prepare_lpn_msg(u32 lpn_idx, int poll_retry_flag, u32 update_tick)
+{
+    my_fifo_t *f_cache = fn_other_par[lpn_idx].p_cache;
+	u8 *p_br_cache = mesh_friend_ship_cache_check(f_cache);
+	mesh_fn2lpn_tx_buf_t *p_tx = &mesh_fn2lpn_tx_buf[lpn_idx];
+
+	if(update_tick){
+		p_tx->tx_tick = update_tick;
+	}
+	
+	if(0 == poll_retry_flag){
+		if(p_br_cache){
+			LOG_MSG_LIB(TL_LOG_FRIEND,p_br_cache+OFFSETOF(mesh_cmd_bear_t, len), 16,"FN Cache message of NW(Big endian):");
+		}else{
+			#if FN_PRIVATE_SEG_CACHE_EN
+			if(is_friend_seg_cache_busy()){
+				friend_seg_cache2friend_cache(BIT(i));
+			}else
+			#endif
+			{
+				friend_cmd_send_fn(lpn_idx, CMD_CTL_UPDATE); // push to cache
+			}
+		}
+
+		mesh_update_fn2lpn_tx_buf(lpn_idx);
+	}
+	else{
+		LOG_MSG_LIB(TL_LOG_FRIEND,0, 0,"FN Cache retry");
+		if(p_tx->is_fn_update && p_br_cache){ // friend update can be replaced
+			mesh_update_fn2lpn_tx_buf(lpn_idx);
+		}
+	}
+
+	return 0;
+}
+
 void mesh_friend_response_delay_proc_fn(u8 lpn_idx)
 {
-    fn_ctl_rsp_delay_t *p_delay = &fn_ctl_rsp_delay[lpn_idx];
-    int print_cache_flag = 0;
-    
-    if(p_delay->delay_type && clock_time_exceed(p_delay->tick, fn_req[lpn_idx].RecDelay * 1000 - 1800)){    // 1800us: encryption pkt time
-        if(DELAY_POLL == p_delay->delay_type){
-            if(p_delay->poll_rsp){
-            	if(fn_other_par[lpn_idx].cache_overwrite){
-            		p_delay->poll_rsp = get_cache_buf_for_poll(lpn_idx, 1, 1); // cache_overwrite will be clear inside.
-            	}
-				
-				u8 bear_temp_buf[MESH_BEAR_SIZE];
-                mesh_cmd_bear_t *bear_temp = (mesh_cmd_bear_t *)bear_temp_buf; // TODO DLE
-                memcpy(bear_temp, p_delay->poll_rsp, min(MESH_BEAR_SIZE, mesh_bear_len_get((mesh_cmd_bear_t *)p_delay->poll_rsp)));
-				u8 bear_tx_len = mesh_bear_len_get(bear_temp);
-                if(bear_tx_len <= MESH_BEAR_SIZE){
-					print_cache_flag = 1; // should not print here, because tx message to LPN should not be delay.
-					int iv_change_flag = is_change_iv_just_before_push_cache(p_delay);
-					if(iv_change_flag){
-						iv_idx_st.iv_tx--;
-					}
-					// no encryption before, because need to check buffer in mesh_fri_cmd2cache_(), then to set cache_overwrite or not.
-                    mesh_sec_msg_enc_nw_rf_buf((u8 *)(&bear_temp->nw), mesh_lt_len_get_by_bear(bear_temp), FRIENDSHIP, lpn_idx,0,fn_other_par[lpn_idx].nk_sel_dec_fn, 0);
-					if(iv_change_flag){
-						iv_idx_st.iv_tx++; // restore
-					}
-					
-                    mesh_tx_cmd_add_packet_fn2lpn((u8 *)bear_temp);
-                }else{
-                    LOG_MSG_ERR(TL_LOG_MESH,0, 0 ,"fn rsp len err");
-                    //  TODO: DLE
-                }
-            }
+	mesh_fn2lpn_tx_buf_t *p_tx = &mesh_fn2lpn_tx_buf[lpn_idx];
 
-            mesh_fri_ship_proc_fn_t *proc_fn = &fri_ship_proc_fn[lpn_idx];
-            if(proc_fn->clear_delay_cnt){
-                proc_fn->clear_delay_cnt--;
-                if(0 == proc_fn->clear_delay_cnt){ // make sure establish friend ship success
-                    friend_cmd_send_fn(lpn_idx, CMD_CTL_CLEAR); // use normal fifo, not mesh_adv_fifo_fn2lpn_
-                    proc_fn->clear_cmd_tick = proc_fn->clear_start_tick = clock_time_100ms();
-                    proc_fn->clear_int_100ms = FRI_FIRST_CLR_INTERVAL_100MS;
-                    proc_fn->clear_poll = 1;
-                }
+	if(p_tx->tx_tick && clock_time_exceed(p_tx->tx_tick, fn_req[lpn_idx].RecDelay * 1000)){
+		p_tx->tx_tick = 0;
+		mesh_tx_cmd_add_packet_fn2lpn(p_tx->data);
+		mesh_fri_ship_proc_fn_t *proc_fn = &fri_ship_proc_fn[lpn_idx];
+        if(proc_fn->clear_delay_cnt){
+            proc_fn->clear_delay_cnt--;
+            if(0 == proc_fn->clear_delay_cnt){ // make sure establish friend ship success
+                friend_cmd_send_fn(lpn_idx, CMD_CTL_CLEAR); // use normal fifo, not mesh_adv_fifo_fn2lpn_
+                proc_fn->clear_cmd_tick = proc_fn->clear_start_tick = clock_time_100ms();
+                proc_fn->clear_int_100ms = FRI_FIRST_CLR_INTERVAL_100MS;
+                proc_fn->clear_poll = 1;
             }
-        }else if(DELAY_SUBSC_LIST == p_delay->delay_type){
-            friend_cmd_send_subsc_conf(p_delay->adr_dst, (u8)p_delay->par_val);
-        }else if(DELAY_CLEAR_CONF == p_delay->delay_type){
-            mesh_ctl_fri_clear_t clear;
-            clear.LPNAdr = fn_other_par[lpn_idx].LPNAdr;
-            clear.LPNCounter = p_delay->par_val;
-            use_mesh_adv_fifo_fn2lpn = 1;
-            friend_cmd_send_clear_conf(clear.LPNAdr, (u8 *)&clear, sizeof(mesh_ctl_fri_clear_t));
-            use_mesh_adv_fifo_fn2lpn = 0;
         }
-        
-        p_delay->delay_type = 0;
-    }
-	
+	}
+
 	if(my_fifo_data_cnt_get(&mesh_adv_fifo_fn2lpn)){
 		fn_quick_send_adv();	// "poll rsp" may be delay when in BLE_S window, so quickly send here again. and also "send_subsc_conf /send_clear_conf" need quick send.
 	}
 
-	if(print_cache_flag){
-		mesh_cmd_bear_t *bear_temp = (mesh_cmd_bear_t *)p_delay->poll_rsp;
-		LOG_MSG_LIB(TL_LOG_FRIEND,(u8 *)&bear_temp->len, min(26,bear_temp->len+1),"Data for poll:");
-	}
 }
 
 void mesh_friend_ship_proc_FN(u8 *bear) // subscription add/remove must be unsegment, please refer to spec section of "Friendship" -> "Low Power feature".
@@ -842,6 +793,13 @@ void mesh_friend_ship_proc_FN(u8 *bear) // subscription add/remove must be unseg
 	        mesh_cmd_nw_t *p_nw = &p_bear->nw;
 	        mesh_cmd_lt_ctl_unseg_t *p_lt_ctl_unseg = &p_bear->lt_ctl_unseg;
 			adv_report_extend_t *p_extend = get_adv_report_extend(&p_bear->len);
+			u32 timeStamp = p_extend->timeStamp;
+            #ifndef WIN32
+            if((u32)(clock_time() - timeStamp) > 100*1000*sys_tick_per_us){
+                timeStamp = clock_time();
+            }
+            #endif
+			
 	        u8 op = p_lt_ctl_unseg->opcode;
 	        if(!((CMD_CTL_REQUEST == op)||(CMD_CTL_CLEAR == op)||(CMD_CTL_CLR_CONF == op))
 			 && !(proc_fn->status && (fn_other_par[i].LPNAdr == p_nw->src))){
@@ -923,16 +881,8 @@ void mesh_friend_ship_proc_FN(u8 *bear) // subscription add/remove must be unseg
 				if(0 == poll_retry_flag){
 					fn_poll[i].FSN = p_poll->FSN;
 				}
-				u8 *p_br_cache = get_cache_buf_for_poll(i, poll_retry_flag, 0);
 
-                u32 timeStamp = p_extend->timeStamp;
-                #ifndef WIN32
-                if((u32)(clock_time() - timeStamp) > 100*1000*sys_tick_per_us){
-                    timeStamp = clock_time();
-                }
-                #endif
-                
-	            mesh_friend_set_delay_par_poll(i, p_br_cache, timeStamp);
+				mesh_friend_prepare_lpn_msg(i, poll_retry_flag, timeStamp | 1);
 
 	            // start poll timeout check
 	            mesh_friend_ship_set_st_fn(i, FRI_ST_TIMEOUT_CHECK);
@@ -943,11 +893,11 @@ void mesh_friend_ship_proc_FN(u8 *bear) // subscription add/remove must be unseg
 	            if((fn_other_par[i].LPNAdr == p_fri_clear->LPNAdr)
 	            && (p_fri_clear->LPNCounter - fn_req[i].LPNCounter <= 255)){
 	            	LOG_MSG_LIB(TL_LOG_FRIEND,(u8 *)p_fri_clear, sizeof(mesh_ctl_fri_clear_t),"rcv friend clear:");
+					friend_cmd_send_clear_conf(p_nw->src, (u8 *)p_fri_clear, sizeof(mesh_ctl_fri_clear_t));
+					
 	            	if(fn_other_par[i].LPNAdr == p_nw->src){
-                        mesh_friend_set_delay_par(DELAY_CLEAR_CONF, i, p_nw->src, p_fri_clear->LPNCounter);
                         proc_fn->clear_by_lpn_tick = clock_time()|1;
 					}else{
-                        friend_cmd_send_clear_conf(p_nw->src, (u8 *)p_fri_clear, sizeof(mesh_ctl_fri_clear_t));
                         friend_ship_disconnect_fn(i, FS_DISCONNECT_TYPE_CLEAR);
 	                }
 					return ;
@@ -981,7 +931,10 @@ void mesh_friend_ship_proc_FN(u8 *bear) // subscription add/remove must be unseg
 	                }
 					//LOG_MSG_LIB(TL_LOG_FRIEND,(u8 *)&fn_other_par[i].SubsList, sizeof(fn_other_par[i].SubsList),"LPN sublist:");
 	            //}
-	            mesh_friend_set_delay_par(DELAY_SUBSC_LIST, i, p_nw->src, p_subsc->TransNo);
+
+				friend_cmd_send_subsc_conf(p_nw->src, p_subsc->TransNo);
+				mesh_friend_prepare_lpn_msg(i, 0, timeStamp | 1);
+					
 	            fn_other_par[i].TransNo = p_subsc->TransNo;
 	        }else{
                 LOG_MSG_LIB(TL_LOG_FRIEND,0, 0,"Error:rcv Invalid op code %2x:",op);
@@ -1002,19 +955,20 @@ u8 g_max_lpn_num = MAX_LPN_NUM;
 STATIC_ASSERT(MAX_LPN_NUM <= 16);	// because F2L is 16bit
 
 // mesh_friend_seg_cache_t friend_seg_cache;
-u8 mesh_fri_cache_fifo_b[MAX_LPN_NUM][(sizeof(mesh_cmd_bear_t)+DELTA_EXTEND_AND_NORMAL_ALIGN4_BUF) * (1 << FN_CACHE_SIZE_LOG)]={{0}};
-my_fifo_t mesh_fri_cache_fifo[MAX_LPN_NUM] = {};//{,,0,0, name##_b};
+_attribute_bss_dlm_ u8 mesh_fri_cache_fifo_b[MAX_LPN_NUM][MESH_CMD_BEAR_SIZE * (1 << FN_CACHE_SIZE_LOG)]={{0}};
+_attribute_bss_dlm_ my_fifo_t mesh_fri_cache_fifo[MAX_LPN_NUM] = {};//{,,0,0, name##_b};
+// cache the message ready to send to lpn after receive friend poll.
+_attribute_bss_dlm_ mesh_fn2lpn_tx_buf_t mesh_fn2lpn_tx_buf[MAX_LPN_NUM];
+	
+_attribute_bss_dlm_ mesh_ctl_fri_poll_t fn_poll[MAX_LPN_NUM] = {};
+_attribute_bss_dlm_ mesh_ctl_fri_update_t fn_update[MAX_LPN_NUM] = {};
+_attribute_bss_dlm_ mesh_ctl_fri_req_t fn_req[MAX_LPN_NUM] = {};
+_attribute_bss_dlm_ mesh_ctl_fri_offer_t fn_offer[MAX_LPN_NUM] = {};
+_attribute_bss_dlm_ mesh_fri_ship_other_t fn_other_par[MAX_LPN_NUM] = {};
 
-mesh_ctl_fri_poll_t fn_poll[MAX_LPN_NUM] = {};
-mesh_ctl_fri_update_t fn_update[MAX_LPN_NUM] = {};
-mesh_ctl_fri_req_t fn_req[MAX_LPN_NUM] = {};
-mesh_ctl_fri_offer_t fn_offer[MAX_LPN_NUM] = {};
-mesh_fri_ship_other_t fn_other_par[MAX_LPN_NUM] = {};
-fn_ctl_rsp_delay_t fn_ctl_rsp_delay[MAX_LPN_NUM] = {};
+_attribute_bss_dlm_ mesh_fri_ship_proc_fn_t fri_ship_proc_fn[MAX_LPN_NUM] = {};
 
-mesh_fri_ship_proc_fn_t fri_ship_proc_fn[MAX_LPN_NUM] = {};
-
-MYFIFO_INIT(mesh_adv_fifo_fn2lpn, (sizeof(mesh_cmd_bear_t)+DELTA_EXTEND_AND_NORMAL_ALIGN4_BUF), 4);
+MYFIFO_INIT_DRAM(mesh_adv_fifo_fn2lpn, MESH_CMD_BEAR_SIZE, 4);
 
 #endif
 

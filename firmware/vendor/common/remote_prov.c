@@ -36,10 +36,6 @@
 #include "proj_lib/mesh_crypto/sha256_telink.h"
 #include "proj_lib/mesh_crypto/le_crypto.h"
 
-#if MI_API_ENABLE 
-#include "vendor/common/mi_api/telink_sdk_mible_api.h"
-#endif 
-
 #if GATT_RP_EN
 #include "remote_prov_gatt.h"
 #endif
@@ -1056,7 +1052,13 @@ void mesh_rp_dkri_end_cb(void)
 			mesh_tx_segment_finished();
 			mesh_seg_rx_init();
 			//Delete all entries in the message replay protection mechanism
-			mesh_network_cache_buf_init();
+			#if 1
+			foreach(i, ELE_CNT){
+			    cache_init(node_adr_net_info.unicast_address + i);
+			}
+			#else
+			mesh_network_cache_buf_init(); // should not clear all cache.
+			#endif
 			//Set all states to the default values when the state default value is specified by the profile specification that defines the state.
 			
 			//Terminate all active friendships, if applicable.

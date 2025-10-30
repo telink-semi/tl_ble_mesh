@@ -3270,7 +3270,7 @@ void mesh_ota_set_partial_report(u16 adr_dst, bool4 tx_now_flag)
 {
 	pull_mode_report_timer_refresh(1);
 	if(tx_now_flag){
-		fw_update_srv_proc.report_timer_tick = clock_time() - ((PULL_MODE_REPORT_TIMER_TIMEOUT_MS - 200) * CLOCK_SYS_CLOCK_1MS);	// should not report at once, but add some delay.
+		fw_update_srv_proc.report_timer_tick = clock_time() - ((PULL_MODE_REPORT_TIMER_TIMEOUT_MS - 200) * CLOCK_SYS_TIMER_CLK_1MS);	// should not report at once, but add some delay.
 	}
 	fw_update_srv_proc.report_partital_dst_adr = adr_dst;
 }

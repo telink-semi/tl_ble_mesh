@@ -39,6 +39,8 @@ u32 mesh_md_light_lc_addr = FLASH_ADR_MD_LIGHT_LC;
 u16 prop_publish_id_sel = LC_PROP_ID_LightnessOn;
 u32 g_ambient_light_value = 0; // unit: lux
 
+STATIC_ASSERT(sizeof(model_light_lc_t) <= (4096 - 48));    // only one sector to save
+
 u16 LC_get_lc_model_element_addr(int light_idx)
 {
     u16 addr_offset = 0;
@@ -166,7 +168,9 @@ void scene_get_lc_par(scene_data_t *p_scene, int light_idx)
     p_scene->lc_mode = model_sig_light_lc.mode[light_idx];
     p_scene->lc_onoff = light_res_sw_save[light_idx].lc_onoff_target;
     p_scene->lc_om = model_sig_light_lc.om[light_idx];
+    #if (SCENE_NOT_STORE_LC_PROPERTY_EN == 0)
     memcpy(&p_scene->lc_propty, &model_sig_light_lc.propty[light_idx], sizeof(p_scene->lc_propty));
+    #endif
 }
 
 void scene_load_lc_par(scene_data_t *p_scene, int light_idx)
@@ -192,10 +196,12 @@ void scene_load_lc_par(scene_data_t *p_scene, int light_idx)
 
 #if 1
     light_lc_property_t *p_prop = &model_sig_light_lc.propty[light_idx];
+    #if (SCENE_NOT_STORE_LC_PROPERTY_EN == 0)
     if(memcmp(&p_scene->lc_propty, p_prop, sizeof(p_scene->lc_propty))){
         memcpy(p_prop, &p_scene->lc_propty, sizeof(p_scene->lc_propty));
         mesh_lc_prop_st_publish(light_idx);
     }
+    #endif
 #endif
 
 #if 0 // TODO LLC_BV_10

@@ -36,11 +36,339 @@ int path_monitoring_test_mode = 0;
 #endif
 
 #if MD_DF_CFG_SERVER_EN
-non_fixed_fwd_tbl_t non_fixed_fwd_tbl[NET_KEY_MAX];
-discovery_table_t discovery_table[NET_KEY_MAX];
-#if 0
-path_origin_state_t path_origin_state[NET_KEY_MAX];
+
+STATIC_ASSERT((NET_KEY_MAX * MAX_FIXED_PATH + 4) <= (FLASH_ADR_FIXED_FWD_TBL_END - FLASH_ADR_FIXED_FWD_TBL) / FWD_ENTRY_SAVE_SIZE); // reserve 8 for update.
+
+u32 mesh_df_fixed_tbl_addr = FLASH_ADR_FIXED_FWD_TBL;
+#if CONFIG_ALWAYS_GET_ROUTE_FROM_FLASH
+u32 mesh_df_non_fixed_tbl_addr = FLASH_ADR_NON_FIXED_FWD_TBL;
 #endif
+
+non_fixed_entry_t g_non_fixed_entry;
+fixed_entry_t g_fixed_entry;
+
+_attribute_bss_dlm_ non_fixed_entry_state_t non_fixed_fwd_tbl_state[NET_KEY_MAX][MAX_NON_FIXED_PATH];
+_attribute_bss_dlm_ fixed_entry_state_t fixed_fwd_tbl_state[NET_KEY_MAX][MAX_FIXED_PATH];
+
+#if CONFIG_ALWAYS_GET_ROUTE_FROM_FLASH
+STATIC_ASSERT((NET_KEY_MAX * MAX_NON_FIXED_PATH + 4) <= (FLASH_ADR_NON_FIXED_FWD_TBL_END - FLASH_ADR_NON_FIXED_FWD_TBL) / FWD_ENTRY_SAVE_SIZE); // reserve 8 for update.
+
+// only 1 entry in ram, read from flash every time to save ram.
+_attribute_bss_dlm_ path_entry_com_t non_fixed_fwd_tbl[NET_KEY_MAX][1];
+_attribute_bss_dlm_ path_entry_com_t fixed_fwd_tbl[NET_KEY_MAX][1];
+#else
+_attribute_bss_dlm_ path_entry_com_t non_fixed_fwd_tbl[NET_KEY_MAX][MAX_NON_FIXED_PATH];
+_attribute_bss_dlm_ path_entry_com_t fixed_fwd_tbl[NET_KEY_MAX][MAX_FIXED_PATH];
+#endif
+
+_attribute_bss_dlm_ discovery_table_t discovery_table[NET_KEY_MAX];
+_attribute_bss_dlm_ path_req_solication_tbl_t path_req_solication_tbl;
+
+/**
+ * @brief       This function serves to get pointer of non-fixed path entry
+ * @return      
+ * @note        before call this function, make sure had update g_non_fixed_entry by get_forwarding_entry() or update_non_fixed_entry_point()
+ */
+static inline non_fixed_entry_t *get_non_fixed_entry_point(void){
+	return &g_non_fixed_entry;
+}
+
+/**
+ * @brief       This function serves to update g_non_fixed_entry
+ * @param[in]   key_offset	- netowrk key offset
+ * @param[in]   path_offset	- path offset
+ * @return      none
+ * @note        
+ */
+static inline void update_non_fixed_entry_point(int key_offset, u16 path_offset){
+    g_non_fixed_entry.p_state = &non_fixed_fwd_tbl_state[key_offset][path_offset];
+    #if CONFIG_ALWAYS_GET_ROUTE_FROM_FLASH
+    g_non_fixed_entry.p_entry = &non_fixed_fwd_tbl[key_offset][0];
+    #else
+    g_non_fixed_entry.p_entry = &non_fixed_fwd_tbl[key_offset][path_offset];
+    #endif
+}
+
+/**
+ * @brief       This function serves to update g_fixed_entry
+ * @param[in]   key_offset	- netowrk key offset
+ * @param[in]   path_offset	- path offset
+ * @return      none
+ * @note        
+ */
+static inline void update_fixed_entry_point(int key_offset, u16 path_offset){
+    g_fixed_entry.p_state = &fixed_fwd_tbl_state[key_offset][path_offset];
+    #if CONFIG_ALWAYS_GET_ROUTE_FROM_FLASH
+    g_fixed_entry.p_entry = &fixed_fwd_tbl[key_offset][0];
+    #else
+    g_fixed_entry.p_entry = &fixed_fwd_tbl[key_offset][path_offset];
+    #endif
+}
+
+/**
+ * @brief       This function serves to rebuild forwarding table entry to free flash space.
+ * @param[in]   is_fixed_path	- 1: fixed path. 0: non-fixed path.
+ * @return      0: success.
+ * @note        
+ */
+int rebuild_fwd_tbl_entry(int is_fixed_path)
+{
+    int new_entry_index = 0;
+    int max_entry_sector = FIXED_ENTRY_SECTORS;
+    int max_path = MAX_FIXED_PATH;
+    u32 fwd_start_addr  = FLASH_ADR_FIXED_FWD_TBL;
+
+    if(0 == is_fixed_path){
+#if CONFIG_ALWAYS_GET_ROUTE_FROM_FLASH
+        max_entry_sector = NON_FIXED_ENTRY_SECTORS;
+        max_path = MAX_NON_FIXED_PATH;
+        fwd_start_addr  = FLASH_ADR_NON_FIXED_FWD_TBL;
+#else
+        return 0;
+#endif
+    }
+
+    for(int sector_offset = 0; sector_offset < max_entry_sector; sector_offset++){
+        // erase backup sector.
+        flash_erase_sector(FLASH_ADR_FRIEND_SHIP);
+        int backup_index = 0;
+        u8 entry[sizeof(path_entry_save_t)];
+        for(int netkey_offset = 0; netkey_offset < NET_KEY_MAX; netkey_offset++){
+            for(int path_offset = 0; path_offset < max_path; path_offset++){
+                int valid_flag = 0;
+                int entry_index = 0;
+                fixed_entry_state_t *p_fixed_state = &fixed_fwd_tbl_state[netkey_offset][path_offset];
+                #if CONFIG_ALWAYS_GET_ROUTE_FROM_FLASH
+                non_fixed_entry_state_t *p_non_fixed_state = &non_fixed_fwd_tbl_state[netkey_offset][path_offset];
+                #endif
+                if(is_fixed_path){
+                    valid_flag = p_fixed_state->vaild;
+                    entry_index = p_fixed_state->fwd_entry_index;
+                }
+                #if CONFIG_ALWAYS_GET_ROUTE_FROM_FLASH
+                else{
+                    if(p_non_fixed_state->lifetime_ms){
+                        valid_flag = 1;
+                    }
+                    entry_index = p_non_fixed_state->fwd_entry_index;
+                }
+                #endif
+
+                if(valid_flag && (GET_FWD_SECTOR_INDEX(entry_index) == (u32)sector_offset)){
+                    // copy valid data to backup sector
+                    flash_read_page(fwd_start_addr + GET_FWD_ENTRY_OFFSET(entry_index), sizeof(path_entry_save_t), entry);
+                    flash_write_page(FLASH_ADR_FRIEND_SHIP + (backup_index * FWD_ENTRY_SAVE_SIZE), sizeof(path_entry_save_t), entry);
+
+                    // update new entry offset.
+                    if(is_fixed_path){
+                        p_fixed_state->fwd_entry_index = new_entry_index + backup_index;
+                    }
+                    #if CONFIG_ALWAYS_GET_ROUTE_FROM_FLASH
+                    else{
+                        p_non_fixed_state->fwd_entry_index = new_entry_index + backup_index;
+                    }
+                    #endif
+                    backup_index += 1;
+                }
+            }
+        }
+
+        // restore back data from backup sector 
+        flash_erase_sector(fwd_start_addr + sector_offset * FLASH_SECTOR_SIZE);
+        for(int offset = 0; offset < backup_index; offset++){
+            flash_read_page(FLASH_ADR_FRIEND_SHIP + GET_FWD_ENTRY_OFFSET(offset), sizeof(path_entry_save_t), entry);
+            flash_write_page(fwd_start_addr + GET_FWD_ENTRY_OFFSET(new_entry_index), sizeof(path_entry_save_t), entry);
+            new_entry_index += 1;
+        }
+    }
+
+    // update flash address to write next entry
+    if(is_fixed_path){
+        mesh_df_fixed_tbl_addr = FLASH_ADR_FIXED_FWD_TBL + GET_FWD_ENTRY_OFFSET(new_entry_index);
+    }
+    #if CONFIG_ALWAYS_GET_ROUTE_FROM_FLASH
+    else{
+        mesh_df_non_fixed_tbl_addr = FLASH_ADR_NON_FIXED_FWD_TBL + GET_FWD_ENTRY_OFFSET(new_entry_index);
+    }
+    #endif
+
+    // erase backup sector.
+    flash_erase_sector(FLASH_ADR_FRIEND_SHIP);
+
+    return 0;
+}
+
+/**
+ * @brief       This function serves to save forwarding table entry
+ * @param[in]   netkey_offset	- offset of network key
+ * @param[in]   p_entry	- pointer of forwarding entry
+ * @return      
+ * @note        update p_state before calling this function if need, not after, because p_state->fwd_entry_index is modified in this function.
+ */
+int mesh_fwd_tbl_entry_save(int netkey_offset, path_entry_com_t *p_entry)
+{
+    path_entry_save_t entry_save;
+    memset(&entry_save, 0x00, sizeof(entry_save));
+    entry_save.netkey_offset = netkey_offset;
+    memcpy(&entry_save.entry, p_entry, sizeof(path_entry_com_t));
+    entry_save.head.flag = SAVE_FLAG;
+    entry_save.head.crc_en = 1;
+    entry_save.head.crc = crc16(&entry_save.netkey_offset, sizeof(path_entry_save_t) - OFFSETOF(path_entry_save_t, netkey_offset));
+
+    u32 *p_cur_addr = 0;
+    u32 start_addr = 0;
+    u32 end_addr = 0;
+    if(p_entry->fixed_path){
+        p_cur_addr = &mesh_df_fixed_tbl_addr;
+        start_addr = FLASH_ADR_FIXED_FWD_TBL;
+        end_addr = FLASH_ADR_FIXED_FWD_TBL_END;
+    }
+    #if CONFIG_ALWAYS_GET_ROUTE_FROM_FLASH
+    else{
+        p_cur_addr = &mesh_df_non_fixed_tbl_addr;
+        start_addr = FLASH_ADR_NON_FIXED_FWD_TBL;
+        end_addr = FLASH_ADR_NON_FIXED_FWD_TBL_END;
+    }
+    #endif
+
+    if((*p_cur_addr < start_addr) || (*p_cur_addr > end_addr)){
+        return -1;
+    }
+
+    if((*p_cur_addr + FWD_ENTRY_SAVE_SIZE) > end_addr){
+        rebuild_fwd_tbl_entry(p_entry->fixed_path); // rebuild forwarding table
+
+    }
+
+    if(((*p_cur_addr + FWD_ENTRY_SAVE_SIZE -1) / FLASH_SECTOR_SIZE) != (*p_cur_addr / FLASH_SECTOR_SIZE)){
+        *p_cur_addr = (*p_cur_addr + FWD_ENTRY_SAVE_SIZE) / FLASH_SECTOR_SIZE * FLASH_SECTOR_SIZE;
+    }
+
+    // update corresponding forwarding table entry index in ram.
+    u32 entry_index = GET_FWD_ENTRY_INDEX(*p_cur_addr - start_addr);
+    if(p_entry->fixed_path){
+        g_fixed_entry.p_state->vaild = 1;
+        g_fixed_entry.p_state->fwd_entry_index = entry_index;
+    }
+    #if CONFIG_ALWAYS_GET_ROUTE_FROM_FLASH
+    else{
+        g_non_fixed_entry.p_state->fwd_entry_index = entry_index;
+    }
+    #endif
+
+    flash_write_page(*p_cur_addr, sizeof(entry_save), (u8 *)&entry_save);
+    *p_cur_addr += FWD_ENTRY_SAVE_SIZE;
+
+    return 0;
+}
+
+/**
+ * @brief       This function serves to delete fixed entry flag, because it need to find existed fixed entrys after power up in mesh_fwd_tbl_entry_init()
+ * @param[in]   p	- pointer of fixed entry
+ * @param[in]   fwd_entry_index	- entry index in flash
+ * @return      
+ * @note        non-fixed entry not need to mark invalid, because non-fixed forwarding table is empty after power up.
+ */
+int mesh_fwd_tbl_entry_mark_invalid(path_entry_com_t *p, int fwd_entry_index)
+{
+    if(p->fixed_path){
+        u32 base_addr = FLASH_ADR_FIXED_FWD_TBL;
+        if((u32)fwd_entry_index > FIXED_ENTRY_SECTORS * FWD_ENTRYS_PER_SECTOR){
+            return -1;
+        }
+
+        if(g_fixed_entry.p_state->fwd_entry_index == fwd_entry_index){
+            g_fixed_entry.p_state->vaild = 0; // mark invalid for add_new_path_in_fixed_fwd_tbl()
+        }
+
+        u8 zero_flag = 0;
+        flash_write_page(base_addr + GET_FWD_ENTRY_OFFSET(fwd_entry_index), sizeof(zero_flag), (u8 *)&zero_flag);
+    }
+
+    return 0;
+}
+
+int mesh_fwd_tbl_entry_read(path_entry_com_t *p, int fwd_entry_index, int is_fixed_path)
+{
+    u32 base_addr = 0;
+    if(is_fixed_path){
+        base_addr = FLASH_ADR_FIXED_FWD_TBL;
+    }
+#if CONFIG_ALWAYS_GET_ROUTE_FROM_FLASH
+    else{
+        base_addr = FLASH_ADR_NON_FIXED_FWD_TBL;
+    }
+#endif
+
+    flash_read_page(base_addr + GET_FWD_ENTRY_OFFSET(fwd_entry_index) + OFFSETOF(path_entry_save_t, entry), sizeof(path_entry_com_t), (u8 *)p);
+
+    return 0;
+}
+
+#if CONFIG_ALWAYS_GET_ROUTE_FROM_FLASH
+void mesh_non_fixed_fwd_tbl_entry_init(void)
+{
+    for(int sector_offset = 0; sector_offset < NON_FIXED_ENTRY_SECTORS; sector_offset++){
+        for(u32 entry_offset = 0; entry_offset < FWD_ENTRYS_PER_SECTOR; entry_offset++){
+            u32 save_flag = 0;
+            u32 read_addr = FLASH_ADR_NON_FIXED_FWD_TBL + sector_offset * FLASH_SECTOR_SIZE + (entry_offset * FWD_ENTRY_SAVE_SIZE);
+            flash_read_page(read_addr, sizeof(save_flag), (u8 *)&save_flag);
+            mesh_df_non_fixed_tbl_addr = read_addr;
+            if(save_flag == U32_MAX){
+                return;
+            }
+        }
+    }
+
+    return;
+}
+#endif
+
+void mesh_fixed_fwd_tbl_entry_init(void)
+{
+    u16 fwd_entry_cnt[NET_KEY_MAX] = {0};
+
+    for(int sector_offset = 0; sector_offset < FIXED_ENTRY_SECTORS; sector_offset++){
+        for(u32 entry_offset = 0; entry_offset < FWD_ENTRYS_PER_SECTOR; entry_offset++){
+            u32 save_flag = 0;
+            u32 read_addr = FLASH_ADR_FIXED_FWD_TBL + (sector_offset * FLASH_SECTOR_SIZE) + (entry_offset * FWD_ENTRY_SAVE_SIZE);
+            path_entry_save_t path_entry;
+            flash_read_page(read_addr, sizeof(path_entry), (u8 *)&path_entry);
+            memcpy(&save_flag, &path_entry, sizeof(save_flag));
+            mesh_df_fixed_tbl_addr = read_addr;
+
+            if(save_flag == U32_MAX){
+                return;
+            }
+            else if(SAVE_FLAG == path_entry.head.flag){
+                if(path_entry.netkey_offset < NET_KEY_MAX){
+                    if(crc16(&path_entry.netkey_offset, sizeof(path_entry_save_t) - OFFSETOF(path_entry_save_t, netkey_offset)) == path_entry.head.crc){
+                        if(fwd_entry_cnt[path_entry.netkey_offset] < MAX_FIXED_PATH){
+                            fixed_entry_state_t *p_state = &fixed_fwd_tbl_state[path_entry.netkey_offset][fwd_entry_cnt[path_entry.netkey_offset]];
+                            p_state->vaild = 1;
+                            p_state->fwd_entry_index = sector_offset * FWD_ENTRYS_PER_SECTOR + entry_offset;
+                            fwd_entry_cnt[path_entry.netkey_offset]++;
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    rebuild_fwd_tbl_entry(1); // flash record area is full, rebuild
+
+    return;
+}
+
+int mesh_fwd_tbl_entry_init(void)
+{
+#if CONFIG_ALWAYS_GET_ROUTE_FROM_FLASH
+    mesh_non_fixed_fwd_tbl_entry_init();
+#endif
+    mesh_fixed_fwd_tbl_entry_init();
+
+    return 0;
+}
 
 #if DF_TEST_MODE_EN
 void mesh_df_led_event(u8 nid, u8 is_ctl_op)
@@ -174,7 +502,7 @@ u8 get_directed_proxy_dependent_ele_cnt(int conn_idx, u16 netkey_offset, u16 add
 u8 get_directed_friend_dependent_ele_cnt(u16 netkey_offset, u16 addr)
 {
 	u8 ele_cnt=0;
-#if (MD_SERVER_EN && !FEATURE_LOWPOWER_EN)
+#if (MD_SERVER_EN && FEATURE_FRIEND_EN)
 	u16 match_F2L = mesh_mac_match_friend(addr);
 	foreach(i,g_max_lpn_num){
 		if(match_F2L & BIT(i)){
@@ -226,18 +554,28 @@ int is_addr_in_entry(u16 src_addr, u16 destination, path_entry_com_t *p_fwd_entr
 	return 0;
 }
 
+/**
+ * @brief       This function serves to get fixed route by path origin and path destination
+ * @param[in]   destination	- path destination
+ * @param[in]   netkey_offset	- array offset of network key
+ * @param[in]   src_address	- path origin
+ * @return      
+ * @note        
+ */
 path_entry_com_t * get_fixed_path_entry(u16 netkey_offset, u16 src_address, u16 destination)
 {
 	if(netkey_offset < NET_KEY_MAX){
 		foreach(i, MAX_FIXED_PATH){
-			path_entry_com_t *p_fwd_entry = &model_sig_g_df_sbr_cfg.df_cfg.fixed_fwd_tbl[netkey_offset].path[i];
-			if(is_addr_in_entry(src_address, destination, p_fwd_entry)){
-				if(p_fwd_entry->path_not_ready){
-					return 0;
-				}
-				else{
-					return p_fwd_entry;
-				}
+            update_fixed_entry_point(netkey_offset, i);
+            #if CONFIG_ALWAYS_GET_ROUTE_FROM_FLASH
+            if(0 == g_fixed_entry.p_state->vaild){
+                continue;
+            }
+            mesh_fwd_tbl_entry_read(g_fixed_entry.p_entry, g_fixed_entry.p_state->fwd_entry_index, 1);
+            #endif
+
+			if(is_addr_in_entry(src_address, destination, g_fixed_entry.p_entry)){
+				return g_fixed_entry.p_entry;
 			}
 		}
 	}
@@ -249,10 +587,21 @@ non_fixed_entry_t * get_non_fixed_path_entry(u16 netkey_offset, u16 src_address,
 {
 	if(netkey_offset < NET_KEY_MAX){
 		foreach(i, MAX_NON_FIXED_PATH){
-			non_fixed_entry_t *p_fwd_entry = &non_fixed_fwd_tbl[netkey_offset].path[i];
-			if(is_addr_in_entry(src_address, destination, &p_fwd_entry->entry)){
-				return p_fwd_entry;
-			}
+            update_non_fixed_entry_point(netkey_offset, i);
+            if(g_non_fixed_entry.p_state->lifetime_ms){
+                #if CONFIG_ALWAYS_GET_ROUTE_FROM_FLASH
+                mesh_fwd_tbl_entry_read(g_non_fixed_entry.p_entry, g_non_fixed_entry.p_state->fwd_entry_index, 0);
+                #endif
+
+    			if(is_addr_in_entry(src_address, destination, g_non_fixed_entry.p_entry)){
+    				if(g_fixed_entry.p_entry->path_not_ready){
+    					return 0;
+    				}
+    				else{
+    					return g_fixed_entry.p_entry;
+    				}
+    			}
+            }
 		}
 	}
 
@@ -273,7 +622,7 @@ path_entry_com_t *get_forwarding_entry(u16 netkey_offset, u16 src, u16 dst)
 	
 	non_fixed_entry_t *p_non_fixed_entry = get_non_fixed_path_entry(netkey_offset, src, dst);
 	if(p_non_fixed_entry){
-		p_entry = &p_non_fixed_entry->entry;
+		p_entry = p_non_fixed_entry->p_entry;
 	}
 	else{
 		p_entry = get_fixed_path_entry(netkey_offset, src, dst);
@@ -284,9 +633,9 @@ path_entry_com_t *get_forwarding_entry(u16 netkey_offset, u16 src, u16 dst)
 
 int mesh_df_path_monitoring(path_entry_com_t *p_entry){
 	if((0 == p_entry->fixed_path) && is_own_ele(p_entry->path_origin)){
-		non_fixed_entry_t *p_non_fixed_entry = GET_NON_FIXED_ENTRY_POINT((u8*) p_entry);
-		if(p_non_fixed_entry->state.path_monitoring){
-			p_non_fixed_entry->state.path_need = 1;
+		non_fixed_entry_t *p_non_fixed_entry = get_non_fixed_entry_point();
+		if(p_non_fixed_entry->p_state->path_monitoring){
+			p_non_fixed_entry->p_state->path_need = 1;
 			return 1;
 		}
 	}
@@ -344,12 +693,13 @@ void mesh_directed_forwarding_default_val_init(void)
 
 	mesh_directed_forwarding_bind_state_update();
 	#if PTS_TEST_EN // init state for PTS
-	memset(non_fixed_fwd_tbl, 0x00, sizeof(non_fixed_fwd_tbl));
+	memset(non_fixed_fwd_tbl_state, 0x00, sizeof(non_fixed_fwd_tbl_state));
 	memset(discovery_table, 0x00, sizeof(discovery_table));
-	memset(model_sig_g_df_sbr_cfg.df_cfg.fixed_fwd_tbl, 0x00, sizeof(model_sig_g_df_sbr_cfg.df_cfg.fixed_fwd_tbl));
-	#if MD_SBR_CFG_SERVER_EN
+    memset(&fixed_fwd_tbl_state, 0x00, sizeof(fixed_fwd_tbl_state));
+	memset(&fixed_fwd_tbl, 0x00, sizeof(fixed_fwd_tbl));
+	    #if MD_SBR_CFG_SERVER_EN
 	memset(model_sig_g_df_sbr_cfg.bridge_cfg.bridge_entry, 0x00, sizeof(model_sig_g_df_sbr_cfg.bridge_cfg.bridge_entry));
-	#endif
+	    #endif
 	#endif
 	return;
 }
@@ -451,12 +801,12 @@ discovery_entry_par_t * get_discovery_entry_correspond2_path_request(u16 netkey_
 	return 0;
 }
 
-discovery_entry_par_t * get_discovery_entry_correspond2_path_destination(u16 netkey_offset, u16 path_dst)
+discovery_entry_par_t * get_discovery_entry_correspond2_path(u16 netkey_offset, u16 path_origin, u16 path_dst)
 {
 	if(netkey_offset < NET_KEY_MAX){
 		foreach(i, MAX_DSC_TBL){
 			discovery_entry_par_t * p_dsc_entry = &discovery_table[netkey_offset].dsc_entry_par[i];
-			if(path_dst == p_dsc_entry->entry.destination){
+			if((path_origin == p_dsc_entry->entry.path_origin.addr) && (path_dst == p_dsc_entry->entry.destination)){
 				return p_dsc_entry;
 			}
 		}
@@ -478,7 +828,7 @@ void del_discovery_entry_correspond2_path_destination(u16 netkey_offset, u16 pat
 
 discovery_entry_par_t * get_discovery_entry_correspond2_forwarding_entry(u16 netkey_offset, non_fixed_entry_t *p_fwd_entry)
 {
-	return get_discovery_entry_correspond2_path_request(netkey_offset, p_fwd_entry->entry.path_origin, p_fwd_entry->state.forwarding_number);
+	return get_discovery_entry_correspond2_path_request(netkey_offset, p_fwd_entry->p_entry->path_origin, p_fwd_entry->p_state->forwarding_number);
 }
 
 int update_discovery_entry_by_path_request(discovery_entry_t *p_dsc_entry, u16 network_src, u8 src_type, mesh_ctl_path_req_t *p_path_request)
@@ -665,59 +1015,59 @@ void start_path_lifetime_timer(non_fixed_entry_t *p_fwd_entry, discovery_entry_t
 	}
 	#endif
 
-	p_fwd_entry->state.lifetime_ms = (clock_time_ms()|1) + (is_own_ele(p_fwd_entry->entry.path_origin)?path_use_timer_ms:path_lifetime_ms);
-	LOG_DF_DEBUG(0, 0, "%s origin:%x dst:%x lifetime_ms:%d", __func__, p_fwd_entry->entry.path_origin, p_fwd_entry->entry.destination, is_own_ele(p_fwd_entry->entry.path_origin)?path_use_timer_ms:path_lifetime_ms);
+	p_fwd_entry->p_state->lifetime_ms = (clock_time_ms()|1) + (is_own_ele(p_fwd_entry->p_entry->path_origin)?path_use_timer_ms:path_lifetime_ms);
+	LOG_DF_DEBUG(0, 0, "%s origin:%x dst:%x lifetime_ms:%d", __func__, p_fwd_entry->p_entry->path_origin, p_fwd_entry->p_entry->destination, is_own_ele(p_fwd_entry->p_entry->path_origin)?path_use_timer_ms:path_lifetime_ms);
 }
 
 void stop_path_lifetime_timer(non_fixed_entry_t *p_fwd_entry)
 {
-	LOG_DF_DEBUG(0, 0, "%s origin:%x dst:%x", __func__, p_fwd_entry->entry.path_origin, p_fwd_entry->entry.destination);
-	p_fwd_entry->state.lifetime_ms = 0;
+	LOG_DF_DEBUG(0, 0, "%s origin:%x dst:%x", __func__, p_fwd_entry->p_entry->path_origin, p_fwd_entry->p_entry->destination);
+	p_fwd_entry->p_state->lifetime_ms = 0;
 }
 
 void start_path_echo_timer(u16 netkey_offset, non_fixed_entry_t *p_fwd_entry)
 {
-	u32 validation_interval = GET_PATH_LIFETIME_MS(model_sig_g_df_sbr_cfg.df_cfg.directed_forward.subnet_state[netkey_offset].path_metric.path_lifetime) * (is_unicast_adr(p_fwd_entry->entry.destination)?model_sig_g_df_sbr_cfg.df_cfg.directed_forward.subnet_state[netkey_offset].unicast_echo_interval:model_sig_g_df_sbr_cfg.df_cfg.directed_forward.subnet_state[netkey_offset].multicast_echo_interval) / 100;			
-	p_fwd_entry->state.path_echo_timer_ms = (clock_time_ms()|1) + validation_interval;
-	LOG_DF_DEBUG(0, 0, "%s origin:%x dst:%x interval_ms:%d", __func__, p_fwd_entry->entry.path_origin, p_fwd_entry->entry.destination, validation_interval);
+	u32 validation_interval = GET_PATH_LIFETIME_MS(model_sig_g_df_sbr_cfg.df_cfg.directed_forward.subnet_state[netkey_offset].path_metric.path_lifetime) * (is_unicast_adr(p_fwd_entry->p_entry->destination)?model_sig_g_df_sbr_cfg.df_cfg.directed_forward.subnet_state[netkey_offset].unicast_echo_interval:model_sig_g_df_sbr_cfg.df_cfg.directed_forward.subnet_state[netkey_offset].multicast_echo_interval) / 100;			
+	p_fwd_entry->p_state->path_echo_timer_ms = (clock_time_ms()|1) + validation_interval;
+	LOG_DF_DEBUG(0, 0, "%s origin:%x dst:%x interval_ms:%d", __func__, p_fwd_entry->p_entry->path_origin, p_fwd_entry->p_entry->destination, validation_interval);
 }
 
 void stop_path_echo_timer(non_fixed_entry_t *p_fwd_entry)
 {
-	LOG_DF_DEBUG(0, 0, "%s origin:%x dst:%x", __func__, p_fwd_entry->entry.path_origin, p_fwd_entry->entry.destination);
-	p_fwd_entry->state.path_echo_timer_ms = 0;
+	LOG_DF_DEBUG(0, 0, "%s origin:%x dst:%x", __func__, p_fwd_entry->p_entry->path_origin, p_fwd_entry->p_entry->destination);
+	p_fwd_entry->p_state->path_echo_timer_ms = 0;
 }
 
 void start_path_echo_reply_timeout_timer(non_fixed_entry_t *p_fwd_entry)
 {
-	LOG_DF_DEBUG(0, 0, "%s origin:%x dst:%x", __func__, p_fwd_entry->entry.path_origin, p_fwd_entry->entry.destination);
-	if(0 == p_fwd_entry->state.path_echo_reply_timeout_timer){// in active, don't refresh
-		p_fwd_entry->state.path_echo_reply_timeout_timer = (clock_time_ms()|1) + GET_PATH_DSC_INTERVAL_MS(model_sig_g_df_sbr_cfg.df_cfg.directed_forward.discovery_timing.path_discovery_interval);
+	LOG_DF_DEBUG(0, 0, "%s origin:%x dst:%x", __func__, p_fwd_entry->p_entry->path_origin, p_fwd_entry->p_entry->destination);
+	if(0 == p_fwd_entry->p_state->path_echo_reply_timeout_timer){// in active, don't refresh
+		p_fwd_entry->p_state->path_echo_reply_timeout_timer = (clock_time_ms()|1) + GET_PATH_DSC_INTERVAL_MS(model_sig_g_df_sbr_cfg.df_cfg.directed_forward.discovery_timing.path_discovery_interval);
 	}
 	stop_path_echo_timer(p_fwd_entry);
 }
 
 void stop_path_echo_reply_timeout_timer(non_fixed_entry_t *p_fwd_entry)
 {
-	LOG_DF_DEBUG(0, 0, "%s origin:%x dst:%x", __func__, p_fwd_entry->entry.path_origin, p_fwd_entry->entry.destination);
-	p_fwd_entry->state.path_echo_reply_timeout_timer = 0;
+	LOG_DF_DEBUG(0, 0, "%s origin:%x dst:%x", __func__, p_fwd_entry->p_entry->path_origin, p_fwd_entry->p_entry->destination);
+	p_fwd_entry->p_state->path_echo_reply_timeout_timer = 0;
 	stop_path_echo_timer(p_fwd_entry);
 }
 
 void start_path_monitor(non_fixed_entry_t *p_fwd_entry)
 {
 	if(model_sig_g_df_sbr_cfg.df_cfg.directed_forward.discovery_timing.path_monitoring_interval){
-		if(0 == p_fwd_entry->state.path_monitoring){
-			LOG_DF_DEBUG(0, 0, "%s origin:%x dst:%x", __func__, p_fwd_entry->entry.path_origin, p_fwd_entry->entry.destination);
-			p_fwd_entry->state.path_monitoring = 1;
+		if(0 == p_fwd_entry->p_state->path_monitoring){
+			LOG_DF_DEBUG(0, 0, "%s origin:%x dst:%x", __func__, p_fwd_entry->p_entry->path_origin, p_fwd_entry->p_entry->destination);
+			p_fwd_entry->p_state->path_monitoring = 1;
 		}
 	}
 }
 
 void stop_path_monitor(non_fixed_entry_t *p_fwd_entry)
 {
-	LOG_DF_DEBUG(0, 0, "%s origin:%x dst:%x", __func__, p_fwd_entry->entry.path_origin, p_fwd_entry->entry.destination);
-	p_fwd_entry->state.path_monitoring = 0;
+	LOG_DF_DEBUG(0, 0, "%s origin:%x dst:%x", __func__, p_fwd_entry->p_entry->path_origin, p_fwd_entry->p_entry->destination);
+	p_fwd_entry->p_state->path_monitoring = 0;
 }
 
 int get_offset_in_dependent_list(path_addr_t *p_dependent_list, u16 addr)
@@ -734,12 +1084,19 @@ non_fixed_entry_t * get_forwarding_entry_correspond2_path_request(u16 netkey_off
 {
 	if(netkey_offset < NET_KEY_MAX){
 		foreach(i, MAX_NON_FIXED_PATH){
-			non_fixed_entry_t *p_fwd_entry = &non_fixed_fwd_tbl[netkey_offset].path[i];
+            update_non_fixed_entry_point(netkey_offset, i);
+            #if CONFIG_ALWAYS_GET_ROUTE_FROM_FLASH
+            if(0 == g_non_fixed_entry.p_state->lifetime_ms){
+                continue;
+            }
+            mesh_fwd_tbl_entry_read(g_non_fixed_entry.p_entry, g_non_fixed_entry.p_state->fwd_entry_index, 0);
+            #endif
+
 			addr_range_t *p_path_origin = (addr_range_t *)p_path_req->addr_par;
-			if((0 == p_fwd_entry->entry.fixed_path) && (p_path_origin->range_start_b == p_fwd_entry->entry.path_origin) && 
-				(is_ele_in_node(p_path_req->destination, p_fwd_entry->entry.destination, p_fwd_entry->entry.path_target_snd_ele_cnt+1) || is_address_in_dependent_target(&p_fwd_entry->entry, p_path_req->destination))
+			if((0 == g_non_fixed_entry.p_entry->fixed_path) && (p_path_origin->range_start_b == g_non_fixed_entry.p_entry->path_origin) && 
+				(is_ele_in_node(p_path_req->destination, g_non_fixed_entry.p_entry->destination, g_non_fixed_entry.p_entry->path_target_snd_ele_cnt+1) || is_address_in_dependent_target(g_non_fixed_entry.p_entry, p_path_req->destination))
 			){
-				return p_fwd_entry;
+				return &g_non_fixed_entry;
 			}
 		}
 	}
@@ -750,9 +1107,16 @@ non_fixed_entry_t * get_forwarding_entry_correspond2_discovery_entry(u16 netkey_
 {
 	if(netkey_offset < NET_KEY_MAX){
 		foreach(i, MAX_NON_FIXED_PATH){
-			non_fixed_entry_t *p_fwd_entry = &non_fixed_fwd_tbl[netkey_offset].path[i];
-			if((0 == p_fwd_entry->entry.fixed_path) && (p_dsc_entry->path_origin.addr == p_fwd_entry->entry.path_origin) && (p_dsc_entry->forwarding_number == p_fwd_entry->state.forwarding_number)){
-				return p_fwd_entry;
+            update_non_fixed_entry_point(netkey_offset, i);
+            #if CONFIG_ALWAYS_GET_ROUTE_FROM_FLASH
+            if(0 == g_non_fixed_entry.p_state->lifetime_ms){
+                continue;
+            }
+            mesh_fwd_tbl_entry_read(g_non_fixed_entry.p_entry, g_non_fixed_entry.p_state->fwd_entry_index, 0);
+            #endif
+
+			if((0 == g_non_fixed_entry.p_entry->fixed_path) && (p_dsc_entry->path_origin.addr == g_non_fixed_entry.p_entry->path_origin) && (p_dsc_entry->forwarding_number == g_non_fixed_entry.p_state->forwarding_number)){
+				return &g_non_fixed_entry;
 			}
 		}
 	}
@@ -764,16 +1128,28 @@ int delete_fixed_path(u16 netkey_offset, path_entry_com_t *p_entry)
 	int err = -1;
 	if(netkey_offset < NET_KEY_MAX){
 		foreach(i, MAX_FIXED_PATH){
-			path_entry_com_t *p_fwd_entry = &model_sig_g_df_sbr_cfg.df_cfg.fixed_fwd_tbl[netkey_offset].path[i];
-			if((p_entry->path_origin == p_fwd_entry->path_origin) &&
-				(p_entry->destination == p_fwd_entry->destination)){
-				 memset(p_fwd_entry, 0x00, sizeof(path_entry_com_t));
-				 err = 0;
-			}	
+            update_fixed_entry_point(netkey_offset, i);
+            #if CONFIG_ALWAYS_GET_ROUTE_FROM_FLASH
+            if(0 == g_fixed_entry.p_state->vaild){
+                continue;
+            }
+            mesh_fwd_tbl_entry_read(g_fixed_entry.p_entry, g_fixed_entry.p_state->fwd_entry_index, 1);
+            #endif
+
+			if((p_entry->path_origin == g_fixed_entry.p_entry->path_origin) &&
+				(p_entry->destination == g_fixed_entry.p_entry->destination)){
+                #if CONFIG_ALWAYS_GET_ROUTE_FROM_FLASH
+                g_fixed_entry.p_state->vaild = 0;
+                mesh_fwd_tbl_entry_mark_invalid(g_fixed_entry.p_entry, g_fixed_entry.p_state->fwd_entry_index);
+                #endif
+                memset(g_fixed_entry.p_entry, 0x00, sizeof(path_entry_com_t));
+                err = 0;
+			}
 		}
 	}
+
 	if(0 == err){
-		model_sig_g_df_sbr_cfg.df_cfg.fixed_fwd_tbl[netkey_offset].update_id++;
+		model_sig_g_df_sbr_cfg.df_cfg.directed_forward.subnet_state[netkey_offset].update_id++;
 		mesh_common_store(FLASH_ADR_MD_DF_SBR);
 	}
 	return err;
@@ -784,10 +1160,17 @@ int delete_non_fixed_path(u16 netkey_offset, path_entry_com_t *p_entry)
 	int err = -1;
 	if(netkey_offset < NET_KEY_MAX){
 		foreach(i, MAX_NON_FIXED_PATH){
-			non_fixed_entry_t *p_fwd_entry = &non_fixed_fwd_tbl[netkey_offset].path[i];
-			if((p_entry->path_origin == p_fwd_entry->entry.path_origin) &&
-				(p_entry->destination == p_fwd_entry->entry.destination)){
-				 memset(p_fwd_entry, 0x00, sizeof(non_fixed_entry_t));
+            update_non_fixed_entry_point(netkey_offset, i);
+            #if CONFIG_ALWAYS_GET_ROUTE_FROM_FLASH
+            if(0 == g_non_fixed_entry.p_state->lifetime_ms){
+                continue;
+            }
+            mesh_fwd_tbl_entry_read(g_non_fixed_entry.p_entry, g_non_fixed_entry.p_state->fwd_entry_index, 0);
+            #endif
+
+			if((p_entry->path_origin == g_non_fixed_entry.p_entry->path_origin) &&
+				(p_entry->destination == g_non_fixed_entry.p_entry->destination)){
+				 memset(g_non_fixed_entry.p_state, 0x00, sizeof(non_fixed_entry_state_t));
 				 err = 0;
 				 LOG_DF_DEBUG(0, 0, "%s origin:0x%x target:0x%x",__func__, p_entry->path_origin, p_entry->destination);
 				 break;
@@ -803,15 +1186,20 @@ path_entry_com_t * add_new_path_in_fixed_fwd_tbl(u16 netkey_offset, path_entry_c
 	path_entry_com_t *p_entry = 0;
 	u16 path_index = 0;
 	for(path_index=0; path_index<MAX_FIXED_PATH; path_index++){
-		if(0 == model_sig_g_df_sbr_cfg.df_cfg.fixed_fwd_tbl[netkey_offset].path[path_index].path_origin){
+        update_fixed_entry_point(netkey_offset, path_index);
+        if(0 == g_fixed_entry.p_state->vaild)
+		{
 			break;
 		}
 	}
 	
 	if(path_index < MAX_FIXED_PATH){
-		p_entry = &model_sig_g_df_sbr_cfg.df_cfg.fixed_fwd_tbl[netkey_offset].path[path_index];
-		model_sig_g_df_sbr_cfg.df_cfg.fixed_fwd_tbl[netkey_offset].update_id++;		
-		memcpy(p_entry, p, sizeof(path_entry_com_t));	
+        p_entry = g_fixed_entry.p_entry;
+        memcpy(p_entry, p, sizeof(path_entry_com_t));
+        #if CONFIG_ALWAYS_GET_ROUTE_FROM_FLASH
+        mesh_fwd_tbl_entry_save(netkey_offset, p_entry);
+        #endif
+		model_sig_g_df_sbr_cfg.df_cfg.directed_forward.subnet_state[netkey_offset].update_id++;
 		mesh_common_store(FLASH_ADR_MD_DF_SBR);
 		LOG_DF_DEBUG(0, 0, "%s origin:0x%x target:0x%x",__func__, p_entry->path_origin, p_entry->destination);
 	}
@@ -820,20 +1208,34 @@ path_entry_com_t * add_new_path_in_fixed_fwd_tbl(u16 netkey_offset, path_entry_c
 
 non_fixed_entry_t * add_new_path_in_non_fixed_fwd_tbl(u16 netkey_offset, non_fixed_entry_t *p)
 {
-	non_fixed_entry_t *p_entry = 0;
 	u16 path_index = 0;
 	for(path_index=0; path_index<MAX_NON_FIXED_PATH; path_index++){
-		if(0 == non_fixed_fwd_tbl[netkey_offset].path[path_index].entry.path_origin){
+        if(0 == non_fixed_fwd_tbl_state[netkey_offset][path_index].lifetime_ms){
 			break;
 		}
 	}
-	
-	if(path_index < MAX_NON_FIXED_PATH){	
-		p_entry = &non_fixed_fwd_tbl[netkey_offset].path[path_index];
-		memcpy(p_entry, p, sizeof(non_fixed_entry_t));	
-		model_sig_g_df_sbr_cfg.df_cfg.fixed_fwd_tbl[netkey_offset].update_id++;
+
+	if(path_index < MAX_NON_FIXED_PATH){
+        update_non_fixed_entry_point(netkey_offset, path_index);
+        if(is_own_ele(p->p_entry->path_origin)){
+            p->p_state->is_path_origin = 1;
+        }
+
+        if(is_unicast_adr(p->p_entry->destination)){
+            p->p_state->is_unicast_path_dst = 1;
+        }
+
+        memcpy(g_non_fixed_entry.p_state, p->p_state, sizeof(non_fixed_entry_state_t));
+        memcpy(g_non_fixed_entry.p_entry, p->p_entry, sizeof(path_entry_com_t));
+
+        #if CONFIG_ALWAYS_GET_ROUTE_FROM_FLASH
+        mesh_fwd_tbl_entry_save(netkey_offset, p->p_entry);
+        #endif
+
+		model_sig_g_df_sbr_cfg.df_cfg.directed_forward.subnet_state[netkey_offset].update_id++;
 	}
-	return p_entry;
+
+	return &g_non_fixed_entry;
 }
 
 int forwarding_tbl_dependent_add(u16 range_start, u8 snd_ele_cnt, path_addr_t *p_dependent_list)
@@ -886,37 +1288,46 @@ int forwarding_tbl_dependent_delete(u16 addr, path_addr_t *p_dependent_list)
 non_fixed_entry_t * add_forwarding_entry_by_path_reply_delay_timer_expired(u16 netkey_offset, discovery_entry_t *p_dsc_entry)
 {
 	non_fixed_entry_t tbl_entry;
-	memset(&tbl_entry, 0x00, sizeof(tbl_entry));
+    non_fixed_entry_state_t entry_state;
+    path_entry_com_t path_entry;
 
-	tbl_entry.entry.fixed_path = 0;
-	tbl_entry.entry.backward_path_validated = 0;
-	tbl_entry.entry.path_not_ready = 0;
-	tbl_entry.entry.path_origin = p_dsc_entry->path_origin.addr;
-	tbl_entry.entry.path_origin_snd_ele_cnt = p_dsc_entry->path_origin.snd_ele_cnt;
-	tbl_entry.state.forwarding_number = p_dsc_entry->forwarding_number;
-	tbl_entry.entry.bearer_toward_path_origin = p_dsc_entry->bearer_toward_path_origin;
+    tbl_entry.p_state = &entry_state;
+    tbl_entry.p_entry = &path_entry;
+	memset(&entry_state, 0x00, sizeof(entry_state));
+    memset(&path_entry, 0x00, sizeof(path_entry));
+
+	tbl_entry.p_entry->fixed_path = 0;
+	tbl_entry.p_entry->backward_path_validated = 0;
+	tbl_entry.p_entry->path_not_ready = 0;
+	tbl_entry.p_entry->path_origin = p_dsc_entry->path_origin.addr;
+	tbl_entry.p_entry->path_origin_snd_ele_cnt = p_dsc_entry->path_origin.snd_ele_cnt;
+	tbl_entry.p_state->forwarding_number = p_dsc_entry->forwarding_number;
+	tbl_entry.p_entry->bearer_toward_path_origin = p_dsc_entry->bearer_toward_path_origin;
 	
 	if(p_dsc_entry->dependent_origin.addr){
-		forwarding_tbl_dependent_add(p_dsc_entry->dependent_origin.addr, p_dsc_entry->dependent_origin.snd_ele_cnt, tbl_entry.entry.dependent_origin);
+		forwarding_tbl_dependent_add(p_dsc_entry->dependent_origin.addr, p_dsc_entry->dependent_origin.snd_ele_cnt, tbl_entry.p_entry->dependent_origin);
 	}
 
 	if(is_group_adr(p_dsc_entry->destination) || is_virtual_adr(p_dsc_entry->destination)){
-		tbl_entry.entry.destination = p_dsc_entry->destination;				
+		tbl_entry.p_entry->destination = p_dsc_entry->destination;				
 	}
 	else{
-		tbl_entry.entry.destination = ele_adr_primary;
-		tbl_entry.entry.path_target_snd_ele_cnt = g_ele_cnt - 1;
+		tbl_entry.p_entry->destination = ele_adr_primary;
+		tbl_entry.p_entry->path_target_snd_ele_cnt = g_ele_cnt - 1;
 
+        #if FEATURE_FRIEND_EN
 		u16 match_F2L = mesh_mac_match_friend(p_dsc_entry->destination);
 		if(match_F2L){
 			foreach(i, g_max_lpn_num){
 				if((match_F2L>>i) & 0x01){						
-					forwarding_tbl_dependent_add(fn_other_par[i].LPNAdr, fn_req[i].NumEle-1, tbl_entry.entry.dependent_target);
+					forwarding_tbl_dependent_add(fn_other_par[i].LPNAdr, fn_req[i].NumEle-1, tbl_entry.p_entry->dependent_target);
 					break;
 				}
 			}
 		}
-		else{
+		else
+        #endif
+        {
 			u8 snd_ele_cnt = 0;
 			if(is_proxy_client_addr(p_dsc_entry->destination)){
 				u8 netkey_offset = 0;
@@ -925,36 +1336,45 @@ non_fixed_entry_t * add_forwarding_entry_by_path_reply_delay_timer_expired(u16 n
 					snd_ele_cnt = proxy_mag[idx].directed_server[netkey_offset].client_2nd_ele_cnt;
 				}
 				
-				forwarding_tbl_dependent_add(p_dsc_entry->destination, snd_ele_cnt, tbl_entry.entry.dependent_target);
+				forwarding_tbl_dependent_add(p_dsc_entry->destination, snd_ele_cnt, tbl_entry.p_entry->dependent_target);
 			}
 		}
 	}
 
-	tbl_entry.entry.bearer_toward_path_target = MESH_BEAR_UNASSIGNED;
-	tbl_entry.state.lane_counter = 1;
+	tbl_entry.p_entry->bearer_toward_path_target = MESH_BEAR_UNASSIGNED;
+	tbl_entry.p_state->lane_counter = 1;
 	
-	non_fixed_entry_t *p_fwd_entry = get_non_fixed_path_entry(netkey_offset, tbl_entry.entry.path_origin, tbl_entry.entry.destination);
+	non_fixed_entry_t *p_fwd_entry = get_non_fixed_path_entry(netkey_offset, tbl_entry.p_entry->path_origin, tbl_entry.p_entry->destination);
 	if(p_fwd_entry){
-		delete_non_fixed_path(netkey_offset, &p_fwd_entry->entry);
+		delete_non_fixed_path(netkey_offset, p_fwd_entry->p_entry);
 	}
 	return add_new_path_in_non_fixed_fwd_tbl(netkey_offset, &tbl_entry);
 }
 
 void update_forwarding_entry_by_path_reply_delay_timer_expired(u16 netkey_offset, non_fixed_entry_t *p_fwd_entry, discovery_entry_par_t *p_dsc_entry)
 {
-	model_sig_g_df_sbr_cfg.df_cfg.fixed_fwd_tbl[netkey_offset].update_id++;
-	p_fwd_entry->entry.bearer_toward_path_origin = p_dsc_entry->entry.bearer_toward_path_origin;
-	p_fwd_entry->state.lane_counter++;
+	model_sig_g_df_sbr_cfg.df_cfg.directed_forward.subnet_state[netkey_offset].update_id++;
+	p_fwd_entry->p_entry->bearer_toward_path_origin = p_dsc_entry->entry.bearer_toward_path_origin;
+	p_fwd_entry->p_state->lane_counter++;
+    #if CONFIG_ALWAYS_GET_ROUTE_FROM_FLASH
+    mesh_fwd_tbl_entry_save(netkey_offset, p_fwd_entry->p_entry);
+    #endif
 }
 
 non_fixed_entry_t * get_forwarding_entry_correspond2_path_reply(u16 netkey_offset, mesh_ctl_path_reply_t *p_path_reply)
 {
 	if(netkey_offset < NET_KEY_MAX){
 		foreach(i, MAX_NON_FIXED_PATH){
-			non_fixed_entry_t *p_fwd_entry = &non_fixed_fwd_tbl[netkey_offset].path[i];
-			if((p_path_reply->path_origin == p_fwd_entry->entry.path_origin) && (p_path_reply->forwarding_number == p_fwd_entry->state.forwarding_number)){
-				return p_fwd_entry;
-			}
+            update_non_fixed_entry_point(netkey_offset, i);
+            if(g_non_fixed_entry.p_state->lifetime_ms){
+                #if CONFIG_ALWAYS_GET_ROUTE_FROM_FLASH
+                mesh_fwd_tbl_entry_read(g_non_fixed_entry.p_entry, g_non_fixed_entry.p_state->fwd_entry_index, 0);
+                #endif
+
+    			if((p_path_reply->path_origin == g_non_fixed_entry.p_entry->path_origin) && (p_path_reply->forwarding_number == g_non_fixed_entry.p_state->forwarding_number)){
+    				return &g_non_fixed_entry;
+    			}
+            }
 		}
 	}
 	return 0;
@@ -963,47 +1383,53 @@ non_fixed_entry_t * get_forwarding_entry_correspond2_path_reply(u16 netkey_offse
 non_fixed_entry_t * add_forwarding_tbl_entry_by_rcv_path_reply(u16 netkey_offset, u8 bearer_toward_path_target, discovery_entry_par_t *p_dsc_entry, mesh_ctl_path_reply_t *p_path_reply)
 {
 	non_fixed_entry_t tbl_entry;
-	memset(&tbl_entry, 0x00, sizeof(tbl_entry));
+    non_fixed_entry_state_t entry_state;
+    path_entry_com_t path_entry;
+
+    tbl_entry.p_state = &entry_state;
+    tbl_entry.p_entry = &path_entry;
+	memset(&entry_state, 0x00, sizeof(entry_state));
+    memset(&path_entry, 0x00, sizeof(path_entry));
 	
 	addr_range_t *p_path_target = (addr_range_t *)p_path_reply->addr_par;
 	if(is_own_ele(p_path_reply->path_origin) && (0 == p_path_target->range_start_b)){
-		tbl_entry.entry.path_not_ready = 1;
+		tbl_entry.p_entry->path_not_ready = 1;
 	}
 
-	tbl_entry.entry.path_origin = p_dsc_entry->entry.path_origin.addr;
-	tbl_entry.entry.path_origin_snd_ele_cnt = p_dsc_entry->entry.path_origin.snd_ele_cnt;
-	tbl_entry.state.forwarding_number = p_dsc_entry->entry.forwarding_number;
+	tbl_entry.p_entry->path_origin = p_dsc_entry->entry.path_origin.addr;
+	tbl_entry.p_entry->path_origin_snd_ele_cnt = p_dsc_entry->entry.path_origin.snd_ele_cnt;
+	tbl_entry.p_state->forwarding_number = p_dsc_entry->entry.forwarding_number;
 
 	if(!is_own_ele(p_path_reply->path_origin)){
-		tbl_entry.entry.bearer_toward_path_origin = p_dsc_entry->entry.bearer_toward_path_origin;
+		tbl_entry.p_entry->bearer_toward_path_origin = p_dsc_entry->entry.bearer_toward_path_origin;
 	}
 	else{
-		tbl_entry.entry.bearer_toward_path_origin = MESH_BEAR_UNASSIGNED;
+		tbl_entry.p_entry->bearer_toward_path_origin = MESH_BEAR_UNASSIGNED;
 	}
 	
 	if(p_dsc_entry->entry.dependent_origin.addr){
-		forwarding_tbl_dependent_add(p_dsc_entry->entry.dependent_origin.addr, p_dsc_entry->entry.dependent_origin.snd_ele_cnt, tbl_entry.entry.dependent_origin);
+		forwarding_tbl_dependent_add(p_dsc_entry->entry.dependent_origin.addr, p_dsc_entry->entry.dependent_origin.snd_ele_cnt, tbl_entry.p_entry->dependent_origin);
 	}
 
 	if(is_group_adr(p_dsc_entry->entry.destination) || is_virtual_adr(p_dsc_entry->entry.destination)){
-		tbl_entry.entry.destination = p_dsc_entry->entry.destination;				
+		tbl_entry.p_entry->destination = p_dsc_entry->entry.destination;				
 	}
 	else{
-		tbl_entry.entry.destination = p_path_target->range_start_b;
-		tbl_entry.entry.path_target_snd_ele_cnt = p_path_target->length_present_b?(p_path_target->range_length-1):0;
+		tbl_entry.p_entry->destination = p_path_target->range_start_b;
+		tbl_entry.p_entry->path_target_snd_ele_cnt = p_path_target->length_present_b?(p_path_target->range_length-1):0;
 	}
 
 	if(p_path_reply->on_behalf_of_dependent_target){	
 		addr_range_t *p_dependent_target = (addr_range_t *)(p_path_reply->addr_par + (p_path_target->length_present_b?3:2));
-		forwarding_tbl_dependent_add(p_dependent_target->range_start_b, p_dependent_target->length_present_b?(p_dependent_target->range_length-1):0, tbl_entry.entry.dependent_target);
+		forwarding_tbl_dependent_add(p_dependent_target->range_start_b, p_dependent_target->length_present_b?(p_dependent_target->range_length-1):0, tbl_entry.p_entry->dependent_target);
 	}
 
-	tbl_entry.entry.bearer_toward_path_target = bearer_toward_path_target;
-	tbl_entry.state.lane_counter = 1;
+	tbl_entry.p_entry->bearer_toward_path_target = bearer_toward_path_target;
+	tbl_entry.p_state->lane_counter = 1;
 
-	non_fixed_entry_t *p_fwd_entry = get_non_fixed_path_entry(netkey_offset, tbl_entry.entry.path_origin, tbl_entry.entry.destination);
+	non_fixed_entry_t *p_fwd_entry = get_non_fixed_path_entry(netkey_offset, tbl_entry.p_entry->path_origin, tbl_entry.p_entry->destination);
 	if(p_fwd_entry){
-		delete_non_fixed_path(netkey_offset, &p_fwd_entry->entry);
+		delete_non_fixed_path(netkey_offset, p_fwd_entry->p_entry);
 	}
 	
 	return add_new_path_in_non_fixed_fwd_tbl(netkey_offset, &tbl_entry);
@@ -1011,25 +1437,45 @@ non_fixed_entry_t * add_forwarding_tbl_entry_by_rcv_path_reply(u16 netkey_offset
 
 void update_forwarding_entry_by_path_reply(u8 netkey_offset, u8 src_type, non_fixed_entry_t *p_fwd_entry, discovery_entry_par_t *p_dsc_entry)
 {
-	model_sig_g_df_sbr_cfg.df_cfg.fixed_fwd_tbl[netkey_offset].update_id++;
+	model_sig_g_df_sbr_cfg.df_cfg.directed_forward.subnet_state[netkey_offset].update_id++;
+
+    #if CONFIG_ALWAYS_GET_ROUTE_FROM_FLASH
+    int need_save = 0;
+    if((p_fwd_entry->p_entry->bearer_toward_path_origin != p_dsc_entry->entry.bearer_toward_path_origin) || (p_fwd_entry->p_entry->bearer_toward_path_target != src_type)){
+        need_save = 1;
+    }
+    #endif
+
 	if(!is_own_ele(p_dsc_entry->entry.path_origin.addr)){
-		p_fwd_entry->entry.bearer_toward_path_origin = p_dsc_entry->entry.bearer_toward_path_origin;
+		p_fwd_entry->p_entry->bearer_toward_path_origin = p_dsc_entry->entry.bearer_toward_path_origin;
 	}
-	p_fwd_entry->entry.bearer_toward_path_target = src_type;
+	p_fwd_entry->p_entry->bearer_toward_path_target = src_type;
 	if(p_dsc_entry->state.first_reply_msg){		
-		p_fwd_entry->state.lane_counter++;
+		p_fwd_entry->p_state->lane_counter++;
 	}
+
+    #if CONFIG_ALWAYS_GET_ROUTE_FROM_FLASH
+    if(need_save){
+        mesh_fwd_tbl_entry_save(netkey_offset, p_fwd_entry->p_entry);
+    }
+    #endif
 }
 
 non_fixed_entry_t * get_forwarding_entry_correspond2_path_confirm(u16 netkey_offset, mesh_ctl_path_confirmation_t *p_path_confirm)
 {
 	if(netkey_offset < NET_KEY_MAX){
 		foreach(i, MAX_NON_FIXED_PATH){
-			non_fixed_entry_t *p_fwd_entry = &non_fixed_fwd_tbl[netkey_offset].path[i];
-			if((0 == p_fwd_entry->entry.fixed_path) && (p_path_confirm->path_origin == p_fwd_entry->entry.path_origin) && (p_path_confirm->path_target == p_fwd_entry->entry.destination)){
-				p_fwd_entry->entry.backward_path_validated = 1;
-				model_sig_g_df_sbr_cfg.df_cfg.fixed_fwd_tbl[netkey_offset].update_id++;
-				return p_fwd_entry;
+            update_non_fixed_entry_point(netkey_offset, i);
+            #if CONFIG_ALWAYS_GET_ROUTE_FROM_FLASH
+            if(0 == g_non_fixed_entry.p_state->lifetime_ms){
+                continue;
+            }
+            mesh_fwd_tbl_entry_read(g_non_fixed_entry.p_entry, g_non_fixed_entry.p_state->fwd_entry_index, 0);
+            #endif
+
+			if((0 == g_non_fixed_entry.p_entry->fixed_path) && (p_path_confirm->path_origin == g_non_fixed_entry.p_entry->path_origin) && (p_path_confirm->path_target == g_non_fixed_entry.p_entry->destination)){
+				model_sig_g_df_sbr_cfg.df_cfg.directed_forward.subnet_state[netkey_offset].update_id++;
+				return &g_non_fixed_entry;
 			}
 		}
 	}
@@ -1038,17 +1484,27 @@ non_fixed_entry_t * get_forwarding_entry_correspond2_path_confirm(u16 netkey_off
 
 void update_forwarding_entry_by_path_confirm(u16 netkey_offset, non_fixed_entry_t *p_fwd_entry, mesh_ctl_path_confirmation_t *p_path_confirm)
 {
-	model_sig_g_df_sbr_cfg.df_cfg.fixed_fwd_tbl[netkey_offset].update_id++;
-	p_fwd_entry->entry.backward_path_validated = 1;
+	model_sig_g_df_sbr_cfg.df_cfg.directed_forward.subnet_state[netkey_offset].update_id++;
+	p_fwd_entry->p_entry->backward_path_validated = 1;
+    #if CONFIG_ALWAYS_GET_ROUTE_FROM_FLASH
+    mesh_fwd_tbl_entry_save(netkey_offset, p_fwd_entry->p_entry);
+    #endif
 }
 
 non_fixed_entry_t * get_forwarding_entry_correspond2_path_echo_request(u16 netkey_offset, u16 src_addr, u16 dst_addr)
 {
 	if(netkey_offset < NET_KEY_MAX){
 		foreach(i, MAX_NON_FIXED_PATH){
-			non_fixed_entry_t *p_fwd_entry = &non_fixed_fwd_tbl[netkey_offset].path[i];
-			if((0 == p_fwd_entry->entry.fixed_path) && (src_addr == p_fwd_entry->entry.path_origin) && (dst_addr == p_fwd_entry->entry.destination)){
-				return p_fwd_entry;
+            update_non_fixed_entry_point(netkey_offset, i);
+            #if CONFIG_ALWAYS_GET_ROUTE_FROM_FLASH
+            if(0 == g_non_fixed_entry.p_state->lifetime_ms){
+                continue;
+            }
+            mesh_fwd_tbl_entry_read(g_non_fixed_entry.p_entry, g_non_fixed_entry.p_state->fwd_entry_index, 0);
+            #endif
+
+			if((0 == g_non_fixed_entry.p_entry->fixed_path) && (src_addr == g_non_fixed_entry.p_entry->path_origin) && (dst_addr == g_non_fixed_entry.p_entry->destination)){
+				return &g_non_fixed_entry;
 			}
 		}
 	}
@@ -1059,9 +1515,16 @@ non_fixed_entry_t * get_forwarding_entry_correspond2_path_echo_reply(u16 netkey_
 {
 	if(netkey_offset < NET_KEY_MAX){
 		foreach(i, MAX_NON_FIXED_PATH){
-			non_fixed_entry_t *p_fwd_entry = &non_fixed_fwd_tbl[netkey_offset].path[i];
-			if((0 == p_fwd_entry->entry.fixed_path) && (network_dst == p_fwd_entry->entry.path_origin) && (p_path_echo_reply->destination == p_fwd_entry->entry.destination)){
-				return p_fwd_entry;
+            update_non_fixed_entry_point(netkey_offset, i);
+            #if CONFIG_ALWAYS_GET_ROUTE_FROM_FLASH
+            if(0 == g_non_fixed_entry.p_state->lifetime_ms){
+                continue;
+            }
+            mesh_fwd_tbl_entry_read(g_non_fixed_entry.p_entry, g_non_fixed_entry.p_state->fwd_entry_index, 0);
+            #endif
+
+			if((0 == g_non_fixed_entry.p_entry->fixed_path) && (network_dst == g_non_fixed_entry.p_entry->path_origin) && (p_path_echo_reply->destination == g_non_fixed_entry.p_entry->destination)){
+				return &g_non_fixed_entry;
 			}
 		}
 	}
@@ -1073,14 +1536,21 @@ non_fixed_entry_t * get_forwarding_entry_correspond2_dependent_node_update(u16 n
 	u16 dependent_addr = p_dependent_node_update->dependent_addr.length_present_b ? p_dependent_node_update->dependent_addr.range_start_b:p_dependent_node_update->dependent_addr.multicast_addr;
 	if(netkey_offset < NET_KEY_MAX){
 		foreach(i, MAX_NON_FIXED_PATH){
-			non_fixed_entry_t *p_fwd_entry = &non_fixed_fwd_tbl[netkey_offset].path[i];
-			if(0 == p_fwd_entry->entry.fixed_path){
-				if(((p_dependent_node_update->path_endpoint==p_fwd_entry->entry.path_origin) && (DEPENDENT_TYPE_REMOVE == p_dependent_node_update->type) && is_address_in_dependent_origin(&p_fwd_entry->entry, dependent_addr)) ||
-					((p_dependent_node_update->path_endpoint==p_fwd_entry->entry.path_origin) && (DEPENDENT_TYPE_ADD == p_dependent_node_update->type) && !is_address_in_dependent_origin(&p_fwd_entry->entry, dependent_addr)) ||
-					((p_dependent_node_update->path_endpoint==p_fwd_entry->entry.destination) && (DEPENDENT_TYPE_REMOVE == p_dependent_node_update->type) && is_address_in_dependent_target(&p_fwd_entry->entry, dependent_addr)) ||
-					((p_dependent_node_update->path_endpoint==p_fwd_entry->entry.destination) && (DEPENDENT_TYPE_ADD == p_dependent_node_update->type) && p_fwd_entry->entry.backward_path_validated && !is_address_in_dependent_target(&p_fwd_entry->entry, dependent_addr))
+            update_non_fixed_entry_point(netkey_offset, i);
+            #if CONFIG_ALWAYS_GET_ROUTE_FROM_FLASH
+            if(0 == g_non_fixed_entry.p_state->lifetime_ms){
+                continue;
+            }
+            mesh_fwd_tbl_entry_read(g_non_fixed_entry.p_entry, g_non_fixed_entry.p_state->fwd_entry_index, 0);
+            #endif
+
+			if(0 == g_non_fixed_entry.p_entry->fixed_path){
+				if(((p_dependent_node_update->path_endpoint==g_non_fixed_entry.p_entry->path_origin) && (DEPENDENT_TYPE_REMOVE == p_dependent_node_update->type) && is_address_in_dependent_origin(g_non_fixed_entry.p_entry, dependent_addr)) ||
+					((p_dependent_node_update->path_endpoint==g_non_fixed_entry.p_entry->path_origin) && (DEPENDENT_TYPE_ADD == p_dependent_node_update->type) && !is_address_in_dependent_origin(g_non_fixed_entry.p_entry, dependent_addr)) ||
+					((p_dependent_node_update->path_endpoint==g_non_fixed_entry.p_entry->destination) && (DEPENDENT_TYPE_REMOVE == p_dependent_node_update->type) && is_address_in_dependent_target(g_non_fixed_entry.p_entry, dependent_addr)) ||
+					((p_dependent_node_update->path_endpoint==g_non_fixed_entry.p_entry->destination) && (DEPENDENT_TYPE_ADD == p_dependent_node_update->type) && g_non_fixed_entry.p_entry->backward_path_validated && !is_address_in_dependent_target(g_non_fixed_entry.p_entry, dependent_addr))
 				){
-					return p_fwd_entry;
+					return &g_non_fixed_entry;
 				}
 			}
 		}
@@ -1093,34 +1563,48 @@ int update_forwarding_by_dependent_node_update(u16 netkey_offset, mesh_ctl_depen
 	int ret = -1;
 	if(netkey_offset < NET_KEY_MAX){
 		foreach(i, MAX_NON_FIXED_PATH){
-			non_fixed_entry_t *p_fwd_entry = &non_fixed_fwd_tbl[netkey_offset].path[i];
-			if(0 == p_fwd_entry->entry.fixed_path){
-				if(((p_dependent_update->path_endpoint==p_fwd_entry->entry.path_origin) && (DEPENDENT_TYPE_REMOVE==p_dependent_update->type) && is_address_in_dependent_origin(&p_fwd_entry->entry, p_dependent_update->dependent_addr.range_start_b)) ||
-					((p_dependent_update->path_endpoint==p_fwd_entry->entry.path_origin) && (DEPENDENT_TYPE_ADD==p_dependent_update->type) && !is_address_in_dependent_origin(&p_fwd_entry->entry, p_dependent_update->dependent_addr.range_start_b)) ||
-					((p_dependent_update->path_endpoint==p_fwd_entry->entry.destination) && (DEPENDENT_TYPE_REMOVE==p_dependent_update->type) && is_address_in_dependent_target(&p_fwd_entry->entry, p_dependent_update->dependent_addr.range_start_b))	||
-					((p_dependent_update->path_endpoint==p_fwd_entry->entry.destination) && (DEPENDENT_TYPE_ADD==p_dependent_update->type) && p_fwd_entry->entry.backward_path_validated && !is_address_in_dependent_target(&p_fwd_entry->entry, p_dependent_update->dependent_addr.range_start_b))				
+            update_non_fixed_entry_point(netkey_offset, i);
+            #if CONFIG_ALWAYS_GET_ROUTE_FROM_FLASH
+            if(0 == g_non_fixed_entry.p_state->lifetime_ms){
+                continue;
+            }
+            mesh_fwd_tbl_entry_read(g_non_fixed_entry.p_entry, g_non_fixed_entry.p_state->fwd_entry_index, 0);
+            #endif
+
+			if(0 == g_non_fixed_entry.p_entry->fixed_path){
+				if(((p_dependent_update->path_endpoint==g_non_fixed_entry.p_entry->path_origin) && (DEPENDENT_TYPE_REMOVE==p_dependent_update->type) && is_address_in_dependent_origin(g_non_fixed_entry.p_entry, p_dependent_update->dependent_addr.range_start_b)) ||
+					((p_dependent_update->path_endpoint==g_non_fixed_entry.p_entry->path_origin) && (DEPENDENT_TYPE_ADD==p_dependent_update->type) && !is_address_in_dependent_origin(g_non_fixed_entry.p_entry, p_dependent_update->dependent_addr.range_start_b)) ||
+					((p_dependent_update->path_endpoint==g_non_fixed_entry.p_entry->destination) && (DEPENDENT_TYPE_REMOVE==p_dependent_update->type) && is_address_in_dependent_target(g_non_fixed_entry.p_entry, p_dependent_update->dependent_addr.range_start_b))	||
+					((p_dependent_update->path_endpoint==g_non_fixed_entry.p_entry->destination) && (DEPENDENT_TYPE_ADD==p_dependent_update->type) && g_non_fixed_entry.p_entry->backward_path_validated && !is_address_in_dependent_target(g_non_fixed_entry.p_entry, p_dependent_update->dependent_addr.range_start_b))				
 				){
-					if(p_dependent_update->path_endpoint==p_fwd_entry->entry.path_origin){
+					if(p_dependent_update->path_endpoint==g_non_fixed_entry.p_entry->path_origin){
 						if(p_dependent_update->type){
-							ret = forwarding_tbl_dependent_add(p_dependent_update->dependent_addr.range_start_b, p_dependent_update->dependent_addr.length_present_b?(p_dependent_update->dependent_addr.range_length-1):0, p_fwd_entry->entry.dependent_origin);
+							ret = forwarding_tbl_dependent_add(p_dependent_update->dependent_addr.range_start_b, p_dependent_update->dependent_addr.length_present_b?(p_dependent_update->dependent_addr.range_length-1):0, g_non_fixed_entry.p_entry->dependent_origin);
 						}
 						else{
-							ret = forwarding_tbl_dependent_delete(p_dependent_update->dependent_addr.range_start_b, p_fwd_entry->entry.dependent_origin);
+							ret = forwarding_tbl_dependent_delete(p_dependent_update->dependent_addr.range_start_b, g_non_fixed_entry.p_entry->dependent_origin);
 						}
 					}
-					else if(p_dependent_update->path_endpoint==p_fwd_entry->entry.destination){
+					else if(p_dependent_update->path_endpoint==g_non_fixed_entry.p_entry->destination){
 						if(p_dependent_update->type){
-							ret = forwarding_tbl_dependent_add(p_dependent_update->dependent_addr.range_start_b, p_dependent_update->dependent_addr.length_present_b?(p_dependent_update->dependent_addr.range_length-1):0, p_fwd_entry->entry.dependent_target);
+							ret = forwarding_tbl_dependent_add(p_dependent_update->dependent_addr.range_start_b, p_dependent_update->dependent_addr.length_present_b?(p_dependent_update->dependent_addr.range_length-1):0, g_non_fixed_entry.p_entry->dependent_target);
 						}
 						else{
-							ret = forwarding_tbl_dependent_delete(p_dependent_update->dependent_addr.range_start_b, p_fwd_entry->entry.dependent_target);
+							ret = forwarding_tbl_dependent_delete(p_dependent_update->dependent_addr.range_start_b, g_non_fixed_entry.p_entry->dependent_target);
 						}	
 					}
-					model_sig_g_df_sbr_cfg.df_cfg.fixed_fwd_tbl[netkey_offset].update_id++;
+					model_sig_g_df_sbr_cfg.df_cfg.directed_forward.subnet_state[netkey_offset].update_id++;
 				}
 			}
+
+            #if CONFIG_ALWAYS_GET_ROUTE_FROM_FLASH
+            if(0 == ret){
+                mesh_fwd_tbl_entry_save(netkey_offset, g_non_fixed_entry.p_entry);
+            }
+            #endif
 		}
 	}
+
 	return ret;
 }
 
@@ -1128,11 +1612,18 @@ non_fixed_entry_t * get_forwarding_entry_correspond2_path_request_solication(u16
 {
 	if(netkey_offset < NET_KEY_MAX){
 		foreach(i, MAX_NON_FIXED_PATH){
-			non_fixed_entry_t *p_fwd_entry = &non_fixed_fwd_tbl[netkey_offset].path[i];
-			if((0 == p_fwd_entry->entry.fixed_path) && is_own_ele(p_fwd_entry->entry.path_origin)){
+            update_non_fixed_entry_point(netkey_offset, i);
+            #if CONFIG_ALWAYS_GET_ROUTE_FROM_FLASH
+            if(0 == g_non_fixed_entry.p_state->lifetime_ms){
+                continue;
+            }
+            mesh_fwd_tbl_entry_read(g_non_fixed_entry.p_entry, g_non_fixed_entry.p_state->fwd_entry_index, 0);
+            #endif
+
+			if((0 == g_non_fixed_entry.p_entry->fixed_path) && is_own_ele(g_non_fixed_entry.p_entry->path_origin)){
 				foreach(i, par_len/2){
-					if(p_fwd_entry->entry.destination == p_request_solication->addr_list[i]){
-						return p_fwd_entry;
+					if(g_non_fixed_entry.p_entry->destination == p_request_solication->addr_list[i]){
+						return &g_non_fixed_entry;
 					}
 				}
 			}
@@ -1198,7 +1689,7 @@ int mesh_cmd_sig_cfg_directed_control_set(u8 *par, int par_len, mesh_cb_fun_par_
 			   (DIRECTED_FRIEND_IGNORE != p_set->directed_control.directed_friend)){
 				return err;
 			}
-			memset(non_fixed_fwd_tbl, 0x00, sizeof(non_fixed_fwd_tbl));
+			memset(non_fixed_fwd_tbl_state, 0x00, sizeof(non_fixed_fwd_tbl_state));
 			memset(discovery_table, 0x00, sizeof(discovery_table));
 		}	
 		else{
@@ -1436,13 +1927,15 @@ int mesh_cmd_sig_cfg_forwarding_tbl_add(u8 *par, int par_len, mesh_cb_fun_par_t 
 		else if(!((tbl_entry.bearer_toward_path_origin && (tbl_entry.bearer_toward_path_origin<MESH_BEAR_SUPPORT)) && (tbl_entry.bearer_toward_path_target && (tbl_entry.bearer_toward_path_target<MESH_BEAR_SUPPORT)))){
 			forwarding_tbl_status.status = ST_INVALID_BEARER;
 		}
-		
+
 		if(ST_SUCCESS == forwarding_tbl_status.status){
 			if(p_fwd_entry){// exist, update entry
 				p_fwd_entry->backward_path_validated = tbl_entry.backward_path_validated;
 				p_fwd_entry->bearer_toward_path_origin = tbl_entry.bearer_toward_path_origin;
 				p_fwd_entry->bearer_toward_path_target = tbl_entry.bearer_toward_path_target;
-				model_sig_g_df_sbr_cfg.df_cfg.fixed_fwd_tbl[key_offset].update_id++;
+				model_sig_g_df_sbr_cfg.df_cfg.directed_forward.subnet_state[key_offset].update_id++;
+                mesh_fwd_tbl_entry_mark_invalid(p_fwd_entry, g_fixed_entry.p_state->fwd_entry_index); // mark previous entry as invalid
+                add_new_path_in_fixed_fwd_tbl(key_offset, &tbl_entry);
 			}
 			else{// not exist, add a new fixed path entry
 				if(add_new_path_in_fixed_fwd_tbl(key_offset, &tbl_entry)){
@@ -1567,7 +2060,9 @@ int mesh_cmd_sig_cfg_forwarding_tbl_dependents_add(u8 *par, int par_len, mesh_cb
 		}
 		
 		if(dependent_change){
-			model_sig_g_df_sbr_cfg.df_cfg.fixed_fwd_tbl[key_offset].update_id++;
+            mesh_fwd_tbl_entry_mark_invalid(g_fixed_entry.p_entry, g_fixed_entry.p_state->fwd_entry_index); // mark previous entry as invalid
+            mesh_fwd_tbl_entry_save(key_offset, g_fixed_entry.p_entry);
+			model_sig_g_df_sbr_cfg.df_cfg.directed_forward.subnet_state[key_offset].update_id++;
 			mesh_common_store(FLASH_ADR_MD_DF_SBR);
 		}		
 	}
@@ -1640,7 +2135,9 @@ int mesh_cmd_sig_cfg_forwarding_tbl_dependents_delete(u8 *par, int par_len, mesh
 		}
 		
 		if(dependent_change){
-			model_sig_g_df_sbr_cfg.df_cfg.fixed_fwd_tbl[key_offset].update_id++;
+            mesh_fwd_tbl_entry_mark_invalid(g_fixed_entry.p_entry, g_fixed_entry.p_state->fwd_entry_index); // mark previous entry as invalid
+            mesh_fwd_tbl_entry_save(key_offset, g_fixed_entry.p_entry);
+			model_sig_g_df_sbr_cfg.df_cfg.directed_forward.subnet_state[key_offset].update_id++;
 			mesh_common_store(FLASH_ADR_MD_DF_SBR);
 		}
 	}
@@ -1702,7 +2199,7 @@ int mesh_cmd_sig_cfg_forwarding_tbl_dependents_get(u8 *par, int par_len, mesh_cb
 	memcpy(&dependengts_get_sts.status+1, p_dependents_get, OFFSETOF(forwarding_tbl_dependents_get_t, up_id));
 
 	int key_offset = get_mesh_net_key_offset(p_dependents_get->netkey_index);		
-	u16 fwd_tbl_id = model_sig_g_df_sbr_cfg.df_cfg.fixed_fwd_tbl[key_offset].update_id;//p_dependents_get->fixed_path_flag ? model_sig_g_df_sbr_cfg.df_cfg.fixed_fwd_tbl[key_offset].update_id:non_fixed_fwd_tbl[key_offset].update_id;
+	u16 fwd_tbl_id = model_sig_g_df_sbr_cfg.df_cfg.directed_forward.subnet_state[key_offset].update_id;//p_dependents_get->fixed_path_flag ? model_sig_g_df_sbr_cfg.df_cfg.fixed_fwd_tbl[key_offset].update_id:non_fixed_fwd_tbl[key_offset].update_id;
 	if(-1 == key_offset){
 		dependengts_get_sts.status = ST_INVALID_NETKEY;
 		cur_par_len = OFFSETOF(forwarding_tbl_dependents_get_sts_t, up_id);
@@ -1718,7 +2215,7 @@ int mesh_cmd_sig_cfg_forwarding_tbl_dependents_get(u8 *par, int par_len, mesh_cb
 		}
 		else{
 			non_fixed_entry_t *p_non_fixed_entry = get_non_fixed_path_entry(key_offset, p_dependents_get->path_origin, p_dependents_get->destination);
-			p_fwd_entry = &p_non_fixed_entry->entry;			
+			p_fwd_entry = p_non_fixed_entry->p_entry;			
 		}	
 		
 		if(p_fwd_entry){			
@@ -1779,19 +2276,33 @@ int mesh_cmd_sig_cfg_forwarding_tbl_entries_count_get(u8 *par, int par_len, mesh
 	int key_offset = get_mesh_net_key_offset(netkey_index);	
 	if(-1 != key_offset){
 		foreach(path_offset, MAX_NON_FIXED_PATH){
-			path_entry_com_t *p_fwd_entry = &non_fixed_fwd_tbl[key_offset].path[path_offset].entry;
-			if(p_fwd_entry->path_origin){
+            update_non_fixed_entry_point(key_offset, path_offset);
+            #if CONFIG_ALWAYS_GET_ROUTE_FROM_FLASH
+            if(0 == g_non_fixed_entry.p_state->lifetime_ms){
+                continue;
+            }
+            mesh_fwd_tbl_entry_read(g_non_fixed_entry.p_entry, g_non_fixed_entry.p_state->fwd_entry_index, 0);
+            #endif
+
+			if(g_non_fixed_entry.p_entry->path_origin){
 				entries_count_sts.non_fixed_cnt++;
 			}
 		}
 
 		foreach(path_offset, MAX_FIXED_PATH){
-			path_entry_com_t *p_fwd_entry = &model_sig_g_df_sbr_cfg.df_cfg.fixed_fwd_tbl[key_offset].path[path_offset];
-			if(p_fwd_entry->path_origin){
+            update_fixed_entry_point(key_offset, path_offset);
+            #if CONFIG_ALWAYS_GET_ROUTE_FROM_FLASH
+            if(0 == g_fixed_entry.p_state->vaild){
+                continue;
+            }
+            mesh_fwd_tbl_entry_read(g_fixed_entry.p_entry, g_fixed_entry.p_state->fwd_entry_index, 0);
+            #endif
+
+			if(g_fixed_entry.p_entry->path_origin){
 				entries_count_sts.fixed_cnt++;				
 			}
 		}
-		entries_count_sts.update_id = model_sig_g_df_sbr_cfg.df_cfg.fixed_fwd_tbl[key_offset].update_id;
+		entries_count_sts.update_id = model_sig_g_df_sbr_cfg.df_cfg.directed_forward.subnet_state[key_offset].update_id;
 	}
 	else{
 		entries_count_sts.status = ST_INVALID_NETKEY;
@@ -1811,12 +2322,12 @@ u16 mesh_fill_fwd_tbl_entry_list(int key_offset, path_entry_com_t *p_entry, u8 *
 	via_len += sizeof(forwarding_table_entry_head_t);
 
 	if(!fix_path){
-		non_fixed_entry_t *p_non_fixed_entry = GET_NON_FIXED_ENTRY_POINT((u8*) p_entry);
-		p_list[via_len++] = p_non_fixed_entry->state.lane_counter;
-		u16 remaining_time = (GET_PATH_LIFETIME_MS(model_sig_g_df_sbr_cfg.df_cfg.directed_forward.subnet_state[key_offset].path_metric.path_lifetime) - (clock_time_ms()-p_non_fixed_entry->state.lifetime_ms))/1000/60;
+		non_fixed_entry_t *p_non_fixed_entry = get_non_fixed_entry_point();
+		p_list[via_len++] = p_non_fixed_entry->p_state->lane_counter;
+		u16 remaining_time = (GET_PATH_LIFETIME_MS(model_sig_g_df_sbr_cfg.df_cfg.directed_forward.subnet_state[key_offset].path_metric.path_lifetime) - (clock_time_ms()-p_non_fixed_entry->p_state->lifetime_ms))/1000/60;
 		memcpy(p_list+via_len, &remaining_time, 2);
 		via_len +=2;
-		p_list[via_len++] = p_non_fixed_entry->state.forwarding_number;
+		p_list[via_len++] = p_non_fixed_entry->p_state->forwarding_number;
 	}
 	
 	addr_range_t *p_origin = (addr_range_t *)(p_list+via_len);
@@ -1914,7 +2425,7 @@ int mesh_cmd_sig_cfg_forwarding_tbl_entries_get(u8 *par, int par_len, mesh_cb_fu
 	int key_offset = get_mesh_net_key_offset(netkey_index);	
 
 	update_id_existed = ((u32)par_len>OFFSETOF(forwarding_tbl_entries_get_t, par) + par_offset);
-	u16 fwd_tbl_id = model_sig_g_df_sbr_cfg.df_cfg.fixed_fwd_tbl[key_offset].update_id;
+	u16 fwd_tbl_id = model_sig_g_df_sbr_cfg.df_cfg.directed_forward.subnet_state[key_offset].update_id;
 	memcpy(entries_sts.par+par_offset, &fwd_tbl_id, 2);
 	par_offset += 2;
 	if(-1 == key_offset){
@@ -1937,14 +2448,35 @@ int mesh_cmd_sig_cfg_forwarding_tbl_entries_get(u8 *par, int par_len, mesh_cb_fu
 			}
 			u8 is_fix_path = (0 == mask);
 			u16 max_paths = is_fix_path ? MAX_FIXED_PATH:MAX_NON_FIXED_PATH;
-			u16 entry_length = is_fix_path ? sizeof(fixed_path_st_t):sizeof(non_fixed_path_st_t);							
+			u16 entry_length = is_fix_path ? sizeof(fixed_path_st_t):sizeof(non_fixed_path_st_t);
+
 			for(u16 path_offset=0; path_offset<max_paths; path_offset++){	
 				if(par_offset+entry_length > MAX_ENTRY_STS_LEN){// buf not enough
 					break;
 				}
-				
-				path_entry_com_t *p_entry = is_fix_path ? &model_sig_g_df_sbr_cfg.df_cfg.fixed_fwd_tbl[key_offset].path[path_offset]:&non_fixed_fwd_tbl[key_offset].path[path_offset].entry;
-				
+
+                path_entry_com_t *p_entry = 0;
+                if(is_fix_path){
+                    update_fixed_entry_point(key_offset, path_offset);
+                    #if CONFIG_ALWAYS_GET_ROUTE_FROM_FLASH
+                    if(0 == g_fixed_entry.p_state->vaild){
+                        continue;
+                    }
+                    mesh_fwd_tbl_entry_read(g_fixed_entry.p_entry, g_fixed_entry.p_state->fwd_entry_index, 1);
+                    #endif
+                    p_entry = g_fixed_entry.p_entry;
+                }
+                else{
+                    update_non_fixed_entry_point(key_offset, path_offset);
+    				#if CONFIG_ALWAYS_GET_ROUTE_FROM_FLASH
+                    if(0 == g_non_fixed_entry.p_state->lifetime_ms){
+                        continue;
+                    }
+                    mesh_fwd_tbl_entry_read(g_non_fixed_entry.p_entry, g_non_fixed_entry.p_state->fwd_entry_index, 0);
+                    #endif
+                    p_entry = g_non_fixed_entry.p_entry;
+                }
+
 				if((!p_entry->path_origin) || (valid_index < p_entries_get->start_index)){
 					if(p_entry->path_origin){
 						valid_index++;
@@ -1962,7 +2494,7 @@ int mesh_cmd_sig_cfg_forwarding_tbl_entries_get(u8 *par, int par_len, mesh_cb_fu
 			}
 
 			if(update_id_existed){// update id existed
-				model_sig_g_df_sbr_cfg.df_cfg.fixed_fwd_tbl[key_offset].update_id = update_id;					
+				model_sig_g_df_sbr_cfg.df_cfg.directed_forward.subnet_state[key_offset].update_id = update_id;					
 				mesh_common_store(FLASH_ADR_MD_DF_SBR);
 			}
 		}
@@ -2441,7 +2973,7 @@ int path_request_msg_set(u16 netkey_offset, discovery_entry_par_t * p_dsc_entry,
 	}
 	else{
 		non_fixed_entry_t *p_fwd_entry = get_forwarding_entry_correspond2_discovery_entry(netkey_offset, &p_dsc_entry->entry);
-		p_path_req->origin_path_metric = p_dsc_entry->entry.path_metric + 1 + (p_fwd_entry?p_fwd_entry->state.lane_counter:0);
+		p_path_req->origin_path_metric = p_dsc_entry->entry.path_metric + 1 + (p_fwd_entry?p_fwd_entry->p_state->lane_counter:0);
 	}
 	p_path_req->destination = p_dsc_entry->entry.destination;	
 	
@@ -2497,25 +3029,25 @@ int prepare_and_send_path_reply(u16 netkey_offset, discovery_entry_par_t *p_dsc_
 			}
 		}
 		else{
-			p_path_target->range_start_b = p_fwd_entry->entry.destination;
-			if(p_fwd_entry->entry.path_target_snd_ele_cnt){			
+			p_path_target->range_start_b = p_fwd_entry->p_entry->destination;
+			if(p_fwd_entry->p_entry->path_target_snd_ele_cnt){			
 				p_path_target->length_present_b = 1;
-				p_path_target->range_length = p_fwd_entry->entry.path_target_snd_ele_cnt + 1;
+				p_path_target->range_length = p_fwd_entry->p_entry->path_target_snd_ele_cnt + 1;
 				via_par_len += 1;
 			}
 		}
 
-		if(p_dsc_entry->entry.destination != p_fwd_entry->entry.destination){
+		if(p_dsc_entry->entry.destination != p_fwd_entry->p_entry->destination){
 			path_reply.on_behalf_of_dependent_target = 1;	
 			addr_range_t *p_dependent_target = (addr_range_t *)(path_reply.addr_par + via_par_len);
 			p_dependent_target->range_start_b = p_dsc_entry->entry.destination;
 			via_par_len += 2;
-			int offset = get_offset_in_dependent_list(p_fwd_entry->entry.dependent_target, p_dsc_entry->entry.destination);
+			int offset = get_offset_in_dependent_list(p_fwd_entry->p_entry->dependent_target, p_dsc_entry->entry.destination);
 			if(-1 != offset){
-				if(p_fwd_entry->entry.dependent_target[offset].snd_ele_cnt){
+				if(p_fwd_entry->p_entry->dependent_target[offset].snd_ele_cnt){
 					via_par_len += 1;
 					p_dependent_target->length_present_b = 1;
-					p_dependent_target->range_length = p_fwd_entry->entry.dependent_target[offset].snd_ele_cnt+1;					
+					p_dependent_target->range_length = p_fwd_entry->p_entry->dependent_target[offset].snd_ele_cnt+1;					
 				}
 			}
 		}	
@@ -2535,12 +3067,12 @@ int cfg_cmd_send_path_request(mesh_ctl_path_req_t *p_path_req, u8 len, u16 netke
 int cfg_cmd_send_path_echo_request(non_fixed_entry_t * p_fwd_entry)
 {
 	start_path_echo_reply_timeout_timer(p_fwd_entry);
-	return mesh_tx_cmd_layer_upper_ctl(CMD_CTL_PATH_ECHO_REQUEST, 0, 0, ele_adr_primary, p_fwd_entry->entry.destination, 0);
+	return mesh_tx_cmd_layer_upper_ctl(CMD_CTL_PATH_ECHO_REQUEST, 0, 0, ele_adr_primary, p_fwd_entry->p_entry->destination, 0);
 }
 
 int cfg_cmd_send_path_echo_reply(non_fixed_entry_t * p_fwd_entry)
 {
-	return mesh_tx_cmd_layer_upper_ctl(CMD_CTL_PATH_ECHO_REPLY, (u8 *)&p_fwd_entry->entry.destination, 2, ele_adr_primary, p_fwd_entry->entry.path_origin, 0);
+	return mesh_tx_cmd_layer_upper_ctl(CMD_CTL_PATH_ECHO_REPLY, (u8 *)&p_fwd_entry->p_entry->destination, 2, ele_adr_primary, p_fwd_entry->p_entry->path_origin, 0);
 }
 
 int path_discovery_by_discovery_entry(u16 netkey_offset, discovery_entry_par_t *p_dsc_entry){
@@ -2560,14 +3092,13 @@ int directed_forwarding_confirm_start(u16 netkey_offset, non_fixed_entry_t *p_fw
 	int err = -1;
 	discovery_entry_par_t *p_dsc_entry = get_discovery_entry_correspond2_forwarding_entry(netkey_offset, p_fwd_entry);
 	mesh_ctl_path_confirmation_t path_confirm;
-	path_confirm.path_target = p_fwd_entry->entry.destination;
-	path_confirm.path_origin = p_fwd_entry->entry.path_origin;
+	path_confirm.path_target = p_fwd_entry->p_entry->destination;
+	path_confirm.path_origin = p_fwd_entry->p_entry->path_origin;
 #ifndef WIN32
 	mesh_tx_with_random_delay_ms = rand()%30;
 #endif
 	err =  mesh_tx_cmd_layer_upper_ctl(CMD_CTL_PATH_CONFIRMATION, (u8 *)&path_confirm, sizeof(mesh_ctl_path_confirmation_t), ele_adr_primary, ADR_ALL_DIRECTED_FORWARD, 0);
 	if(0 == err){
-		p_fwd_entry->entry.backward_path_validated = 1;
 		p_dsc_entry->state.path_confirm_sent = 1;
 	}
 	return err;
@@ -2576,11 +3107,64 @@ int directed_forwarding_confirm_start(u16 netkey_offset, non_fixed_entry_t *p_fw
 int directed_forwarding_solication_start(u16 netkey_offset, mesh_ctl_path_request_solication_t *p_addr_list, u8 list_num)
 {
 	int err = -1;
-	if(is_provision_success()){// to be done
-		err = mesh_tx_cmd_layer_upper_ctl_primary_specified_key(CMD_CTL_PATH_REQUEST_SOLICITATION, (u8 *)p_addr_list, list_num<<1, ADR_ALL_DIRECTED_FORWARD, get_netkey_index(netkey_offset));
-	}
+    if(is_provision_success()){
+        if(netkey_offset < NET_KEY_MAX){
+            err = 0;
+            for(u8 adr_offset=0; adr_offset<list_num; adr_offset++){
+                u8 list_offset = 0;
+                for(; list_offset < MAX_SOLICITATION_ADDR_LIST; list_offset++){
+                    if((path_req_solication_tbl.addr[netkey_offset][list_offset] == p_addr_list->addr_list[adr_offset]) || (p_addr_list->addr_list[adr_offset] == ADR_UNASSIGNED)){
+                        break;
+                    }
+                    else if(0 == path_req_solication_tbl.addr[netkey_offset][list_offset]){
+                        path_req_solication_tbl.addr[netkey_offset][list_offset] = p_addr_list->addr_list[adr_offset];
+                        break;
+                    }
+                }
+
+                if(list_offset == MAX_SOLICITATION_ADDR_LIST){
+                    return -1;
+                }
+            }           
+        }
+    }
 	
 	return err; 
+}
+
+void directed_forwarding_solication_start_proc(void)
+{
+	if(is_provision_success()){
+	    if(clock_time_exceed(path_req_solication_tbl.tick, GET_PATH_DSC_INTERVAL_MS(model_sig_g_df_sbr_cfg.df_cfg.directed_forward.discovery_timing.path_discovery_interval) * 1000)){
+    	    foreach(netkey_offset, NET_KEY_MAX){
+                int addr_num = 0;
+                u16 addr_list[MAX_SOLICITATION_ADDR_LIST];
+            
+                if(path_req_solication_tbl.addr[netkey_offset][0]){
+                    foreach(i, MAX_SOLICITATION_ADDR_LIST){
+                        if(path_req_solication_tbl.addr[netkey_offset][i]){
+                            addr_list[addr_num++] = path_req_solication_tbl.addr[netkey_offset][i];
+                        }
+                        else{
+                            break;
+                        }
+                    }
+                    
+                }
+
+                if(addr_num){              
+                    int err = mesh_tx_cmd_layer_upper_ctl_primary_specified_key(CMD_CTL_PATH_REQUEST_SOLICITATION, (u8 *)addr_list, addr_num<<1, ADR_ALL_DIRECTED_FORWARD, get_netkey_index(netkey_offset));
+
+                    if(0 == err){
+                        path_req_solication_tbl.tick = clock_time();
+                        memset(path_req_solication_tbl.addr[netkey_offset], 0x00, sizeof(path_req_solication_tbl.addr[0]));
+                    }
+                }
+            }
+       }
+	}
+	
+	return; 
 }
 
 int is_path_target(u16 origin, u16 destination)
@@ -2599,45 +3183,49 @@ int is_path_target(u16 origin, u16 destination)
 
 void forwarding_table_timing_proc(u16 netkey_offset)
 {
- 	foreach(fwd_tbl_offset, MAX_NON_FIXED_PATH){
-		non_fixed_entry_t *p_fwd_entry = &non_fixed_fwd_tbl[netkey_offset].path[fwd_tbl_offset];
-		if(p_fwd_entry->entry.path_origin && !p_fwd_entry->entry.fixed_path){
-			discovery_timing_t *p_dsc_timing = &model_sig_g_df_sbr_cfg.df_cfg.directed_forward.discovery_timing;
-			if(p_fwd_entry->state.lifetime_ms && clock_time_ms_expired(p_fwd_entry->state.lifetime_ms)){
-				if(is_own_ele(p_fwd_entry->entry.path_origin)){
-					if(clock_time_exceed_ms(p_fwd_entry->state.lifetime_ms, p_dsc_timing->path_monitoring_interval*1000)){
-						stop_path_monitor(p_fwd_entry);
-						if(p_fwd_entry->state.path_need){
-							directed_forwarding_initial_start(netkey_offset, p_fwd_entry->entry.destination, 0, 0);
-						} 
-						delete_non_fixed_path(netkey_offset, &p_fwd_entry->entry);
-					}
-					else{
-						start_path_monitor(p_fwd_entry);
-					}
+ 	foreach(fwd_entry_index, MAX_NON_FIXED_PATH){
+        update_non_fixed_entry_point(netkey_offset, fwd_entry_index);
+		discovery_timing_t *p_dsc_timing = &model_sig_g_df_sbr_cfg.df_cfg.directed_forward.discovery_timing;
+
+		if(g_non_fixed_entry.p_state->lifetime_ms && clock_time_ms_expired(g_non_fixed_entry.p_state->lifetime_ms)){
+			if(g_non_fixed_entry.p_state->is_path_origin){
+                #if CONFIG_ALWAYS_GET_ROUTE_FROM_FLASH
+                mesh_fwd_tbl_entry_read(g_non_fixed_entry.p_entry, g_non_fixed_entry.p_state->fwd_entry_index, 0); // must read entry before use g_non_fixed_entry.p_state
+                #endif
+
+                if(clock_time_exceed_ms(g_non_fixed_entry.p_state->lifetime_ms, p_dsc_timing->path_monitoring_interval*1000)){
+					stop_path_monitor(&g_non_fixed_entry);
+					if(g_non_fixed_entry.p_state->path_need){
+						directed_forwarding_initial_start(netkey_offset, g_non_fixed_entry.p_entry->destination, 0, 0);
+					} 
+					delete_non_fixed_path(netkey_offset, g_non_fixed_entry.p_entry);
 				}
 				else{
-					delete_non_fixed_path(netkey_offset, &p_fwd_entry->entry);
+					start_path_monitor(&g_non_fixed_entry);
 				}
 			}
+			else{
+				delete_non_fixed_path(netkey_offset, g_non_fixed_entry.p_entry);
+			}
+		}
 
-			int echo_interval = (is_unicast_adr(p_fwd_entry->entry.destination)?model_sig_g_df_sbr_cfg.df_cfg.directed_forward.subnet_state[netkey_offset].unicast_echo_interval:model_sig_g_df_sbr_cfg.df_cfg.directed_forward.subnet_state[netkey_offset].multicast_echo_interval);
-			if((0 == echo_interval) && p_fwd_entry->state.path_echo_timer_ms){
-				stop_path_echo_timer(p_fwd_entry);
-			}			
-			if(p_fwd_entry->state.path_echo_timer_ms && clock_time_ms_expired(p_fwd_entry->state.path_echo_timer_ms)){
-				cfg_cmd_send_path_echo_request(p_fwd_entry); // Path Validation Started	
-			}
-			
-			if(p_fwd_entry->state.path_echo_reply_timeout_timer && clock_time_ms_expired(p_fwd_entry->state.path_echo_reply_timeout_timer)){
-				stop_path_echo_reply_timeout_timer(p_fwd_entry); //   Path Validation Failed
-				directed_forwarding_initial_start(netkey_offset, p_fwd_entry->entry.destination, 0, 0);
-				//path_discovery_by_forwarding_entry(netkey_offset, p_fwd_entry);
-				if(p_fwd_entry){
-					delete_non_fixed_path(netkey_offset, &p_fwd_entry->entry);
-					model_sig_g_df_sbr_cfg.df_cfg.fixed_fwd_tbl[netkey_offset].update_id++;
-				}
-			}		
+		int echo_interval = (g_non_fixed_entry.p_state->is_unicast_path_dst ? model_sig_g_df_sbr_cfg.df_cfg.directed_forward.subnet_state[netkey_offset].unicast_echo_interval : model_sig_g_df_sbr_cfg.df_cfg.directed_forward.subnet_state[netkey_offset].multicast_echo_interval);
+		if((0 == echo_interval) && g_non_fixed_entry.p_state->path_echo_timer_ms){
+			stop_path_echo_timer(&g_non_fixed_entry);
+		}			
+		if(g_non_fixed_entry.p_state->path_echo_timer_ms && clock_time_ms_expired(g_non_fixed_entry.p_state->path_echo_timer_ms)){
+			cfg_cmd_send_path_echo_request(&g_non_fixed_entry); // Path Validation Started	
+		}
+		
+		if(g_non_fixed_entry.p_state->path_echo_reply_timeout_timer && clock_time_ms_expired(g_non_fixed_entry.p_state->path_echo_reply_timeout_timer)){
+			stop_path_echo_reply_timeout_timer(&g_non_fixed_entry); //   Path Validation Failed
+		    #if CONFIG_ALWAYS_GET_ROUTE_FROM_FLASH
+            mesh_fwd_tbl_entry_read(g_non_fixed_entry.p_entry, g_non_fixed_entry.p_state->fwd_entry_index, 0); // must read entry before use g_non_fixed_entry.p_state
+            #endif
+			directed_forwarding_initial_start(netkey_offset, g_non_fixed_entry.p_entry->destination, 0, 0);
+			//path_discovery_by_forwarding_entry(netkey_offset, p_fwd_entry);
+			delete_non_fixed_path(netkey_offset, g_non_fixed_entry.p_entry);
+			model_sig_g_df_sbr_cfg.df_cfg.directed_forward.subnet_state[netkey_offset].update_id++;
 		}
 	}
 }
@@ -2646,20 +3234,20 @@ void discovery_table_timing_proc(u16 netkey_offset)
 {
 	foreach(dsc_tbl_offset, MAX_DSC_TBL){
 		discovery_entry_par_t *p_dsc_entry = &discovery_table[netkey_offset].dsc_entry_par[dsc_tbl_offset];
-		non_fixed_entry_t *p_fwd_entry = get_non_fixed_path_entry(netkey_offset, p_dsc_entry->entry.path_origin.addr, p_dsc_entry->entry.destination);
 		if(p_dsc_entry->entry.destination){
 			if(p_dsc_entry->state.discovery_timer && clock_time_expired(p_dsc_entry->state.discovery_timer)){
 				LOG_DF_DEBUG(0, 0, "path discovery timer expired");
 				stop_path_discovery_timer(p_dsc_entry);						
 				if(is_own_ele(p_dsc_entry->entry.path_origin.addr)){ // path origin
+                    non_fixed_entry_t *p_fwd_entry = get_non_fixed_path_entry(netkey_offset, p_dsc_entry->entry.path_origin.addr, p_dsc_entry->entry.destination);
 					if(p_fwd_entry){
-						if(p_fwd_entry->entry.path_not_ready){
-							p_fwd_entry->entry.path_not_ready = 0;
+						if(p_fwd_entry->p_entry->path_not_ready){
+							p_fwd_entry->p_entry->path_not_ready = 0;
 						}
 						
 						if(p_dsc_entry->state.new_lane_established){
-							LOG_DF_DEBUG(0, 0, "new path lane establish counter:%d", p_fwd_entry->state.lane_counter);
-							if(p_fwd_entry->state.lane_counter < model_sig_g_df_sbr_cfg.df_cfg.directed_forward.subnet_state[netkey_offset].wanted_lanes){
+							LOG_DF_DEBUG(0, 0, "new path lane establish counter:%d", p_fwd_entry->p_state->lane_counter);
+							if(p_fwd_entry->p_state->lane_counter < model_sig_g_df_sbr_cfg.df_cfg.directed_forward.subnet_state[netkey_offset].wanted_lanes){
 								LOG_DF_DEBUG(0, 0, "start discovery guard timer");
 								start_path_discovery_guard_timer(p_dsc_entry);// start discovery guard timer.
 							}	
@@ -2708,7 +3296,7 @@ void discovery_table_timing_proc(u16 netkey_offset)
 
 			if(p_dsc_entry->state.reply_delay_timer && clock_time_expired(p_dsc_entry->state.reply_delay_timer)){							
 				stop_path_reply_delay_timer(p_dsc_entry);
-				p_fwd_entry = get_forwarding_entry_correspond2_discovery_entry(netkey_offset, &p_dsc_entry->entry);
+				non_fixed_entry_t *p_fwd_entry = get_forwarding_entry_correspond2_discovery_entry(netkey_offset, &p_dsc_entry->entry);
 				if(p_fwd_entry){// forwarding table entry exist, update
 					update_forwarding_entry_by_path_reply_delay_timer_expired(netkey_offset, p_fwd_entry, p_dsc_entry);
 				}
@@ -2720,7 +3308,7 @@ void discovery_table_timing_proc(u16 netkey_offset)
 				}
 				#if MD_SBR_CFG_SERVER_EN
 				if(p_fwd_entry && is_subnet_bridge_addr(p_dsc_entry->entry.path_origin.addr, p_dsc_entry->entry.destination)){
-					forwarding_tbl_dependent_add(p_dsc_entry->entry.destination, 0, p_fwd_entry->entry.dependent_target);					
+					forwarding_tbl_dependent_add(p_dsc_entry->entry.destination, 0, p_fwd_entry->p_entry->dependent_target);					
 				}
 				#endif
 				prepare_and_send_path_reply(netkey_offset, p_dsc_entry, 0);
@@ -2773,6 +3361,8 @@ void directed_forwarding_pending_check(u16 netkey_offset)
 	if(p_dsc_pending && (num < model_sig_g_df_sbr_cfg.df_cfg.directed_forward.subnet_state[netkey_offset].max_concurrent_init)){
 		path_discovery_by_discovery_entry(netkey_offset, p_dsc_pending);;
 	}
+
+    directed_forwarding_solication_start_proc();
 }
 
 int directed_forwarding_initial_start(u16 netkey_offset, u16 destination, u16 dependent_addr, u16 dependent_ele_cnt)
@@ -2794,7 +3384,7 @@ int directed_forwarding_initial_start(u16 netkey_offset, u16 destination, u16 de
 	if(netkey_offset < NET_KEY_MAX){
 		if(model_sig_g_df_sbr_cfg.df_cfg.directed_forward.subnet_state[netkey_offset].directed_control.directed_forwarding == DIRECTED_FORWARDING_ENABLE){
 			//del_discovery_entry_correspond2_path_destination(netkey_offset, ele_adr_primary, destination);
-			discovery_entry_par_t *p_dsc_entry = get_discovery_entry_correspond2_path_destination(netkey_offset, destination);
+			discovery_entry_par_t *p_dsc_entry = get_discovery_entry_correspond2_path(netkey_offset, ele_adr_primary, destination);
 			if(p_dsc_entry){
 				err = 0;
 				p_dsc_entry->state.path_need = 1; // will trigle path discovery after retry timer expired
@@ -2869,7 +3459,7 @@ void mesh_directed_forwarding_proc(u8 *bear, u8 *par, int par_len, int src_type)
 					
 					p_fwd_entry = get_forwarding_entry_correspond2_path_request(netkey_offset, p_path_req);
 					#if 1 
-					if((!p_fwd_entry) || ((u8)(p_path_req->forwarding_number-p_fwd_entry->state.forwarding_number)<128)){ 
+					if((!p_fwd_entry) || ((u8)(p_path_req->forwarding_number-p_fwd_entry->p_state->forwarding_number)<128)){ 
 					#else
 					if(1){// dorwarding number always 0 after powerup now.
 					#endif
@@ -2931,9 +3521,15 @@ void mesh_directed_forwarding_proc(u8 *bear, u8 *par, int par_len, int src_type)
 					if(is_own_ele(p_path_reply->path_origin)){// path origin
 						if(1 == p_path_reply->confirmation_request){ 
 							directed_forwarding_confirm_start(netkey_offset, p_fwd_entry);
+                            if(0 == p_fwd_entry->p_entry->backward_path_validated){
+                                p_fwd_entry->p_entry->backward_path_validated = 1;
+                                #if CONFIG_ALWAYS_GET_ROUTE_FROM_FLASH
+                                mesh_fwd_tbl_entry_save(netkey_offset, p_fwd_entry->p_entry);
+                                #endif
+                            }
 						}
 
-						if((!p_fwd_entry->state.path_echo_timer_ms) && (is_unicast_adr(p_fwd_entry->entry.destination)?model_sig_g_df_sbr_cfg.df_cfg.directed_forward.subnet_state[netkey_offset].unicast_echo_interval:model_sig_g_df_sbr_cfg.df_cfg.directed_forward.subnet_state[netkey_offset].multicast_echo_interval)){
+						if((!p_fwd_entry->p_state->path_echo_timer_ms) && (is_unicast_adr(p_fwd_entry->p_entry->destination)?model_sig_g_df_sbr_cfg.df_cfg.directed_forward.subnet_state[netkey_offset].unicast_echo_interval:model_sig_g_df_sbr_cfg.df_cfg.directed_forward.subnet_state[netkey_offset].multicast_echo_interval)){
 							start_path_echo_timer(netkey_offset, p_fwd_entry);
 						}
 					}
@@ -2949,7 +3545,7 @@ void mesh_directed_forwarding_proc(u8 *bear, u8 *par, int par_len, int src_type)
 			if(p_fwd_entry){
 				LOG_DF_DEBUG(par, par_len, "forwarding entry found origin:0x%04x target:0x%04x", p_path_confirm->path_origin, p_path_confirm->path_target);
 				discovery_entry_par_t *p_dsc_entry = get_discovery_entry_correspond2_forwarding_entry(netkey_offset, p_fwd_entry);
-				if(p_fwd_entry->entry.backward_path_validated){
+				if(p_fwd_entry->p_entry->backward_path_validated){
 					if(!is_path_target(p_path_confirm->path_origin, p_path_confirm->path_target)){
 						if(p_dsc_entry && !p_dsc_entry->state.path_confirm_sent){
 							directed_forwarding_confirm_start(netkey_offset, p_fwd_entry);
@@ -2978,14 +3574,14 @@ void mesh_directed_forwarding_proc(u8 *bear, u8 *par, int par_len, int src_type)
 			p_fwd_entry = get_forwarding_entry_correspond2_path_echo_reply(netkey_offset, p_nw->dst, p_path_echo_reply);
 			if(p_fwd_entry){
 				LOG_DF_DEBUG(0, 0, "forwarding entry found target:0x%x", p_path_echo_reply->destination);
-				if((p_fwd_entry->entry.backward_path_validated && (DIRECTED != mesh_key.sec_type_sel)) || 
-					((!p_fwd_entry->entry.backward_path_validated && (MASTER != mesh_key.sec_type_sel)))){
+				if((p_fwd_entry->p_entry->backward_path_validated && (DIRECTED != mesh_key.sec_type_sel)) || 
+					((!p_fwd_entry->p_entry->backward_path_validated && (MASTER != mesh_key.sec_type_sel)))){
 					return;
 				}
 				
-				if(p_fwd_entry->state.path_echo_reply_timeout_timer){
+				if(p_fwd_entry->p_state->path_echo_reply_timeout_timer){
 					stop_path_echo_reply_timeout_timer(p_fwd_entry); // Path Validation Succeeded
-					if(is_unicast_adr(p_fwd_entry->entry.destination)?model_sig_g_df_sbr_cfg.df_cfg.directed_forward.subnet_state[netkey_offset].unicast_echo_interval:model_sig_g_df_sbr_cfg.df_cfg.directed_forward.subnet_state[netkey_offset].multicast_echo_interval){
+					if(is_unicast_adr(p_fwd_entry->p_entry->destination)?model_sig_g_df_sbr_cfg.df_cfg.directed_forward.subnet_state[netkey_offset].unicast_echo_interval:model_sig_g_df_sbr_cfg.df_cfg.directed_forward.subnet_state[netkey_offset].multicast_echo_interval){
 						start_path_echo_timer(netkey_offset, p_fwd_entry);
 					}
 				}
@@ -3017,7 +3613,7 @@ void mesh_directed_forwarding_proc(u8 *bear, u8 *par, int par_len, int src_type)
 					if(p_dsc_entry){
 						directed_discovery_entry_remove(p_dsc_entry);
 					}
-					delete_non_fixed_path(netkey_offset, &p_fwd_entry->entry);
+					delete_non_fixed_path(netkey_offset, p_fwd_entry->p_entry);
 					directed_forwarding_initial_start(netkey_offset, p_path_req_solicat->addr_list[i], 0, 0);
 				}
 			}
@@ -3255,7 +3851,7 @@ int cfg_cmd_forwarding_tbl_add(u16 node_adr, u16 nk_idx, u16 adr_origin, u8 rang
 	}
 	else{
 		par_len += 2;
-		p_adr_range->multicast_addr = adr_origin;
+		p_adr_range->range_start_l = adr_origin;
 	}
 
 	p_adr_range = (addr_range_t*)(tbl_add.par + par_len);
@@ -3459,4 +4055,27 @@ int cfg_cmd_send_path_solicitation(u16 netkey_offset, u16 *addr_list, int num)
 {
 	return mesh_tx_cmd_layer_upper_ctl_primary_specified_key(CMD_CTL_PATH_REQUEST_SOLICITATION, (u8 *)addr_list, num<<1, ADR_ALL_DIRECTED_FORWARD, get_netkey_index(netkey_offset));
 }
+
+#if DF_TEST_MODE_EN
+path_entry_com_t * get_fixed_path_entry_by_origin(u16 netkey_offset, u16 path_origin)
+{
+	if(netkey_offset < NET_KEY_MAX){
+		foreach(i, MAX_FIXED_PATH){
+            update_fixed_entry_point(netkey_offset, i);
+            #if CONFIG_ALWAYS_GET_ROUTE_FROM_FLASH
+            if(0 == g_fixed_entry.p_state->vaild){
+                continue;
+            }
+            mesh_fwd_tbl_entry_read(g_fixed_entry.p_entry, g_fixed_entry.p_state->fwd_entry_index, 1);
+            #endif
+
+            if(is_ele_in_node(path_origin, g_fixed_entry.p_entry->path_origin, g_fixed_entry.p_entry->path_origin_snd_ele_cnt+1)){
+                return g_fixed_entry.p_entry;
+            }
+		}
+	}
+
+	return 0;
+}
+#endif
 
