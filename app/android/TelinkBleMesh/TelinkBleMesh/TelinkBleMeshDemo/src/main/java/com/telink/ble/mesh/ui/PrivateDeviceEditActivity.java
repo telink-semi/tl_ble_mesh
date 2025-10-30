@@ -1,5 +1,5 @@
 /********************************************************************************************************
- * @file OOBEditActivity.java
+ * @file PrivateDeviceEditActivity.java
  *
  * @brief for TLSR chips
  *

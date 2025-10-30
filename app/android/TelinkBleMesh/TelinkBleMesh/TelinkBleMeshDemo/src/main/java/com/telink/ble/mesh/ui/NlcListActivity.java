@@ -1,5 +1,5 @@
 /********************************************************************************************************
- * @file DeviceSettingActivity.java
+ * @file NlcListActivity.java
  *
  * @brief for TLSR chips
  *

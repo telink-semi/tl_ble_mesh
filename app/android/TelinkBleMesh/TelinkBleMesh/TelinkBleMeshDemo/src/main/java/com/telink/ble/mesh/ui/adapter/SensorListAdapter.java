@@ -1,5 +1,5 @@
 /********************************************************************************************************
- * @file OnlineDeviceListAdapter.java
+ * @file SensorListAdapter.java
  *
  * @brief for TLSR chips
  *

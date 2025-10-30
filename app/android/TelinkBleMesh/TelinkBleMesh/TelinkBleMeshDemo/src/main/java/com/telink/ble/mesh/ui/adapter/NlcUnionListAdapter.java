@@ -1,5 +1,5 @@
 /********************************************************************************************************
- * @file OnlineDeviceListAdapter.java
+ * @file NlcUnionListAdapter.java
  *
  * @brief for TLSR chips
  *

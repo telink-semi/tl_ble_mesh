@@ -1,5 +1,5 @@
 /********************************************************************************************************
- * @file GroupSelectAdapter.java
+ * @file SimpleGroupSelectAdapter.java
  *
  * @brief for TLSR chips
  *

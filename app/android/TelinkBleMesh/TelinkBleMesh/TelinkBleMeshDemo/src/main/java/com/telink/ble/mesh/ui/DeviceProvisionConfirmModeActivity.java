@@ -1,5 +1,5 @@
 /********************************************************************************************************
- * @file DeviceProvisionActivity.java
+ * @file DeviceProvisionConfirmModeActivity.java
  *
  * @brief for TLSR chips
  *

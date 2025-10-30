@@ -1,5 +1,5 @@
 /********************************************************************************************************
- * @file ResponseTestActivity.java
+ * @file ReliableTestActivity.java
  *
  * @brief for TLSR chips
  *

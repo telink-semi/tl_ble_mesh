@@ -1,5 +1,5 @@
 /********************************************************************************************************
- * @file OOBListAdapter.java
+ * @file PrivateDeviceListAdapter.java
  *
  * @brief for TLSR chips
  *

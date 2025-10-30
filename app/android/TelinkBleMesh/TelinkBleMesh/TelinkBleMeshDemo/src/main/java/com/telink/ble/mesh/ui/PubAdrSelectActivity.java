@@ -1,5 +1,5 @@
 /********************************************************************************************************
- * @file DeviceSettingActivity.java
+ * @file PubAdrSelectActivity.java
  *
  * @brief for TLSR chips
  *
