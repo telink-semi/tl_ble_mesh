@@ -63,7 +63,7 @@ public class TelinkPlatformUuidInfo {
 
     /**
      * 6 bytes
-     * MAC address, little endianess
+     * MAC address, little endianness
      */
     public byte[] mac;
 

@@ -81,7 +81,7 @@ public class MeshMessage implements Cloneable {
     protected byte[] params;
 
     /**
-     * device key or appliction key determined by accessType {@link #accessType}
+     * device key or app key determined by accessType {@link #accessType}
      */
     protected byte[] accessKey;
 

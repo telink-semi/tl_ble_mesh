@@ -1766,7 +1766,7 @@ public final class MeshController implements ProvisioningBridge, NetworkingBridg
 
     /**
      * gatt will be disconnected by remote device (or timeout because of timeout)
-     * wating for gatt disconnected callback
+     * waiting for gatt disconnected callback
      */
     private boolean isGattOtaDisconnectWaiting = false;
 
