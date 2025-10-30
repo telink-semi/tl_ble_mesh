@@ -109,7 +109,7 @@ void audio_codec_config (audio_channel_wl_mode_e channel_wl,int sample_rate, u32
 
 	reg_audio_codec_vic_ctr = FLD_AUDIO_CODEC_SLEEP_ANALOG;//active analog sleep mode
 
-	while(!(reg_audio_codec_stat_ctr&FLD_AUDIO_CODEC_PON_ACK));//wait codec can be configed
+	while(!(reg_audio_codec_stat_ctr&FLD_AUDIO_CODEC_PON_ACK));//wait codec can be configured
 
 	audio_codec_dac_config(I2S_M_CODEC_S, sample_rate, CODEC_BIT_16_DATA, MCU_WREG);
 
@@ -178,26 +178,26 @@ static inline u32 tcodec_get_mic_wptr (void) {
 	return ((audio_get_rx_dma_wptr(DMA2) - (u32)buff_mic) / sizeof (tadc_int));
 }
 
-void app_sync_mic_sample (int n, int tollerance)
+void app_sync_mic_sample (int n, int tolerance)
 {
     int wptr = tcodec_get_mic_wptr ();
     int num = (wptr - tcodec.mic_rptr) & MIC_FIFO_MAX;
 //    my_dump_str_u32s (1, "app_sync_mic_sample", tcodec.mic_rptr, num, wptr, n);
-    if (num < n - tollerance || num > n + tollerance)
+    if (num < n - tolerance || num > n + tolerance)
     {
         tcodec.mic_rptr = (wptr - n) & MIC_FIFO_MAX;
-        my_dump_str_u32s (1, "Reset MIC Samples", 0, num, n, tollerance);
+        my_dump_str_u32s (1, "Reset MIC Samples", 0, num, n, tolerance);
     }
 }
 
-void app_check_playback_buffer (int ref, int tollerance)
+void app_check_playback_buffer (int ref, int tolerance)
 {
 	int rptr0 = tcodec_get_speaker_rptr ();
 	int samples_in_fifo0 = (tcodec.play_wptr - rptr0) & PLAY_FIFO_MAX;
-	if (samples_in_fifo0 < ref - tollerance || samples_in_fifo0 > ref + tollerance)
+	if (samples_in_fifo0 < ref - tolerance || samples_in_fifo0 > ref + tolerance)
 	{
-//		LOG_MSG_LIB(TL_LOG_NODE_SDK,0, 0,"***************Reset Play back buffer samples_in_fifo:%d ref:%d tollerance:%d", samples_in_fifo0, ref, tollerance);
-		my_dump_str_u32s (AUDIO_DUMP_EN, "MIC - Reset Play back buffer", 0, samples_in_fifo0, ref, tollerance);
+//		LOG_MSG_LIB(TL_LOG_NODE_SDK,0, 0,"***************Reset Play back buffer samples_in_fifo:%d ref:%d tolerance:%d", samples_in_fifo0, ref, tolerance);
+		my_dump_str_u32s (AUDIO_DUMP_EN, "MIC - Reset Play back buffer", 0, samples_in_fifo0, ref, tolerance);
 		tcodec.play_wptr = (rptr0 + ref) & PLAY_FIFO_MAX;
 	}
 }
@@ -352,7 +352,7 @@ void app_audio_task(void)
 	
 	if (clock_time_exceed(audio_mesh_tx_tick, MIC_SAMPLES_TIME_US)) {
 		audio_mesh_tx_tick += MIC_SAMPLES_TIME_US * sys_tick_per_us;
-		app_sync_mic_sample(MIC_SAMPLES_PER_PACKET + MIC_TOLLERANCE_THRES, MIC_TOLLERANCE_THRES);	// allow 30ms tollerance
+		app_sync_mic_sample(MIC_SAMPLES_PER_PACKET + MIC_TOLERANCE_THRES, MIC_TOLERANCE_THRES);	// allow 30ms tolerance
 		
 		tcodec_get_mic_data(pcm, MIC_SAMPLES_PER_PACKET);
 #if (CODEC_ALGORITHM_SEL == CODEC_ALGORITHM_LC3)
@@ -427,7 +427,7 @@ int cb_vd_async_audio_data(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par)
 	audio_mesh_rx_par.index_last = p_audio->index;	
 //	LOG_MSG_LIB(TL_LOG_NODE_SDK,0, 0,"audio sno:0x%x idx:%d", cb_par->p_nw->sno[0]+(cb_par->p_nw->sno[1]<<8)+(cb_par->p_nw->sno[2]<<16), p_audio->index);
 	tadc_int pcm[MIC_SAMPLES_PER_PACKET];
-	app_check_playback_buffer(MIC_SAMPLES_PER_PACKET + PLAY_TOLLERANCE_THRES, PLAY_TOLLERANCE_THRES);
+	app_check_playback_buffer(MIC_SAMPLES_PER_PACKET + PLAY_TOLERANCE_THRES, PLAY_TOLERANCE_THRES);
 	for(int num=0; num<MIC_NUM_MESH_TX; num++){	
 #if (CODEC_ALGORITHM_SEL == CODEC_ALGORITHM_LC3)
 		audio_mesh_dec (0, p_audio->data+num*MIC_ENC_SIZE, MIC_ENC_SIZE, pcm, 0);

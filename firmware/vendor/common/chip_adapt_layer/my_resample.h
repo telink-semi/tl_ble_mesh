@@ -183,7 +183,7 @@
 //#define SRC_44to16_OVERSAMPLE (8)
 //#define SRC_44to16_CUTOFF (0.895f*SRC_44to16_DEN/SRC_44to16_NUM)
 //#if __riscv
-#define REARRANG_SINC_TABLE //sinc
+#define REARRANGE_SINC_TABLE //sinc
 //#endif
 
 /* data struct */
