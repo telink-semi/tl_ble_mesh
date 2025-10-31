@@ -2032,16 +2032,8 @@
 				914D045C2B2B012600824A17 /* DeviceStateItemView.m */,
 				914D045B2B2B012500824A17 /* DeviceStateItemView.xib */,
 				919BC7112B2986F70011991B /* Cell */,
-				919BC6FE2B2986870011991B /* CustomShareAlert */,
 			);
 			path = View;
-			sourceTree = "<group>";
-		};
-		919BC6FE2B2986870011991B /* CustomShareAlert */ = {
-			isa = PBXGroup;
-			children = (
-			);
-			path = CustomShareAlert;
 			sourceTree = "<group>";
 		};
 		919BC7112B2986F70011991B /* Cell */ = {

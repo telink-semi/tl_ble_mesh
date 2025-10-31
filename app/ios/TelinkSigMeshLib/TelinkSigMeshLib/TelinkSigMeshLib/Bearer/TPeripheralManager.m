@@ -164,7 +164,6 @@
  *
  */
 - (void)peripheralManagerDidStartAdvertising:(CBPeripheralManager *)peripheral error:(NSError *)error {
-//    TeLogDebug(@"callback peripheralManagerDidStartAdvertising,self.advertisingInterval=%f",self.advertisingInterval);
     if (error) {
         TelinkLogDebug(@"error =%@",error.localizedDescription);
         [self advertisingSuccess:@(NO)];
