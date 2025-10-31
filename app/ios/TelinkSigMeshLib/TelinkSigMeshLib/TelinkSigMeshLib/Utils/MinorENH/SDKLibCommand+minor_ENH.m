@@ -68,7 +68,7 @@
 
 /// Get description string.
 - (NSString *)getDescription {
-    return [NSString stringWithFormat:@"MetadataLength:%d\nMetadataID:0x%04X\nMetadata:0x%@", _metadataLength, _metadataID, [LibTools convertDataToHexStr:_metadata]];
+    return [NSString stringWithFormat:@"MetadataLength:%d\nMetadataID:0x%04X\nMetadata:0x%@", _metadataLength, _metadataID, [TelinkLibTools convertDataToHexStr:_metadata]];
 }
 
 @end

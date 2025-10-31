@@ -3,7 +3,7 @@
     <device id="retina6_12" orientation="portrait" appearance="light"/>
     <dependencies>
         <deployment identifier="iOS"/>
-        <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="22684"/>
+        <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="22685"/>
         <capability name="Named colors" minToolsVersion="9.0"/>
         <capability name="Safe area layout guides" minToolsVersion="9.0"/>
         <capability name="documents saved in the Xcode 8 format" minToolsVersion="8.0"/>
@@ -32,11 +32,11 @@
                                             <rect key="frame" x="0.0" y="0.0" width="393" height="43"/>
                                             <autoresizingMask key="autoresizingMask"/>
                                             <subviews>
-                                                <imageView userInteractionEnabled="NO" contentMode="scaleToFill" horizontalHuggingPriority="251" verticalHuggingPriority="251" image="ic_group" translatesAutoresizingMaskIntoConstraints="NO" id="94e-wr-aAE">
-                                                    <rect key="frame" x="15" y="11.666666666666664" width="20" height="20"/>
+                                                <imageView userInteractionEnabled="NO" contentMode="scaleToFill" horizontalHuggingPriority="251" verticalHuggingPriority="251" image="ic_group_blue" translatesAutoresizingMaskIntoConstraints="NO" id="94e-wr-aAE">
+                                                    <rect key="frame" x="15" y="9.6666666666666643" width="24" height="24"/>
                                                     <constraints>
-                                                        <constraint firstAttribute="width" constant="20" id="5Hh-Ap-1HY"/>
-                                                        <constraint firstAttribute="height" constant="20" id="e00-uV-Ini"/>
+                                                        <constraint firstAttribute="width" constant="24" id="5Hh-Ap-1HY"/>
+                                                        <constraint firstAttribute="height" constant="24" id="e00-uV-Ini"/>
                                                     </constraints>
                                                 </imageView>
                                                 <switch opaque="NO" contentMode="scaleToFill" horizontalHuggingPriority="750" verticalHuggingPriority="750" contentHorizontalAlignment="center" contentVerticalAlignment="center" on="YES" translatesAutoresizingMaskIntoConstraints="NO" id="W42-0f-vx3">
@@ -46,7 +46,7 @@
                                                     </connections>
                                                 </switch>
                                                 <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="c001" textAlignment="center" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="NxH-XX-UOY">
-                                                    <rect key="frame" x="45" y="13.666666666666664" width="30" height="16"/>
+                                                    <rect key="frame" x="49" y="13.666666666666664" width="30" height="16"/>
                                                     <fontDescription key="fontDescription" type="system" pointSize="13"/>
                                                     <nil key="textColor"/>
                                                     <nil key="highlightedColor"/>
@@ -502,9 +502,9 @@
     </scenes>
     <resources>
         <image name="dengs" width="50" height="50"/>
-        <image name="ic_group" width="50" height="50"/>
+        <image name="ic_group_blue" width="60" height="60"/>
         <image name="ic_user" width="75" height="75"/>
-        <image name="icon_edit" width="25" height="25"/>
+        <image name="icon_edit" width="50" height="50"/>
         <image name="tabbar_device" width="25" height="25"/>
         <image name="tabbar_group" width="25" height="25"/>
         <image name="tabbar_network" width="25" height="25"/>

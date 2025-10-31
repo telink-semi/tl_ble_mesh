@@ -114,7 +114,7 @@ NS_ASSUME_NONNULL_BEGIN
 /// has been modified. The timestamp is based on Coordinated Universal Time (UTC) and
 /// follows the “date-time” format as defined by JSON Schema Draft 4 [3], which is based
 /// on the Internet date/time format described in Section 5.6 of RFC 3339 [6]:
-/// YYYY-MM-DDThh:mm:ssZ or YYYY-MM-DDThh:mm:ss+/- timeoffset
+/// YYYY-MM-DDTHH:mm:ssZ or YYYY-MM-DDTHH:mm:ss+/- timeoffset
 /// where “YYYY” denotes a year; “MM” denotes a two-digit month (01 to 12); “DD” denotes
 /// a two-digit day of the month (01 to 31); “hh” denotes a two-digit hour (00 to 23); “mm”
 /// denotes a two-digit minute (00 to 59);'ss" denotes a two-digit second (00 to 59); “Z” denotes
@@ -149,6 +149,10 @@ NS_ASSUME_NONNULL_BEGIN
 /// The scenes property contains an array of scene objects (see Section 2.1.6) that includes
 /// information about scenes configured in the mesh network.
 @property (nonatomic, strong) NSMutableArray<SigSceneModel *> *scenes;
+
+/// The NLCs property contains an array of NLC objects that includes
+/// information about NLCs configured in the mesh network.
+@property (nonatomic, strong) NSMutableArray<SigNLCModel *> *NLCs;
 
 /// The networkExclusions property contains the array of exclusionList objects
 /// (see section 2.1.7).(Optional)
@@ -447,16 +451,35 @@ NS_ASSUME_NONNULL_BEGIN
 - (UInt16)getNewSceneAddress;
 
 /**
+ * @brief   Get the new NLC ID for add a new NLC object.
+ * @return  new NLC ID, min ID is 1. max ID is 0xFFFF.
+ * @note    new NLC ID = exist NLC ID + 1, min NLC ID is 1.
+ */
+- (UInt16)getNewNLC_ID;
+
+/**
  * @brief   Add or Update the information of  SigSceneModel to _scenes..
  * @param   model    the SigSceneModel object.
  */
 - (void)saveSceneModelWithModel:(SigSceneModel *)model;
 
 /**
+ * @brief   Add or Update the information of  SigNLCModel to _NLCs..
+ * @param   model    the SigNLCModel object.
+ */
+- (void)saveSigNLCModelWithModel:(SigNLCModel *)model;
+
+/**
  * @brief   Delete SigSceneModel from _scenes..
  * @param   model   the SigSceneModel object.
  */
 - (void)deleteSceneModelWithModel:(SigSceneModel *)model;
+
+/**
+ * @brief   Delete SigNLCModel from _NLCs..
+ * @param   model    the SigNLCModel object.
+ */
+- (void)deleteSigNLCModelWithModel:(SigNLCModel *)model;
 
 /**
  * @brief   Get the SigEncryptedModel from the match advertisementDataServiceData cache through the unicastAddress of node..
@@ -629,8 +652,21 @@ NS_ASSUME_NONNULL_BEGIN
  */
 - (DeviceTypeModel * _Nullable)getNodeInfoWithCID:(UInt16)CID PID:(UInt16)PID;
 
+/// Yes means connected node is switch device.
+- (BOOL)isConnectedSwitchDevice;
+
+/// Yes means connected node is NoProxyFeatureDevice.
+/// 节点是否有 代理转发功能标准规则判断：ADV扫描Mesh设备后，先通过数据库的cps获取直连节点的Proxy state，如果为disable，再获取直连节点的Private Proxy state或者不支持，再获取 ondemand 的时间参数，如果支持并且为0，   如果以上3个条件都满足则认为该设备不具备代理收发功能，不连接该设备。
+- (BOOL)isConnectedNoProxyFeatureDevice;
+
 /// Return the device dictionary classified by PID.
 - (NSMutableDictionary *)currentProductNodesDictionary;
+
+/// 根据JSON数据里面sensor的publish参数生成NLC数据，NLC的lightness control使用默认参数。（只在导入Mesh时调用一次，其它情况不需要调用该方法）
+- (void)optimizationDataOfNLCList;
+
+/// 获取目标地址的设备列表，当前只考虑kMeshAddress_allNodes和GroupAddress。
+- (NSArray <SigNodeModel *>*)getNodesOfDestinationAddress:(UInt16)destinationAddress;
 
 #pragma mark - OOB存取相关
 

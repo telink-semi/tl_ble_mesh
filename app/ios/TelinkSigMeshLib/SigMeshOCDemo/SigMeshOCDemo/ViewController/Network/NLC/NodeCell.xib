@@ -1,0 +1,81 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<document type="com.apple.InterfaceBuilder3.CocoaTouch.XIB" version="3.0" toolsVersion="32700.99.1234" targetRuntime="iOS.CocoaTouch" propertyAccessControl="none" useAutolayout="YES" useTraitCollections="YES" useSafeAreas="YES" colorMatched="YES">
+    <device id="retina6_12" orientation="portrait" appearance="light"/>
+    <dependencies>
+        <deployment identifier="iOS"/>
+        <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="22685"/>
+        <capability name="Safe area layout guides" minToolsVersion="9.0"/>
+        <capability name="System colors in document resources" minToolsVersion="11.0"/>
+        <capability name="documents saved in the Xcode 8 format" minToolsVersion="8.0"/>
+    </dependencies>
+    <objects>
+        <placeholder placeholderIdentifier="IBFilesOwner" id="-1" userLabel="File's Owner"/>
+        <placeholder placeholderIdentifier="IBFirstResponder" id="-2" customClass="UIResponder"/>
+        <tableViewCell contentMode="scaleToFill" selectionStyle="default" indentationWidth="10" rowHeight="75" id="KGk-i7-Jjw" customClass="NodeCell">
+            <rect key="frame" x="0.0" y="0.0" width="320" height="75"/>
+            <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
+            <tableViewCellContentView key="contentView" opaque="NO" clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="center" tableViewCell="KGk-i7-Jjw" id="H2p-sc-9uM">
+                <rect key="frame" x="0.0" y="0.0" width="320" height="75"/>
+                <autoresizingMask key="autoresizingMask"/>
+                <subviews>
+                    <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="YMD-Mk-6Rd">
+                        <rect key="frame" x="7" y="7" width="306" height="61"/>
+                        <subviews>
+                            <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="setting name" textAlignment="natural" lineBreakMode="tailTruncation" numberOfLines="0" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="e1P-fN-SBn">
+                                <rect key="frame" x="44" y="23" width="218" height="15"/>
+                                <fontDescription key="fontDescription" type="system" pointSize="14"/>
+                                <nil key="textColor"/>
+                                <nil key="highlightedColor"/>
+                            </label>
+                            <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="NLn-Mo-MGC">
+                                <rect key="frame" x="272" y="18.666666666666668" width="24" height="24.000000000000004"/>
+                                <state key="normal" image="icon_setting_bule"/>
+                            </button>
+                            <imageView userInteractionEnabled="NO" contentMode="scaleToFill" horizontalHuggingPriority="251" verticalHuggingPriority="251" translatesAutoresizingMaskIntoConstraints="NO" id="BPq-mU-vb5">
+                                <rect key="frame" x="10" y="18.666666666666668" width="24" height="24.000000000000004"/>
+                                <constraints>
+                                    <constraint firstAttribute="width" constant="24" id="3V3-W5-29A"/>
+                                    <constraint firstAttribute="width" secondItem="BPq-mU-vb5" secondAttribute="height" multiplier="1:1" id="nkN-Up-qxL"/>
+                                </constraints>
+                            </imageView>
+                        </subviews>
+                        <color key="backgroundColor" systemColor="systemBackgroundColor"/>
+                        <constraints>
+                            <constraint firstItem="e1P-fN-SBn" firstAttribute="top" secondItem="YMD-Mk-6Rd" secondAttribute="top" constant="23" id="3dd-WO-Oi9"/>
+                            <constraint firstItem="NLn-Mo-MGC" firstAttribute="height" secondItem="BPq-mU-vb5" secondAttribute="height" id="FdE-fr-x7q"/>
+                            <constraint firstAttribute="trailing" secondItem="NLn-Mo-MGC" secondAttribute="trailing" constant="10" id="VwD-cN-Q19"/>
+                            <constraint firstItem="e1P-fN-SBn" firstAttribute="centerY" secondItem="BPq-mU-vb5" secondAttribute="centerY" id="YHs-Er-0kT"/>
+                            <constraint firstItem="NLn-Mo-MGC" firstAttribute="centerY" secondItem="BPq-mU-vb5" secondAttribute="centerY" id="bj0-xF-neU"/>
+                            <constraint firstItem="e1P-fN-SBn" firstAttribute="leading" secondItem="BPq-mU-vb5" secondAttribute="trailing" constant="10" id="fGg-oh-6EJ"/>
+                            <constraint firstAttribute="bottom" secondItem="e1P-fN-SBn" secondAttribute="bottom" constant="23" id="fjN-ZZ-x5P"/>
+                            <constraint firstItem="BPq-mU-vb5" firstAttribute="leading" secondItem="YMD-Mk-6Rd" secondAttribute="leading" constant="10" id="oh1-V4-Fb5"/>
+                            <constraint firstItem="BPq-mU-vb5" firstAttribute="centerY" secondItem="YMD-Mk-6Rd" secondAttribute="centerY" id="pmD-Vz-1YQ"/>
+                            <constraint firstItem="NLn-Mo-MGC" firstAttribute="width" secondItem="BPq-mU-vb5" secondAttribute="width" id="t7d-Kq-kg5"/>
+                            <constraint firstItem="NLn-Mo-MGC" firstAttribute="leading" secondItem="e1P-fN-SBn" secondAttribute="trailing" constant="10" id="xGY-nv-ysZ"/>
+                        </constraints>
+                    </view>
+                </subviews>
+                <constraints>
+                    <constraint firstItem="YMD-Mk-6Rd" firstAttribute="top" secondItem="H2p-sc-9uM" secondAttribute="top" constant="7" id="Xft-gq-lHj"/>
+                    <constraint firstAttribute="bottom" secondItem="YMD-Mk-6Rd" secondAttribute="bottom" constant="7" id="YEn-Vu-XHA"/>
+                    <constraint firstItem="YMD-Mk-6Rd" firstAttribute="leading" secondItem="H2p-sc-9uM" secondAttribute="leading" constant="7" id="fQD-bb-lPu"/>
+                    <constraint firstAttribute="trailing" secondItem="YMD-Mk-6Rd" secondAttribute="trailing" constant="7" id="nVd-PI-xdR"/>
+                </constraints>
+            </tableViewCellContentView>
+            <viewLayoutGuide key="safeArea" id="aW0-zy-SZf"/>
+            <connections>
+                <outlet property="bgView" destination="YMD-Mk-6Rd" id="2tl-M5-BF4"/>
+                <outlet property="iconImageView" destination="BPq-mU-vb5" id="rJj-lA-V2b"/>
+                <outlet property="nameLabel" destination="e1P-fN-SBn" id="V6i-8t-R92"/>
+                <outlet property="settingButton" destination="NLn-Mo-MGC" id="2b0-I9-35n"/>
+            </connections>
+            <point key="canvasLocation" x="35" y="21"/>
+        </tableViewCell>
+    </objects>
+    <resources>
+        <image name="icon_setting_bule" width="50" height="50"/>
+        <systemColor name="systemBackgroundColor">
+            <color white="1" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
+        </systemColor>
+    </resources>
+</document>

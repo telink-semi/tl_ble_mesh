@@ -28,6 +28,7 @@ NS_ASSUME_NONNULL_BEGIN
 typedef enum : NSUInteger {
     ItemType_Choose,
     ItemType_Input,
+    ItemType_sliderAndInput,
 } ItemType;
 
 @interface AlertItemModel : NSObject
@@ -35,6 +36,8 @@ typedef enum : NSUInteger {
 @property(nonatomic,strong) NSString *headerString;
 @property(nonatomic,strong) NSString *defaultString;//choose的默认选中选，input的默认字符串
 @property(nonatomic,strong) NSMutableArray <NSString *>*chooseItemsArray;//Item选项文本
+@property(nonatomic,assign) NSInteger maxValueOfSlider;
+@property(nonatomic,assign) NSInteger totalValueOfSlider;
 
 @end
 

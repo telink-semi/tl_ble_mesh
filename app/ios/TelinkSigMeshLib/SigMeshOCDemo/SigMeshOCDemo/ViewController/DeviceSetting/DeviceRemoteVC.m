@@ -27,7 +27,7 @@
 #import "NSString+extension.h"
 #import "RemoteElementCell.h"
 
-@interface DeviceRemoteVC ()<UITableViewDelegate,UITableViewDataSource>
+@interface DeviceRemoteVC ()<UITableViewDelegate, UITableViewDataSource, SigBearerDataDelegate>
 @property (weak, nonatomic) IBOutlet UITableView *tableView;
 @property (weak, nonatomic) IBOutlet UIButton *connectTipButton;
 
@@ -36,62 +36,92 @@
 @implementation DeviceRemoteVC
 
 - (IBAction)clickConnectDevice:(UIButton *)sender {
-    [self tryConnectRemote];
+    if (!SigBearer.share.isOpen || SigDataSource.share.unicastAddressOfConnected != self.model.address) {
+        [self connectAction];
+    }
+}
+
+#pragma  mark - SigBearerDataDelegate
+
+- (void)bearerDidOpen:(SigBearer *)bearer {
+    [self refreshConnectStatusUI];
+}
+
+- (void)bearer:(SigBearer *)bearer didCloseWithError:(NSError *)error {
+    TelinkLogVerbose(@"");
+    [self refreshConnectStatusUI];
+}
+
+- (void)refreshConnectStatusUI {
+    dispatch_async(dispatch_get_main_queue(), ^{
+        if (SigBearer.share.isOpen && SigDataSource.share.unicastAddressOfConnected == self.model.address) {
+            [self.connectTipButton setTitle:@"device connected." forState:UIControlStateNormal];
+            self.connectTipButton.userInteractionEnabled = NO;
+        } else {
+            [self.connectTipButton setTitle:@"device disconnected." forState:UIControlStateNormal];
+            self.connectTipButton.userInteractionEnabled = YES;
+        }
+    });
 }
 
 #pragma mark - Life method
-- (void)normalSetting{
+- (void)normalSetting {
     [super normalSetting];
     self.tableView.separatorStyle = UITableViewCellSeparatorStyleNone;//去掉下划线
     self.tableView.tableFooterView = [[UIView alloc] initWithFrame:CGRectZero];
     self.tableView.allowsSelection = NO;
     [self.tableView registerNib:[UINib nibWithNibName:CellIdentifiers_RemoteElementCellID bundle:nil] forCellReuseIdentifier:CellIdentifiers_RemoteElementCellID];
-
-    [self tryConnectRemote];
+    SigBearer.share.dataDelegate = self;
+    [self refreshConnectStatusUI];
+    [self tipAndTryConnectRemote];
 }
 
 - (void)viewWillDisappear:(BOOL)animated {
     [super viewWillDisappear:animated];
     if([self isBeingDismissed] || [self isMovingFromParentViewController]) {
         // pop / dismiss
-        // 如果直连了遥控器，需要在首页断开，非遥控器则无需断开，停止自动setNodeIdentity即可。
-        if (SigDataSource.share.unicastAddressOfConnected == self.model.address) {
-//            [ConnectTools.share stopConnectToolsWithComplete:nil];
-        } else {
-            TelinkLogInfo(@"===========endConnectTools");
+        // 退出该界面则无需再直连遥控器，因为遥控器不具备proxy功能。
+        SigBearer.share.isAllowConnectSwitch = NO;
+        // 如果直连了遥控器，需要在首页断开,此处无需断开。非遥控器则无需断开，停止自动setNodeIdentity即可。
+        if (SigDataSource.share.unicastAddressOfConnected != self.model.address) {
             [ConnectTools.share endConnectTools];
         }
     } else {
         // push /present from here
     }
 }
-- (void)tryConnectRemote {
+- (void)tipAndTryConnectRemote {
     //判断直连节点，重试直连遥控器
     if (SigBearer.share.isOpen && SigDataSource.share.unicastAddressOfConnected == self.model.address) {
-        [self showTips:@"The current remote control is already connected."];
-        [self.connectTipButton setTitle:@"device connected." forState:UIControlStateNormal];
+        dispatch_async(dispatch_get_main_queue(), ^{
+            UIAlertController *alert = [UIAlertController alertControllerWithTitle:@"Tip" message:@"Switch connected, pls keep connection" preferredStyle:UIAlertControllerStyleAlert];
+            UIAlertAction *action = [UIAlertAction actionWithTitle:@"CONFIRM" style:UIAlertActionStyleDefault handler:nil];
+            [alert addAction:action];
+            [self presentViewController:alert animated:YES completion:nil];
+        });
     } else {
-        [self showTips:@"The current remote control is not connected. Please press the remote control button to enter Bluetooth broadcast mode."];
-        [self.connectTipButton setTitle:@"device connecting..." forState:UIControlStateNormal];
-        __weak typeof(self) weakSelf = self;
-        [SDKLibCommand stopMeshConnectWithComplete:^(BOOL successful) {
-            if (successful) {
-                [ConnectTools.share startConnectToolsWithNodeList:@[weakSelf.model] timeout:20 Complete:^(BOOL successful) {
-                    dispatch_async(dispatch_get_main_queue(), ^{
-                        if (successful) {
-                            [weakSelf.connectTipButton setTitle:@"device connected." forState:UIControlStateNormal];
-                        } else {
-                            [weakSelf.connectTipButton setTitle:@"device disconnected." forState:UIControlStateNormal];
-                        }
-                    });
-                }];
-            } else {
-                dispatch_async(dispatch_get_main_queue(), ^{
-                    [weakSelf.connectTipButton setTitle:@"device disconnected." forState:UIControlStateNormal];
-                });
-            }
-        }];
+        [self connectAction];
     }
+}
+
+- (void)connectAction {
+    [self showAlertSureAndCancelWithTitle:kDefaultAlertTitle message:@"Switch not connected, pls set device to adv mode" sure:nil cancel:nil];
+    [self.connectTipButton setTitle:@"device connecting..." forState:UIControlStateNormal];
+    self.connectTipButton.userInteractionEnabled = YES;
+    __weak typeof(self) weakSelf = self;
+    SigBearer.share.isAllowConnectSwitch = YES;
+    [SDKLibCommand stopMeshConnectWithComplete:^(BOOL successful) {
+        if (successful) {
+            [ConnectTools.share startConnectToolsWithNodeList:@[weakSelf.model] timeout:0xFFFF Complete:^(BOOL successful) {
+                //在delegate处刷新
+            }];
+        } else {
+            dispatch_async(dispatch_get_main_queue(), ^{
+                [weakSelf.connectTipButton setTitle:@"device disconnected." forState:UIControlStateNormal];
+                weakSelf.connectTipButton.userInteractionEnabled = YES;
+            });
+        }
+    }];
 }
 
 #pragma mark - UITableView
@@ -110,7 +140,7 @@
     }
     UInt16 pubAdr = 0;
     if (model && model.publish) {
-        pubAdr = [LibTools uint16From16String:model.publish.address];
+        pubAdr = [TelinkLibTools uint16FromHexString:model.publish.address];
     } else if (indexPath.row < SigDataSource.share.groups.count) {
         //默认值，按照Group来顺序设置
         pubAdr = SigDataSource.share.groups[indexPath.row].intAddress;
@@ -136,8 +166,8 @@
         //2.判断model合法性
         UInt16 newModelID;
         UInt16 newCompanyIdentifier = model.getIntCompanyIdentifier;
-        if ([LibTools validateHex:cell.modelTF.text.removeAllSpaceAndNewlines] && cell.modelTF.text.length <= 8) {
-            UInt32 tem = [LibTools uint32From16String:cell.modelTF.text];
+        if ([TelinkLibTools validateHexString:cell.modelTF.text.removeAllSpaceAndNewlines] && cell.modelTF.text.length <= 8) {
+            UInt32 tem = [TelinkLibTools uint32FromHexString:cell.modelTF.text];
             SigModelIDModel *temModel =  [self.model getModelIDModelWithModelID:tem andElementAddress:eleAdr];
             if (temModel) {
                 if (tem >= 0xFFFF) {
@@ -157,8 +187,8 @@
 
         //3.判断pubAdr合法性
         UInt16 newPubAdr;
-        if ([LibTools validateHex:cell.pubAdrTF.text.removeAllSpaceAndNewlines] && cell.pubAdrTF.text.length <= 4) {
-            newPubAdr = [LibTools uint16From16String:cell.pubAdrTF.text];
+        if ([TelinkLibTools validateHexString:cell.pubAdrTF.text.removeAllSpaceAndNewlines] && cell.pubAdrTF.text.length <= 4) {
+            newPubAdr = [TelinkLibTools uint16FromHexString:cell.pubAdrTF.text];
         } else {
             [self showTips:@"Please enter the correct pubAdr!"];
             return;

@@ -65,6 +65,8 @@
     [self configSortTypeOfNodeList];
     //(Optional)16.Config IP Of Share Mesh By Cloud
     [self configBaseURLForCloudSharing];
+    //(Optional)17.Set retryGroupMessageByUnicastAddress to YES.
+    SigMeshLib.share.retryGroupMessageByUnicastAddress = YES;
     return YES;
 }
 
@@ -129,9 +131,9 @@
 /// 6.Config SDK log level
 - (void)configSDKLogLevel {
     //demo中setting界面显示的log信息，客户开发到后期，APP稳定后可以不集成该功能，且上架最好关闭log保存功能。(客户发送iTunes中的日志文件“TelinkSDKDebugLogData”给泰凌微即可)
-//    [SigLogger.share setSDKLogLevel:SigLogLevelDebug];
-    [SigLogger.share setSDKLogLevel:SigLogLevelAll];
-//    [SigLogger.share setSDKLogLevel:SigLogLevelOff];//上架则关闭Log保存功能
+//    [TelinkLogger.shared setSDKLogLevel:TelinkLogLevelDebug];
+    [TelinkLogger.shared setSDKLogLevel:TelinkLogLevelAll];
+//    [TelinkLogger.shared setSDKLogLevel:TelinkLogLevelOff];//上架则关闭Log保存功能
 }
 
 /// 7.Config SigDataSource default parameter of SDK
@@ -203,7 +205,7 @@
     NSArray *meshList = [[NSUserDefaults standardUserDefaults] valueForKey:kCacheMeshListKey];
     if (meshList == nil) {
         NSDictionary *meshDict = [SigDataSource.share getDictionaryFromDataSource];
-        NSData *tempData = [LibTools getJSONDataWithDictionary:meshDict];
+        NSData *tempData = [TelinkLibTools getJSONDataWithDictionary:meshDict];
         //Migrate data from a single network to multiple networks.
         NSData *oldData = [NSUserDefaults.standardUserDefaults objectForKey:kSaveLocationDataKey];
         if (oldData.length > 0) {
@@ -219,7 +221,7 @@
     } else {
         NSString *meshUUID = [[NSUserDefaults standardUserDefaults] valueForKey:kCacheCurrentMeshUUIDKey];
         for (NSData *data in meshList) {
-            NSDictionary *meshDict = [LibTools getDictionaryWithJSONData:data];
+            NSDictionary *meshDict = [TelinkLibTools getDictionaryWithJSONData:data];
             if ([[meshDict[@"meshUUID"] uppercaseString] isEqualToString:[meshUUID uppercaseString]]) {
                 [SigDataSource.share switchToNewMeshDictionary:meshDict];
                 break;
@@ -248,12 +250,12 @@
 //    if (filterData == nil) {
 //        SigProxyFilterModel *model = [[SigProxyFilterModel alloc] init];
 //        NSDictionary *dict = [model getDictionaryOfSigProxyFilterModel];
-//        filterData = [LibTools getJSONDataWithDictionary:dict];
+//        filterData = [TelinkLibTools getJSONDataWithDictionary:dict];
 //        [[NSUserDefaults standardUserDefaults] setValue:filterData forKey:kFilter];
 //        [[NSUserDefaults standardUserDefaults] synchronize];
 //    }
 //    SigProxyFilterModel *filter = [[SigProxyFilterModel alloc] init];
-//    NSDictionary *dict = [LibTools getDictionaryWithJSONData:filterData];
+//    NSDictionary *dict = [TelinkLibTools getDictionaryWithJSONData:filterData];
 //    [filter setDictionaryToSigProxyFilterModel:dict];
 //    SigDataSource.share.filterModel = filter;
 }
@@ -287,7 +289,7 @@
     //demo v3.3.4新增certificate-base Provision使用的默认根证书文件名，demo不重新赋值则默认使用PTS的root.der。
     NSString *rootCertificateName = [[NSUserDefaults standardUserDefaults] valueForKey:kRootCertificateName];
     if (rootCertificateName != nil) {
-        NSData *selectData = [LibTools getDataWithFileName:rootCertificateName fileType:nil];
+        NSData *selectData = [TelinkLibTools getDataWithFileName:rootCertificateName fileType:nil];
         if (selectData && selectData.length > 0) {
             SigDataSource.share.defaultRootCertificateData = selectData;
         }
@@ -316,6 +318,11 @@
     if (baseUrlString == nil) {
         // 无需处理
     } else {
+        if (![[baseUrlString substringFromIndex:baseUrlString.length-1] isEqualToString:@"/"]) {
+            baseUrlString = [baseUrlString stringByAppendingString:@"/"];
+            [[NSUserDefaults standardUserDefaults] setValue:baseUrlString forKey:kDefaultBaseURL];
+            [[NSUserDefaults standardUserDefaults] synchronize];
+        }
         TelinkHttpManager.share.baseUrl = baseUrlString;
     }
 }

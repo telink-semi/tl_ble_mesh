@@ -599,7 +599,7 @@
 }
 
 /// Check Certificate Hex Data
-/// check version & time & Serial Number
+/// check version & time
 ///
 /// "ecdsa-with-SHA256"
 /// check certificate data and return inner public key
@@ -714,8 +714,8 @@
 //        ASN1_BIT_STRING *signature = nil;
 //        X509_get0_signature(&signature, &x509->sig_alg, x509);
 //        NSData *sig = [NSData dataWithBytes:signature->data length:signature->length];
-//        TelinkLogInfo(@"check certificate success, sig=%@",[LibTools convertDataToHexStr:sig]);
-//        NSLog(@"check certificate success, sig=%@",[LibTools convertDataToHexStr:sig]);
+//        TelinkLogInfo(@"check certificate success, sig=%@",[TelinkLibTools convertDataToHexStr:sig]);
+//        NSLog(@"check certificate success, sig=%@",[TelinkLibTools convertDataToHexStr:sig]);
 
         //验证证书签名(存在父证书的publicKey则使用父证书的publicKey验签，没有则使用自己的publicKey验签)
         EVP_PKEY *key = nil;
@@ -732,7 +732,7 @@
             if (verify == 1) {
                 TelinkLogInfo(@"Signature is valid");
             } else {
-                TelinkLogError(@"serial number check err,X509_verify=%d",verify);
+                TelinkLogError(@"sign check err,X509_verify=%d",verify);
                 return nil;
             }
             EVP_PKEY_free(key);
@@ -754,7 +754,7 @@
             return nil;
         }
 
-        TelinkLogInfo(@"check certificate success, publicKey=%@",[LibTools convertDataToHexStr:publicKey]);
+        TelinkLogInfo(@"check certificate success, publicKey=%@",[TelinkLibTools convertDataToHexStr:publicKey]);
         X509_free(x509);
         return publicKey;
     }
@@ -879,8 +879,8 @@
     //openssl-1.0.1c/crypto/x509/x509_vfy.h
     ret = X509_verify_cert(ctx);
     if ( ret != 1 ) {
-        fprintf(stderr, "X509_verify_cert fail, ret = %d, error id = %d, %s\n",
-                ret, ctx->error, X509_verify_cert_error_string(ctx->error));
+//        fprintf(stderr, "X509_verify_cert fail, ret = %d, error id = %d, %s\n",
+//                ret, ctx->error, X509_verify_cert_error_string(ctx->error));
         goto EXIT;
     }
     fprintf(stdout, "X509_verify_cert successful\n");

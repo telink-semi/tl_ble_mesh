@@ -52,14 +52,14 @@
             __weak typeof(self) weakSelf = self;
             __block BOOL hasFail = NO;
             _messageHandle = [SDKLibCommand bridgeTableAddWithDestination:self.model.address subnetBridge:self.bridgeModel retryCount:2 responseMaxCount:1 successCallback:^(UInt16 source, UInt16 destination, SigBridgeTableStatus * _Nonnull responseMessage) {
-                TelinkLogDebug(@"subnetBridgeSet=%@,source=%d,destination=%d",[LibTools convertDataToHexStr:responseMessage.parameters],source,destination);
+                TelinkLogDebug(@"subnetBridgeSet=%@,source=%d,destination=%d",[TelinkLibTools convertDataToHexStr:responseMessage.parameters],source,destination);
                 if (responseMessage.status == SigConfigMessageStatus_success) {
                     [weakSelf.model.subnetBridgeList addObject:weakSelf.bridgeModel];
                     [SigDataSource.share saveLocationData];
                     [ShowTipsHandle.share show:Tip_AddSubnetBridgeSuccess];
                 } else {
                     hasFail = YES;
-                    [ShowTipsHandle.share show:[NSString stringWithFormat:@"add Subnet Bridge to node fail! error status=%d",responseMessage.status]];
+                    [ShowTipsHandle.share show:[NSString stringWithFormat:@"add Subnet Bridge to node fail! error status=%d, message=%@",responseMessage.status, [SigHelper.share getConfigMessageStatusDescription:responseMessage.status]]];
                 }
             } resultCallback:^(BOOL isResponseAll, NSError * _Nullable error) {
                 TelinkLogInfo(@"isResponseAll=%d,error=%@",isResponseAll,error);
@@ -70,7 +70,7 @@
                         [weakSelf showTips:Tip_AddSubnetBridgeFail];
                     } else {
                         [ShowTipsHandle.share delayHidden:2.0];
-                        [weakSelf performSelector:@selector(pop) withObject:nil afterDelay:2.0];
+                        [weakSelf performSelector:@selector(pop) withObject:nil afterDelay:3.0];
                     }
                 });
             }];
@@ -211,8 +211,8 @@
     switch (textField.tag) {
         case 3:
         {
-            if ([LibTools validateHex:textField.text.removeAllSpaceAndNewlines]) {
-                self.bridgeModel.address1 = [LibTools uint16From16String:textField.text];
+            if ([TelinkLibTools validateHexString:textField.text.removeAllSpaceAndNewlines]) {
+                self.bridgeModel.address1 = [TelinkLibTools uint16FromHexString:textField.text];
             } else {
                 [self showTips:@"Please enter the correct address!"];
             }
@@ -220,8 +220,8 @@
             break;
         case 4:
         {
-            if ([LibTools validateHex:textField.text.removeAllSpaceAndNewlines]) {
-                self.bridgeModel.address2 = [LibTools uint16From16String:textField.text];
+            if ([TelinkLibTools validateHexString:textField.text.removeAllSpaceAndNewlines]) {
+                self.bridgeModel.address2 = [TelinkLibTools uint16FromHexString:textField.text];
             } else {
                 [self showTips:@"Please enter the correct address!"];
             }

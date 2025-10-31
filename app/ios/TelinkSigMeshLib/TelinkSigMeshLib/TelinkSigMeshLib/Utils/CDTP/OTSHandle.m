@@ -69,7 +69,7 @@
 
 - (void)setClickForOTSCommandTimeout:(OTSCommand *)command {
     __weak typeof(self) weakSelf = self;
-    BackgroundTimer *timer = [BackgroundTimer scheduledTimerWithTimeInterval:command.timeout repeats:NO block:^(BackgroundTimer * _Nonnull t) {
+    TelinkBackgroundTimer *timer = [TelinkBackgroundTimer scheduledTimerWithTimeInterval:command.timeout repeats:NO block:^(TelinkBackgroundTimer * _Nonnull t) {
         [weakSelf cleanCommand:command];
         TelinkLogDebug(@"timeout command:%@-%@",command.curOTSMessage,command.curOTSMessage.payload);
         NSError *error = [NSError errorWithDomain:@"stop wait response, because command is timeout." code:-1 userInfo:nil];

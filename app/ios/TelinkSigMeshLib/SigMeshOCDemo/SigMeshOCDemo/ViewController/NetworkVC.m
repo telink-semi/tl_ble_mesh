@@ -35,12 +35,14 @@
 #import "PassiveSwitchDetailVC.h"
 #import "NFCMiFareTagScanVC.h"
 #import "NodeBatchSettingVC.h"
+#import "NLCListVC.h"
 
 #define kMeshInfo   @"Mesh Info"
 #define kNodeBatchSetting   @"Node Batch Setting"
 #define kSolicitationPDU   @"Solicitation PDU"
 #define kAddEnergyHarvestSwitchByQRCode   @"Add Energy Harvest Switch by QRCode"
 #define kAddEnergyHarvestSwitchByNFC   @"Add Energy Harvest Switch by NFC"
+#define kNLC   @"NLC"
 
 @interface NetworkVC ()<UITableViewDataSource,UITableViewDelegate>
 @property (weak, nonatomic) IBOutlet UITableView *tableView;
@@ -105,6 +107,8 @@
         [self pushToScanVC];
     } else if ([titleString isEqualToString:kAddEnergyHarvestSwitchByNFC]) {
         [self pushToNFCVC];
+    } else if ([titleString isEqualToString:kNLC]) {
+        [self pushToNLCListVC];
     } else {
         vc = [UIStoryboard initVC:self.vcIdentifiers[indexPath.row] storyboard:sb];
         if ([titleString isEqualToString:kMeshInfo]) {
@@ -152,6 +156,9 @@
     [self.source addObject:@"Scenes"];
     [self.iconSource addObject:@"ic_scene"];
     [self.vcIdentifiers addObject:ViewControllerIdentifiers_SceneListViewControllerID];
+    [self.source addObject:kNLC];
+    [self.iconSource addObject:@"ic_motion_sensor"];
+    [self.vcIdentifiers addObject:@""];
     [self.source addObject:@"Direct Forwarding"];
     [self.iconSource addObject:@"ic_directForwarding"];
     [self.vcIdentifiers addObject:ViewControllerIdentifiers_DirectForwardingVCID];
@@ -223,6 +230,11 @@
         weakSelf.address = info.deviceAddress;
         [weakSelf showConfigSwitchVC];
     }];
+    [self.navigationController pushViewController:vc animated:YES];
+}
+
+- (void)pushToNLCListVC {
+    NLCListVC *vc = [[NLCListVC alloc] init];
     [self.navigationController pushViewController:vc animated:YES];
 }
 

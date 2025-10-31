@@ -30,8 +30,21 @@
 #endif
 
 @interface BaseViewController : UIViewController
+@property (nonatomic, strong) UIImageView *listEmptyImageView;
+@property (nonatomic, strong) UILabel *listEmptyLabel;
+@property (nonatomic, strong) UIButton *addNewItemButton;
+- (void)setListEmptyHidden:(BOOL)hidden;
 
 #pragma mark Public
+
+/// 顶部导航栏+顶部状态栏
+- (CGFloat)getRectNavAndStatusHeight;
+
+/// 顶部导航栏+顶部状态栏+底部安全区
+- (CGFloat)getRectNavAndStatusHeightAndSafeDistanceBottom;
+
+/// 顶部导航栏+顶部状态栏+底部导航栏+底部安全区
+- (CGFloat)getRectNavAndStatusHeightAndTabBarFullHeight;
 
 /// Default UI setting in BaseViewController
 - (void)normalSetting;

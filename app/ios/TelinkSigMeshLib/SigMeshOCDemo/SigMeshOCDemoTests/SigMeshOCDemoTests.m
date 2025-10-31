@@ -54,10 +54,10 @@
 ///// 测试解密共享文件夹的json文件`TelinkSDKMeshJsonData`
 //- (void)testGetDecryptTelinkSDKMeshJsonData {
 //    //1.
-//    NSLog(@"%@",SigLogger.share.getDecryptTelinkSDKMeshJsonData);
+//    NSLog(@"%@",TelinkLogger.shared.getDecryptTelinkSDKMeshJsonData);
 //    //2.
 ////    NSString *key = @"com.telink.TelinkSDKMeshJsonData";
-////    NSLog(@"%@",[SigLogger.share getDecryptTelinkSDKMeshJsonDataWithPassword:key]);
+////    NSLog(@"%@",[TelinkLogger.shared getDecryptTelinkSDKMeshJsonDataWithPassword:key]);
 //}
 //
 ///// 测试SigProvisionerModel创建及Unicast分配
@@ -69,7 +69,7 @@
 //            NSLog(@"mesh地址可用区间已经消耗完了！！");
 //            break;
 //        }
-//        SigProvisionerModel *provisioner = [[SigProvisionerModel alloc] initWithExistProvisionerMaxHighAddressUnicast:maxHighAddressUnicast andProvisionerUUID:[LibTools convertDataToHexStr:[LibTools initMeshUUID]]];
+//        SigProvisionerModel *provisioner = [[SigProvisionerModel alloc] initWithExistProvisionerMaxHighAddressUnicast:maxHighAddressUnicast andProvisionerUUID:[TelinkLibTools convertDataToHexStr:[LibTools initMeshUUID]]];
 //        NSLog(@"MaxHighAddressUnicast=0x%X,lowAddress=0x%@,highAddress=0x%@",maxHighAddressUnicast,provisioner.allocatedUnicastRange.firstObject.lowAddress,provisioner.allocatedUnicastRange.firstObject.highAddress);
 //        maxHighAddressUnicast = provisioner.allocatedUnicastRange.firstObject.heightIntAddress;
 //    }

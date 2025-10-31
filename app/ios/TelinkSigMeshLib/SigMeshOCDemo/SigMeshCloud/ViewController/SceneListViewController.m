@@ -187,7 +187,7 @@
 //            while (delArray.count > 0) {
 //                dispatch_semaphore_t semaphore = dispatch_semaphore_create(0);
 //                ActionModel *curAction = delArray.firstObject;
-//                [DemoCommand delSceneWithAddress:curAction.address sceneId:[LibTools uint16From16String:scene.number] responseMaxCount:1 ack:YES successCallback:^(UInt16 source, UInt16 destination, SigSceneRegisterStatus * _Nonnull responseMessage) {
+//                [DemoCommand delSceneWithAddress:curAction.address sceneId:[TelinkLibTools uint16FromHexString:scene.number] responseMaxCount:1 ack:YES successCallback:^(UInt16 source, UInt16 destination, SigSceneRegisterStatus * _Nonnull responseMessage) {
 //                    TelinkLogDebug(@"responseMessage.statusCode=%d",responseMessage.statusCode);
 //                    [delArray removeObject:curAction];
 //                    dispatch_semaphore_signal(semaphore);
@@ -218,8 +218,10 @@
 
 - (void)refreshUI {
     self.sceneList = [NSMutableArray arrayWithArray:AppDataSource.share.curMeshNetworkDetailModel.sceneList];
-    [self.tableView performSelectorOnMainThread:@selector(reloadData) withObject:nil waitUntilDone:YES];
-    self.tableView.hidden = self.sceneList.count == 0;
+    dispatch_async(dispatch_get_main_queue(), ^{
+        [self.tableView reloadData];
+        self.tableView.hidden = self.sceneList.count == 0;
+    });
 }
 
 @end

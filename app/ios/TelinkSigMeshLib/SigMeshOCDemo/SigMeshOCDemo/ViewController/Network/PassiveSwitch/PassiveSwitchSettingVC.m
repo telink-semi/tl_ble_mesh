@@ -148,8 +148,8 @@
     if (self.optionalDataTF.text.length % 2 == 1) {
         self.optionalDataTF.text = [self.optionalDataTF.text stringByAppendingString:@"0"];
     }
-    if ([LibTools validateHex:self.optionalDataTF.text]) {
-        self.nOptionalData = [NSMutableData dataWithData:[LibTools nsstringToHex:self.optionalDataTF.text]];
+    if ([TelinkLibTools validateHexString:self.optionalDataTF.text]) {
+        self.nOptionalData = [NSMutableData dataWithData:[TelinkLibTools nsstringToHex:self.optionalDataTF.text]];
     } else {
         [self showTips:@"The optional data is a hexadecimal string."];
         self.optionalDataTF.text = @"";
@@ -243,12 +243,12 @@
 
 - (void)writeCommandWithAddress:(UInt8)address data:(NSData *)data completionHandler:(void(^)(NSData *response, NSError * _Nullable error))completionHandler {
     MiFareWriteCommand *command = [[MiFareWriteCommand alloc] initWithAddress:address data:data];
-    NSLog(@"write data = %@", [LibTools convertDataToHexStr:command.getCommandParameters]);
+    NSLog(@"write data = %@", [TelinkLibTools convertDataToHexStr:command.getCommandParameters]);
     [self.miFareTag sendMiFareCommand:command.getCommandParameters completionHandler:completionHandler];
 }
 
 - (void)pairAction {
-    MiFarePasswordAuthenticationCommand *command = [[MiFarePasswordAuthenticationCommand alloc] initWithPasswordData:[LibTools nsstringToHex:kDefaultPinCode]];
+    MiFarePasswordAuthenticationCommand *command = [[MiFarePasswordAuthenticationCommand alloc] initWithPasswordData:[TelinkLibTools nsstringToHex:kDefaultPinCode]];
     if (self.miFareTag.isAvailable) {
         __weak typeof(self) weakSelf = self;
         [self.miFareTag sendMiFareCommand:command.getCommandParameters completionHandler:^(NSData * _Nonnull response, NSError * _Nullable error) {
@@ -271,7 +271,7 @@
                             NSLog(@"1 read Static Source Address response=%@, error=%@", response, error);
                             if (error == nil) {
                                 if (response.length >= 4) {
-                                    info.staticSourceAddress = [[kDefaultPinCode substringFromIndex:4] stringByAppendingString:[LibTools convertDataToHexStr:[response subdataWithRange:NSMakeRange(0, 4)]]];
+                                    info.staticSourceAddress = [[kDefaultPinCode substringFromIndex:4] stringByAppendingString:[TelinkLibTools convertDataToHexStr:[response subdataWithRange:NSMakeRange(0, 4)]]];
                                     if (![weakSelf.oldEnOceanInfo.staticSourceAddress isEqualToString:info.staticSourceAddress]) {
                                         hasFail = YES;//this Switch(ID:%@)
                                         NSError *error = [NSError errorWithDomain:[NSString stringWithFormat:@"Configure failed, The ID of this switch is not %@", weakSelf.oldEnOceanInfo.staticSourceAddress] code:-1 userInfo:nil];

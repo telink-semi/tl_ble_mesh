@@ -116,7 +116,7 @@
         [self writeOACPCalculateChecksumWithOffset:0 length:(UInt32)data.length complete:^(OACPResponseCodeModel * _Nullable responseMessage, NSError * _Nullable error) {
             if (error == nil && responseMessage.resultCode == OACPResultCode_Success) {
                 NSData *checksumOfService = responseMessage.responseParameter;
-                UInt32 crc = [LibTools getCRC32OfData:data];
+                UInt32 crc = [TelinkLibTools getCRC32OfData:data];
                 NSData *checksumOfClient = [NSData dataWithBytes:&crc length:4];
                 if ([checksumOfService isEqualToData:checksumOfClient]) {
                     [weakSelf clientReadSuccessAction:data];
@@ -268,10 +268,10 @@
             [weakSelf respondsClientWriteFailWithError:error];
         } else {
             //write finish, 不延时，设备会在接收完data后在回复response。
-            [weakSelf writePrivateOACPCalculateChecksumWithOffset:0 length:object.objectSize crc32:[LibTools getCRC32OfData:object.objectData] complete:^(OACPResponseCodeModel * _Nullable responseMessage, NSError * _Nullable error) {
+            [weakSelf writePrivateOACPCalculateChecksumWithOffset:0 length:object.objectSize crc32:[TelinkLibTools getCRC32OfData:object.objectData] complete:^(OACPResponseCodeModel * _Nullable responseMessage, NSError * _Nullable error) {
                 if (error == nil && responseMessage.resultCode == OACPResultCode_Success) {
                     NSData *checksumOfService = responseMessage.responseParameter;
-                    UInt32 crc = [LibTools getCRC32OfData:object.objectData];
+                    UInt32 crc = [TelinkLibTools getCRC32OfData:object.objectData];
                     NSData *checksumOfClient = [NSData dataWithBytes:&crc length:4];
                     if ([checksumOfService isEqualToData:checksumOfClient]) {
                         [weakSelf respondsClientWriteSuccessful];
@@ -312,7 +312,7 @@
                                     if (weakSelf.psmCharacteristic) {
                                         [weakSelf.privateBluetooth readCharachteristicWithCharacteristic:weakSelf.psmCharacteristic ofPeripheral:weakSelf.servicePeripheral timeout:60.0 complete:^(CBCharacteristic * _Nonnull characteristic, BOOL successful) {
                                             if (successful) {
-                                                [weakSelf openChannelWithPSM:[LibTools uint16FromBytes:characteristic.value] ResultBlock:block];
+                                                [weakSelf openChannelWithPSM:[TelinkLibTools uint16FromData:characteristic.value] ResultBlock:block];
                                             } else {
                                                 //弹出配对框，不点，直到超时，进入这里。
                                                 if (block) {
@@ -519,7 +519,7 @@
     UInt32 tem32 = 0;
     Byte *dataByte = (Byte *)checkSumData.bytes;
     memcpy(&tem32, dataByte, 4);
-    UInt32 crc32 = [LibTools getCRC32OfData:objectContentsData];
+    UInt32 crc32 = [TelinkLibTools getCRC32OfData:objectContentsData];
     return crc32 == tem32;
 }
 

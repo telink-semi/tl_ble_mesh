@@ -92,8 +92,6 @@
 		25589BF52721403F00F4F880 /* DeviceGroupViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 25589AE22721403E00F4F880 /* DeviceGroupViewController.m */; };
 		25589BF62721403F00F4F880 /* DeviceCompositionDataVC.m in Sources */ = {isa = PBXBuildFile; fileRef = 25589AE32721403E00F4F880 /* DeviceCompositionDataVC.m */; };
 		25589BF72721403F00F4F880 /* DeviceConfigVC.xib in Resources */ = {isa = PBXBuildFile; fileRef = 25589AE62721403E00F4F880 /* DeviceConfigVC.xib */; };
-		25589BF82721403F00F4F880 /* DeviceConfigCell.m in Sources */ = {isa = PBXBuildFile; fileRef = 25589AE72721403E00F4F880 /* DeviceConfigCell.m */; };
-		25589BF92721403F00F4F880 /* DeviceConfigCell.xib in Resources */ = {isa = PBXBuildFile; fileRef = 25589AE82721403E00F4F880 /* DeviceConfigCell.xib */; };
 		25589BFA2721403F00F4F880 /* DeviceConfigVC.m in Sources */ = {isa = PBXBuildFile; fileRef = 25589AEB2721403E00F4F880 /* DeviceConfigVC.m */; };
 		25589BFB2721403F00F4F880 /* DeviceRemoteVC.m in Sources */ = {isa = PBXBuildFile; fileRef = 25589AEE2721403E00F4F880 /* DeviceRemoteVC.m */; };
 		25589BFC2721403F00F4F880 /* SingleDeviceViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 25589AF12721403E00F4F880 /* SingleDeviceViewController.m */; };
@@ -159,6 +157,18 @@
 		25FE6CD327EC14D5009F7626 /* EntryCell.xib in Resources */ = {isa = PBXBuildFile; fileRef = 25FE6CD127EC14D5009F7626 /* EntryCell.xib */; };
 		9105B16B2BB1765D00EA0DD6 /* ElementActionView.m in Sources */ = {isa = PBXBuildFile; fileRef = 9105B16A2BB1765D00EA0DD6 /* ElementActionView.m */; };
 		9105B1712BB1767700EA0DD6 /* ElementActionView.xib in Resources */ = {isa = PBXBuildFile; fileRef = 9105B1702BB1767700EA0DD6 /* ElementActionView.xib */; };
+		91070B172D2239910044370F /* NLCSingleVC.m in Sources */ = {isa = PBXBuildFile; fileRef = 91070B152D2239910044370F /* NLCSingleVC.m */; };
+		91070B182D2239910044370F /* NLCSingleVC.xib in Resources */ = {isa = PBXBuildFile; fileRef = 91070B162D2239910044370F /* NLCSingleVC.xib */; };
+		91070B192D2239910044370F /* NLCSingleVC.m in Sources */ = {isa = PBXBuildFile; fileRef = 91070B152D2239910044370F /* NLCSingleVC.m */; };
+		91070B1A2D2239910044370F /* NLCSingleVC.xib in Resources */ = {isa = PBXBuildFile; fileRef = 91070B162D2239910044370F /* NLCSingleVC.xib */; };
+		91070B222D223DCA0044370F /* NLCUnionVC.m in Sources */ = {isa = PBXBuildFile; fileRef = 91070B202D223DCA0044370F /* NLCUnionVC.m */; };
+		91070B232D223DCA0044370F /* NLCUnionVC.xib in Resources */ = {isa = PBXBuildFile; fileRef = 91070B212D223DCA0044370F /* NLCUnionVC.xib */; };
+		91070B242D223DCA0044370F /* NLCUnionVC.m in Sources */ = {isa = PBXBuildFile; fileRef = 91070B202D223DCA0044370F /* NLCUnionVC.m */; };
+		91070B252D223DCA0044370F /* NLCUnionVC.xib in Resources */ = {isa = PBXBuildFile; fileRef = 91070B212D223DCA0044370F /* NLCUnionVC.xib */; };
+		91070B292D228B540044370F /* NLCPublishHeaderCell.m in Sources */ = {isa = PBXBuildFile; fileRef = 91070B272D228B540044370F /* NLCPublishHeaderCell.m */; };
+		91070B2A2D228B540044370F /* NLCPublishHeaderCell.xib in Resources */ = {isa = PBXBuildFile; fileRef = 91070B282D228B540044370F /* NLCPublishHeaderCell.xib */; };
+		91070B2B2D228B540044370F /* NLCPublishHeaderCell.m in Sources */ = {isa = PBXBuildFile; fileRef = 91070B272D228B540044370F /* NLCPublishHeaderCell.m */; };
+		91070B2C2D228B540044370F /* NLCPublishHeaderCell.xib in Resources */ = {isa = PBXBuildFile; fileRef = 91070B282D228B540044370F /* NLCPublishHeaderCell.xib */; };
 		91075BA62B0D97EC00F933EA /* BaseCell.m in Sources */ = {isa = PBXBuildFile; fileRef = 91075BA52B0D97EC00F933EA /* BaseCell.m */; };
 		91075BAA2B0D99DE00F933EA /* DirectToggleCell.m in Sources */ = {isa = PBXBuildFile; fileRef = 91075BA82B0D99DE00F933EA /* DirectToggleCell.m */; };
 		91075BAB2B0D99DE00F933EA /* DirectToggleCell.xib in Resources */ = {isa = PBXBuildFile; fileRef = 91075BA92B0D99DE00F933EA /* DirectToggleCell.xib */; };
@@ -171,6 +181,10 @@
 		911217D72B4643A600A79A3E /* BinFileChooseVC.m in Sources */ = {isa = PBXBuildFile; fileRef = 911217D42B4643A600A79A3E /* BinFileChooseVC.m */; };
 		911217D82B4643A600A79A3E /* BinFileChooseVC.xib in Resources */ = {isa = PBXBuildFile; fileRef = 911217D52B4643A600A79A3E /* BinFileChooseVC.xib */; };
 		911217D92B4643A600A79A3E /* BinFileChooseVC.xib in Resources */ = {isa = PBXBuildFile; fileRef = 911217D52B4643A600A79A3E /* BinFileChooseVC.xib */; };
+		911D9C1C2D2B786400090DAB /* SelectPublishAddressVC.xib in Resources */ = {isa = PBXBuildFile; fileRef = 911D9C1B2D2B786400090DAB /* SelectPublishAddressVC.xib */; };
+		911D9C1D2D2B786400090DAB /* SelectPublishAddressVC.m in Sources */ = {isa = PBXBuildFile; fileRef = 911D9C1A2D2B786400090DAB /* SelectPublishAddressVC.m */; };
+		911D9C1E2D2B786400090DAB /* SelectPublishAddressVC.xib in Resources */ = {isa = PBXBuildFile; fileRef = 911D9C1B2D2B786400090DAB /* SelectPublishAddressVC.xib */; };
+		911D9C1F2D2B786400090DAB /* SelectPublishAddressVC.m in Sources */ = {isa = PBXBuildFile; fileRef = 911D9C1A2D2B786400090DAB /* SelectPublishAddressVC.m */; };
 		9124E39D2BE07F7200E44AB2 /* AppDelegate.m in Sources */ = {isa = PBXBuildFile; fileRef = 25589A13272115D700F4F880 /* AppDelegate.m */; };
 		9124E39E2BE07F9200E44AB2 /* UIColor+Telink.m in Sources */ = {isa = PBXBuildFile; fileRef = 9161956C290A17CE00BCF0A6 /* UIColor+Telink.m */; };
 		9124E39F2BE080CF00E44AB2 /* TelinkSigMeshLib.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 9102B6022B293BDA00BB08B4 /* TelinkSigMeshLib.framework */; };
@@ -195,10 +209,18 @@
 		913661862CA2BB4200DF6124 /* NodeBatchCell.xib in Resources */ = {isa = PBXBuildFile; fileRef = 913661842CA2BB4200DF6124 /* NodeBatchCell.xib */; };
 		913661872CA2BB4200DF6124 /* NodeBatchCell.xib in Resources */ = {isa = PBXBuildFile; fileRef = 913661842CA2BB4200DF6124 /* NodeBatchCell.xib */; };
 		913661882CA2BB4200DF6124 /* NodeBatchCell.m in Sources */ = {isa = PBXBuildFile; fileRef = 913661832CA2BB4200DF6124 /* NodeBatchCell.m */; };
+		913691F32E682B8A004B0A04 /* TelinkToolsLib.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 913691F12E682B81004B0A04 /* TelinkToolsLib.framework */; };
+		913691F42E682B8A004B0A04 /* TelinkToolsLib.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 913691F12E682B81004B0A04 /* TelinkToolsLib.framework */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
+		913691F62E682B8F004B0A04 /* TelinkToolsLib.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 913691EF2E682B7A004B0A04 /* TelinkToolsLib.framework */; };
+		913691F72E682B8F004B0A04 /* TelinkToolsLib.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 913691EF2E682B7A004B0A04 /* TelinkToolsLib.framework */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 		91423DE62B30384900BE9CE1 /* CMDCell.m in Sources */ = {isa = PBXBuildFile; fileRef = 91423DE42B30384900BE9CE1 /* CMDCell.m */; };
 		91423DE72B30384900BE9CE1 /* CMDCell.m in Sources */ = {isa = PBXBuildFile; fileRef = 91423DE42B30384900BE9CE1 /* CMDCell.m */; };
 		91423DE82B30384900BE9CE1 /* CMDCell.xib in Resources */ = {isa = PBXBuildFile; fileRef = 91423DE52B30384900BE9CE1 /* CMDCell.xib */; };
 		91423DE92B30384900BE9CE1 /* CMDCell.xib in Resources */ = {isa = PBXBuildFile; fileRef = 91423DE52B30384900BE9CE1 /* CMDCell.xib */; };
+		9144BEB62D376018003A6C9C /* NodeCell.xib in Resources */ = {isa = PBXBuildFile; fileRef = 9144BEB52D376018003A6C9C /* NodeCell.xib */; };
+		9144BEB72D376018003A6C9C /* NodeCell.m in Sources */ = {isa = PBXBuildFile; fileRef = 9144BEB42D376018003A6C9C /* NodeCell.m */; };
+		9144BEB82D376018003A6C9C /* NodeCell.m in Sources */ = {isa = PBXBuildFile; fileRef = 9144BEB42D376018003A6C9C /* NodeCell.m */; };
+		9144BEB92D376018003A6C9C /* NodeCell.xib in Resources */ = {isa = PBXBuildFile; fileRef = 9144BEB52D376018003A6C9C /* NodeCell.xib */; };
 		914890082BB1490D0082ABA7 /* SceneElementCell.xib in Resources */ = {isa = PBXBuildFile; fileRef = 914890072BB1490D0082ABA7 /* SceneElementCell.xib */; };
 		914890092BB1490D0082ABA7 /* SceneElementCell.m in Sources */ = {isa = PBXBuildFile; fileRef = 914890062BB1490D0082ABA7 /* SceneElementCell.m */; };
 		914890102BB153780082ABA7 /* SceneElementView.m in Sources */ = {isa = PBXBuildFile; fileRef = 9148900F2BB153780082ABA7 /* SceneElementView.m */; };
@@ -218,6 +240,10 @@
 		914D04592B2AFF0D00824A17 /* CloudSceneCell.m in Sources */ = {isa = PBXBuildFile; fileRef = 914D04572B2AFF0D00824A17 /* CloudSceneCell.m */; };
 		914D045D2B2B012600824A17 /* DeviceStateItemView.xib in Resources */ = {isa = PBXBuildFile; fileRef = 914D045B2B2B012500824A17 /* DeviceStateItemView.xib */; };
 		914D045E2B2B012600824A17 /* DeviceStateItemView.m in Sources */ = {isa = PBXBuildFile; fileRef = 914D045C2B2B012600824A17 /* DeviceStateItemView.m */; };
+		915188F12D15382600EA7467 /* NLCCell.xib in Resources */ = {isa = PBXBuildFile; fileRef = 915188F02D15382600EA7467 /* NLCCell.xib */; };
+		915188F22D15382600EA7467 /* NLCCell.m in Sources */ = {isa = PBXBuildFile; fileRef = 915188EF2D15382600EA7467 /* NLCCell.m */; };
+		915188F32D15382600EA7467 /* NLCCell.xib in Resources */ = {isa = PBXBuildFile; fileRef = 915188F02D15382600EA7467 /* NLCCell.xib */; };
+		915188F42D15382600EA7467 /* NLCCell.m in Sources */ = {isa = PBXBuildFile; fileRef = 915188EF2D15382600EA7467 /* NLCCell.m */; };
 		9152A18F2AD8E9B500186969 /* SettingsItemCell.m in Sources */ = {isa = PBXBuildFile; fileRef = 9152A18D2AD8E9B500186969 /* SettingsItemCell.m */; };
 		9152A1902AD8E9B500186969 /* SettingsItemCell.xib in Resources */ = {isa = PBXBuildFile; fileRef = 9152A18E2AD8E9B500186969 /* SettingsItemCell.xib */; };
 		915709DF2B54FF7900C9D502 /* LightingControlVC.m in Sources */ = {isa = PBXBuildFile; fileRef = 915709DE2B54FF7900C9D502 /* LightingControlVC.m */; };
@@ -260,6 +286,26 @@
 		917BE4C72AD68A2A0073FC35 /* CustomShareAlertView.m in Sources */ = {isa = PBXBuildFile; fileRef = 917BE4C52AD68A2A0073FC35 /* CustomShareAlertView.m */; };
 		9180A7BA2C803CD300BA8A15 /* SettingsEditItemCell.xib in Resources */ = {isa = PBXBuildFile; fileRef = 9180A7B92C803CD300BA8A15 /* SettingsEditItemCell.xib */; };
 		9180A7BB2C803CD300BA8A15 /* SettingsEditItemCell.m in Sources */ = {isa = PBXBuildFile; fileRef = 9180A7B82C803CD300BA8A15 /* SettingsEditItemCell.m */; };
+		91815DE82D1BA3FD00EE7AF4 /* NLCSensorHeaderCell.xib in Resources */ = {isa = PBXBuildFile; fileRef = 91815DE72D1BA3FD00EE7AF4 /* NLCSensorHeaderCell.xib */; };
+		91815DE92D1BA3FD00EE7AF4 /* NLCSensorHeaderCell.m in Sources */ = {isa = PBXBuildFile; fileRef = 91815DE62D1BA3FD00EE7AF4 /* NLCSensorHeaderCell.m */; };
+		91815DEE2D1BA40400EE7AF4 /* NLCSensorHeaderCell.m in Sources */ = {isa = PBXBuildFile; fileRef = 91815DE62D1BA3FD00EE7AF4 /* NLCSensorHeaderCell.m */; };
+		91815DF92D1BA46500EE7AF4 /* NLCItemCell.xib in Resources */ = {isa = PBXBuildFile; fileRef = 91815DF82D1BA46500EE7AF4 /* NLCItemCell.xib */; };
+		91815DFA2D1BA46500EE7AF4 /* NLCItemCell.m in Sources */ = {isa = PBXBuildFile; fileRef = 91815DF72D1BA46500EE7AF4 /* NLCItemCell.m */; };
+		91815DFB2D1BA46500EE7AF4 /* NLCItemCell.xib in Resources */ = {isa = PBXBuildFile; fileRef = 91815DF82D1BA46500EE7AF4 /* NLCItemCell.xib */; };
+		91815DFC2D1BA46500EE7AF4 /* NLCItemCell.m in Sources */ = {isa = PBXBuildFile; fileRef = 91815DF72D1BA46500EE7AF4 /* NLCItemCell.m */; };
+		91815E072D1C09D600EE7AF4 /* SelectItemVC.xib in Resources */ = {isa = PBXBuildFile; fileRef = 91815E062D1C09D600EE7AF4 /* SelectItemVC.xib */; };
+		91815E082D1C09D600EE7AF4 /* SelectItemVC.m in Sources */ = {isa = PBXBuildFile; fileRef = 91815E052D1C09D600EE7AF4 /* SelectItemVC.m */; };
+		91815E092D1C09D600EE7AF4 /* SelectItemVC.xib in Resources */ = {isa = PBXBuildFile; fileRef = 91815E062D1C09D600EE7AF4 /* SelectItemVC.xib */; };
+		91815E0A2D1C09D600EE7AF4 /* SelectItemVC.m in Sources */ = {isa = PBXBuildFile; fileRef = 91815E052D1C09D600EE7AF4 /* SelectItemVC.m */; };
+		91850C632EB0C1840070B5BC /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = 91850C622EB0C1840070B5BC /* PrivacyInfo.xcprivacy */; };
+		91850C642EB0C1840070B5BC /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = 91850C622EB0C1840070B5BC /* PrivacyInfo.xcprivacy */; };
+		91850C652EB0C1840070B5BC /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = 91850C622EB0C1840070B5BC /* PrivacyInfo.xcprivacy */; };
+		919015382D1E518A00186839 /* PdfVC.m in Sources */ = {isa = PBXBuildFile; fileRef = 919015372D1E518A00186839 /* PdfVC.m */; };
+		919015392D1E518A00186839 /* PdfVC.m in Sources */ = {isa = PBXBuildFile; fileRef = 919015372D1E518A00186839 /* PdfVC.m */; };
+		9190153C2D1E527000186839 /* UIDevice+Extension.m in Sources */ = {isa = PBXBuildFile; fileRef = 9190153B2D1E527000186839 /* UIDevice+Extension.m */; };
+		9190153D2D1E527000186839 /* UIDevice+Extension.m in Sources */ = {isa = PBXBuildFile; fileRef = 9190153B2D1E527000186839 /* UIDevice+Extension.m */; };
+		919015442D1E565D00186839 /* LightnessController.pdf in Resources */ = {isa = PBXBuildFile; fileRef = 919015432D1E565D00186839 /* LightnessController.pdf */; };
+		919015452D1E565D00186839 /* LightnessController.pdf in Resources */ = {isa = PBXBuildFile; fileRef = 919015432D1E565D00186839 /* LightnessController.pdf */; };
 		919BC72D2B2987360011991B /* CustomCircularButton.m in Sources */ = {isa = PBXBuildFile; fileRef = 919BC72C2B2987360011991B /* CustomCircularButton.m */; };
 		919BC73D2B2987830011991B /* TelinkSigMeshLib.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 9102B6022B293BDA00BB08B4 /* TelinkSigMeshLib.framework */; };
 		919BC73E2B29887E0011991B /* TelinkCloudSigMeshLib.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 9102B6042B293BDA00BB08B4 /* TelinkCloudSigMeshLib.framework */; };
@@ -328,8 +374,26 @@
 		919EDC5A2C2E8B4900E01501 /* NFCMiFareTagScanVC.m in Sources */ = {isa = PBXBuildFile; fileRef = 919EDC2E2C2E8B4900E01501 /* NFCMiFareTagScanVC.m */; };
 		919EDC5B2C2E8B4900E01501 /* NFCMiFareTagScanVC.xib in Resources */ = {isa = PBXBuildFile; fileRef = 919EDC2F2C2E8B4900E01501 /* NFCMiFareTagScanVC.xib */; };
 		919EDC5C2C2E8B4900E01501 /* NFCMiFareTagScanVC.xib in Resources */ = {isa = PBXBuildFile; fileRef = 919EDC2F2C2E8B4900E01501 /* NFCMiFareTagScanVC.xib */; };
+		91A3A8FF2D13FA990065FD3C /* NLCVC.m in Sources */ = {isa = PBXBuildFile; fileRef = 91A3A8FD2D13FA990065FD3C /* NLCVC.m */; };
+		91A3A9002D13FA990065FD3C /* NLCVC.xib in Resources */ = {isa = PBXBuildFile; fileRef = 91A3A8FE2D13FA990065FD3C /* NLCVC.xib */; };
+		91A3A9012D13FA990065FD3C /* NLCVC.m in Sources */ = {isa = PBXBuildFile; fileRef = 91A3A8FD2D13FA990065FD3C /* NLCVC.m */; };
+		91A3A9022D13FA990065FD3C /* NLCVC.xib in Resources */ = {isa = PBXBuildFile; fileRef = 91A3A8FE2D13FA990065FD3C /* NLCVC.xib */; };
+		91A3A9062D13FB710065FD3C /* NLCListVC.m in Sources */ = {isa = PBXBuildFile; fileRef = 91A3A9042D13FB710065FD3C /* NLCListVC.m */; };
+		91A3A9072D13FB710065FD3C /* NLCListVC.xib in Resources */ = {isa = PBXBuildFile; fileRef = 91A3A9052D13FB710065FD3C /* NLCListVC.xib */; };
+		91A3A9082D13FB710065FD3C /* NLCListVC.m in Sources */ = {isa = PBXBuildFile; fileRef = 91A3A9042D13FB710065FD3C /* NLCListVC.m */; };
+		91A3A9092D13FB710065FD3C /* NLCListVC.xib in Resources */ = {isa = PBXBuildFile; fileRef = 91A3A9052D13FB710065FD3C /* NLCListVC.xib */; };
+		91AB682A2E695CD800F23059 /* ConfirmAddDeviceVC.m in Sources */ = {isa = PBXBuildFile; fileRef = 91AB68292E695CD800F23059 /* ConfirmAddDeviceVC.m */; };
+		91AB682B2E695CD800F23059 /* ConfirmAddDeviceVC.m in Sources */ = {isa = PBXBuildFile; fileRef = 91AB68292E695CD800F23059 /* ConfirmAddDeviceVC.m */; };
 		91ADA9442B5907140063B95F /* SensorConfigVC.m in Sources */ = {isa = PBXBuildFile; fileRef = 91ADA9422B5907140063B95F /* SensorConfigVC.m */; };
 		91ADA9452B5907140063B95F /* SensorConfigVC.m in Sources */ = {isa = PBXBuildFile; fileRef = 91ADA9422B5907140063B95F /* SensorConfigVC.m */; };
+		91BD76592E7BD296009F6BBC /* DeviceConfigShowCell.m in Sources */ = {isa = PBXBuildFile; fileRef = 91BD76572E7BD296009F6BBC /* DeviceConfigShowCell.m */; };
+		91BD765A2E7BD296009F6BBC /* DeviceConfigShowCell.xib in Resources */ = {isa = PBXBuildFile; fileRef = 91BD76582E7BD296009F6BBC /* DeviceConfigShowCell.xib */; };
+		91BD765B2E7BD296009F6BBC /* DeviceConfigShowCell.m in Sources */ = {isa = PBXBuildFile; fileRef = 91BD76572E7BD296009F6BBC /* DeviceConfigShowCell.m */; };
+		91BD765C2E7BD296009F6BBC /* DeviceConfigShowCell.xib in Resources */ = {isa = PBXBuildFile; fileRef = 91BD76582E7BD296009F6BBC /* DeviceConfigShowCell.xib */; };
+		91BD76602E7BD2B4009F6BBC /* DeviceConfigHiddenCell.m in Sources */ = {isa = PBXBuildFile; fileRef = 91BD765E2E7BD2B4009F6BBC /* DeviceConfigHiddenCell.m */; };
+		91BD76612E7BD2B4009F6BBC /* DeviceConfigHiddenCell.xib in Resources */ = {isa = PBXBuildFile; fileRef = 91BD765F2E7BD2B4009F6BBC /* DeviceConfigHiddenCell.xib */; };
+		91BD76622E7BD2B4009F6BBC /* DeviceConfigHiddenCell.m in Sources */ = {isa = PBXBuildFile; fileRef = 91BD765E2E7BD2B4009F6BBC /* DeviceConfigHiddenCell.m */; };
+		91BD76632E7BD2B4009F6BBC /* DeviceConfigHiddenCell.xib in Resources */ = {isa = PBXBuildFile; fileRef = 91BD765F2E7BD2B4009F6BBC /* DeviceConfigHiddenCell.xib */; };
 		91BF46FC2B27FFA300254CB6 /* EntryCell.m in Sources */ = {isa = PBXBuildFile; fileRef = 25FE6CD027EC14D5009F7626 /* EntryCell.m */; };
 		91BF46FD2B27FFA300254CB6 /* UIImage+Extension.m in Sources */ = {isa = PBXBuildFile; fileRef = 25589A5A2721403D00F4F880 /* UIImage+Extension.m */; };
 		91BF46FF2B27FFA300254CB6 /* InfoSwitchCell.m in Sources */ = {isa = PBXBuildFile; fileRef = 25589ABD2721403E00F4F880 /* InfoSwitchCell.m */; };
@@ -383,7 +447,6 @@
 		91BF47432B27FFA300254CB6 /* DirectControlListVC.m in Sources */ = {isa = PBXBuildFile; fileRef = 2512BB3A27E41CD7000B353B /* DirectControlListVC.m */; };
 		91BF47452B27FFA300254CB6 /* HSLViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 25589B092721403E00F4F880 /* HSLViewController.m */; };
 		91BF47462B27FFA300254CB6 /* PrivateBeaconCell.m in Sources */ = {isa = PBXBuildFile; fileRef = 91F6A93D2AEFB0E50076E54B /* PrivateBeaconCell.m */; };
-		91BF47482B27FFA300254CB6 /* DeviceConfigCell.m in Sources */ = {isa = PBXBuildFile; fileRef = 25589AE72721403E00F4F880 /* DeviceConfigCell.m */; };
 		91BF474A2B27FFA300254CB6 /* TableCell.m in Sources */ = {isa = PBXBuildFile; fileRef = 91C627E92B0EFC5800DC3B29 /* TableCell.m */; };
 		91BF474B2B27FFA300254CB6 /* CMDViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 25589B042721403E00F4F880 /* CMDViewController.m */; };
 		91BF474C2B27FFA300254CB6 /* NetworkListVC.m in Sources */ = {isa = PBXBuildFile; fileRef = 917BE4AA2AD66E150073FC35 /* NetworkListVC.m */; };
@@ -488,7 +551,6 @@
 		91BF47C42B27FFA300254CB6 /* ShareButtonCell.xib in Resources */ = {isa = PBXBuildFile; fileRef = 917BE4BE2AD689B10073FC35 /* ShareButtonCell.xib */; };
 		91BF47C52B27FFA300254CB6 /* CertificateListVC.xib in Resources */ = {isa = PBXBuildFile; fileRef = 25DD7D0A2728E58D0029037A /* CertificateListVC.xib */; };
 		91BF47C82B27FFA300254CB6 /* EntryCell.xib in Resources */ = {isa = PBXBuildFile; fileRef = 25FE6CD127EC14D5009F7626 /* EntryCell.xib */; };
-		91BF47C92B27FFA300254CB6 /* DeviceConfigCell.xib in Resources */ = {isa = PBXBuildFile; fileRef = 25589AE82721403E00F4F880 /* DeviceConfigCell.xib */; };
 		91BF47CA2B27FFA300254CB6 /* DeviceSetting.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 25589C512721408B00F4F880 /* DeviceSetting.storyboard */; };
 		91BF47CB2B27FFA300254CB6 /* Setting.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 25589C532721408B00F4F880 /* Setting.storyboard */; };
 		91BF47CC2B27FFA300254CB6 /* TableCell.xib in Resources */ = {isa = PBXBuildFile; fileRef = 91C627EA2B0EFC5800DC3B29 /* TableCell.xib */; };
@@ -528,6 +590,20 @@
 		91DC48092B453E83009B07DA /* MeshOTACell.m in Sources */ = {isa = PBXBuildFile; fileRef = 91DC48062B453E83009B07DA /* MeshOTACell.m */; };
 		91DC480A2B453E83009B07DA /* MeshOTACell.xib in Resources */ = {isa = PBXBuildFile; fileRef = 91DC48072B453E83009B07DA /* MeshOTACell.xib */; };
 		91DC480B2B453E83009B07DA /* MeshOTACell.xib in Resources */ = {isa = PBXBuildFile; fileRef = 91DC48072B453E83009B07DA /* MeshOTACell.xib */; };
+		91EA21432D239AC100BCFE7E /* InputAndSliderItemCell.xib in Resources */ = {isa = PBXBuildFile; fileRef = 91EA21422D239AC100BCFE7E /* InputAndSliderItemCell.xib */; };
+		91EA21442D239AC100BCFE7E /* InputAndSliderItemCell.m in Sources */ = {isa = PBXBuildFile; fileRef = 91EA21412D239AC100BCFE7E /* InputAndSliderItemCell.m */; };
+		91EA21452D239AC100BCFE7E /* InputAndSliderItemCell.m in Sources */ = {isa = PBXBuildFile; fileRef = 91EA21412D239AC100BCFE7E /* InputAndSliderItemCell.m */; };
+		91EA21462D239AC100BCFE7E /* InputAndSliderItemCell.xib in Resources */ = {isa = PBXBuildFile; fileRef = 91EA21422D239AC100BCFE7E /* InputAndSliderItemCell.xib */; };
+		91EA214D2D23B6C800BCFE7E /* BaseModel.m in Sources */ = {isa = PBXBuildFile; fileRef = 91EA214C2D23B6C800BCFE7E /* BaseModel.m */; };
+		91EA214E2D23B6C800BCFE7E /* BaseModel.m in Sources */ = {isa = PBXBuildFile; fileRef = 91EA214C2D23B6C800BCFE7E /* BaseModel.m */; };
+		91EA21522D23C35100BCFE7E /* LCItemShowCell.xib in Resources */ = {isa = PBXBuildFile; fileRef = 91EA21512D23C35100BCFE7E /* LCItemShowCell.xib */; };
+		91EA21532D23C35100BCFE7E /* LCItemShowCell.m in Sources */ = {isa = PBXBuildFile; fileRef = 91EA21502D23C35100BCFE7E /* LCItemShowCell.m */; };
+		91EA21542D23C35100BCFE7E /* LCItemShowCell.m in Sources */ = {isa = PBXBuildFile; fileRef = 91EA21502D23C35100BCFE7E /* LCItemShowCell.m */; };
+		91EA21552D23C35100BCFE7E /* LCItemShowCell.xib in Resources */ = {isa = PBXBuildFile; fileRef = 91EA21512D23C35100BCFE7E /* LCItemShowCell.xib */; };
+		91EA21592D23C36400BCFE7E /* LCItemHiddenCell.xib in Resources */ = {isa = PBXBuildFile; fileRef = 91EA21582D23C36400BCFE7E /* LCItemHiddenCell.xib */; };
+		91EA215A2D23C36400BCFE7E /* LCItemHiddenCell.m in Sources */ = {isa = PBXBuildFile; fileRef = 91EA21572D23C36400BCFE7E /* LCItemHiddenCell.m */; };
+		91EA215B2D23C36400BCFE7E /* LCItemHiddenCell.m in Sources */ = {isa = PBXBuildFile; fileRef = 91EA21572D23C36400BCFE7E /* LCItemHiddenCell.m */; };
+		91EA215C2D23C36400BCFE7E /* LCItemHiddenCell.xib in Resources */ = {isa = PBXBuildFile; fileRef = 91EA21582D23C36400BCFE7E /* LCItemHiddenCell.xib */; };
 		91ED317F29236CAC003263D1 /* TipsVC.m in Sources */ = {isa = PBXBuildFile; fileRef = 91ED317E29236CAC003263D1 /* TipsVC.m */; };
 		91F21BCE2A6E496600CCE24C /* CDTPServiceListVC.m in Sources */ = {isa = PBXBuildFile; fileRef = 91F21BCD2A6E496600CCE24C /* CDTPServiceListVC.m */; };
 		91F6A93F2AEFB0E50076E54B /* PrivateBeaconCell.m in Sources */ = {isa = PBXBuildFile; fileRef = 91F6A93D2AEFB0E50076E54B /* PrivateBeaconCell.m */; };
@@ -573,6 +649,31 @@
 			remoteInfo = TelinkSigMeshLibTests;
 		};
 /* End PBXContainerItemProxy section */
+
+/* Begin PBXCopyFilesBuildPhase section */
+		913691F52E682B8A004B0A04 /* Embed Frameworks */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 10;
+			files = (
+				913691F42E682B8A004B0A04 /* TelinkToolsLib.framework in Embed Frameworks */,
+			);
+			name = "Embed Frameworks";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		913691F82E682B8F004B0A04 /* Embed Frameworks */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 10;
+			files = (
+				913691F72E682B8F004B0A04 /* TelinkToolsLib.framework in Embed Frameworks */,
+			);
+			name = "Embed Frameworks";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
 		2512BB3927E41CD7000B353B /* DirectControlListVC.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = DirectControlListVC.h; sourceTree = "<group>"; };
@@ -710,10 +811,7 @@
 		25589AE32721403E00F4F880 /* DeviceCompositionDataVC.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = DeviceCompositionDataVC.m; sourceTree = "<group>"; };
 		25589AE42721403E00F4F880 /* DeviceRemoteVC.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = DeviceRemoteVC.h; sourceTree = "<group>"; };
 		25589AE62721403E00F4F880 /* DeviceConfigVC.xib */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.xib; path = DeviceConfigVC.xib; sourceTree = "<group>"; };
-		25589AE72721403E00F4F880 /* DeviceConfigCell.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = DeviceConfigCell.m; sourceTree = "<group>"; };
-		25589AE82721403E00F4F880 /* DeviceConfigCell.xib */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.xib; path = DeviceConfigCell.xib; sourceTree = "<group>"; };
 		25589AE92721403E00F4F880 /* DeviceConfigVC.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = DeviceConfigVC.h; sourceTree = "<group>"; };
-		25589AEA2721403E00F4F880 /* DeviceConfigCell.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = DeviceConfigCell.h; sourceTree = "<group>"; };
 		25589AEB2721403E00F4F880 /* DeviceConfigVC.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = DeviceConfigVC.m; sourceTree = "<group>"; };
 		25589AEC2721403E00F4F880 /* DeviceSettingViewController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = DeviceSettingViewController.h; sourceTree = "<group>"; };
 		25589AED2721403E00F4F880 /* DeviceControlViewController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = DeviceControlViewController.h; sourceTree = "<group>"; };
@@ -831,6 +929,15 @@
 		9105B1692BB1765D00EA0DD6 /* ElementActionView.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = ElementActionView.h; sourceTree = "<group>"; };
 		9105B16A2BB1765D00EA0DD6 /* ElementActionView.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = ElementActionView.m; sourceTree = "<group>"; };
 		9105B1702BB1767700EA0DD6 /* ElementActionView.xib */ = {isa = PBXFileReference; lastKnownFileType = file.xib; path = ElementActionView.xib; sourceTree = "<group>"; };
+		91070B142D2239910044370F /* NLCSingleVC.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = NLCSingleVC.h; sourceTree = "<group>"; };
+		91070B152D2239910044370F /* NLCSingleVC.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = NLCSingleVC.m; sourceTree = "<group>"; };
+		91070B162D2239910044370F /* NLCSingleVC.xib */ = {isa = PBXFileReference; lastKnownFileType = file.xib; path = NLCSingleVC.xib; sourceTree = "<group>"; };
+		91070B1F2D223DCA0044370F /* NLCUnionVC.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = NLCUnionVC.h; sourceTree = "<group>"; };
+		91070B202D223DCA0044370F /* NLCUnionVC.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = NLCUnionVC.m; sourceTree = "<group>"; };
+		91070B212D223DCA0044370F /* NLCUnionVC.xib */ = {isa = PBXFileReference; lastKnownFileType = file.xib; path = NLCUnionVC.xib; sourceTree = "<group>"; };
+		91070B262D228B540044370F /* NLCPublishHeaderCell.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = NLCPublishHeaderCell.h; sourceTree = "<group>"; };
+		91070B272D228B540044370F /* NLCPublishHeaderCell.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = NLCPublishHeaderCell.m; sourceTree = "<group>"; };
+		91070B282D228B540044370F /* NLCPublishHeaderCell.xib */ = {isa = PBXFileReference; lastKnownFileType = file.xib; path = NLCPublishHeaderCell.xib; sourceTree = "<group>"; };
 		91075BA12B0D97EC00F933EA /* BaseCell.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = BaseCell.h; sourceTree = "<group>"; };
 		91075BA52B0D97EC00F933EA /* BaseCell.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = BaseCell.m; sourceTree = "<group>"; };
 		91075BA72B0D99DE00F933EA /* DirectToggleCell.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = DirectToggleCell.h; sourceTree = "<group>"; };
@@ -847,6 +954,9 @@
 		911217D32B4643A600A79A3E /* BinFileChooseVC.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = BinFileChooseVC.h; sourceTree = "<group>"; };
 		911217D42B4643A600A79A3E /* BinFileChooseVC.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = BinFileChooseVC.m; sourceTree = "<group>"; };
 		911217D52B4643A600A79A3E /* BinFileChooseVC.xib */ = {isa = PBXFileReference; lastKnownFileType = file.xib; path = BinFileChooseVC.xib; sourceTree = "<group>"; };
+		911D9C192D2B786400090DAB /* SelectPublishAddressVC.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = SelectPublishAddressVC.h; sourceTree = "<group>"; };
+		911D9C1A2D2B786400090DAB /* SelectPublishAddressVC.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = SelectPublishAddressVC.m; sourceTree = "<group>"; };
+		911D9C1B2D2B786400090DAB /* SelectPublishAddressVC.xib */ = {isa = PBXFileReference; lastKnownFileType = file.xib; path = SelectPublishAddressVC.xib; sourceTree = "<group>"; };
 		912A58032B35660700531DA4 /* ShareNetKeyCell.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = ShareNetKeyCell.h; sourceTree = "<group>"; };
 		912A58042B35660700531DA4 /* ShareNetKeyCell.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = ShareNetKeyCell.m; sourceTree = "<group>"; };
 		912A58052B35660700531DA4 /* ShareNetKeyCell.xib */ = {isa = PBXFileReference; lastKnownFileType = file.xib; path = ShareNetKeyCell.xib; sourceTree = "<group>"; };
@@ -868,9 +978,14 @@
 		913661822CA2BB4200DF6124 /* NodeBatchCell.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = NodeBatchCell.h; sourceTree = "<group>"; };
 		913661832CA2BB4200DF6124 /* NodeBatchCell.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = NodeBatchCell.m; sourceTree = "<group>"; };
 		913661842CA2BB4200DF6124 /* NodeBatchCell.xib */ = {isa = PBXFileReference; lastKnownFileType = file.xib; path = NodeBatchCell.xib; sourceTree = "<group>"; };
+		913691EF2E682B7A004B0A04 /* TelinkToolsLib.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; path = TelinkToolsLib.framework; sourceTree = BUILT_PRODUCTS_DIR; };
+		913691F12E682B81004B0A04 /* TelinkToolsLib.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; path = TelinkToolsLib.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		91423DE32B30384900BE9CE1 /* CMDCell.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = CMDCell.h; sourceTree = "<group>"; };
 		91423DE42B30384900BE9CE1 /* CMDCell.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = CMDCell.m; sourceTree = "<group>"; };
 		91423DE52B30384900BE9CE1 /* CMDCell.xib */ = {isa = PBXFileReference; lastKnownFileType = file.xib; path = CMDCell.xib; sourceTree = "<group>"; };
+		9144BEB32D376018003A6C9C /* NodeCell.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = NodeCell.h; sourceTree = "<group>"; };
+		9144BEB42D376018003A6C9C /* NodeCell.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = NodeCell.m; sourceTree = "<group>"; };
+		9144BEB52D376018003A6C9C /* NodeCell.xib */ = {isa = PBXFileReference; lastKnownFileType = file.xib; path = NodeCell.xib; sourceTree = "<group>"; };
 		914890052BB1490D0082ABA7 /* SceneElementCell.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = SceneElementCell.h; sourceTree = "<group>"; };
 		914890062BB1490D0082ABA7 /* SceneElementCell.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = SceneElementCell.m; sourceTree = "<group>"; };
 		914890072BB1490D0082ABA7 /* SceneElementCell.xib */ = {isa = PBXFileReference; lastKnownFileType = file.xib; path = SceneElementCell.xib; sourceTree = "<group>"; };
@@ -902,6 +1017,9 @@
 		914D045A2B2B012500824A17 /* DeviceStateItemView.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = DeviceStateItemView.h; sourceTree = "<group>"; };
 		914D045B2B2B012500824A17 /* DeviceStateItemView.xib */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.xib; path = DeviceStateItemView.xib; sourceTree = "<group>"; };
 		914D045C2B2B012600824A17 /* DeviceStateItemView.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = DeviceStateItemView.m; sourceTree = "<group>"; };
+		915188EE2D15382600EA7467 /* NLCCell.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = NLCCell.h; sourceTree = "<group>"; };
+		915188EF2D15382600EA7467 /* NLCCell.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = NLCCell.m; sourceTree = "<group>"; };
+		915188F02D15382600EA7467 /* NLCCell.xib */ = {isa = PBXFileReference; lastKnownFileType = file.xib; path = NLCCell.xib; sourceTree = "<group>"; };
 		9152A18C2AD8E9B500186969 /* SettingsItemCell.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = SettingsItemCell.h; sourceTree = "<group>"; };
 		9152A18D2AD8E9B500186969 /* SettingsItemCell.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = SettingsItemCell.m; sourceTree = "<group>"; };
 		9152A18E2AD8E9B500186969 /* SettingsItemCell.xib */ = {isa = PBXFileReference; lastKnownFileType = file.xib; path = SettingsItemCell.xib; sourceTree = "<group>"; };
@@ -958,6 +1076,21 @@
 		9180A7B72C803CD300BA8A15 /* SettingsEditItemCell.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = SettingsEditItemCell.h; sourceTree = "<group>"; };
 		9180A7B82C803CD300BA8A15 /* SettingsEditItemCell.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = SettingsEditItemCell.m; sourceTree = "<group>"; };
 		9180A7B92C803CD300BA8A15 /* SettingsEditItemCell.xib */ = {isa = PBXFileReference; lastKnownFileType = file.xib; path = SettingsEditItemCell.xib; sourceTree = "<group>"; };
+		91815DE52D1BA3FD00EE7AF4 /* NLCSensorHeaderCell.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = NLCSensorHeaderCell.h; sourceTree = "<group>"; };
+		91815DE62D1BA3FD00EE7AF4 /* NLCSensorHeaderCell.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = NLCSensorHeaderCell.m; sourceTree = "<group>"; };
+		91815DE72D1BA3FD00EE7AF4 /* NLCSensorHeaderCell.xib */ = {isa = PBXFileReference; lastKnownFileType = file.xib; path = NLCSensorHeaderCell.xib; sourceTree = "<group>"; };
+		91815DF62D1BA46500EE7AF4 /* NLCItemCell.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = NLCItemCell.h; sourceTree = "<group>"; };
+		91815DF72D1BA46500EE7AF4 /* NLCItemCell.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = NLCItemCell.m; sourceTree = "<group>"; };
+		91815DF82D1BA46500EE7AF4 /* NLCItemCell.xib */ = {isa = PBXFileReference; lastKnownFileType = file.xib; path = NLCItemCell.xib; sourceTree = "<group>"; };
+		91815E042D1C09D600EE7AF4 /* SelectItemVC.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = SelectItemVC.h; sourceTree = "<group>"; };
+		91815E052D1C09D600EE7AF4 /* SelectItemVC.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = SelectItemVC.m; sourceTree = "<group>"; };
+		91815E062D1C09D600EE7AF4 /* SelectItemVC.xib */ = {isa = PBXFileReference; lastKnownFileType = file.xib; path = SelectItemVC.xib; sourceTree = "<group>"; };
+		91850C622EB0C1840070B5BC /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; lastKnownFileType = text.xml; path = PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
+		919015362D1E518A00186839 /* PdfVC.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = PdfVC.h; sourceTree = "<group>"; };
+		919015372D1E518A00186839 /* PdfVC.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = PdfVC.m; sourceTree = "<group>"; };
+		9190153A2D1E527000186839 /* UIDevice+Extension.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "UIDevice+Extension.h"; sourceTree = "<group>"; };
+		9190153B2D1E527000186839 /* UIDevice+Extension.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "UIDevice+Extension.m"; sourceTree = "<group>"; };
+		919015432D1E565D00186839 /* LightnessController.pdf */ = {isa = PBXFileReference; lastKnownFileType = image.pdf; path = LightnessController.pdf; sourceTree = "<group>"; };
 		919BC72B2B2987360011991B /* CustomCircularButton.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CustomCircularButton.h; sourceTree = "<group>"; };
 		919BC72C2B2987360011991B /* CustomCircularButton.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = CustomCircularButton.m; sourceTree = "<group>"; };
 		919BC73F2B298B440011991B /* UpdatePasswordVC.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = UpdatePasswordVC.m; sourceTree = "<group>"; };
@@ -1030,8 +1163,22 @@
 		919EDC2F2C2E8B4900E01501 /* NFCMiFareTagScanVC.xib */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.xib; path = NFCMiFareTagScanVC.xib; sourceTree = "<group>"; };
 		919EDC5D2C2EB04900E01501 /* SigMeshOCDemo.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = SigMeshOCDemo.entitlements; sourceTree = "<group>"; };
 		919EDC5E2C2EB04F00E01501 /* SigMeshCloud.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = SigMeshCloud.entitlements; sourceTree = "<group>"; };
+		91A3A8FC2D13FA990065FD3C /* NLCVC.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = NLCVC.h; sourceTree = "<group>"; };
+		91A3A8FD2D13FA990065FD3C /* NLCVC.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = NLCVC.m; sourceTree = "<group>"; };
+		91A3A8FE2D13FA990065FD3C /* NLCVC.xib */ = {isa = PBXFileReference; lastKnownFileType = file.xib; path = NLCVC.xib; sourceTree = "<group>"; };
+		91A3A9032D13FB710065FD3C /* NLCListVC.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = NLCListVC.h; sourceTree = "<group>"; };
+		91A3A9042D13FB710065FD3C /* NLCListVC.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = NLCListVC.m; sourceTree = "<group>"; };
+		91A3A9052D13FB710065FD3C /* NLCListVC.xib */ = {isa = PBXFileReference; lastKnownFileType = file.xib; path = NLCListVC.xib; sourceTree = "<group>"; };
+		91AB68282E695CD800F23059 /* ConfirmAddDeviceVC.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = ConfirmAddDeviceVC.h; sourceTree = "<group>"; };
+		91AB68292E695CD800F23059 /* ConfirmAddDeviceVC.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = ConfirmAddDeviceVC.m; sourceTree = "<group>"; };
 		91ADA9412B5907140063B95F /* SensorConfigVC.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = SensorConfigVC.h; sourceTree = "<group>"; };
 		91ADA9422B5907140063B95F /* SensorConfigVC.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = SensorConfigVC.m; sourceTree = "<group>"; };
+		91BD76562E7BD296009F6BBC /* DeviceConfigShowCell.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = DeviceConfigShowCell.h; sourceTree = "<group>"; };
+		91BD76572E7BD296009F6BBC /* DeviceConfigShowCell.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = DeviceConfigShowCell.m; sourceTree = "<group>"; };
+		91BD76582E7BD296009F6BBC /* DeviceConfigShowCell.xib */ = {isa = PBXFileReference; lastKnownFileType = file.xib; path = DeviceConfigShowCell.xib; sourceTree = "<group>"; };
+		91BD765D2E7BD2B4009F6BBC /* DeviceConfigHiddenCell.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = DeviceConfigHiddenCell.h; sourceTree = "<group>"; };
+		91BD765E2E7BD2B4009F6BBC /* DeviceConfigHiddenCell.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = DeviceConfigHiddenCell.m; sourceTree = "<group>"; };
+		91BD765F2E7BD2B4009F6BBC /* DeviceConfigHiddenCell.xib */ = {isa = PBXFileReference; lastKnownFileType = file.xib; path = DeviceConfigHiddenCell.xib; sourceTree = "<group>"; };
 		91BF47E42B27FFA300254CB6 /* SigMeshCloud.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = SigMeshCloud.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		91C627E82B0EFC5800DC3B29 /* TableCell.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = TableCell.h; sourceTree = "<group>"; };
 		91C627E92B0EFC5800DC3B29 /* TableCell.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = TableCell.m; sourceTree = "<group>"; };
@@ -1053,6 +1200,17 @@
 		91DC48052B453E83009B07DA /* MeshOTACell.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = MeshOTACell.h; sourceTree = "<group>"; };
 		91DC48062B453E83009B07DA /* MeshOTACell.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = MeshOTACell.m; sourceTree = "<group>"; };
 		91DC48072B453E83009B07DA /* MeshOTACell.xib */ = {isa = PBXFileReference; lastKnownFileType = file.xib; path = MeshOTACell.xib; sourceTree = "<group>"; };
+		91EA21402D239AC100BCFE7E /* InputAndSliderItemCell.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = InputAndSliderItemCell.h; sourceTree = "<group>"; };
+		91EA21412D239AC100BCFE7E /* InputAndSliderItemCell.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = InputAndSliderItemCell.m; sourceTree = "<group>"; };
+		91EA21422D239AC100BCFE7E /* InputAndSliderItemCell.xib */ = {isa = PBXFileReference; lastKnownFileType = file.xib; path = InputAndSliderItemCell.xib; sourceTree = "<group>"; };
+		91EA214B2D23B6C800BCFE7E /* BaseModel.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = BaseModel.h; sourceTree = "<group>"; };
+		91EA214C2D23B6C800BCFE7E /* BaseModel.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = BaseModel.m; sourceTree = "<group>"; };
+		91EA214F2D23C35100BCFE7E /* LCItemShowCell.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = LCItemShowCell.h; sourceTree = "<group>"; };
+		91EA21502D23C35100BCFE7E /* LCItemShowCell.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = LCItemShowCell.m; sourceTree = "<group>"; };
+		91EA21512D23C35100BCFE7E /* LCItemShowCell.xib */ = {isa = PBXFileReference; lastKnownFileType = file.xib; path = LCItemShowCell.xib; sourceTree = "<group>"; };
+		91EA21562D23C36400BCFE7E /* LCItemHiddenCell.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = LCItemHiddenCell.h; sourceTree = "<group>"; };
+		91EA21572D23C36400BCFE7E /* LCItemHiddenCell.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = LCItemHiddenCell.m; sourceTree = "<group>"; };
+		91EA21582D23C36400BCFE7E /* LCItemHiddenCell.xib */ = {isa = PBXFileReference; lastKnownFileType = file.xib; path = LCItemHiddenCell.xib; sourceTree = "<group>"; };
 		91ED317929236CAC003263D1 /* TipsVC.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = TipsVC.h; sourceTree = "<group>"; };
 		91ED317E29236CAC003263D1 /* TipsVC.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = TipsVC.m; sourceTree = "<group>"; };
 		91F21BCC2A6E496600CCE24C /* CDTPServiceListVC.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = CDTPServiceListVC.h; sourceTree = "<group>"; };
@@ -1079,6 +1237,7 @@
 			files = (
 				919BC73D2B2987830011991B /* TelinkSigMeshLib.framework in Frameworks */,
 				0801C8BC1449EB7351C69C35 /* Pods_SigMeshOCDemo.framework in Frameworks */,
+				913691F62E682B8F004B0A04 /* TelinkToolsLib.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1113,6 +1272,7 @@
 			files = (
 				919BC73E2B29887E0011991B /* TelinkCloudSigMeshLib.framework in Frameworks */,
 				ABE8A50E72098127AD3555C3 /* Pods_SigMeshCloud.framework in Frameworks */,
+				913691F32E682B8A004B0A04 /* TelinkToolsLib.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1169,6 +1329,7 @@
 		25589A06272115D700F4F880 = {
 			isa = PBXGroup;
 			children = (
+				91850C622EB0C1840070B5BC /* PrivacyInfo.xcprivacy */,
 				25589C57272140CF00F4F880 /* TelinkSigMeshLib.xcodeproj */,
 				919E9A022B285BF000948BEA /* SigMeshCloud */,
 				25589A11272115D700F4F880 /* SigMeshOCDemo */,
@@ -1204,6 +1365,7 @@
 				25589AC62721403E00F4F880 /* ViewController */,
 				25589A12272115D700F4F880 /* AppDelegate.h */,
 				25589A13272115D700F4F880 /* AppDelegate.m */,
+				919015422D1E565400186839 /* Resource */,
 				25589A1B272115D700F4F880 /* Main.storyboard */,
 				25589A1E272115DA00F4F880 /* Assets.xcassets */,
 				25589A20272115DA00F4F880 /* LaunchScreen.storyboard */,
@@ -1251,6 +1413,8 @@
 				25589A6A2721403D00F4F880 /* UIStoryboard+extension.m */,
 				919E99FD2B28416F00948BEA /* UIView+Frame.h */,
 				919E99FE2B28416F00948BEA /* UIView+Frame.m */,
+				9190153A2D1E527000186839 /* UIDevice+Extension.h */,
+				9190153B2D1E527000186839 /* UIDevice+Extension.m */,
 				912C6EBB2C783874003D4748 /* UIView+Toast.h */,
 				912C6EC02C783874003D4748 /* UIView+Toast.m */,
 				25589A592721403D00F4F880 /* QRCode */,
@@ -1294,6 +1458,8 @@
 				91075BA52B0D97EC00F933EA /* BaseCell.m */,
 				91075BBA2B0E05F000F933EA /* DemoTool.h */,
 				91075BBB2B0E05F000F933EA /* DemoTool.m */,
+				91EA214B2D23B6C800BCFE7E /* BaseModel.h */,
+				91EA214C2D23B6C800BCFE7E /* BaseModel.m */,
 			);
 			path = Base;
 			sourceTree = "<group>";
@@ -1437,6 +1603,9 @@
 				25589A792721403E00F4F880 /* InputItemCell.h */,
 				25589A732721403E00F4F880 /* InputItemCell.m */,
 				25589A7B2721403E00F4F880 /* InputItemCell.xib */,
+				91EA21402D239AC100BCFE7E /* InputAndSliderItemCell.h */,
+				91EA21412D239AC100BCFE7E /* InputAndSliderItemCell.m */,
+				91EA21422D239AC100BCFE7E /* InputAndSliderItemCell.xib */,
 			);
 			path = CustomAlert;
 			sourceTree = "<group>";
@@ -1468,6 +1637,8 @@
 				25589ACA2721403E00F4F880 /* HomeViewController.m */,
 				91D999EA2A94595E00E66929 /* AddDeviceVC.h */,
 				91D999EB2A94595E00E66929 /* AddDeviceVC.m */,
+				91AB68282E695CD800F23059 /* ConfirmAddDeviceVC.h */,
+				91AB68292E695CD800F23059 /* ConfirmAddDeviceVC.m */,
 				916963472AC51D300010D34A /* AutoAddDeviceVC.h */,
 				916963482AC51D300010D34A /* AutoAddDeviceVC.m */,
 				25589B062721403E00F4F880 /* FastProvisionAddVC.h */,
@@ -1559,9 +1730,12 @@
 				25589AE92721403E00F4F880 /* DeviceConfigVC.h */,
 				25589AEB2721403E00F4F880 /* DeviceConfigVC.m */,
 				25589AE62721403E00F4F880 /* DeviceConfigVC.xib */,
-				25589AEA2721403E00F4F880 /* DeviceConfigCell.h */,
-				25589AE72721403E00F4F880 /* DeviceConfigCell.m */,
-				25589AE82721403E00F4F880 /* DeviceConfigCell.xib */,
+				91BD76562E7BD296009F6BBC /* DeviceConfigShowCell.h */,
+				91BD76572E7BD296009F6BBC /* DeviceConfigShowCell.m */,
+				91BD76582E7BD296009F6BBC /* DeviceConfigShowCell.xib */,
+				91BD765D2E7BD2B4009F6BBC /* DeviceConfigHiddenCell.h */,
+				91BD765E2E7BD2B4009F6BBC /* DeviceConfigHiddenCell.m */,
+				91BD765F2E7BD2B4009F6BBC /* DeviceConfigHiddenCell.xib */,
 			);
 			path = DeviceConfig;
 			sourceTree = "<group>";
@@ -1725,6 +1899,8 @@
 		7ED24C72DF0029D499A0D13C /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
+				913691F12E682B81004B0A04 /* TelinkToolsLib.framework */,
+				913691EF2E682B7A004B0A04 /* TelinkToolsLib.framework */,
 				B3553C2BEF057314FF76338A /* Pods_SigLoopAddDemo.framework */,
 				2873F62ACC87BB4D3CCF965A /* Pods_SigMeshCloud.framework */,
 				9E1E2E87CA9B50BF3A959948 /* Pods_SigMeshOCDemo.framework */,
@@ -1742,13 +1918,6 @@
 				9102B6062B293BDA00BB08B4 /* TelinkSigMeshLibTests.xctest */,
 			);
 			name = Products;
-			sourceTree = "<group>";
-		};
-		9102B60F2B29540600BB08B4 /* Base */ = {
-			isa = PBXGroup;
-			children = (
-			);
-			path = Base;
 			sourceTree = "<group>";
 		};
 		915709D82B54FF3700C9D502 /* LightingControl */ = {
@@ -1778,6 +1947,7 @@
 			children = (
 				25589B102721403E00F4F880 /* MeshInfoVC.h */,
 				25589B2F2721403E00F4F880 /* MeshInfoVC.m */,
+				91A3A8FB2D13FA6B0065FD3C /* NLC */,
 				919EDC302C2E8B4900E01501 /* NFC */,
 				919EDC282C2E8B4800E01501 /* PassiveSwitch */,
 				9136617A2CA2B5BA00DF6124 /* NodeBatchSettingVC.h */,
@@ -1802,6 +1972,14 @@
 				25589B422721403E00F4F880 /* ActionViewController.m */,
 			);
 			path = Scenes;
+			sourceTree = "<group>";
+		};
+		919015422D1E565400186839 /* Resource */ = {
+			isa = PBXGroup;
+			children = (
+				919015432D1E565D00186839 /* LightnessController.pdf */,
+			);
+			path = Resource;
 			sourceTree = "<group>";
 		};
 		919BC6FC2B2986270011991B /* ViewController */ = {
@@ -1902,7 +2080,6 @@
 			children = (
 				919EDC5E2C2EB04F00E01501 /* SigMeshCloud.entitlements */,
 				919BC7712B29B6010011991B /* storyboard */,
-				9102B60F2B29540600BB08B4 /* Base */,
 				919BC6FC2B2986270011991B /* ViewController */,
 				919BC6FD2B2986420011991B /* View */,
 				914D04212B2AAA1300824A17 /* SigMeshCloudPrefixHeader.pch */,
@@ -1957,6 +2134,54 @@
 			path = NFC;
 			sourceTree = "<group>";
 		};
+		91A3A8FB2D13FA6B0065FD3C /* NLC */ = {
+			isa = PBXGroup;
+			children = (
+				91A3A9032D13FB710065FD3C /* NLCListVC.h */,
+				91A3A9042D13FB710065FD3C /* NLCListVC.m */,
+				91A3A9052D13FB710065FD3C /* NLCListVC.xib */,
+				91070B142D2239910044370F /* NLCSingleVC.h */,
+				91070B152D2239910044370F /* NLCSingleVC.m */,
+				91070B162D2239910044370F /* NLCSingleVC.xib */,
+				91070B1F2D223DCA0044370F /* NLCUnionVC.h */,
+				91070B202D223DCA0044370F /* NLCUnionVC.m */,
+				91070B212D223DCA0044370F /* NLCUnionVC.xib */,
+				91A3A8FC2D13FA990065FD3C /* NLCVC.h */,
+				91A3A8FD2D13FA990065FD3C /* NLCVC.m */,
+				91A3A8FE2D13FA990065FD3C /* NLCVC.xib */,
+				91815E042D1C09D600EE7AF4 /* SelectItemVC.h */,
+				91815E052D1C09D600EE7AF4 /* SelectItemVC.m */,
+				91815E062D1C09D600EE7AF4 /* SelectItemVC.xib */,
+				911D9C192D2B786400090DAB /* SelectPublishAddressVC.h */,
+				911D9C1A2D2B786400090DAB /* SelectPublishAddressVC.m */,
+				911D9C1B2D2B786400090DAB /* SelectPublishAddressVC.xib */,
+				919015362D1E518A00186839 /* PdfVC.h */,
+				919015372D1E518A00186839 /* PdfVC.m */,
+				915188EE2D15382600EA7467 /* NLCCell.h */,
+				915188EF2D15382600EA7467 /* NLCCell.m */,
+				915188F02D15382600EA7467 /* NLCCell.xib */,
+				9144BEB32D376018003A6C9C /* NodeCell.h */,
+				9144BEB42D376018003A6C9C /* NodeCell.m */,
+				9144BEB52D376018003A6C9C /* NodeCell.xib */,
+				91815DE52D1BA3FD00EE7AF4 /* NLCSensorHeaderCell.h */,
+				91815DE62D1BA3FD00EE7AF4 /* NLCSensorHeaderCell.m */,
+				91815DE72D1BA3FD00EE7AF4 /* NLCSensorHeaderCell.xib */,
+				91070B262D228B540044370F /* NLCPublishHeaderCell.h */,
+				91070B272D228B540044370F /* NLCPublishHeaderCell.m */,
+				91070B282D228B540044370F /* NLCPublishHeaderCell.xib */,
+				91EA214F2D23C35100BCFE7E /* LCItemShowCell.h */,
+				91EA21502D23C35100BCFE7E /* LCItemShowCell.m */,
+				91EA21512D23C35100BCFE7E /* LCItemShowCell.xib */,
+				91EA21562D23C36400BCFE7E /* LCItemHiddenCell.h */,
+				91EA21572D23C36400BCFE7E /* LCItemHiddenCell.m */,
+				91EA21582D23C36400BCFE7E /* LCItemHiddenCell.xib */,
+				91815DF62D1BA46500EE7AF4 /* NLCItemCell.h */,
+				91815DF72D1BA46500EE7AF4 /* NLCItemCell.m */,
+				91815DF82D1BA46500EE7AF4 /* NLCItemCell.xib */,
+			);
+			path = NLC;
+			sourceTree = "<group>";
+		};
 		91ADA93C2B5906AC0063B95F /* SensorConfig */ = {
 			isa = PBXGroup;
 			children = (
@@ -1994,6 +2219,7 @@
 				25589A0C272115D700F4F880 /* Frameworks */,
 				25589A0D272115D700F4F880 /* Resources */,
 				0F42B9C2B5F35C1D1405BE41 /* [CP] Embed Pods Frameworks */,
+				913691F82E682B8F004B0A04 /* Embed Frameworks */,
 			);
 			buildRules = (
 			);
@@ -2071,6 +2297,7 @@
 				91BF479B2B27FFA300254CB6 /* Frameworks */,
 				91BF479D2B27FFA300254CB6 /* Resources */,
 				B816412185EA41E76F676C68 /* [CP] Embed Pods Frameworks */,
+				913691F52E682B8A004B0A04 /* Embed Frameworks */,
 			);
 			buildRules = (
 			);
@@ -2161,13 +2388,16 @@
 			files = (
 				25589BE22721403F00F4F880 /* LevelAndSliderCell.xib in Resources */,
 				91075BB12B0DF87300F933EA /* AddTableHeaderCell.xib in Resources */,
+				91EA21522D23C35100BCFE7E /* LCItemShowCell.xib in Resources */,
 				25589BCA2721403F00F4F880 /* ChooseBinCell.xib in Resources */,
 				25589A22272115DA00F4F880 /* LaunchScreen.storyboard in Resources */,
 				914890122BB153980082ABA7 /* SceneElementView.xib in Resources */,
 				919EDC4B2C2E8B4900E01501 /* PairNodeCell.xib in Resources */,
 				258B6297282CAB6500AE9B35 /* PTSViewController.xib in Resources */,
+				91EA21432D239AC100BCFE7E /* InputAndSliderItemCell.xib in Resources */,
 				25589BFF2721403F00F4F880 /* MeshOTAItemCell.xib in Resources */,
 				91D999F52A945B3100E66929 /* AddDeviceCell.xib in Resources */,
+				91815E072D1C09D600EE7AF4 /* SelectItemVC.xib in Resources */,
 				25589BF02721403F00F4F880 /* DeviceChooseKeyVC.xib in Resources */,
 				915709E62B5507DE00C9D502 /* LightControlCell.xib in Resources */,
 				25589BC92721403F00F4F880 /* InfoSwitchCell.xib in Resources */,
@@ -2190,6 +2420,7 @@
 				25589A1D272115D700F4F880 /* Main.storyboard in Resources */,
 				914890082BB1490D0082ABA7 /* SceneElementCell.xib in Resources */,
 				919EDC5B2C2E8B4900E01501 /* NFCMiFareTagScanVC.xib in Resources */,
+				91A3A9002D13FA990065FD3C /* NLCVC.xib in Resources */,
 				25589BC22721403F00F4F880 /* BridgeTableItemCell.xib in Resources */,
 				25589BCD2721403F00F4F880 /* ChooseModelIDCell.xib in Resources */,
 				916FEF3629E6840200206FE6 /* FilterAddressCell.xib in Resources */,
@@ -2202,12 +2433,16 @@
 				25589BD72721403F00F4F880 /* ExtendBearerModeCell.xib in Resources */,
 				919EDC432C2E8B4900E01501 /* ButtonActionVC.xib in Resources */,
 				25589BC62721403F00F4F880 /* OnOffItemCell.xib in Resources */,
+				91070B2A2D228B540044370F /* NLCPublishHeaderCell.xib in Resources */,
 				25589BD62721403F00F4F880 /* AddDeviceItemCell.xib in Resources */,
 				25589BD02721403F00F4F880 /* ColorModelCell.xib in Resources */,
 				915958C62AD5286D00D85CA4 /* SettingDetailItemCell.xib in Resources */,
+				91EA21592D23C36400BCFE7E /* LCItemHiddenCell.xib in Resources */,
 				917BE4B52AD684F30073FC35 /* NetworkCell.xib in Resources */,
 				911217D82B4643A600A79A3E /* BinFileChooseVC.xib in Resources */,
 				919EDC472C2E8B4900E01501 /* ButtonItemCell.xib in Resources */,
+				91070B182D2239910044370F /* NLCSingleVC.xib in Resources */,
+				91BD765A2E7BD296009F6BBC /* DeviceConfigShowCell.xib in Resources */,
 				25589BEF2721403F00F4F880 /* DeviceNetKeyListVC.xib in Resources */,
 				913661862CA2BB4200DF6124 /* NodeBatchCell.xib in Resources */,
 				25589BB32721403F00F4F880 /* ChooseItemCell.xib in Resources */,
@@ -2219,13 +2454,17 @@
 				9130614F2BC29FA5003D2972 /* DeviceSelectVC.xib in Resources */,
 				919EDC3F2C2E8B4900E01501 /* ActionSceneRecallCell.xib in Resources */,
 				25FE6CD327EC14D5009F7626 /* EntryCell.xib in Resources */,
-				25589BF92721403F00F4F880 /* DeviceConfigCell.xib in Resources */,
 				25589C552721408B00F4F880 /* DeviceSetting.storyboard in Resources */,
+				91BD76632E7BD2B4009F6BBC /* DeviceConfigHiddenCell.xib in Resources */,
+				915188F12D15382600EA7467 /* NLCCell.xib in Resources */,
 				25589C562721408B00F4F880 /* Setting.storyboard in Resources */,
+				911D9C1C2D2B786400090DAB /* SelectPublishAddressVC.xib in Resources */,
 				914890162BB173650082ABA7 /* SceneDetailCell.xib in Resources */,
+				919015442D1E565D00186839 /* LightnessController.pdf in Resources */,
 				91C627EC2B0EFC5800DC3B29 /* TableCell.xib in Resources */,
 				25589BEA2721403F00F4F880 /* DeviceAppKeyListVC.xib in Resources */,
 				25589BC42721403F00F4F880 /* OnOffModelCell.xib in Resources */,
+				91850C652EB0C1840070B5BC /* PrivacyInfo.xcprivacy in Resources */,
 				25589C0C2721403F00F4F880 /* ResponseTestVC.xib in Resources */,
 				91F6A9402AEFB0E50076E54B /* PrivateBeaconCell.xib in Resources */,
 				25589C232721403F00F4F880 /* NetKeyListVC.xib in Resources */,
@@ -2237,13 +2476,18 @@
 				25589BBD2721403F00F4F880 /* ModelIDCell.xib in Resources */,
 				919EDC372C2E8B4900E01501 /* ActionOnOffCell.xib in Resources */,
 				25589C132721403F00F4F880 /* OOBListVC.xib in Resources */,
+				91070B232D223DCA0044370F /* NLCUnionVC.xib in Resources */,
 				25589C142721403F00F4F880 /* OOBItemCell.xib in Resources */,
 				25589C212721403F00F4F880 /* AppKeyAddVC.xib in Resources */,
 				9130FC462B215EF400392F2B /* ActivityIndicatorCell.xib in Resources */,
+				91A3A9072D13FB710065FD3C /* NLCListVC.xib in Resources */,
 				25589BB62721403F00F4F880 /* CustomAlert.xib in Resources */,
 				91DC48032B452727009B07DA /* SelectDeviceCell.xib in Resources */,
 				9163A3E62B33E842006960B6 /* NetKeyCell.xib in Resources */,
+				91815DF92D1BA46500EE7AF4 /* NLCItemCell.xib in Resources */,
 				25589BC72721403F00F4F880 /* SchedulerCell.xib in Resources */,
+				91815DE82D1BA3FD00EE7AF4 /* NLCSensorHeaderCell.xib in Resources */,
+				9144BEB62D376018003A6C9C /* NodeCell.xib in Resources */,
 				9175845729E535B7008FE98A /* ProxyFilterVC.xib in Resources */,
 				25589BE12721403F00F4F880 /* SceneItemCell.xib in Resources */,
 				91075BB92B0E04EB00F933EA /* TableNodeCell.xib in Resources */,
@@ -2271,6 +2515,7 @@
 				2590C57C285C287D00E19DE9 /* LaunchScreen.storyboard in Resources */,
 				2590C5C5285C2E6100E19DE9 /* SigLoopAddDemo.plist in Resources */,
 				2590C584285C287D00E19DE9 /* Assets.xcassets in Resources */,
+				91850C642EB0C1840070B5BC /* PrivacyInfo.xcprivacy in Resources */,
 				2590C5C1285C293400E19DE9 /* TestAddDevice.storyboard in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -2288,7 +2533,9 @@
 				91343AF32B590B04008FC4F6 /* SensorConfigCell.xib in Resources */,
 				919EDC502C2E8B4900E01501 /* PassiveSwitchDetailVC.xib in Resources */,
 				91BF47A22B27FFA300254CB6 /* PTSViewController.xib in Resources */,
+				91815E092D1C09D600EE7AF4 /* SelectItemVC.xib in Resources */,
 				91BF47A32B27FFA300254CB6 /* MeshOTAItemCell.xib in Resources */,
+				91070B2C2D228B540044370F /* NLCPublishHeaderCell.xib in Resources */,
 				91BF47A42B27FFA300254CB6 /* AddDeviceCell.xib in Resources */,
 				91BF47A52B27FFA300254CB6 /* DeviceChooseKeyVC.xib in Resources */,
 				91DC48042B452727009B07DA /* SelectDeviceCell.xib in Resources */,
@@ -2302,8 +2549,10 @@
 				91BF47AC2B27FFA300254CB6 /* Assets.xcassets in Resources */,
 				914D04172B2A968C00824A17 /* CloudMain.storyboard in Resources */,
 				91BF47AD2B27FFA300254CB6 /* AppKeyListVC.xib in Resources */,
+				91A3A9022D13FA990065FD3C /* NLCVC.xib in Resources */,
 				91BF47AE2B27FFA300254CB6 /* ShareItemCell.xib in Resources */,
 				919EDC5C2C2E8B4900E01501 /* NFCMiFareTagScanVC.xib in Resources */,
+				91EA21552D23C35100BCFE7E /* LCItemShowCell.xib in Resources */,
 				91BF47B02B27FFA300254CB6 /* PrivateBeaconVC.xib in Resources */,
 				91BF47B22B27FFA300254CB6 /* MeshOTAVC.xib in Resources */,
 				91DC47F92B450708009B07DA /* SelectUpdateDeviceVC.xib in Resources */,
@@ -2313,14 +2562,21 @@
 				91BF47B52B27FFA300254CB6 /* ChooseModelIDCell.xib in Resources */,
 				914D04582B2AFF0D00824A17 /* CloudSceneCell.xib in Resources */,
 				91BF47B62B27FFA300254CB6 /* FilterAddressCell.xib in Resources */,
+				911D9C1E2D2B786400090DAB /* SelectPublishAddressVC.xib in Resources */,
 				91BF47B72B27FFA300254CB6 /* InputItemCell.xib in Resources */,
+				91A3A9092D13FB710065FD3C /* NLCListVC.xib in Resources */,
 				91BF47B82B27FFA300254CB6 /* RemoteElementCell.xib in Resources */,
 				91BF47B92B27FFA300254CB6 /* ChooseOOBFileVC.xib in Resources */,
 				91BF47BA2B27FFA300254CB6 /* SettingTitleItemCell.xib in Resources */,
+				91815DFB2D1BA46500EE7AF4 /* NLCItemCell.xib in Resources */,
 				91BF47BB2B27FFA300254CB6 /* ExtendBearerModeCell.xib in Resources */,
+				91BD765C2E7BD296009F6BBC /* DeviceConfigShowCell.xib in Resources */,
 				91BF47BC2B27FFA300254CB6 /* OnOffItemCell.xib in Resources */,
 				919EDC542C2E8B4900E01501 /* PassiveSwitchSettingVC.xib in Resources */,
+				91070B252D223DCA0044370F /* NLCUnionVC.xib in Resources */,
+				91850C632EB0C1840070B5BC /* PrivacyInfo.xcprivacy in Resources */,
 				91BF47BD2B27FFA300254CB6 /* AddDeviceItemCell.xib in Resources */,
+				91BD76612E7BD2B4009F6BBC /* DeviceConfigHiddenCell.xib in Resources */,
 				91BF47BE2B27FFA300254CB6 /* ColorModelCell.xib in Resources */,
 				91BF47BF2B27FFA300254CB6 /* SettingDetailItemCell.xib in Resources */,
 				91BF47C02B27FFA300254CB6 /* NetworkCell.xib in Resources */,
@@ -2330,15 +2586,17 @@
 				91BF47C42B27FFA300254CB6 /* ShareButtonCell.xib in Resources */,
 				91BF47C52B27FFA300254CB6 /* CertificateListVC.xib in Resources */,
 				91BF47C82B27FFA300254CB6 /* EntryCell.xib in Resources */,
-				91BF47C92B27FFA300254CB6 /* DeviceConfigCell.xib in Resources */,
 				91BF47CA2B27FFA300254CB6 /* DeviceSetting.storyboard in Resources */,
 				91BF47CB2B27FFA300254CB6 /* Setting.storyboard in Resources */,
+				915188F32D15382600EA7467 /* NLCCell.xib in Resources */,
+				91EA21462D239AC100BCFE7E /* InputAndSliderItemCell.xib in Resources */,
 				91BF47CC2B27FFA300254CB6 /* TableCell.xib in Resources */,
 				91BF47CD2B27FFA300254CB6 /* DeviceAppKeyListVC.xib in Resources */,
 				91BF47CE2B27FFA300254CB6 /* OnOffModelCell.xib in Resources */,
 				914D04532B2AFEEA00824A17 /* CloudActionCell.xib in Resources */,
 				9163A3E72B33E842006960B6 /* NetKeyCell.xib in Resources */,
 				91BF47D02B27FFA300254CB6 /* ResponseTestVC.xib in Resources */,
+				9144BEB92D376018003A6C9C /* NodeCell.xib in Resources */,
 				912A58092B35660700531DA4 /* ShareNetKeyCell.xib in Resources */,
 				91BF47D12B27FFA300254CB6 /* PrivateBeaconCell.xib in Resources */,
 				919EDC582C2E8B4900E01501 /* TelinkPickerView.xib in Resources */,
@@ -2355,15 +2613,18 @@
 				914D042C2B2AD92F00824A17 /* CloudSchedulerCell.xib in Resources */,
 				91BF47D92B27FFA300254CB6 /* AppKeyAddVC.xib in Resources */,
 				919BC76E2B2995810011991B /* ApplicantCell.xib in Resources */,
+				91EA215C2D23C36400BCFE7E /* LCItemHiddenCell.xib in Resources */,
 				91BF47DA2B27FFA300254CB6 /* ActivityIndicatorCell.xib in Resources */,
 				919BC76A2B29954A0011991B /* JoinedNetworkCell.xib in Resources */,
 				91BF47DC2B27FFA300254CB6 /* CustomAlert.xib in Resources */,
+				919015452D1E565D00186839 /* LightnessController.pdf in Resources */,
 				919EDC402C2E8B4900E01501 /* ActionSceneRecallCell.xib in Resources */,
 				91BF47DD2B27FFA300254CB6 /* SchedulerCell.xib in Resources */,
 				91BF47DE2B27FFA300254CB6 /* ProxyFilterVC.xib in Resources */,
 				913661872CA2BB4200DF6124 /* NodeBatchCell.xib in Resources */,
 				91BF47DF2B27FFA300254CB6 /* SceneItemCell.xib in Resources */,
 				919EDC482C2E8B4900E01501 /* ButtonItemCell.xib in Resources */,
+				91070B1A2D2239910044370F /* NLCSingleVC.xib in Resources */,
 				914D045D2B2B012600824A17 /* DeviceStateItemView.xib in Resources */,
 				91DC480B2B453E83009B07DA /* MeshOTACell.xib in Resources */,
 				9163A3E02B33E0F9006960B6 /* AppKeyCell.xib in Resources */,
@@ -2383,9 +2644,13 @@
 			inputFileListPaths = (
 				"${PODS_ROOT}/Target Support Files/Pods-SigMeshOCDemo-SigMeshOCDemoUITests/Pods-SigMeshOCDemo-SigMeshOCDemoUITests-frameworks-${CONFIGURATION}-input-files.xcfilelist",
 			);
+			inputPaths = (
+			);
 			name = "[CP] Embed Pods Frameworks";
 			outputFileListPaths = (
 				"${PODS_ROOT}/Target Support Files/Pods-SigMeshOCDemo-SigMeshOCDemoUITests/Pods-SigMeshOCDemo-SigMeshOCDemoUITests-frameworks-${CONFIGURATION}-output-files.xcfilelist",
+			);
+			outputPaths = (
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
@@ -2422,9 +2687,13 @@
 			inputFileListPaths = (
 				"${PODS_ROOT}/Target Support Files/Pods-SigMeshOCDemo/Pods-SigMeshOCDemo-frameworks-${CONFIGURATION}-input-files.xcfilelist",
 			);
+			inputPaths = (
+			);
 			name = "[CP] Embed Pods Frameworks";
 			outputFileListPaths = (
 				"${PODS_ROOT}/Target Support Files/Pods-SigMeshOCDemo/Pods-SigMeshOCDemo-frameworks-${CONFIGURATION}-output-files.xcfilelist",
+			);
+			outputPaths = (
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
@@ -2439,9 +2708,13 @@
 			inputFileListPaths = (
 				"${PODS_ROOT}/Target Support Files/Pods-SigLoopAddDemo/Pods-SigLoopAddDemo-frameworks-${CONFIGURATION}-input-files.xcfilelist",
 			);
+			inputPaths = (
+			);
 			name = "[CP] Embed Pods Frameworks";
 			outputFileListPaths = (
 				"${PODS_ROOT}/Target Support Files/Pods-SigLoopAddDemo/Pods-SigLoopAddDemo-frameworks-${CONFIGURATION}-output-files.xcfilelist",
+			);
+			outputPaths = (
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
@@ -2500,9 +2773,13 @@
 			inputFileListPaths = (
 				"${PODS_ROOT}/Target Support Files/Pods-SigMeshCloud/Pods-SigMeshCloud-frameworks-${CONFIGURATION}-input-files.xcfilelist",
 			);
+			inputPaths = (
+			);
 			name = "[CP] Embed Pods Frameworks";
 			outputFileListPaths = (
 				"${PODS_ROOT}/Target Support Files/Pods-SigMeshCloud/Pods-SigMeshCloud-frameworks-${CONFIGURATION}-output-files.xcfilelist",
+			);
+			outputPaths = (
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
@@ -2564,6 +2841,7 @@
 				25589BA72721403F00F4F880 /* UIImage+Extension.m in Sources */,
 				25589BDF2721403F00F4F880 /* InfoSwitchCell.m in Sources */,
 				25589C052721403F00F4F880 /* SensorVC.m in Sources */,
+				91EA21532D23C35100BCFE7E /* LCItemShowCell.m in Sources */,
 				25589BC52721403F00F4F880 /* DeviceGroupListCell.m in Sources */,
 				919EDC3D2C2E8B4900E01501 /* ActionSceneRecallCell.m in Sources */,
 				9163A3E42B33E842006960B6 /* NetKeyCell.m in Sources */,
@@ -2572,7 +2850,9 @@
 				91FAEB192AD7D2AE00F951CE /* SettingsViewController.m in Sources */,
 				9130FC452B215EF400392F2B /* ActivityIndicatorCell.m in Sources */,
 				25589BB72721403F00F4F880 /* ChooseItemCell.m in Sources */,
+				91815DFA2D1BA46500EE7AF4 /* NLCItemCell.m in Sources */,
 				25589BAD2721403F00F4F880 /* OTAFileSource.m in Sources */,
+				91070B292D228B540044370F /* NLCPublishHeaderCell.m in Sources */,
 				25589BD32721403F00F4F880 /* ColorPickerView.m in Sources */,
 				914890172BB173650082ABA7 /* SceneDetailCell.m in Sources */,
 				25589BBA2721403F00F4F880 /* GroupCell.m in Sources */,
@@ -2584,6 +2864,7 @@
 				25589C0D2721403F00F4F880 /* ResponseTestVC.m in Sources */,
 				25589C032721403F00F4F880 /* ReKeyBindViewController.m in Sources */,
 				25589C192721403F00F4F880 /* SchedulerDetailViewController.m in Sources */,
+				91A3A9062D13FB710065FD3C /* NLCListVC.m in Sources */,
 				25589BDE2721403F00F4F880 /* ChooseModelIDCell.m in Sources */,
 				25589C2E2721403F00F4F880 /* GroupDetailViewController.m in Sources */,
 				25589BF12721403F00F4F880 /* DeviceControlViewController.m in Sources */,
@@ -2591,7 +2872,9 @@
 				25589C2C2721403F00F4F880 /* SchedulerListViewController.m in Sources */,
 				25589BFD2721403F00F4F880 /* DeviceSubscriptionListViewController.m in Sources */,
 				9136617C2CA2B5BA00DF6124 /* NodeBatchSettingVC.m in Sources */,
+				9144BEB72D376018003A6C9C /* NodeCell.m in Sources */,
 				25589BB42721403F00F4F880 /* CustomAlertView.m in Sources */,
+				919015382D1E518A00186839 /* PdfVC.m in Sources */,
 				915958CA2AD5391F00D85CA4 /* SettingTitleItemCell.m in Sources */,
 				25589BF42721403F00F4F880 /* DeviceSettingViewController.m in Sources */,
 				25589BC12721403F00F4F880 /* LevelAndSliderCell.m in Sources */,
@@ -2611,11 +2894,13 @@
 				917BE4C12AD689B10073FC35 /* CustomShareAlert.m in Sources */,
 				25589BFB2721403F00F4F880 /* DeviceRemoteVC.m in Sources */,
 				258B6296282CAB6500AE9B35 /* PTSViewController.m in Sources */,
+				915188F22D15382600EA7467 /* NLCCell.m in Sources */,
 				25589C012721403F00F4F880 /* MeshOTAVC.m in Sources */,
 				25589C292721403F00F4F880 /* ShareInVC.m in Sources */,
 				9161956D290A17CE00BCF0A6 /* UIColor+Telink.m in Sources */,
 				25589BD52721403F00F4F880 /* AddDeviceItemCell.m in Sources */,
 				915958C52AD5286D00D85CA4 /* SettingDetailItemCell.m in Sources */,
+				91AB682B2E695CD800F23059 /* ConfirmAddDeviceVC.m in Sources */,
 				25589BE82721403F00F4F880 /* HomeViewController.m in Sources */,
 				25589BE72721403F00F4F880 /* GroupViewController.m in Sources */,
 				916FEF2C29E654F800206FE6 /* ProxyFilterCell.m in Sources */,
@@ -2628,10 +2913,10 @@
 				25589C082721403F00F4F880 /* HSLViewController.m in Sources */,
 				91F6A93F2AEFB0E50076E54B /* PrivateBeaconCell.m in Sources */,
 				91343AF02B590B04008FC4F6 /* SensorConfigCell.m in Sources */,
-				25589BF82721403F00F4F880 /* DeviceConfigCell.m in Sources */,
 				915958BE2AD521F500D85CA4 /* NetworkVC.m in Sources */,
 				91C627EB2B0EFC5800DC3B29 /* TableCell.m in Sources */,
 				25589C062721403F00F4F880 /* CMDViewController.m in Sources */,
+				91A3A8FF2D13FA990065FD3C /* NLCVC.m in Sources */,
 				917BE4AB2AD66E150073FC35 /* NetworkListVC.m in Sources */,
 				25DD7D0B2728E58D0029037A /* CertificateListVC.m in Sources */,
 				917BE4C72AD68A2A0073FC35 /* CustomShareAlertView.m in Sources */,
@@ -2648,10 +2933,13 @@
 				91ED317F29236CAC003263D1 /* TipsVC.m in Sources */,
 				25589BE52721403F00F4F880 /* DemoCommand.m in Sources */,
 				25589BA82721403F00F4F880 /* ScanView.m in Sources */,
+				91815E082D1C09D600EE7AF4 /* SelectItemVC.m in Sources */,
 				25589BA92721403F00F4F880 /* ScanCodeVC.m in Sources */,
 				25589C2D2721403F00F4F880 /* SceneListViewController.m in Sources */,
 				25589C272721403F00F4F880 /* ShowQRCodeViewController.m in Sources */,
+				91070B222D223DCA0044370F /* NLCUnionVC.m in Sources */,
 				919EDC552C2E8B4900E01501 /* TelinkPickerView.m in Sources */,
+				91BD76622E7BD2B4009F6BBC /* DeviceConfigHiddenCell.m in Sources */,
 				91DC48082B453E83009B07DA /* MeshOTACell.m in Sources */,
 				919EDC592C2E8B4900E01501 /* NFCMiFareTagScanVC.m in Sources */,
 				91D769C82AEB897F00A07E45 /* PrivateBeaconVC.m in Sources */,
@@ -2666,11 +2954,14 @@
 				916FEF3529E6840200206FE6 /* FilterAddressCell.m in Sources */,
 				91DC48012B452727009B07DA /* SelectDeviceCell.m in Sources */,
 				25589C152721403F00F4F880 /* OOBListVC.m in Sources */,
+				91EA214D2D23B6C800BCFE7E /* BaseModel.m in Sources */,
 				25589C0A2721403F00F4F880 /* FileChooseVC.m in Sources */,
 				9152A18F2AD8E9B500186969 /* SettingsItemCell.m in Sources */,
 				25589BF62721403F00F4F880 /* DeviceCompositionDataVC.m in Sources */,
 				25589BC02721403F00F4F880 /* ModelIDCell.m in Sources */,
+				911D9C1D2D2B786400090DAB /* SelectPublishAddressVC.m in Sources */,
 				917BE4BF2AD689B10073FC35 /* ShareButtonCell.m in Sources */,
+				91815DE92D1BA3FD00EE7AF4 /* NLCSensorHeaderCell.m in Sources */,
 				25589BE62721403F00F4F880 /* FastProvisionAddVC.m in Sources */,
 				25589C002721403F00F4F880 /* MeshOTAItemCell.m in Sources */,
 				25589BE42721403F00F4F880 /* ShowTipsView.m in Sources */,
@@ -2681,12 +2972,15 @@
 				9180A7BB2C803CD300BA8A15 /* SettingsEditItemCell.m in Sources */,
 				25589C042721403F00F4F880 /* RemoteAddVC.m in Sources */,
 				25589BAF2721403F00F4F880 /* UIStoryboard+extension.m in Sources */,
+				91EA21442D239AC100BCFE7E /* InputAndSliderItemCell.m in Sources */,
 				25589BB92721403F00F4F880 /* SceneItemCell.m in Sources */,
 				25589C202721403F00F4F880 /* NetKeyAddVC.m in Sources */,
 				25589BB22721403F00F4F880 /* InputItemCell.m in Sources */,
+				9190153C2D1E527000186839 /* UIDevice+Extension.m in Sources */,
 				25589BB52721403F00F4F880 /* CustomAlert.m in Sources */,
 				91DC47F62B450708009B07DA /* SelectUpdateDeviceVC.m in Sources */,
 				25589BEB2721403F00F4F880 /* DeviceAppKeyListVC.m in Sources */,
+				91070B172D2239910044370F /* NLCSingleVC.m in Sources */,
 				25589C282721403F00F4F880 /* ShareTipsVC.m in Sources */,
 				911217D62B4643A600A79A3E /* BinFileChooseVC.m in Sources */,
 				91075BA62B0D97EC00F933EA /* BaseCell.m in Sources */,
@@ -2698,6 +2992,7 @@
 				25589C1F2721403F00F4F880 /* AppKeyAddVC.m in Sources */,
 				25589BAA2721403F00F4F880 /* zipAndUnzip.m in Sources */,
 				25589BAE2721403F00F4F880 /* NSString+calculate.m in Sources */,
+				91EA215A2D23C36400BCFE7E /* LCItemHiddenCell.m in Sources */,
 				25589C2F2721403F00F4F880 /* LogViewController.m in Sources */,
 				25589BD22721403F00F4F880 /* OnOffItemCell.m in Sources */,
 				919EDC312C2E8B4900E01501 /* ActionLightnessCell.m in Sources */,
@@ -2708,6 +3003,7 @@
 				916963492AC51D300010D34A /* AutoAddDeviceVC.m in Sources */,
 				915709DF2B54FF7900C9D502 /* LightingControlVC.m in Sources */,
 				25589BEE2721403F00F4F880 /* DeviceChooseKeyVC.m in Sources */,
+				91BD76592E7BD296009F6BBC /* DeviceConfigShowCell.m in Sources */,
 				9175845629E535B7008FE98A /* ProxyFilterVC.m in Sources */,
 				913061502BC29FA5003D2972 /* DeviceSelectVC.m in Sources */,
 				25589BDC2721403F00F4F880 /* RemoteElementCell.m in Sources */,
@@ -2754,10 +3050,12 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				91A3A9012D13FA990065FD3C /* NLCVC.m in Sources */,
 				91BF46FC2B27FFA300254CB6 /* EntryCell.m in Sources */,
 				919BC75B2B298B460011991B /* AddDeviceByCloudVC.m in Sources */,
 				919BC75C2B298B460011991B /* LoginVC.m in Sources */,
 				919EDC4A2C2E8B4900E01501 /* PairNodeCell.m in Sources */,
+				915188F42D15382600EA7467 /* NLCCell.m in Sources */,
 				919EDC3A2C2E8B4900E01501 /* ActionPublishCell.m in Sources */,
 				91BF46FD2B27FFA300254CB6 /* UIImage+Extension.m in Sources */,
 				91BF46FF2B27FFA300254CB6 /* InfoSwitchCell.m in Sources */,
@@ -2775,8 +3073,10 @@
 				91BF470F2B27FFA300254CB6 /* DeviceNetKeyListVC.m in Sources */,
 				91BF47102B27FFA300254CB6 /* ExtendBearerModeCell.m in Sources */,
 				913661882CA2BB4200DF6124 /* NodeBatchCell.m in Sources */,
+				911D9C1F2D2B786400090DAB /* SelectPublishAddressVC.m in Sources */,
 				91BF47112B27FFA300254CB6 /* ResponseTestVC.m in Sources */,
 				91BF47122B27FFA300254CB6 /* ReKeyBindViewController.m in Sources */,
+				91070B242D223DCA0044370F /* NLCUnionVC.m in Sources */,
 				91BF47142B27FFA300254CB6 /* ChooseModelIDCell.m in Sources */,
 				91BF47152B27FFA300254CB6 /* GroupDetailViewController.m in Sources */,
 				91BF47162B27FFA300254CB6 /* DeviceControlViewController.m in Sources */,
@@ -2787,11 +3087,13 @@
 				91BF471C2B27FFA300254CB6 /* CustomAlertView.m in Sources */,
 				91BF471D2B27FFA300254CB6 /* SettingTitleItemCell.m in Sources */,
 				91BF471E2B27FFA300254CB6 /* DeviceSettingViewController.m in Sources */,
+				9190153D2D1E527000186839 /* UIDevice+Extension.m in Sources */,
 				919EDC562C2E8B4900E01501 /* TelinkPickerView.m in Sources */,
 				91BF471F2B27FFA300254CB6 /* LevelAndSliderCell.m in Sources */,
 				91BF47212B27FFA300254CB6 /* EditOOBVC.m in Sources */,
 				91BF47262B27FFA300254CB6 /* NetKeyListVC.m in Sources */,
 				91BF47272B27FFA300254CB6 /* ShareItemCell.m in Sources */,
+				91BD76602E7BD2B4009F6BBC /* DeviceConfigHiddenCell.m in Sources */,
 				91BF47282B27FFA300254CB6 /* zipAndUnzip+zipString.m in Sources */,
 				919BC76F2B2995810011991B /* ApplicantCell.m in Sources */,
 				91BF47292B27FFA300254CB6 /* NetworkCell.m in Sources */,
@@ -2799,6 +3101,7 @@
 				91BF472B2B27FFA300254CB6 /* HomeItemCell.m in Sources */,
 				91BF472C2B27FFA300254CB6 /* SchedulerCell.m in Sources */,
 				914D04282B2AD8EA00824A17 /* SchedulerListViewController.m in Sources */,
+				91AB682A2E695CD800F23059 /* ConfirmAddDeviceVC.m in Sources */,
 				91BF472D2B27FFA300254CB6 /* BaseTableView.m in Sources */,
 				91BF472E2B27FFA300254CB6 /* ColorModelCell.m in Sources */,
 				914D045E2B2B012600824A17 /* DeviceStateItemView.m in Sources */,
@@ -2818,7 +3121,9 @@
 				91BF473A2B27FFA300254CB6 /* HomeViewController.m in Sources */,
 				91BF473C2B27FFA300254CB6 /* GroupViewController.m in Sources */,
 				91BF473D2B27FFA300254CB6 /* ProxyFilterCell.m in Sources */,
+				91815DEE2D1BA40400EE7AF4 /* NLCSensorHeaderCell.m in Sources */,
 				91BF473F2B27FFA300254CB6 /* ShareOutVC.m in Sources */,
+				91EA215B2D23C36400BCFE7E /* LCItemHiddenCell.m in Sources */,
 				91BF47402B27FFA300254CB6 /* SingleDeviceViewController.m in Sources */,
 				91BF47412B27FFA300254CB6 /* DeviceGroupViewController.m in Sources */,
 				919BC7632B298B460011991B /* ResetPasswordVC.m in Sources */,
@@ -2827,10 +3132,11 @@
 				91BF47452B27FFA300254CB6 /* HSLViewController.m in Sources */,
 				91BF47462B27FFA300254CB6 /* PrivateBeaconCell.m in Sources */,
 				912C6EC22C783874003D4748 /* UIView+Toast.m in Sources */,
-				91BF47482B27FFA300254CB6 /* DeviceConfigCell.m in Sources */,
 				91DC48022B452727009B07DA /* SelectDeviceCell.m in Sources */,
 				91BF474A2B27FFA300254CB6 /* TableCell.m in Sources */,
 				912A58072B35660700531DA4 /* ShareNetKeyCell.m in Sources */,
+				91EA21542D23C35100BCFE7E /* LCItemShowCell.m in Sources */,
+				919015392D1E518A00186839 /* PdfVC.m in Sources */,
 				919EDC4E2C2E8B4900E01501 /* PassiveSwitchDetailVC.m in Sources */,
 				91BF474B2B27FFA300254CB6 /* CMDViewController.m in Sources */,
 				91BF474C2B27FFA300254CB6 /* NetworkListVC.m in Sources */,
@@ -2838,6 +3144,7 @@
 				91ADA9452B5907140063B95F /* SensorConfigVC.m in Sources */,
 				91BF474E2B27FFA300254CB6 /* CustomShareAlertView.m in Sources */,
 				91BF474F2B27FFA300254CB6 /* ChooseEntryVC.m in Sources */,
+				91BD765B2E7BD296009F6BBC /* DeviceConfigShowCell.m in Sources */,
 				91BF47502B27FFA300254CB6 /* UIButton+extension.m in Sources */,
 				91BF47512B27FFA300254CB6 /* SettingViewController.m in Sources */,
 				91BF47522B27FFA300254CB6 /* TableNodeCell.m in Sources */,
@@ -2857,19 +3164,25 @@
 				91BF47602B27FFA300254CB6 /* MeshInfoVC.m in Sources */,
 				919BC7622B298B460011991B /* NetworkVC.m in Sources */,
 				91BF47632B27FFA300254CB6 /* CDTPServiceListVC.m in Sources */,
+				91070B2B2D228B540044370F /* NLCPublishHeaderCell.m in Sources */,
 				91BF47642B27FFA300254CB6 /* DirectForwardingVC.m in Sources */,
 				91BF47672B27FFA300254CB6 /* ColorManager.m in Sources */,
 				91BF47682B27FFA300254CB6 /* FilterAddressCell.m in Sources */,
+				91EA214E2D23B6C800BCFE7E /* BaseModel.m in Sources */,
 				919EDC462C2E8B4900E01501 /* ButtonItemCell.m in Sources */,
 				91BF476A2B27FFA300254CB6 /* OOBListVC.m in Sources */,
 				91DC48092B453E83009B07DA /* MeshOTACell.m in Sources */,
+				91815DFC2D1BA46500EE7AF4 /* NLCItemCell.m in Sources */,
 				91BF476B2B27FFA300254CB6 /* FileChooseVC.m in Sources */,
 				91BF476C2B27FFA300254CB6 /* SettingsItemCell.m in Sources */,
 				91DC47F72B450708009B07DA /* SelectUpdateDeviceVC.m in Sources */,
+				91815E0A2D1C09D600EE7AF4 /* SelectItemVC.m in Sources */,
 				91BF476E2B27FFA300254CB6 /* DeviceCompositionDataVC.m in Sources */,
 				91BF476F2B27FFA300254CB6 /* ModelIDCell.m in Sources */,
 				91BF47702B27FFA300254CB6 /* ShareButtonCell.m in Sources */,
 				91BF47712B27FFA300254CB6 /* FastProvisionAddVC.m in Sources */,
+				91070B192D2239910044370F /* NLCSingleVC.m in Sources */,
+				91EA21452D239AC100BCFE7E /* InputAndSliderItemCell.m in Sources */,
 				91BF47722B27FFA300254CB6 /* MeshOTAItemCell.m in Sources */,
 				914D04592B2AFF0D00824A17 /* CloudSceneCell.m in Sources */,
 				91BF47732B27FFA300254CB6 /* ShowTipsView.m in Sources */,
@@ -2899,6 +3212,7 @@
 				91BF478A2B27FFA300254CB6 /* zipAndUnzip.m in Sources */,
 				914D04542B2AFEEA00824A17 /* CloudActionCell.m in Sources */,
 				91BF478B2B27FFA300254CB6 /* NSString+calculate.m in Sources */,
+				9144BEB82D376018003A6C9C /* NodeCell.m in Sources */,
 				91BF478C2B27FFA300254CB6 /* LogViewController.m in Sources */,
 				915709E02B54FF7900C9D502 /* LightingControlVC.m in Sources */,
 				91BF478D2B27FFA300254CB6 /* OnOffItemCell.m in Sources */,
@@ -2913,6 +3227,7 @@
 				9136617D2CA2B5BA00DF6124 /* NodeBatchSettingVC.m in Sources */,
 				91BF47922B27FFA300254CB6 /* ProxyFilterVC.m in Sources */,
 				919EDC322C2E8B4900E01501 /* ActionLightnessCell.m in Sources */,
+				91A3A9082D13FB710065FD3C /* NLCListVC.m in Sources */,
 				91423DE72B30384900BE9CE1 /* CMDCell.m in Sources */,
 				91BF47942B27FFA300254CB6 /* RemoteElementCell.m in Sources */,
 				911217D72B4643A600A79A3E /* BinFileChooseVC.m in Sources */,
@@ -3101,7 +3416,7 @@
 				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = NO;
 				CODE_SIGN_ENTITLEMENTS = SigMeshOCDemo/SigMeshOCDemo.entitlements;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 2;
+				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = J3AJAYU5N6;
 				ENABLE_BITCODE = NO;
 				GCC_C_LANGUAGE_STANDARD = "compiler-default";
@@ -3112,6 +3427,7 @@
 				INFOPLIST_FILE = SigMeshOCDemo/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = TelinkSigMesh;
 				INFOPLIST_KEY_LSSupportsOpeningDocumentsInPlace = YES;
+				INFOPLIST_KEY_NFCReaderUsageDescription = "The app needs to use NFC to read information about energy harvest switch.";
 				INFOPLIST_KEY_NSBluetoothAlwaysUsageDescription = "APP需要打开蓝牙进行设备连接。";
 				INFOPLIST_KEY_NSBluetoothPeripheralUsageDescription = "APP需要打开蓝牙外设功能进行Mesh数据共享。";
 				INFOPLIST_KEY_NSCameraUsageDescription = "APP需要调用照相机进行二维码扫描。";
@@ -3129,7 +3445,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 4.1.02;
+				MARKETING_VERSION = 4.2.02;
 				ONLY_ACTIVE_ARCH = YES;
 				OTHER_LDFLAGS = "-ObjC";
 				PRODUCT_BUNDLE_IDENTIFIER = com.telink.TelinkSigMesh;
@@ -3148,7 +3464,7 @@
 				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = NO;
 				CODE_SIGN_ENTITLEMENTS = SigMeshOCDemo/SigMeshOCDemo.entitlements;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 2;
+				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = J3AJAYU5N6;
 				ENABLE_BITCODE = NO;
 				GCC_C_LANGUAGE_STANDARD = "compiler-default";
@@ -3159,6 +3475,7 @@
 				INFOPLIST_FILE = SigMeshOCDemo/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = TelinkSigMesh;
 				INFOPLIST_KEY_LSSupportsOpeningDocumentsInPlace = YES;
+				INFOPLIST_KEY_NFCReaderUsageDescription = "The app needs to use NFC to read information about energy harvest switch.";
 				INFOPLIST_KEY_NSBluetoothAlwaysUsageDescription = "APP需要打开蓝牙进行设备连接。";
 				INFOPLIST_KEY_NSBluetoothPeripheralUsageDescription = "APP需要打开蓝牙外设功能进行Mesh数据共享。";
 				INFOPLIST_KEY_NSCameraUsageDescription = "APP需要调用照相机进行二维码扫描。";
@@ -3176,7 +3493,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 4.1.02;
+				MARKETING_VERSION = 4.2.02;
 				OTHER_LDFLAGS = "-ObjC";
 				PRODUCT_BUNDLE_IDENTIFIER = com.telink.TelinkSigMesh;
 				PRODUCT_NAME = "$(TARGET_NAME)";
@@ -3313,7 +3630,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 4.1.01;
+				MARKETING_VERSION = 4.1.03;
 				OTHER_LDFLAGS = "-ObjC";
 				PRODUCT_BUNDLE_IDENTIFIER = com.telink.SigLoopAddDemo;
 				PRODUCT_NAME = "$(TARGET_NAME)";
@@ -3358,7 +3675,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 4.1.01;
+				MARKETING_VERSION = 4.1.03;
 				OTHER_LDFLAGS = "-ObjC";
 				PRODUCT_BUNDLE_IDENTIFIER = com.telink.SigLoopAddDemo;
 				PRODUCT_NAME = "$(TARGET_NAME)";
@@ -3405,7 +3722,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 4.1.01;
+				MARKETING_VERSION = 4.1.03;
 				ONLY_ACTIVE_ARCH = YES;
 				OTHER_LDFLAGS = "-ObjC";
 				PRODUCT_BUNDLE_IDENTIFIER = com.telink.TelinkSigMeshCloud;
@@ -3452,7 +3769,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 4.1.01;
+				MARKETING_VERSION = 4.1.03;
 				OTHER_LDFLAGS = "-ObjC";
 				PRODUCT_BUNDLE_IDENTIFIER = com.telink.TelinkSigMeshCloud;
 				PRODUCT_NAME = "$(TARGET_NAME)";

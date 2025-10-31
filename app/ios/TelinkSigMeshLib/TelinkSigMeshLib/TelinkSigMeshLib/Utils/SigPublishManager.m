@@ -25,7 +25,7 @@
 
 @interface SigPublishManager ()
 //Dictionary of timer that check node off line.
-@property (nonatomic,strong) NSMutableDictionary <NSNumber *,BackgroundTimer *>*checkOfflineTimerDict;
+@property (nonatomic, strong) NSMutableDictionary <NSNumber *, TelinkBackgroundTimer *>*checkOfflineTimerDict;
 @end
 
 @implementation SigPublishManager
@@ -79,7 +79,7 @@
     if (device && device.hasPublishFunction && device.hasOpenPublish && device.hasPublishPeriod && !device.isSensor && !device.isLPN) {
         [self stopCheckOfflineTimerWithAddress:address];
         __weak typeof(self) weakSelf = self;
-        BackgroundTimer *timer = [BackgroundTimer scheduledTimerWithTimeInterval:[self getIntervalWithSigPeriodModel:[device getModelIDModelWithModelID:device.publishModelID].publish.period]*3+1 repeats:NO block:^(BackgroundTimer * _Nonnull t) {
+        TelinkBackgroundTimer *timer = [TelinkBackgroundTimer scheduledTimerWithTimeInterval:[self getIntervalWithSigPeriodModel:[device getModelIDModelWithModelID:device.publishModelID].publish.period]*3+1 repeats:NO block:^(TelinkBackgroundTimer * _Nonnull t) {
             [weakSelf setDeviceOffline:address];
         }];
         _checkOfflineTimerDict[address] = timer;
@@ -89,7 +89,7 @@
 /// Stop monitoring the online and offline status of node.
 /// - Parameter address: The unicastAddress of node.
 - (void)stopCheckOfflineTimerWithAddress:(NSNumber *)address{
-    BackgroundTimer *timer = _checkOfflineTimerDict[address];
+    TelinkBackgroundTimer *timer = _checkOfflineTimerDict[address];
     if (timer) {
         [_checkOfflineTimerDict removeObjectForKey:address];
     }

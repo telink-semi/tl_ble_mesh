@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<document type="com.apple.InterfaceBuilder3.CocoaTouch.Storyboard.XIB" version="3.0" toolsVersion="32700.99.1234" targetRuntime="iOS.CocoaTouch" propertyAccessControl="none" useAutolayout="YES" useTraitCollections="YES" useSafeAreas="YES" colorMatched="YES" initialViewController="2Qi-x5-oWD">
+<document type="com.apple.InterfaceBuilder3.CocoaTouch.Storyboard.XIB" version="3.0" toolsVersion="23727" targetRuntime="iOS.CocoaTouch" propertyAccessControl="none" useAutolayout="YES" useTraitCollections="YES" useSafeAreas="YES" colorMatched="YES" initialViewController="2Qi-x5-oWD">
     <device id="retina4_7" orientation="portrait" appearance="light"/>
     <dependencies>
         <deployment identifier="iOS"/>
-        <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="22685"/>
+        <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="23721"/>
         <capability name="Named colors" minToolsVersion="9.0"/>
         <capability name="Safe area layout guides" minToolsVersion="9.0"/>
         <capability name="System colors in document resources" minToolsVersion="11.0"/>
@@ -33,11 +33,11 @@
                                             <rect key="frame" x="0.0" y="0.0" width="375" height="43"/>
                                             <autoresizingMask key="autoresizingMask"/>
                                             <subviews>
-                                                <imageView userInteractionEnabled="NO" contentMode="scaleToFill" horizontalHuggingPriority="251" verticalHuggingPriority="251" image="ic_group" translatesAutoresizingMaskIntoConstraints="NO" id="ppE-0U-rZN">
-                                                    <rect key="frame" x="15" y="11.5" width="20" height="20"/>
+                                                <imageView userInteractionEnabled="NO" contentMode="scaleToFill" horizontalHuggingPriority="251" verticalHuggingPriority="251" image="ic_group_blue" translatesAutoresizingMaskIntoConstraints="NO" id="ppE-0U-rZN">
+                                                    <rect key="frame" x="15" y="9.5" width="24" height="24"/>
                                                     <constraints>
-                                                        <constraint firstAttribute="height" constant="20" id="g8s-Uv-B1b"/>
-                                                        <constraint firstAttribute="width" constant="20" id="sft-v5-puF"/>
+                                                        <constraint firstAttribute="height" constant="24" id="g8s-Uv-B1b"/>
+                                                        <constraint firstAttribute="width" constant="24" id="sft-v5-puF"/>
                                                     </constraints>
                                                 </imageView>
                                                 <switch opaque="NO" contentMode="scaleToFill" horizontalHuggingPriority="750" verticalHuggingPriority="750" contentHorizontalAlignment="center" contentVerticalAlignment="center" on="YES" translatesAutoresizingMaskIntoConstraints="NO" id="LRa-p1-3W6">
@@ -47,7 +47,7 @@
                                                     </connections>
                                                 </switch>
                                                 <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="c001" textAlignment="center" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="EmZ-ta-t5J">
-                                                    <rect key="frame" x="45" y="13.5" width="30" height="16"/>
+                                                    <rect key="frame" x="49" y="13.5" width="30" height="16"/>
                                                     <fontDescription key="fontDescription" type="system" pointSize="13"/>
                                                     <nil key="textColor"/>
                                                     <nil key="highlightedColor"/>
@@ -211,7 +211,7 @@
                                                     <constraints>
                                                         <constraint firstAttribute="height" constant="11" id="WVC-gt-yYY"/>
                                                     </constraints>
-                                                    <fontDescription key="fontDescription" type="system" pointSize="10"/>
+                                                    <fontDescription key="fontDescription" type="system" pointSize="7"/>
                                                     <nil key="textColor"/>
                                                     <nil key="highlightedColor"/>
                                                 </label>
@@ -352,10 +352,10 @@ GET ALL</string>
                         <color key="backgroundColor" white="0.0" alpha="0.0" colorSpace="calibratedWhite"/>
                     </tabBar>
                     <connections>
-                        <segue destination="FFD-qo-7Iw" kind="relationship" relationship="viewControllers" id="IG5-km-sci"/>
-                        <segue destination="Xds-5x-X9v" kind="relationship" relationship="viewControllers" id="Vrg-5O-XCd"/>
-                        <segue destination="WSW-De-C8B" kind="relationship" relationship="viewControllers" id="rTw-f9-pOF"/>
-                        <segue destination="lwQ-hn-YXs" kind="relationship" relationship="viewControllers" id="4bU-K8-PyW"/>
+                        <segue destination="FFD-qo-7Iw" kind="relationship" relationship="viewControllers" id="wSA-fU-wjB"/>
+                        <segue destination="Xds-5x-X9v" kind="relationship" relationship="viewControllers" id="dWu-S3-qwe"/>
+                        <segue destination="WSW-De-C8B" kind="relationship" relationship="viewControllers" id="o5J-vm-Puz"/>
+                        <segue destination="lwQ-hn-YXs" kind="relationship" relationship="viewControllers" id="vka-lc-oe2"/>
                     </connections>
                 </tabBarController>
                 <placeholder placeholderIdentifier="IBFirstResponder" id="dJ2-t3-fEn" userLabel="First Responder" sceneMemberID="firstResponder"/>
@@ -735,7 +735,7 @@ mac:AABBCCDDEEFF</string>
                                                     <constraints>
                                                         <constraint firstAttribute="height" constant="11" id="8IT-Om-PGU"/>
                                                     </constraints>
-                                                    <fontDescription key="fontDescription" type="system" pointSize="10"/>
+                                                    <fontDescription key="fontDescription" type="system" pointSize="7"/>
                                                     <nil key="textColor"/>
                                                     <nil key="highlightedColor"/>
                                                 </label>
@@ -1514,13 +1514,78 @@ mac:AABBCCDDEEFF</string>
             </objects>
             <point key="canvasLocation" x="100" y="940"/>
         </scene>
+        <!--Confirm Add DeviceVC-->
+        <scene sceneID="RGw-FF-9Er">
+            <objects>
+                <viewController storyboardIdentifier="ConfirmAddDeviceVC" id="O1m-4p-NmC" customClass="ConfirmAddDeviceVC" sceneMemberID="viewController">
+                    <view key="view" contentMode="scaleToFill" id="Pdg-Jb-ml3">
+                        <rect key="frame" x="0.0" y="0.0" width="375" height="667"/>
+                        <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
+                        <subviews>
+                            <tableView clipsSubviews="YES" contentMode="scaleToFill" alwaysBounceVertical="YES" dataMode="prototypes" style="plain" separatorStyle="none" rowHeight="-1" estimatedRowHeight="-1" sectionHeaderHeight="-1" estimatedSectionHeaderHeight="-1" sectionFooterHeight="-1" estimatedSectionFooterHeight="-1" translatesAutoresizingMaskIntoConstraints="NO" id="edK-OJ-9Ym">
+                                <rect key="frame" x="0.0" y="95" width="375" height="522"/>
+                                <color key="backgroundColor" name="telinkTabBarBackgroundColor"/>
+                                <connections>
+                                    <outlet property="dataSource" destination="O1m-4p-NmC" id="LPq-fx-dN6"/>
+                                    <outlet property="delegate" destination="O1m-4p-NmC" id="IkR-UG-A15"/>
+                                </connections>
+                            </tableView>
+                            <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="system" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="FuQ-yH-iXP">
+                                <rect key="frame" x="0.0" y="617" width="375" height="50"/>
+                                <color key="backgroundColor" red="0.2901960784" green="0.52941176469999995" blue="0.93333333330000001" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
+                                <constraints>
+                                    <constraint firstAttribute="height" constant="50" id="myh-8e-f4q"/>
+                                </constraints>
+                                <state key="normal" title="ATTENTION TIME: 20s">
+                                    <color key="titleColor" red="0.94117647059999998" green="1" blue="1" alpha="1" colorSpace="calibratedRGB"/>
+                                </state>
+                                <connections>
+                                    <action selector="clickAttentionTimeButton:" destination="O1m-4p-NmC" eventType="touchUpInside" id="Gkp-ni-DbX"/>
+                                </connections>
+                            </button>
+                            <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="unprovisioned device count: 0" textAlignment="center" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="yza-dT-lJ4">
+                                <rect key="frame" x="10" y="69" width="355" height="21"/>
+                                <constraints>
+                                    <constraint firstAttribute="height" constant="21" id="CfN-Pc-B2f"/>
+                                </constraints>
+                                <fontDescription key="fontDescription" type="system" pointSize="12"/>
+                                <color key="textColor" red="0.91764705879999997" green="0.70196078429999997" blue="0.23921568630000001" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
+                                <nil key="highlightedColor"/>
+                            </label>
+                        </subviews>
+                        <viewLayoutGuide key="safeArea" id="gmF-sm-aAp"/>
+                        <color key="backgroundColor" name="telinkTabBarBackgroundColor"/>
+                        <constraints>
+                            <constraint firstItem="FuQ-yH-iXP" firstAttribute="bottom" secondItem="gmF-sm-aAp" secondAttribute="bottom" id="0aA-Kl-BZL"/>
+                            <constraint firstItem="FuQ-yH-iXP" firstAttribute="leading" secondItem="gmF-sm-aAp" secondAttribute="leading" id="1eQ-nz-iyp"/>
+                            <constraint firstItem="edK-OJ-9Ym" firstAttribute="leading" secondItem="gmF-sm-aAp" secondAttribute="leading" id="4Xj-be-GC3"/>
+                            <constraint firstItem="yza-dT-lJ4" firstAttribute="leading" secondItem="gmF-sm-aAp" secondAttribute="leading" constant="10" id="F7q-CE-cQO"/>
+                            <constraint firstItem="FuQ-yH-iXP" firstAttribute="trailing" secondItem="gmF-sm-aAp" secondAttribute="trailing" id="N3q-Bj-YMg"/>
+                            <constraint firstItem="FuQ-yH-iXP" firstAttribute="top" secondItem="edK-OJ-9Ym" secondAttribute="bottom" id="PVf-m1-Y3H"/>
+                            <constraint firstItem="yza-dT-lJ4" firstAttribute="top" secondItem="gmF-sm-aAp" secondAttribute="top" constant="5" id="PZa-2K-n7q"/>
+                            <constraint firstItem="edK-OJ-9Ym" firstAttribute="top" secondItem="yza-dT-lJ4" secondAttribute="bottom" constant="5" id="ef2-ul-Cit"/>
+                            <constraint firstItem="edK-OJ-9Ym" firstAttribute="trailing" secondItem="gmF-sm-aAp" secondAttribute="trailing" id="jSD-AD-U6g"/>
+                            <constraint firstItem="gmF-sm-aAp" firstAttribute="trailing" secondItem="yza-dT-lJ4" secondAttribute="trailing" constant="10" id="qRN-Ul-vyf"/>
+                        </constraints>
+                    </view>
+                    <simulatedNavigationBarMetrics key="simulatedTopBarMetrics" prompted="NO"/>
+                    <connections>
+                        <outlet property="attentionTimeButton" destination="FuQ-yH-iXP" id="Vsj-LS-JOw"/>
+                        <outlet property="tableView" destination="edK-OJ-9Ym" id="m1Z-JO-xrB"/>
+                        <outlet property="unprovisionedLabel" destination="yza-dT-lJ4" id="Vys-Ox-2rK"/>
+                    </connections>
+                </viewController>
+                <placeholder placeholderIdentifier="IBFirstResponder" id="jhP-7l-6es" userLabel="First Responder" customClass="UIResponder" sceneMemberID="firstResponder"/>
+            </objects>
+            <point key="canvasLocation" x="7828" y="-546"/>
+        </scene>
     </scenes>
     <resources>
         <image name="dengs" width="50" height="50"/>
         <image name="fb_top" width="12" height="7"/>
         <image name="ic_add" width="50" height="50"/>
         <image name="ic_dengs" width="120" height="120"/>
-        <image name="ic_group" width="50" height="50"/>
+        <image name="ic_group_blue" width="60" height="60"/>
         <image name="ic_minus" width="50" height="50"/>
         <image name="tabbar_device" width="25" height="25"/>
         <image name="tabbar_group" width="25" height="25"/>

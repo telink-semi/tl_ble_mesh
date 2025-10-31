@@ -73,7 +73,7 @@
         [_scanCodeVC scanDataViewControllerBackBlock:^(id content) {
             //AnalysisShareDataVC
             NSString *shareString = (NSString *)content;
-            NSDictionary *shareDict = [LibTools getDictionaryWithJsonString:shareString];
+            NSDictionary *shareDict = [TelinkLibTools getDictionaryWithJsonString:shareString];
             if (shareDict.count > 0) {
                 [weakSelf joinNetworkWithShareDict:shareDict];
             }else{
@@ -125,8 +125,10 @@
             } else {
                 weakSelf.sharedList = [NSMutableArray arrayWithArray:AppDataSource.share.sharedNetwordList];
             }
-            weakSelf.tableView.hidden = AppDataSource.share.sharedNetwordList.count == 0;
-            [weakSelf.tableView performSelectorOnMainThread:@selector(reloadData) withObject:nil waitUntilDone:YES];
+            dispatch_async(dispatch_get_main_queue(), ^{
+                weakSelf.tableView.hidden = AppDataSource.share.sharedNetwordList.count == 0;
+                [weakSelf.tableView reloadData];
+            });
         }
     }];
 }

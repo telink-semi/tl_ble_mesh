@@ -64,7 +64,7 @@
     vc.isAdd = YES;
     SigAppkeyModel *appkey = [[SigAppkeyModel alloc] init];
     appkey.oldKey = @"00000000000000000000000000000000";
-    appkey.key = [LibTools convertDataToHexStr:[LibTools initAppKey]];
+    appkey.key = [TelinkLibTools convertDataToHexStr:[LibTools initAppKey]];
     appkey.index = self.network.appKeys.count;
     appkey.name = [NSString stringWithFormat:@"appkey%ld",(long)appkey.index];
     appkey.boundNetKey = self.network.curNetkeyModel.index;

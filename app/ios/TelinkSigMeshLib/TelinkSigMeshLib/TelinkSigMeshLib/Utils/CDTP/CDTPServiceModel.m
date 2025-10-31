@@ -179,7 +179,7 @@
 }
 
 - (NSData *)getValueOfObjectType {
-    return [LibTools nsstringToHex:kPROXYService];
+    return [TelinkLibTools nsstringToHex:kPROXYService];
 }
 
 - (NSData *)getValueOfObjectSize {
@@ -328,7 +328,7 @@
         [self responseUnsupportedTypeWithRequestOacpOpCode:OACPOpCode_Create];
         return;
     }
-    long freeSize = [LibTools freeDiskSpaceInBytes];
+    long freeSize = [TelinkLibTools freeDiskSpaceInBytes];
     if (freeSize - tem32 < 500 * 1024 * 1024) {
         //如果接收object后手机剩余内存小于500M，则上报资源不足，且不允许进行OTS传输。
         // The Server cannot accept an object of the size specified in the Size parameter.
@@ -341,9 +341,9 @@
     self.objectModel = [[ObjectModel alloc] init];
     self.objectModel.objectSize = tem32;
     self.objectModel.objectData = [NSMutableData data];
-    self.objectSizeCharacteristic.value = [LibTools nsstringToHex:@"00"];
-    self.objectFirstCreatedCharacteristic.value = [LibTools nsstringToHex:@"00"];
-    self.objectLastModifiedCharacteristic.value = [LibTools nsstringToHex:@"00"];
+    self.objectSizeCharacteristic.value = [TelinkLibTools nsstringToHex:@"00"];
+    self.objectFirstCreatedCharacteristic.value = [TelinkLibTools nsstringToHex:@"00"];
+    self.objectLastModifiedCharacteristic.value = [TelinkLibTools nsstringToHex:@"00"];
     struct ObjectProperties objectProperties = {0};
     objectProperties.value = 0;
     objectProperties.Write = 1;
@@ -422,7 +422,7 @@
 
     /*验证 Object 校验码 成功流程*/
     NSData *sourceData = [self.objectModel.objectData subdataWithRange:NSMakeRange(offset, length)];
-    UInt32 checkSum = [LibTools getCRC32OfData:sourceData];
+    UInt32 checkSum = [TelinkLibTools getCRC32OfData:sourceData];
     NSData *checkSumData = [NSData dataWithBytes:&checkSum length:4];
     [self responseOacpResultWithResultCode:OACPResultCode_Success requestOacpOpCode:OACPOpCode_CalculateChecksum responseParameter:checkSumData];
 }
@@ -688,7 +688,7 @@
             self.needAdvertise = YES;
         }
     } else {
-        if (self.peripheralManager.state == CBPeripheralManagerStatePoweredOn) {
+        if (self.peripheralManager.state == CBManagerStatePoweredOn) {
             [self.peripheralManager startAdvertising:dict];
         } else {
             self.needAdvertise = YES;
@@ -719,9 +719,9 @@
  *  @param peripheral   The peripheral manager whose state has changed.
  *
  *  @discussion         Invoked whenever the peripheral manager's state has been updated. Commands should only be issued when the state is
- *                      <code>CBPeripheralManagerStatePoweredOn</code>. A state below <code>CBPeripheralManagerStatePoweredOn</code>
+ *                      <code>CBManagerStatePoweredOn</code>. A state below <code>CBManagerStatePoweredOn</code>
  *                      implies that advertisement has paused and any connected centrals have been disconnected. If the state moves below
- *                      <code>CBPeripheralManagerStatePoweredOff</code>, advertisement is stopped and must be explicitly restarted, and the
+ *                      <code>CBManagerStatePoweredOff</code>, advertisement is stopped and must be explicitly restarted, and the
  *                      local database is cleared and all services must be re-added.
  *
  *  @see                state
@@ -732,7 +732,7 @@
     BOOL isOpen = NO;
     switch (peripheral.state) {
             //在这里判断蓝牙设别的状态  当开启了则可调用  setUp方法(自定义)
-        case CBPeripheralManagerStatePoweredOn:
+        case CBManagerStatePoweredOn:
             NSLog(@"powered on");
             [peripheral publishL2CAPChannelWithEncryption:YES];
             isOpen = YES;
@@ -740,7 +740,7 @@
                 [self initServices];
             }
             break;
-        case CBPeripheralManagerStatePoweredOff:
+        case CBManagerStatePoweredOff:
             NSLog(@"powered off");
             if (self.channelPSM > 0) {
                 [peripheral unpublishL2CAPChannel:self.channelPSM];
@@ -847,7 +847,7 @@
         CBMutableCharacteristic *c =(CBMutableCharacteristic *)request.characteristic;
         c.value = request.value;
         NSData *data = request.value;
-        NSLog(@"request.value=%@", [LibTools convertDataToHexStr:request.value]);
+        NSLog(@"request.value=%@", [TelinkLibTools convertDataToHexStr:request.value]);
         if (c == self.objectActionControlPointCharacteristic) {
             [self handleReceivceDataOfOACPCharacteristic:data];
         } else if (c == self.objectNameCharacteristic) {

@@ -50,7 +50,7 @@ typedef void(^RemotePDUResultCallBack)(BOOL isSuccess);
 @property (nonatomic,strong) NSData *reportNodeUUID;
 @property (nonatomic,assign) NSInteger outboundPDUNumber;
 @property (nonatomic,assign) NSInteger inboundPDUNumber;
-@property (nonatomic,copy,nullable) prvisionResponseCallBack provisionResponseBlock;
+@property (nonatomic,copy,nullable) provisionResponseCallBack provisionResponseBlock;
 @property (nonatomic,strong) SigMessageHandle *messageHandle;
 @property (nonatomic, retain) dispatch_semaphore_t semaphore;
 
@@ -162,11 +162,11 @@ typedef void(^RemotePDUResultCallBack)(BOOL isSuccess);
     self.capabilitiesResponseBlock = capabilitiesResponse;
     self.provisionSuccessBlock = provisionSuccess;
     self.failBlock = fail;
-    self.unprovisionedDevice = [SigMeshLib.share.dataSource getScanRspModelWithUUID:[LibTools convertDataToHexStr:reportNodeUUID]];
+    self.unprovisionedDevice = [SigMeshLib.share.dataSource getScanRspModelWithUUID:[TelinkLibTools convertDataToHexStr:reportNodeUUID]];
     SigNetkeyModel *provisionNet = nil;
     NSArray *netKeys = [NSArray arrayWithArray:SigMeshLib.share.dataSource.netKeys];
     for (SigNetkeyModel *net in netKeys) {
-        if (([networkKey isEqualToData:[LibTools nsstringToHex:net.key]] || (net.phase == distributingKeys && [networkKey isEqualToData:[LibTools nsstringToHex:net.oldKey]])) && netkeyIndex == net.index) {
+        if (([networkKey isEqualToData:[TelinkLibTools nsstringToHex:net.key]] || (net.phase == distributingKeys && [networkKey isEqualToData:[TelinkLibTools nsstringToHex:net.oldKey]])) && netkeyIndex == net.index) {
             provisionNet = net;
             break;
         }
@@ -294,7 +294,7 @@ typedef void(^RemotePDUResultCallBack)(BOOL isSuccess);
             }
             weakSelf.semaphore = dispatch_semaphore_create(0);
             weakSelf.messageHandle = [SDKLibCommand remoteProvisioningScanStartWithDestination:node.address scannedItemsLimit:kScannedItemsLimit timeout:kScannedItemsTimeout UUID:nil retryCount:0 responseMaxCount:0 successCallback:^(UInt16 source, UInt16 destination, SigRemoteProvisioningScanStatus * _Nonnull responseMessage) {
-                TelinkLogInfo(@"source=0x%x,destination=0x%x,opCode=0x%x,parameters=%@",source,destination,responseMessage.opCode,[LibTools convertDataToHexStr:responseMessage.parameters]);
+                TelinkLogInfo(@"source=0x%x,destination=0x%x,opCode=0x%x,parameters=%@",source,destination,responseMessage.opCode,[TelinkLibTools convertDataToHexStr:responseMessage.parameters]);
             } resultCallback:^(BOOL isResponseAll, NSError * _Nullable error) {
                 TelinkLogInfo(@"isResponseAll=%d,error=%@",isResponseAll,error);
                 [NSThread sleepForTimeInterval:0.3];
@@ -344,7 +344,7 @@ typedef void(^RemotePDUResultCallBack)(BOOL isSuccess);
 
     UInt16 address = self.provisioningData.unicastAddress;
     NSString *identify = nil;
-    identify = [LibTools convertDataToHexStr:_reportNodeUUID];
+    identify = [TelinkLibTools convertDataToHexStr:_reportNodeUUID];
     UInt8 ele_count = self.provisioningCapabilities.numberOfElements;
     NSData *devKeyData = self.provisioningData.deviceKey;
     TelinkLogInfo(@"deviceKey=%@",devKeyData);
@@ -355,11 +355,11 @@ typedef void(^RemotePDUResultCallBack)(BOOL isSuccess);
 
     SigNodeModel *model = [[SigNodeModel alloc] init];
     [model setAddress:address];
-    model.deviceKey = [LibTools convertDataToHexStr:devKeyData];
+    model.deviceKey = [TelinkLibTools convertDataToHexStr:devKeyData];
     model.peripheralUUID = nil;
     model.UUID = identify;
     //Attention: There isn't scanModel at remote add, so develop need add macAddress in provisionSuccessCallback.
-    model.macAddress = [LibTools convertDataToHexStr:[LibTools turnOverData:[_reportNodeUUID subdataWithRange:NSMakeRange(_reportNodeUUID.length - 6, 6)]]];
+    model.macAddress = [TelinkLibTools convertDataToHexStr:[TelinkLibTools turnOverData:[_reportNodeUUID subdataWithRange:NSMakeRange(_reportNodeUUID.length - 6, 6)]]];
     SigNodeKeyModel *nodeNetkey = [[SigNodeKeyModel alloc] init];
     nodeNetkey.index = self.networkKey.index;
     if (![model.netKeys containsObject:nodeNetkey]) {
@@ -401,7 +401,7 @@ typedef void(^RemotePDUResultCallBack)(BOOL isSuccess);
     [self.provisioningData provisionerDidObtainAuthValue:data];
     NSData *provisionerConfirmationData = [self.provisioningData provisionerConfirmation];
     SigProvisioningConfirmationPdu *pdu = [[SigProvisioningConfirmationPdu alloc] initWithConfirmation:provisionerConfirmationData];
-//    TelinkLogInfo(@"app端的Confirmation=%@",[LibTools convertDataToHexStr:provisionerConfirmationData]);
+//    TelinkLogInfo(@"app端的Confirmation=%@",[TelinkLibTools convertDataToHexStr:provisionerConfirmationData]);
     self.outboundPDUNumber = 3;
     [self sendRemoteProvisionPDUWithOutboundPDUNumber:self.outboundPDUNumber provisioningPDU:pdu.pduData retryCount:kRemoteProgressRetryCount complete:nil];
 }
@@ -423,7 +423,7 @@ typedef void(^RemotePDUResultCallBack)(BOOL isSuccess);
 }
 
 #pragma mark step1:getCapabilities
-- (void)getCapabilitiesWithTimeout:(NSTimeInterval)timeout callback:(prvisionResponseCallBack)block {
+- (void)getCapabilitiesWithTimeout:(NSTimeInterval)timeout callback:(provisionResponseCallBack)block {
     TelinkLogInfo(@"\n\n==========remote provision:step1\n\n");
     self.provisionResponseBlock = block;
     [self cancelLastMessageHandle];
@@ -457,7 +457,7 @@ typedef void(^RemotePDUResultCallBack)(BOOL isSuccess);
 }
 
 #pragma mark step2:start
-- (void)sentStartNoOobProvisionPduWithTimeout:(NSTimeInterval)timeout callback:(prvisionResponseCallBack)block {
+- (void)sentStartNoOobProvisionPduWithTimeout:(NSTimeInterval)timeout callback:(provisionResponseCallBack)block {
     TelinkLogInfo(@"\n\n==========remote provision:step2(noOob)\n\n");
     // Is the Provisioner Manager in the right state?
     if (self.state != ProvisioningState_capabilitiesReceived) {
@@ -496,7 +496,7 @@ typedef void(^RemotePDUResultCallBack)(BOOL isSuccess);
     [self sendRemoteProvisionPDUWithOutboundPDUNumber:self.outboundPDUNumber provisioningPDU:startPdu.pduData retryCount:kRemoteProgressRetryCount complete:nil];
 }
 
-- (void)sentStartStaticOobProvisionPduAndPublicKeyPduWithStaticOobData:(NSData *)oobData timeout:(NSTimeInterval)timeout callback:(prvisionResponseCallBack)block {
+- (void)sentStartStaticOobProvisionPduAndPublicKeyPduWithStaticOobData:(NSData *)oobData timeout:(NSTimeInterval)timeout callback:(provisionResponseCallBack)block {
     TelinkLogInfo(@"\n\n==========remote provision:step2(staticOob)\n\n");
     // Is the Provisioner Manager in the right state?
     if (self.state != ProvisioningState_capabilitiesReceived) {
@@ -538,7 +538,7 @@ typedef void(^RemotePDUResultCallBack)(BOOL isSuccess);
 }
 
 #pragma mark step2.5:Publickey
-- (void)sentProvisionPublickeyPduWithTimeout:(NSTimeInterval)timeout callback:(prvisionResponseCallBack)block {
+- (void)sentProvisionPublickeyPduWithTimeout:(NSTimeInterval)timeout callback:(provisionResponseCallBack)block {
     TelinkLogInfo(@"\n\n==========remote provision:step2.5(noOob)\n\n");
 
     self.provisionResponseBlock = block;
@@ -550,7 +550,7 @@ typedef void(^RemotePDUResultCallBack)(BOOL isSuccess);
 }
 
 #pragma mark step3:Confirmation
-- (void)sentProvisionConfirmationPduWithTimeout:(NSTimeInterval)timeout callback:(prvisionResponseCallBack)block {
+- (void)sentProvisionConfirmationPduWithTimeout:(NSTimeInterval)timeout callback:(provisionResponseCallBack)block {
     TelinkLogInfo(@"\n\n==========remote provision:step3\n\n");
     self.provisionResponseBlock = block;
     NSData *authValue = nil;
@@ -573,7 +573,7 @@ typedef void(^RemotePDUResultCallBack)(BOOL isSuccess);
 }
 
 #pragma mark step4:Random
-- (void)sentProvisionRandomPduWithTimeout:(NSTimeInterval)timeout callback:(prvisionResponseCallBack)block {
+- (void)sentProvisionRandomPduWithTimeout:(NSTimeInterval)timeout callback:(provisionResponseCallBack)block {
     TelinkLogInfo(@"\n\n==========remote provision:step4\n\n");
     self.provisionResponseBlock = block;
     [self cancelLastMessageHandle];
@@ -583,7 +583,7 @@ typedef void(^RemotePDUResultCallBack)(BOOL isSuccess);
 }
 
 #pragma mark step5:EncryptedData
-- (void)sentProvisionEncryptedDataWithMicPduWithTimeout:(NSTimeInterval)timeout callback:(prvisionResponseCallBack)block {
+- (void)sentProvisionEncryptedDataWithMicPduWithTimeout:(NSTimeInterval)timeout callback:(provisionResponseCallBack)block {
     TelinkLogInfo(@"\n\n==========remote provision:step5\n\n");
     self.provisionResponseBlock = block;
     [self cancelLastMessageHandle];
@@ -640,7 +640,7 @@ typedef void(^RemotePDUResultCallBack)(BOOL isSuccess);
 - (void)sentProvisionPublicKeyPduWithResponse:(SigProvisioningPdu *)response {
     if (response.provisionType == SigProvisioningPduType_publicKey && self.outboundPDUNumber == 2 && self.inboundPDUNumber == 2) {
         SigProvisioningPublicKeyPdu *publicKeyPdu = (SigProvisioningPublicKeyPdu *)response;
-        TelinkLogInfo(@"device public key back:%@",[LibTools convertDataToHexStr:publicKeyPdu.publicKey]);
+        TelinkLogInfo(@"device public key back:%@",[TelinkLibTools convertDataToHexStr:publicKeyPdu.publicKey]);
         self.provisioningData.devicePublicKey = publicKeyPdu.publicKey;
         [self.provisioningData provisionerDidObtainWithDevicePublicKey:publicKeyPdu.publicKey];
         if (self.provisioningData.sharedSecret && self.provisioningData.sharedSecret.length > 0) {
@@ -664,7 +664,7 @@ typedef void(^RemotePDUResultCallBack)(BOOL isSuccess);
 - (void)sentProvisionConfirmationPduWithResponse:(SigProvisioningPdu *)response {
     if (response.provisionType == SigProvisioningPduType_confirmation && self.outboundPDUNumber == 3 && self.inboundPDUNumber == 3) {
         SigProvisioningConfirmationPdu *confirmationPdu = (SigProvisioningConfirmationPdu *)response;
-        TelinkLogInfo(@"device confirmation back:%@",[LibTools convertDataToHexStr:confirmationPdu.confirmation]);
+        TelinkLogInfo(@"device confirmation back:%@",[TelinkLibTools convertDataToHexStr:confirmationPdu.confirmation]);
         [self.provisioningData provisionerDidObtainWithDeviceConfirmation:confirmationPdu.confirmation];
         if ([[self.provisioningData provisionerConfirmation] isEqualToData:confirmationPdu.confirmation]) {
             TelinkLogDebug(@"Confirmation of device is equal to confirmation of provisioner!");
@@ -879,7 +879,7 @@ typedef void(^RemotePDUResultCallBack)(BOOL isSuccess);
     }
     if (self.staticOobData && self.staticOobData.length > 16 && algorithm == Algorithm_fipsP256EllipticCurve) {
         self.staticOobData = [self.staticOobData subdataWithRange:NSMakeRange(0, 16)];
-        TelinkLogInfo(@"Change staticOobData to 0x%@", [LibTools convertDataToHexStr:self.staticOobData]);
+        TelinkLogInfo(@"Change staticOobData to 0x%@", [TelinkLibTools convertDataToHexStr:self.staticOobData]);
     }
     TelinkLogInfo(@"algorithm=%@", algorithm == Algorithm_fipsP256EllipticCurve ? @"CMAC_AES128" : @"HMAC_SHA256");
     return algorithm;

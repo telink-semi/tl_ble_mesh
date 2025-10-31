@@ -79,7 +79,7 @@
     self.source = [[NSMutableArray alloc] init];
     for (NSData *data in meshList) {
         SigDataSource *ds = [[SigDataSource alloc] init];
-        [ds setDictionaryToDataSource:[LibTools getDictionaryWithJSONData:data]];
+        [ds setDictionaryToDataSource:[TelinkLibTools getDictionaryWithJSONData:data]];
         if ([ds.meshUUID isEqualToString:SigDataSource.share.meshUUID]) {
             [self.source addObject:SigDataSource.share];
         } else {
@@ -116,6 +116,7 @@
         [weakSelf saveMeshList];
         [weakSelf.tableView reloadData];
         [weakSelf switchMeshActionWithMeshDictionary:[ds getDictionaryFromDataSource]];
+        [SigDataSource.share optimizationDataOfNLCList];
     } cancel:^(UIAlertAction *action) {
 
     }];
@@ -187,6 +188,7 @@
 
 - (void)clickSwitchToThisNetworkButtonWithNetwork:(SigDataSource *)network {
     [self switchMeshActionWithMeshDictionary:network.getDictionaryFromDataSource];
+    [SigDataSource.share optimizationDataOfNLCList];
     [self reloadDataAndUI];
 }
 
@@ -242,7 +244,7 @@
     NSMutableArray *meshList = [NSMutableArray array];
     for (SigDataSource *n in self.source) {
         NSDictionary *meshDict = [n getDictionaryFromDataSource];
-        NSData *tempData = [LibTools getJSONDataWithDictionary:meshDict];
+        NSData *tempData = [TelinkLibTools getJSONDataWithDictionary:meshDict];
         [meshList addObject:tempData];
     }
     [[NSUserDefaults standardUserDefaults] setValue:meshList forKey:kCacheMeshListKey];

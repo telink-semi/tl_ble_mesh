@@ -166,7 +166,7 @@
 }
 
 - (NSString *)description {
-    return[NSString stringWithFormat:@"<%p> - SigSegmentedAccessMessage, aid:(0x%X) szmic:(0x%X), seqZero:(0x%X), segO:(0x%X), segN:(0x%X), data:(0x%@)", self, _aid, _transportMicSize, self.sequenceZero, self.segmentOffset, self.lastSegmentNumber, [LibTools convertDataToHexStr:self.upperTransportPdu]];
+    return[NSString stringWithFormat:@"<%p> - SigSegmentedAccessMessage, aid:(0x%X) szmic:(0x%X), seqZero:(0x%X), segO:(0x%X), segN:(0x%X), data:(0x%@)", self, _aid, _transportMicSize, self.sequenceZero, self.segmentOffset, self.lastSegmentNumber, [TelinkLibTools convertDataToHexStr:self.upperTransportPdu]];
 }
 
 @end

@@ -40,7 +40,7 @@
 /// Tips Title of Provision Mode
 #define kProvisionModeTitle  @"Provision Mode"
 /// Tips message of Provision Mode
-#define kProvisionModeMessage  @"①.normal(selectable): Enabled for select the device for provision operation;\n②.normal(auto): Enabled for scanning, provisioning and key-binding one by one automatically;\n③.remote provision: If remote provision enabled, provision process will be:\n\t1. Scan for an unprovisioned device, connect and\n\tprovision;\n\t2. Keep the connection state, send scan command\n\tto the device;\n\t3. Some remote devices info will be upload;\n\t4. Check and do provision one by one.\n④.fast provision: Telink private provision profile, scan and setting device by direct connected mesh device."
+#define kProvisionModeMessage  @"①.normal(selectable): Enabled for select the device for provision operation;\n②.normal(auto): Enabled for scanning, provisioning and key-binding one by one automatically;\n③.remote provision: If remote provision enabled, provision process will be:\n\t1. Scan for an unprovisioned device, connect and\n\tprovision;\n\t2. Keep the connection state, send scan command\n\tto the device;\n\t3. Some remote devices info will be upload;\n\t4. Check and do provision one by one.\n④.fast provision: Telink private provision profile, scan and setting device by direct connected mesh device;\n⑤.normal(confirm): You can first determine the location of the device through identity, and then perform the device provision operation."
 /// 3.subscription level
 #define kSubscriptionLevel   @"Enable subscription level service model ID"
 /// Tips Title of subscription level
@@ -136,7 +136,7 @@
     [tipsMessage addObject:kDefaultBoundMessage];
 
     [array addObject:kProvision_Mode];
-    [items addObject:@[@"normal(selectable)", @"normal(auto)", @"remote provision", @"fast provision"]];
+    [items addObject:@[@"normal(selectable)", @"normal(auto)", @"remote provision", @"fast provision", @"normal(confirm)"]];
     [tipsTitles addObject:kProvisionModeTitle];
     [tipsMessage addObject:kProvisionModeMessage];
 

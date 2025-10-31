@@ -48,7 +48,7 @@
 
 /// The UUID as Data.
 - (NSData *)getData {
-    return [LibTools nsstringToHex:self.getHex];
+    return [TelinkLibTools nsstringToHex:self.getHex];
 }
 
 @end

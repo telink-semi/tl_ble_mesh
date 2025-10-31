@@ -69,7 +69,16 @@
     self.customAlert.rightBtnTitle = self.rightBtnTitle;
     self.customAlert.leftBtn.tag = 1;
     self.customAlert.rightBtn.tag = 2;
-    self.customAlert.height = 145+45*self.itemArray.count;
+//    self.customAlert.height = 145+45*self.itemArray.count;
+    self.customAlert.height = 145;
+    NSArray *array = [NSArray arrayWithArray:self.itemArray];
+    for (AlertItemModel *item in array) {
+        if (item.itemType == ItemType_sliderAndInput) {
+            self.customAlert.height += 108;
+        } else {
+            self.customAlert.height += 44;
+        }
+    }
     [self.customAlert.leftBtn addTarget:self action:@selector(btnClick:) forControlEvents:UIControlEventTouchUpInside];
     [self.customAlert.rightBtn addTarget:self action:@selector(btnClick:) forControlEvents:UIControlEventTouchUpInside];
 }

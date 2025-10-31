@@ -202,7 +202,7 @@
         NSMutableData *mData = [NSMutableData dataWithData:[NSData dataWithBytes:&scheduler length:8]];
         [mData appendData:[NSData dataWithBytes:&sceneID length:2]];
         if ([responseMessage.parameters isEqualToData:mData]) {
-            [AppDataSource.share saveSchedulerWithCloudSchedulerModel:weakSelf.cloudScheduler params:[LibTools convertDataToHexStr:mData] meshSceneId:sceneID resultBlock:^(NSError * _Nullable error) {
+            [AppDataSource.share saveSchedulerWithCloudSchedulerModel:weakSelf.cloudScheduler params:[TelinkLibTools convertDataToHexStr:mData] meshSceneId:sceneID resultBlock:^(NSError * _Nullable error) {
                 if (error) {
                     [weakSelf showTips:[NSString stringWithFormat:@"%@", error.localizedDescription]];
                 } else {
@@ -286,7 +286,7 @@
         UIButton *button = checkButtons[i];
         if (button.isSelected) {
             NSString *temStr = [(UITextField *)self.checkTextFields[i] text];
-            if ([LibTools validateNumberString:temStr]) {
+            if ([TelinkLibTools validateNumberString:temStr]) {
                 int tem = [temStr intValue];
                 int min = [checkRangeMin[i] intValue];
                 int max = [checkRangeMax[i] intValue];
@@ -438,7 +438,7 @@
     //1.remove all space
     sender.text = [sender.text removeAllSpaceAndNewlines];
     //2.正则判断合法性
-    if ([LibTools validateNumberString:sender.text]) {
+    if ([TelinkLibTools validateNumberString:sender.text]) {
         //3.change to int
         int tem = [sender.text intValue];
         if (sender == self.yearTextField) {

@@ -101,7 +101,7 @@
     NodeBatchCell *cell = (NodeBatchCell *)[tableView dequeueReusableCellWithIdentifier:NSStringFromClass(NodeBatchCell.class) forIndexPath:indexPath];
     SigNodeModel *node = self.dataSource[indexPath.row];
     cell.iconImageView.image = [DemoTool getNodeStateImageWithUnicastAddress:node.address];
-    cell.nameLabel.text = [NSString stringWithFormat:@"%@\naddress: 0x%04X UUID:\n%@", node.name, node.address, [LibTools meshUUIDToUUID:node.UUID]];
+    cell.nameLabel.text = [NSString stringWithFormat:@"%@\naddress: 0x%04X UUID:\n%@", node.name, node.address, [TelinkLibTools meshUUIDToUUID:node.UUID]];
     //直连设备显示蓝色
     if (node.address == SigDataSource.share.unicastAddressOfConnected && SigBearer.share.isOpen) {
         cell.nameLabel.textColor = HEX(#4A87EE);
@@ -156,11 +156,9 @@
 - (void)kickOutWithNode:(SigNodeModel *)node {
     //add a alert for kickOut device.
     __weak typeof(self) weakSelf = self;
-    [self showAlertSureAndCancelWithTitle:kDefaultAlertTitle message:@"Confirm to remove device?" sure:^(UIAlertAction *action) {
+    NSString *message = (SigBearer.share.isOpen && node.state != DeviceStateOutOfLine) ? @"Confirm to remove device?" : @"This node is outline, confirm to remove device?";
+    [self showAlertSureAndCancelWithTitle:kDefaultAlertTitle message:message sure:^(UIAlertAction *action) {
         [ShowTipsHandle.share show:Tip_KickOutDevice];
-        if (node.hasPublishFunction && node.hasOpenPublish) {
-            [SigPublishManager.share stopCheckOfflineTimerWithAddress:@(node.address)];
-        }
         if (SigBearer.share.isOpen) {
             [weakSelf kickOutActionWithNode:node];
         } else {
@@ -211,23 +209,34 @@
     } else {
         TelinkLogInfo(@"send request for kick out address:%d", node.address);
         [SDKLibCommand resetNodeWithDestination:node.address retryCount:SigDataSource.share.defaultRetryCount responseMaxCount:1 successCallback:^(UInt16 source, UInt16 destination, SigConfigNodeResetStatus * _Nonnull responseMessage) {
-
+            
         } resultCallback:^(BOOL isResponseAll, NSError * _Nullable error) {
             if (isResponseAll) {
                 TelinkLogDebug(@"kick out success.");
-            } else {
-                TelinkLogDebug(@"kick out fail.");
-            }
 #ifdef kIsTelinkCloudSigMeshLib
             [AppDataSource.share deleteNodeWithAddress:node.address resultBlock:^(NSError * _Nullable error) {
                 TelinkLogInfo(@"error = %@", error);
             }];
 #endif
-            [SigDataSource.share deleteNodeFromMeshNetworkWithDeviceAddress:node.address];
-            [ShowTipsHandle.share hidden];
-            [weakSelf delayReloadTableView];
+                [weakSelf kickOutSuccessAction:node];
+            } else {
+                TelinkLogDebug(@"kick out fail.");
+                // v4.1.0.4之后，如果App端没有接收到SigConfigNodeResetStatus，有可能是没有移除成功或者移除成功但回包丢失了，所以新增超时弹框让用户选择是否删除数据。
+                [weakSelf showAlertSureAndCancelWithTitle:kDefaultAlertTitle message:@"The APP did not receive the message NodeResetStatus, confirm to remove device?" sure:^(UIAlertAction *action) {
+                    [weakSelf kickOutSuccessAction:node];
+                } cancel:nil];
+            }
         }];
     }
+}
+
+- (void)kickOutSuccessAction:(SigNodeModel *)node {
+    if (node.hasPublishFunction && node.hasOpenPublish) {
+        [SigPublishManager.share stopCheckOfflineTimerWithAddress:@(node.address)];
+    }
+    [SigDataSource.share deleteNodeFromMeshNetworkWithDeviceAddress:node.address];
+    [ShowTipsHandle.share hidden];
+    [self delayReloadTableView];
 }
 
 - (void)connectGATTWithNode:(SigNodeModel *)node {
@@ -239,7 +248,7 @@
     [self showAlertSureAndCancelWithTitle:kDefaultAlertTitle message:@"connect to this node?" sure:^(UIAlertAction *action) {
         if (SigBearer.share.isOpen) {
             [SDKLibCommand configNodeIdentitySetWithDestination:node.address netKeyIndex:SigDataSource.share.curNetkeyModel.index identity:SigNodeIdentityState_enabled retryCount:SigMeshLib.share.dataSource.defaultRetryCount responseMaxCount:1 successCallback:^(UInt16 source, UInt16 destination, SigConfigNodeIdentityStatus * _Nonnull responseMessage) {
-                TelinkLogInfo(@"configNodeIdentitySetWithDestination=%@,source=%d,destination=%d",[LibTools convertDataToHexStr:responseMessage.parameters],source,destination);
+                TelinkLogInfo(@"configNodeIdentitySetWithDestination=%@,source=%d,destination=%d",[TelinkLibTools convertDataToHexStr:responseMessage.parameters],source,destination);
             } resultCallback:^(BOOL isResponseAll, NSError * _Nullable error) {
                 TelinkLogInfo(@"isResponseAll=%d,error=%@",isResponseAll,error);
                 [SDKLibCommand stopMeshConnectWithComplete:^(BOOL successful) {

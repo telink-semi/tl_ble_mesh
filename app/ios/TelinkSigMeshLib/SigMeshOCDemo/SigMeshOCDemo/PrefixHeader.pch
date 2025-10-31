@@ -32,10 +32,13 @@
 
 #import <CoreBluetooth/CoreBluetooth.h>
 
-//导入TelinkSigMeshLib.framework库
+// 导入方式1：导入TelinkSigMeshLib.framework库
 //#import "TelinkSigMeshLib/TelinkSigMeshLib.h"
-//导入TelinkSigMeshLib.xcodeproj工程
+
+// 导入方式2：导入TelinkSigMeshLib.xcodeproj工程
 #import "TelinkSigMeshLib.h"
+
+
 
 #import "UIColor+Telink.h"
 #import "BaseViewController.h"

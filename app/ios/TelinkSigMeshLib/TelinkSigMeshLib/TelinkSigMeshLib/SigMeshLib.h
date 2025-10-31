@@ -162,10 +162,13 @@ NS_ASSUME_NONNULL_BEGIN
 /// maxNetworkTransmitInterval = (networkTransmitIntervalSteps +1+1)*10*(networkTransmitCount+1)
 /// default is (0b00010+1+1)*10*(0b101 + 1)=240ms.
 @property (nonatomic,assign,readonly) double maxNetworkTransmitInterval;
+/// recommendedNetworkTransmitIntervalForMeshOTA = ((networkTransmitIntervalSteps +1)*10+7)*(networkTransmitCount+1)
+/// default is ((0b00010+1)*10+7)*(0b101 + 1)=222ms.
+@property (nonatomic,assign,readonly) double recommendedNetworkTransmitIntervalForMeshOTA;
 /// When the APP receives the segment data packet reported by the device, the timer for sending the
 /// ACK data packet before receiving the complete partial packet is reset. The timer is reset when the
 /// segment belonging to the current message is received.
-@property (nonatomic,strong,nullable) BackgroundTimer *receiveSegmentTimer;
+@property (nonatomic, strong, nullable) TelinkBackgroundTimer *receiveSegmentTimer;
 /// Identifies whether the SDK is currently receiving segment type data packets.
 @property (nonatomic,assign) BOOL isReceiveSegmentPDUing;
 /// Source Address of segment PDU.
@@ -176,6 +179,8 @@ NS_ASSUME_NONNULL_BEGIN
 @property (nonatomic,strong,nullable) SigMeshPrivateBeacon *meshPrivateBeacon;
 /// secureNetworkBeacon or meshPrivateBeacon.
 @property (nonatomic,assign) AppSendBeaconType sendBeaconType;
+/// Identify whether to retry group commands using unResponse unicast addresses. The default value is NO.
+@property (nonatomic,assign) BOOL retryGroupMessageByUnicastAddress;
 
 + (instancetype)new __attribute__((unavailable("please initialize by use .share or .share()")));
 - (instancetype)init __attribute__((unavailable("please initialize by use .share or .share()")));

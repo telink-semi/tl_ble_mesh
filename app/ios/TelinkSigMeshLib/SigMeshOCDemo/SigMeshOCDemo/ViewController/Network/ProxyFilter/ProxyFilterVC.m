@@ -73,12 +73,12 @@
             return;
         }
         //check input format
-        if ([LibTools validateHex:addressTF.text] == NO) {
+        if ([TelinkLibTools validateHexString:addressTF.text] == NO) {
             // need input hexadecimal char.
             [weakSelf showTips:@"Please input a hexadecimal string."];
             return;
         }
-        UInt16 address = [LibTools uint16From16String:addressTF.text];
+        UInt16 address = [TelinkLibTools uint16FromHexString:addressTF.text];
         TelinkLogDebug(@"输入address=%d",address);
         if ([weakSelf.filterModel.addressList containsObject:@(address)]) {
             [weakSelf showTips:[NSString stringWithFormat:@"Add fail! The address 0x%04X already exists.", address]];
@@ -95,7 +95,7 @@
 
 - (void)saveFilterLocation {
     NSDictionary *dict = [self.filterModel getDictionaryOfSigProxyFilterModel];
-    NSData *filterData = [LibTools getJSONDataWithDictionary:dict];
+    NSData *filterData = [TelinkLibTools getJSONDataWithDictionary:dict];
     [[NSUserDefaults standardUserDefaults] setValue:filterData forKey:kFilter];
     [[NSUserDefaults standardUserDefaults] synchronize];
 }
@@ -124,7 +124,7 @@
             [weakSelf showAlertSureAndCancelWithTitle:kDefaultAlertTitle message:[NSString stringWithFormat:@"Are you sure delete address: 0x%04X?", address.intValue] sure:^(UIAlertAction *action) {
                 [weakSelf.filterModel.addressList removeObject:address];
                 NSDictionary *dict = [weakSelf.filterModel getDictionaryOfSigProxyFilterModel];
-                NSData *filterData = [LibTools getJSONDataWithDictionary:dict];
+                NSData *filterData = [TelinkLibTools getJSONDataWithDictionary:dict];
                 [[NSUserDefaults standardUserDefaults] setValue:filterData forKey:kFilter];
                 [[NSUserDefaults standardUserDefaults] synchronize];
                 [weakSelf refreshSourceAndUI];

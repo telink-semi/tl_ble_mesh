@@ -37,13 +37,13 @@ typedef void(^ResponseOfOLCPMessageBlock)(OLCPResponseCodeModel * _Nullable resp
 
 @interface OTSCommand : NSObject
 /// OTS message object.
-@property (nonatomic,strong) OTSBaseModel *curOTSMessage;
+@property (nonatomic, strong) OTSBaseModel *curOTSMessage;
 /// Time out of message
-@property (nonatomic,assign) NSTimeInterval timeout;//default is 1.0s,OTSCommandTimeout.
+@property (nonatomic, assign) NSTimeInterval timeout;//default is 1.0s,OTSCommandTimeout.
 /// The BackgroundTimer object of time out.
-@property (nonatomic,strong,nullable) BackgroundTimer *timeoutTimer;
+@property (nonatomic, strong, nullable) TelinkBackgroundTimer *timeoutTimer;
 #pragma mark - Save call back
-@property (nonatomic,copy) ResponseAllOTSMessageBlock responseCallback;
+@property (nonatomic, copy) ResponseAllOTSMessageBlock responseCallback;
 
 
 #pragma mark - OACP

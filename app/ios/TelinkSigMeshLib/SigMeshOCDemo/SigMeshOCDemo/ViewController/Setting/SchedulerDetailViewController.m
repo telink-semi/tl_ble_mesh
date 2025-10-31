@@ -28,6 +28,9 @@
 @interface SchedulerDetailViewController ()
 @property (weak, nonatomic) IBOutlet UILabel *schedulerIndexLabel;
 
+@property (weak, nonatomic) IBOutlet UILabel *elementLabel;
+@property (weak, nonatomic) IBOutlet UIButton *elementButton;
+
 @property (weak, nonatomic) IBOutlet UIButton *yearAnyButton;
 @property (weak, nonatomic) IBOutlet UIButton *yearCustomButton;
 @property (weak, nonatomic) IBOutlet UITextField *yearTextField;
@@ -127,34 +130,25 @@
     if ([self hasInputError]) {
         return;
     }
-
-    NSMutableArray *allArray = [[NSMutableArray alloc] initWithObjects:self.device, nil];
+    __block BOOL hasSuccess = NO;
     __weak typeof(self) weakSelf = self;
-    NSOperationQueue *operationQueue = [[NSOperationQueue alloc] init];
-    [operationQueue addOperationWithBlock:^{
-        while (allArray.count > 0) {
-            dispatch_semaphore_t semaphore = dispatch_semaphore_create(0);
-            SigNodeModel *curDevice = allArray.firstObject;
-            [DemoCommand setSchedulerActionWithAddress:curDevice.schedulerAddress[0].intValue schedulerModel:weakSelf.model responseMaxCount:1 ack:YES successCallback:^(UInt16 source, UInt16 destination, SigSchedulerActionStatus * _Nonnull responseMessage) {
-                TelinkLogVerbose(@"responseMessage=%@,parameters=%@",responseMessage,responseMessage.parameters);
-                UInt16 sceneID = weakSelf.model.sceneId;
-                UInt64 scheduler = weakSelf.model.schedulerData;
-                NSMutableData *mData = [NSMutableData dataWithData:[NSData dataWithBytes:&scheduler length:8]];
-                [mData appendData:[NSData dataWithBytes:&sceneID length:2]];
-                if ([responseMessage.parameters isEqualToData:mData]) {
-                    [allArray removeObject:curDevice];
-                    dispatch_semaphore_signal(semaphore);
-                }
-            } resultCallback:^(BOOL isResponseAll, NSError * _Nonnull error) {
-                TelinkLogDebug(@"");
-            }];
-            dispatch_semaphore_wait(semaphore, dispatch_time(DISPATCH_TIME_NOW, NSEC_PER_SEC * 4.0));
+    [DemoCommand setSchedulerActionWithAddress:self.device.address + self.model.elementOffset schedulerModel:self.model responseMaxCount:1 ack:YES successCallback:^(UInt16 source, UInt16 destination, SigSchedulerActionStatus * _Nonnull responseMessage) {
+        TelinkLogVerbose(@"responseMessage=%@,parameters=%@",responseMessage,responseMessage.parameters);
+        UInt16 sceneID = weakSelf.model.sceneId;
+        UInt64 scheduler = weakSelf.model.schedulerData;
+        NSMutableData *mData = [NSMutableData dataWithData:[NSData dataWithBytes:&scheduler length:8]];
+        [mData appendData:[NSData dataWithBytes:&sceneID length:2]];
+        if ([responseMessage.parameters isEqualToData:mData]) {
+            hasSuccess = YES;
         }
-        TelinkLogDebug(@"save success");
-        [weakSelf.device saveSchedulerModelWithModel:weakSelf.model];
-        dispatch_async(dispatch_get_main_queue(), ^{
-            [weakSelf.navigationController popViewControllerAnimated:YES];
-        });
+    } resultCallback:^(BOOL isResponseAll, NSError * _Nonnull error) {
+        if (hasSuccess) {
+            TelinkLogDebug(@"save success");
+            [weakSelf.device saveSchedulerModelWithModel:weakSelf.model];
+            dispatch_async(dispatch_get_main_queue(), ^{
+                [weakSelf.navigationController popViewControllerAnimated:YES];
+            });
+        }
     }];
 }
 
@@ -168,7 +162,7 @@
         UIButton *button = checkButtons[i];
         if (button.isSelected) {
             NSString *temStr = [(UITextField *)self.checkTextFields[i] text];
-            if ([LibTools validateNumberString:temStr]) {
+            if ([TelinkLibTools validateNumberString:temStr]) {
                 int tem = [temStr intValue];
                 int min = [checkRangeMin[i] intValue];
                 int max = [checkRangeMax[i] intValue];
@@ -193,6 +187,25 @@
         }
     }
 
+    //element
+    if (sender == self.elementButton) {
+        NSArray <NSNumber *>*elementAddresses = [self.device schedulerAddress];
+        __weak typeof(self) weakSelf = self;
+        UIAlertController *actionSheet = [UIAlertController alertControllerWithTitle:@"Select Element Address" message:nil preferredStyle:UIAlertControllerStyleActionSheet];
+        for (NSNumber *elementAddressNumber in elementAddresses) {
+            UIAlertAction *alertT = [UIAlertAction actionWithTitle:[NSString stringWithFormat:@"element %d(address=0x%04X)", elementAddressNumber.intValue - weakSelf.device.address, elementAddressNumber.intValue] style:UIAlertActionStyleDefault handler:^(UIAlertAction * _Nonnull action) {
+                weakSelf.model.elementOffset = elementAddressNumber.intValue - weakSelf.device.address;
+                [weakSelf reloadView];
+            }];
+            [actionSheet addAction:alertT];
+        }
+        UIAlertAction *alertF = [UIAlertAction actionWithTitle:kDefaultAlertCancel style:UIAlertActionStyleCancel handler:nil];
+        [actionSheet addAction:alertF];
+        actionSheet.popoverPresentationController.sourceView = self.elementButton;
+        actionSheet.popoverPresentationController.sourceRect =  self.elementButton.frame;
+        [self presentViewController:actionSheet animated:YES completion:nil];
+    }
+    
     //year
     if (sender == self.yearAnyButton) {
         self.model.year = 0x64;
@@ -318,7 +331,7 @@
     //1.remove all space
     sender.text = [sender.text removeAllSpaceAndNewlines];
     //2.正则判断合法性
-    if ([LibTools validateNumberString:sender.text]) {
+    if ([TelinkLibTools validateNumberString:sender.text]) {
         //3.change to int
         int tem = [sender.text intValue];
         if (sender == self.yearTextField) {
@@ -344,6 +357,10 @@
 }
 
 - (void)reloadView{
+    //element
+    self.elementLabel.text = [NSString stringWithFormat:@"element %d(address=0x%04X)", self.model.elementOffset, self.device.address+self.model.elementOffset];
+    self.elementButton.enabled = self.isNew;
+    
     //year
     if (self.model.year <= 0x63) {
         self.yearAnyButton.selected = NO;

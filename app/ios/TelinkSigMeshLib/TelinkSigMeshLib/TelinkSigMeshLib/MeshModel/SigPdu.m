@@ -876,21 +876,21 @@
         NSMutableArray <SigNetkeyDerivatives *>*keySets = [NSMutableArray array];
         if (_nid == networkKey.nid) {
             [keySets addObject:networkKey.keys];
-            TelinkLogVerbose(@"Decode networkId=0x%@", [LibTools convertDataToHexStr:networkKey.networkId]);
+            TelinkLogVerbose(@"Decode networkId=0x%@", [TelinkLibTools convertDataToHexStr:networkKey.networkId]);
         } else if (_nid == networkKey.directedSecurityNid) {
             networkKey.keys.privacyKey = networkKey.keys.directedSecurityPrivacyKey;
             networkKey.keys.encryptionKey = networkKey.keys.directedSecurityEncryptionKey;
             [keySets addObject:networkKey.keys];
-            TelinkLogVerbose(@"Decode networkId=0x%@", [LibTools convertDataToHexStr:networkKey.networkId]);
+            TelinkLogVerbose(@"Decode networkId=0x%@", [TelinkLibTools convertDataToHexStr:networkKey.networkId]);
         }
         if (networkKey.oldKeys != nil && networkKey.oldNid == _nid) {
             [keySets addObject:networkKey.oldKeys];
-            TelinkLogVerbose(@"Decode old networkId=0x%@", [LibTools convertDataToHexStr:networkKey.oldNetworkId]);
+            TelinkLogVerbose(@"Decode old networkId=0x%@", [TelinkLibTools convertDataToHexStr:networkKey.oldNetworkId]);
         } else if (networkKey.oldKeys != nil && networkKey.directedSecurityOldNid == _nid) {
             networkKey.oldKeys.privacyKey = networkKey.oldKeys.directedSecurityPrivacyKey;
             networkKey.oldKeys.encryptionKey = networkKey.oldKeys.directedSecurityEncryptionKey;
             [keySets addObject:networkKey.oldKeys];
-            TelinkLogVerbose(@"Decode old networkId=0x%@", [LibTools convertDataToHexStr:networkKey.oldNetworkId]);
+            TelinkLogVerbose(@"Decode old networkId=0x%@", [TelinkLibTools convertDataToHexStr:networkKey.oldNetworkId]);
         }
         if (keySets.count == 0) {
             return nil;
@@ -1479,7 +1479,7 @@
         if (pdu.length < 19 || tem == 0) {
             return nil;
         }
-        _deviceUuid = [LibTools convertDataToHexStr:[pdu subdataWithRange:NSMakeRange(1, 16)]];
+        _deviceUuid = [TelinkLibTools convertDataToHexStr:[pdu subdataWithRange:NSMakeRange(1, 16)]];
         UInt16 temOob = 0;
         memcpy(&temOob, pduByte+17, 1);
         _oob.value = temOob;
@@ -1540,10 +1540,10 @@
         BOOL authentication = NO;
         NSMutableArray *mArray = [NSMutableArray array];
         if (networkKey.key && networkKey.key.length == 32) {
-            [mArray addObject:[LibTools nsstringToHex:networkKey.key]];
+            [mArray addObject:[TelinkLibTools nsstringToHex:networkKey.key]];
         }
         if (networkKey.oldKey && networkKey.oldKey.length == 32) {
-            [mArray addObject:[LibTools nsstringToHex:networkKey.oldKey]];
+            [mArray addObject:[TelinkLibTools nsstringToHex:networkKey.oldKey]];
         }
         for (NSData *key in mArray) {
             NSData *obfuscatedPrivateBeaconDataC = [OpenSSLHelper.share calculateObfuscatedPrivateBeaconDataWithKeyRefreshFlag:networkKey.phase == distributingKeys ivUpdateActive:networkKey.ivIndex.updateActive ivIndex:networkKey.ivIndex.index randomData:_randomData usingNetworkKey:key];
@@ -1622,7 +1622,7 @@
         _randomData = [NSData dataWithData:randomData];
         _ivIndex = ivIndex;
         _networkKey = networkKey;
-        _netKeyData = [LibTools nsstringToHex:networkKey.key];
+        _netKeyData = [TelinkLibTools nsstringToHex:networkKey.key];
     }
     return self;
 }
@@ -1659,7 +1659,7 @@
 }
 
 - (NSString *)description {
-    return[NSString stringWithFormat:@"<%p> - Mesh Private Beacon, random:(%@), netKeyData:(%@), ivIndex: (%x) Key refresh Flag: (%d), IV Update active: (%d)", self, [LibTools convertDataToHexStr:_randomData],[LibTools convertDataToHexStr:_netKeyData],(unsigned int)_ivIndex, _keyRefreshFlag,_ivUpdateActive];
+    return[NSString stringWithFormat:@"<%p> - Mesh Private Beacon, random:(%@), netKeyData:(%@), ivIndex: (%x) Key refresh Flag: (%d), IV Update active: (%d)", self, [TelinkLibTools convertDataToHexStr:_randomData],[TelinkLibTools convertDataToHexStr:_netKeyData],(unsigned int)_ivIndex, _keyRefreshFlag,_ivUpdateActive];
 }
 
 @end

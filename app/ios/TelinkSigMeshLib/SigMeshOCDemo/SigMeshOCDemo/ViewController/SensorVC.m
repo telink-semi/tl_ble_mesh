@@ -29,7 +29,6 @@
 @property (weak, nonatomic) IBOutlet UIButton *GetSensorStatusButton;
 
 @property (nonatomic,strong) NSString *logString;
-@property (nonatomic, assign) BOOL hasClickKickOut;
 
 @end
 
@@ -54,7 +53,7 @@
     NSString *str = @"a3 ff 00 00 00 00 00 00 02 00 e0 11 02 e1 02 00 00";
 //    NSString *str = @"a3 ff 00 00 00 00 00 00 02 00 82 01";
     NSString *string = [str.uppercaseString removeAllSpaceAndNewlines];
-    NSData *data = [LibTools nsstringToHex:string];
+    NSData *data = [TelinkLibTools nsstringToHex:string];
 
     UInt8 *bytes = (UInt8 *)data.bytes;
     UInt16 address = self.model.address;
@@ -80,49 +79,8 @@
     } resultCallback:^(BOOL isResponseAll, NSError * _Nullable error) {
         TelinkLogVerbose(@"");
     }];
-    TelinkLogInfo(@"send ini:%@",[LibTools convertDataToHexStr:[NSData dataWithBytes:bytes length:data.length]]);
+    TelinkLogInfo(@"send ini:%@",[TelinkLibTools convertDataToHexStr:[NSData dataWithBytes:bytes length:data.length]]);
 }
-
-//- (IBAction)clickKictOut:(UIButton *)sender {
-//    TelinkLogDebug(@"");
-//    self.hasClickKickOut = YES;
-//    [ShowTipsHandle.share show:Tip_KickOutDevice];
-//
-//    [SigDataSource.share deleteNodeFromMeshNetworkWithDeviceAddress:self.model.address];
-//
-//    if (SigBearer.share.isOpen) {
-//        [self kickoutAction];
-//    } else {
-//        [self pop];
-//    }
-//
-//}
-//
-//- (void)kickoutAction{
-//    TelinkLogDebug(@"");
-//    __weak typeof(self) weakSelf = self;
-//    [DemoCommand kickoutDevice:self.model.address retryCount:0 responseMaxCount:0 successCallback:^(UInt16 source, UInt16 destination, SigConfigNodeResetStatus * _Nonnull responseMessage) {
-//        TelinkLogDebug(@"delete device success.");
-//        [NSObject cancelPreviousPerformRequestsWithTarget:weakSelf];
-//        [weakSelf pop];
-//    } resultCallback:^(BOOL isResponseAll, NSError * _Nonnull error) {
-//
-//    }];
-//
-//    if (self.model && [self.model.peripheralUUID isEqualToString:SigBearer.share.getCurrentPeripheral.identifier.UUIDString]) {
-//        //if node is Bluetooth.share.currentPeripheral, wait node didDisconnectPeripheral, delay 1.5s and pop.
-//    } else {
-//        //if node isn't Bluetooth.share.currentPeripheral, delay 5s and pop.
-//        [self performSelector:@selector(pop) withObject:nil afterDelay:TimeOut_KickoutConnectedDelayResponseTime];
-//    }
-//}
-//
-//- (void)pop{
-//    dispatch_async(dispatch_get_main_queue(), ^{
-//        [ShowTipsHandle.share hidden];
-//        [self.navigationController popViewControllerAnimated:YES];
-//    });
-//}
 
 - (void)showNewLogMessage:(NSString *)msg{
     NSDateFormatter *dformatter = [[NSDateFormatter alloc] init];

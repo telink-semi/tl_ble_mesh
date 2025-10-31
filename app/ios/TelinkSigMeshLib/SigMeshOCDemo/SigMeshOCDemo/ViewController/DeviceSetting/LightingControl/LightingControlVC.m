@@ -26,30 +26,7 @@
 #import "UIButton+extension.h"
 #import "CustomAlertView.h"
 #import "NSString+extension.h"
-
-@interface LCShowModel : NSObject
-/** 是否展开 */
-@property (nonatomic, assign) BOOL isExpand;
-@property (strong, nonatomic) NSString *title;
-@property (strong, nonatomic) NSString *detail;
-@property (assign, nonatomic) NSInteger propertyID;
-@property (assign, nonatomic) NSInteger value;
-- (instancetype)initWithTitle:(NSString *)title detail:(NSString *)detail propertyID:(NSInteger)propertyID value:(NSInteger)value;
-@end
-@implementation LCShowModel
-- (instancetype)initWithTitle:(NSString *)title detail:(NSString *)detail propertyID:(NSInteger)propertyID value:(NSInteger)value {
-    /// Use the init method of the parent class to initialize some properties of the parent class of the subclass instance.
-    if (self = [super init]) {
-        /// Initialize self.
-        _title = title;
-        _detail = detail;
-        _propertyID = propertyID;
-        _value = value;
-    }
-    return self;
-}
-@end
-
+#import "BaseModel.h"
 
 @interface LightingControlVC ()
 @property (weak, nonatomic) IBOutlet UISwitch *enableLCModeSwitch;
@@ -348,22 +325,28 @@
     [cell.setButton addAction:^(UIButton *button) {
         //Set property parameter
         AlertItemModel *item = [[AlertItemModel alloc] init];
-        item.itemType = ItemType_Input;
+        item.itemType = indexPath.section < 6 ? ItemType_sliderAndInput : ItemType_Input;
         item.headerString = @"please input content";
         item.defaultString = @"";
+        item.totalValueOfSlider = m.value;
+        if (indexPath.section < 3) {
+            item.maxValueOfSlider = 0xFFFF;
+        } else if (indexPath.section < 6) {
+            item.maxValueOfSlider = 0xFFFFFF;
+        }
         CustomAlertView *customAlertView = [[CustomAlertView alloc] initWithTitle:[NSString stringWithFormat:@"Set %@", m.title] detail:@"input new value" itemArray:@[item] leftBtnTitle:kDefaultAlertCancel rightBtnTitle:kDefaultAlertOK alertResult:^(CustomAlert * _Nonnull alertView, BOOL isConfirm) {
             if (isConfirm) {
                 //CONFIRM
                 NSString *ttlString = [alertView getTextFieldOfRow:0].text.removeAllSpace;
                 if (indexPath.section > 13) {
                     //float32
-                    BOOL result = [LibTools validateFloatString:ttlString];
+                    BOOL result = [TelinkLibTools validateFloatString:ttlString];
                     if (result == NO || ttlString.length == 0) {
                         [weakSelf showTips:@"Please enter float32 string!"];
                         return;
                     }
                 } else {
-                    BOOL result = [LibTools validateNumberString:ttlString];
+                    BOOL result = [TelinkLibTools validateNumberString:ttlString];
                     if (result == NO || ttlString.length == 0) {
                         [weakSelf showTips:@"Please enter decimal string!"];
                         return;
@@ -404,7 +387,7 @@
                 }
                 [ShowTipsHandle.share show:[NSString stringWithFormat:@"Set %@...", m.title]];
                 [SDKLibCommand lightLCPropertySetWithDestination:weakSelf.lightLCServerAddress propertyID:m.propertyID propertyValue:data retryCount:2 responseMaxCount:1 ack:YES successCallback:^(UInt16 source, UInt16 destination, SigLightLCPropertyStatus * _Nonnull responseMessage) {
-                    TelinkLogInfo(@"lightLCPropertySet=%@,source=%d,destination=%d",[LibTools convertDataToHexStr:responseMessage.parameters],source,destination);
+                    TelinkLogInfo(@"lightLCPropertySet=%@,source=%d,destination=%d",[TelinkLibTools convertDataToHexStr:responseMessage.parameters],source,destination);
                     if (weakSelf.lightLCServerAddress == source && m.propertyID == responseMessage.lightLCPropertyID) {
                         UInt32 *responseValue = 0;
                         Byte *dataByte = (Byte *)responseMessage.lightLCPropertyValue.bytes;

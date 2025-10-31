@@ -138,7 +138,7 @@
 //    } startProvisionCallback:^{
 //        [weakSelf updateSettingProvisionData];
 //    } addSingleDeviceSuccessCallback:^(NSData * _Nonnull deviceKey, NSString * _Nonnull macAddress, UInt16 address, UInt16 pid) {
-//        TelinkLogInfo(@"fast provision single success, deviceKey=%@, macAddress=%@, address=0x%x, pid=%d",[LibTools convertDataToHexStr:deviceKey],macAddress,address,pid);
+//        TelinkLogInfo(@"fast provision single success, deviceKey=%@, macAddress=%@, address=0x%x, pid=%d",[TelinkLibTools convertDataToHexStr:deviceKey],macAddress,address,pid);
 //        [weakSelf updateFastProvisionSuccessWithDeviceKey:deviceKey macAddress:macAddress address:address pid:pid];
 //    } finish:^(NSError * _Nullable error) {
 //        TelinkLogInfo(@"error=%@",error);
@@ -164,7 +164,7 @@
     } startProvisionCallback:^{
         [weakSelf updateSettingProvisionData];
     } addSingleDeviceSuccessCallback:^(NSData * _Nonnull deviceKey, NSString * _Nonnull macAddress, UInt16 address, UInt16 pid) {
-        TelinkLogInfo(@"fast provision single success, deviceKey=%@, macAddress=%@, address=0x%x, pid=%d",[LibTools convertDataToHexStr:deviceKey],macAddress,address,pid);
+        TelinkLogInfo(@"fast provision single success, deviceKey=%@, macAddress=%@, address=0x%x, pid=%d",[TelinkLibTools convertDataToHexStr:deviceKey],macAddress,address,pid);
         [weakSelf updateFastProvisionSuccessWithDeviceKey:deviceKey macAddress:macAddress address:address pid:pid];
     } finish:^(NSError * _Nullable error) {
         TelinkLogInfo(@"error=%@",error);
@@ -191,7 +191,7 @@
     scanModel.macAddress = macAddress;
     model.scanRspModel = scanModel;
     model.scanRspModel.address = address;
-    model.scanRspModel.advUuid = [LibTools convertDataToHexStr:[LibTools calcUuidByMac:[LibTools nsstringToHex:model.scanRspModel.macAddress]]];
+    model.scanRspModel.advUuid = [TelinkLibTools convertDataToHexStr:[LibTools calcUuidByMac:[TelinkLibTools nsstringToHex:model.scanRspModel.macAddress]]];
     model.state = AddDeviceModelStateDeviceFound;
     if (![self.source containsObject:model]) {
         [self.source addObject:model];

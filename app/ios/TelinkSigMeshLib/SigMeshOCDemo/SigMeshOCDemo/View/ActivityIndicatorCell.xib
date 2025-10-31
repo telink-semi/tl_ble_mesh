@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<document type="com.apple.InterfaceBuilder3.CocoaTouch.XIB" version="3.0" toolsVersion="22155" targetRuntime="iOS.CocoaTouch" propertyAccessControl="none" useAutolayout="YES" useTraitCollections="YES" useSafeAreas="YES" colorMatched="YES">
+<document type="com.apple.InterfaceBuilder3.CocoaTouch.XIB" version="3.0" toolsVersion="23727" targetRuntime="iOS.CocoaTouch" propertyAccessControl="none" useAutolayout="YES" useTraitCollections="YES" useSafeAreas="YES" colorMatched="YES">
     <device id="retina6_12" orientation="portrait" appearance="light"/>
     <dependencies>
         <deployment identifier="iOS"/>
-        <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="22131"/>
+        <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="23721"/>
         <capability name="Safe area layout guides" minToolsVersion="9.0"/>
         <capability name="System colors in document resources" minToolsVersion="11.0"/>
         <capability name="documents saved in the Xcode 8 format" minToolsVersion="8.0"/>
@@ -47,8 +47,8 @@
                             <constraint firstItem="1zF-pr-57y" firstAttribute="top" secondItem="OOq-Zh-tg8" secondAttribute="top" constant="18" id="PQN-Xn-Pu9"/>
                             <constraint firstItem="vGN-HH-JBk" firstAttribute="centerY" secondItem="1zF-pr-57y" secondAttribute="centerY" id="axd-BH-Eck"/>
                             <constraint firstItem="1zF-pr-57y" firstAttribute="centerY" secondItem="OOq-Zh-tg8" secondAttribute="centerY" id="cO1-0V-9li"/>
-                            <constraint firstItem="fdG-K1-21B" firstAttribute="centerY" secondItem="1zF-pr-57y" secondAttribute="centerY" id="goP-WU-N1c"/>
                             <constraint firstAttribute="trailing" secondItem="fdG-K1-21B" secondAttribute="trailing" constant="20" id="mtS-am-dxM"/>
+                            <constraint firstItem="fdG-K1-21B" firstAttribute="centerY" secondItem="1zF-pr-57y" secondAttribute="centerY" id="oeX-e1-TTM"/>
                             <constraint firstItem="vGN-HH-JBk" firstAttribute="leading" secondItem="1zF-pr-57y" secondAttribute="trailing" constant="10" id="tGq-U1-r79"/>
                             <constraint firstItem="1zF-pr-57y" firstAttribute="leading" secondItem="OOq-Zh-tg8" secondAttribute="leading" constant="20" id="uPZ-wD-Vut"/>
                         </constraints>

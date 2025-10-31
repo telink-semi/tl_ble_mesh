@@ -46,7 +46,7 @@
     [cell.editButton addAction:^(UIButton *button) {
         SchedulerDetailViewController *vc = (SchedulerDetailViewController *)[UIStoryboard initVC:NSStringFromClass(SchedulerDetailViewController.class) storyboard:@"Cloud"];
         vc.cloudScheduler = model;
-        SchedulerModel *scheduler = [[SchedulerModel alloc] initWithSchedulerDataAndSceneIdData:[LibTools nsstringToHex:model.params]];
+        SchedulerModel *scheduler = [[SchedulerModel alloc] initWithSchedulerDataAndSceneIdData:[TelinkLibTools nsstringToHex:model.params]];
         if (scheduler == nil) {
             //That means params is nil.
             scheduler = [[SchedulerModel alloc] init];
@@ -130,8 +130,10 @@
 
 - (void)refreshUI {
     self.schedulerList = [NSMutableArray arrayWithArray:self.cloudNodeModel.schedulerList];
-    [self.tableView performSelectorOnMainThread:@selector(reloadData) withObject:nil waitUntilDone:YES];
-    self.tableView.hidden = self.schedulerList.count == 0;
+    dispatch_async(dispatch_get_main_queue(), ^{
+        [self.tableView reloadData];
+        self.tableView.hidden = self.schedulerList.count == 0;
+    });
 }
 
 @end

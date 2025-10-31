@@ -99,7 +99,7 @@
                 dispatch_semaphore_t semaphore = dispatch_semaphore_create(0);
                 TelinkLogInfo(@"send request for forwardingTableDelete, address:%d", address);
                 [SDKLibCommand forwardingTableDeleteWithNetKeyIndex:weakSelf.forwardingTableModel.netKeyIndex pathOrigin:weakSelf.forwardingTableModel.tableSource pathDestination:weakSelf.forwardingTableModel.tableDestination destination:address retryCount:SigDataSource.share.defaultRetryCount responseMaxCount:1 successCallback:^(UInt16 source, UInt16 destination, SigForwardingTableStatus * _Nonnull responseMessage) {
-                    TelinkLogDebug(@"forwardingTableDelete=%@,source=%d,destination=%d",[LibTools convertDataToHexStr:responseMessage.parameters],source,destination);
+                    TelinkLogDebug(@"forwardingTableDelete=%@,source=%d,destination=%d",[TelinkLibTools convertDataToHexStr:responseMessage.parameters],source,destination);
                     if (responseMessage.status == SigConfigMessageStatus_success) {
                         hasSuccess = YES;
                     } else {
@@ -126,7 +126,7 @@
                     bearerTowardPathTarget = 0;
                 }
                 [SDKLibCommand forwardingTableAddWithNetKeyIndex:weakSelf.forwardingTableModel.netKeyIndex unicastDestinationFlag:weakSelf.forwardingTableModel.unicastDestinationFlag backwardPathValidatedFlag:weakSelf.forwardingTableModel.backwardPathValidatedFlag pathOriginUnicastAddrRange:weakSelf.forwardingTableModel.pathOriginUnicastAddrRange pathTargetUnicastAddrRange:weakSelf.forwardingTableModel.pathTargetUnicastAddrRange multicastDestination:weakSelf.forwardingTableModel.multicastDestination bearerTowardPathOrigin:bearerTowardPathOrigin bearerTowardPathTarget:bearerTowardPathTarget destination:address retryCount:SigDataSource.share.defaultRetryCount responseMaxCount:1 successCallback:^(UInt16 source, UInt16 destination, SigForwardingTableStatus * _Nonnull responseMessage) {
-                    TelinkLogDebug(@"forwardingTableAdd=%@,source=%d,destination=%d",[LibTools convertDataToHexStr:responseMessage.parameters],source,destination);
+                    TelinkLogDebug(@"forwardingTableAdd=%@,source=%d,destination=%d",[TelinkLibTools convertDataToHexStr:responseMessage.parameters],source,destination);
                     if (responseMessage.status == SigConfigMessageStatus_success) {
                         hasSuccess = YES;
                     } else {

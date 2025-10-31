@@ -145,8 +145,8 @@
     
     __weak typeof(self) weakSelf = self;
     __block BOOL nameAvailable = NO;
-    NSOperationQueue *oprationQueue = [[NSOperationQueue alloc] init];
-    [oprationQueue addOperationWithBlock:^{
+    NSOperationQueue *operationQueue = [[NSOperationQueue alloc] init];
+    [operationQueue addOperationWithBlock:^{
         dispatch_semaphore_t semaphore = dispatch_semaphore_create(0);
         [TelinkHttpTool checkNameAvailableRequestWithName:name didLoadData:^(id  _Nullable result, NSError * _Nullable err) {
             if (err) {

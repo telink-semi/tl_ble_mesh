@@ -1,6 +1,6 @@
 # TelinkSigMeshLib
 
-version: v4.1.0.0
+version: v4.2.0.2
 
 APP store download url: https://apps.apple.com/cn/app/telinksigmesh/id1536722792
 
@@ -36,8 +36,8 @@ The sample application demonstrates how to use the library.
 
 ## Requirements
 
-* Xcode 11.0 or newer.
-* An iOS 11.0 or newer device with BLE capabilities.
+* Xcode 16.0 or newer.
+* An iOS 12.0 or newer device with BLE capabilities.
 
 ## How to run the Sample app `TelinkSigMesh`？
 
@@ -52,6 +52,16 @@ The sample application demonstrates how to use the library.
 
 * 1.Due to the project using pod to import third-party libraries, developers need to use the command line to enter the folders `telink_sig_mesh_sdk/app/ios/TelinkSigMeshLib/SigMeshOCDemo` and `telink_sig_mesh_sdk/app/ios/TelinkSigMeshLib/TelinkSigMeshLib` respectively, and then run the command `pod install` to download and configure the pod third-party library.
 * 2.copy folder `TelinkSigMeshLib` to your project, then `Link Binary With Libraries` the `TelinkSigMeshLib.framework`.
+* 3.TelinkSigMeshLib.framework includes the sub library TelinkToolsLib, as TelinkToolsLib is a dynamic library, the developer needs to configure it in their own project as follows: SigMeshOCDemo -> Frameworks,Libraries,and Embedded Content -> TelinkToolsLib.framework, set to Embed Without Signing or Embed Sign.
+* 4.Due to the classification defined in TelinkSigMeshLib, developers need to add the link parameter “-ObjC” in their project engineering. Patch: Build Settings -> Other Linker Flags -> ➕ -> `- ObjC`.
+* 5.Developers can use the following header file import method to import TelinkSigMeshLib and call the SDK's API.
+```Object-C
+// Method1: import TelinkSigMeshLib.framework
+#import "TelinkSigMeshLib/TelinkSigMeshLib.h"
+
+// Method2: TelinkSigMeshLib.xcodeproj
+#import "TelinkSigMeshLib.h"
+```
 
 ## Open API
 
@@ -85,7 +95,7 @@ The sample application demonstrates how to use the library.
 ```Object-C
 - (void)startFastProvisionWithProvisionAddress:(UInt16)provisionAddress productId:(UInt16)productId compositionData:(NSData *)compositionData currentConnectedNodeIsUnprovisioned:(BOOL)unprovisioned addSingleDeviceSuccessCallback:(AddSingleDeviceSuccessOfFastProvisionCallBack)singleSuccess finish:(ErrorBlock)finish;
 ```
-* 7. Add nodes by remote provision
+* 7.Add nodes by remote provision
 
 >7.1. scan remote provision node
 ```Object-C

@@ -1,6 +1,6 @@
 # TelinkSigMeshLib
 
-version: v4.1.0.0
+version: v4.2.0.2
 APP store下载链接: https://apps.apple.com/cn/app/telinksigmesh/id1536722792
 
 ## 关于
@@ -35,8 +35,8 @@ TelinkSigMeshLib库用于SIG设备的组网、绑定、收发消息。
 
 ## 要求环境
 
-* Xcode 11.0及以上.
-* 一个支持蓝牙功能的系统是iOS11及以上的苹果设备。
+* Xcode 16.0及以上。
+* 一个支持蓝牙功能的系统是iOS12及以上的苹果设备。
 
 ## 如何运行实例APP `TelinkSigMesh`
 
@@ -51,6 +51,16 @@ TelinkSigMeshLib库用于SIG设备的组网、绑定、收发消息。
 
 * 1.由于项目使用pod导入了第三方库，所以需要开发者使用命令行分别进入文件夹`telink_sig_mesh_sdk/app/ios/TelinkSigMeshLib/SigMeshOCDemo`和文件夹`telink_sig_mesh_sdk/app/ios/TelinkSigMeshLib/TelinkSigMeshLib`，再运行命令`pod install`进行pod第三方库的下载与配置。
 * 2.拷贝文件夹`TelinkSigMeshLib`到开发者自己工程文件夹，将TelinkSigMeshLib.xcodepro拖进开发者自己的工程中，添加头文件搜索路径（即与文件TelinkSigMeshLib.xcodepro同级的文件夹TelinkSigMeshLib的路径），然后编译选项中链接二进制库`TelinkSigMeshLib.framework`。
+* 3.TelinkSigMeshLib.framework中包含了子库TelinkToolsLib，由于TelinkToolsLib为动态库，需要开发者在自己的项目中进行如下配置：SigMeshOCDemo的 -> Frameworks,Libraries,and Embedded Content -> TelinkToolsLib.framework设置为Embed Without Signing或者Embed Sign。
+* 4.由于`TelinkSigMeshLib`里面定义了分类，所以需要开发者在自己的项目工程中加上链接参数“-ObjC”。路径：Build Settings->Other Linker Flags->➕->`-ObjC`。
+* 5.开发者使用以下的头文件导入的方式导入TelinkSigMeshLib，即可调用SDK的API。
+```Object-C
+// 导入方式1：导入TelinkSigMeshLib.framework库
+#import "TelinkSigMeshLib/TelinkSigMeshLib.h"
+
+// 导入方式2：导入TelinkSigMeshLib.xcodeproj工程
+#import "TelinkSigMeshLib.h"
+```
 
 ## 开发接口
 
@@ -59,7 +69,7 @@ TelinkSigMeshLib库用于SIG设备的组网、绑定、收发消息。
 ```Object-C
 [SDKLibCommand startMeshSDK];
 ```
-* 2.设置SDK的日志记录登记.
+* 2.设置SDK的日志记录等级.
 
 ```Object-C
 [SigLogger.share setSDKLogLevel:SigLogLevelDebug];
@@ -84,7 +94,7 @@ TelinkSigMeshLib库用于SIG设备的组网、绑定、收发消息。
 ```Object-C
 - (void)startFastProvisionWithProvisionAddress:(UInt16)provisionAddress productId:(UInt16)productId compositionData:(NSData *)compositionData currentConnectedNodeIsUnprovisioned:(BOOL)unprovisioned addSingleDeviceSuccessCallback:(AddSingleDeviceSuccessOfFastProvisionCallBack)singleSuccess finish:(ErrorBlock)finish;
 ```
-* 7. 通过remote provision添加设备的接口
+* 7.通过remote provision添加设备的接口
 
 >7.1. 通过remote provision的方式扫描设备
 ```Object-C

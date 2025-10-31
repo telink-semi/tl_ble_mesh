@@ -340,7 +340,7 @@
 - (void)updateNodeBindStateWithBindState:(NSInteger)bindState address:(UInt16)address {
     CloudNodeModel *node = [self getCloudNodeModelWithNodeAddress:address];
     SigNodeModel *nodeModel = [SigMeshLib.share.dataSource getNodeWithAddress:address];
-    [TelinkHttpTool updateNodeBindStateRequestWithNodeId:node.nodeId vid:[LibTools uint16FromBytes:[LibTools nsstringToHex:nodeModel.vid]] bindState:bindState didLoadData:^(id  _Nullable result, NSError * _Nullable err) {
+    [TelinkHttpTool updateNodeBindStateRequestWithNodeId:node.nodeId vid:[TelinkLibTools uint16FromData:[TelinkLibTools nsstringToHex:nodeModel.vid]] bindState:bindState didLoadData:^(id  _Nullable result, NSError * _Nullable err) {
         if (err) {
             TelinkLogInfo(@"updateNodeBindState error = %@", err);
         } else {
@@ -353,7 +353,7 @@
                 [cloudNodeModel setDictionaryToCloudNodeModel:nodeDict];
                 UInt8 page0 = 0;
                 NSMutableData *mData = [NSMutableData dataWithBytes:&page0 length:1];
-                [mData appendData:[LibTools nsstringToHex:cloudNodeModel.versionInfo.compositionData]];
+                [mData appendData:[TelinkLibTools nsstringToHex:cloudNodeModel.versionInfo.compositionData]];
                 SigPage0 *page = [[SigPage0 alloc] initWithParameters:mData];
                 [nodeModel setCompositionData:page];
             } else {
@@ -966,7 +966,7 @@
         node.configComplete = no == 0 ? NO : YES;
         UInt8 page0 = 0;
         NSMutableData *mData = [NSMutableData dataWithBytes:&page0 length:1];
-        [mData appendData:[LibTools nsstringToHex:no.versionInfo.compositionData]];
+        [mData appendData:[TelinkLibTools nsstringToHex:no.versionInfo.compositionData]];
         SigPage0 *page = [[SigPage0 alloc] initWithParameters:mData];
         [node setCompositionData:page];
         if (no.bindState && model.applicationKeyList.count == 1) {

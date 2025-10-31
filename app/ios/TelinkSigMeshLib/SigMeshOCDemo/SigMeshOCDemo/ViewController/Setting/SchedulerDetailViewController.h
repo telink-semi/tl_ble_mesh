@@ -25,6 +25,7 @@
 
 @interface SchedulerDetailViewController : BaseViewController
 
+@property (nonatomic, assign) BOOL isNew;
 @property (nonatomic, strong) SchedulerModel *model;
 @property (nonatomic, strong) SigNodeModel *device;
 

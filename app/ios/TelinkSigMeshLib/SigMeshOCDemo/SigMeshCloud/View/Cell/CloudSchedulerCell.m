@@ -42,9 +42,9 @@
     _model = model;
     _nameLabel.text = model.name;
     _schedulerIndexLabel.text = [NSString stringWithFormat:@"%04lX",  (long)model.schedulerIndex];
-    _createTimeLabel.text = [NSString getTimeStringWithTimeStamp:model.createTime];
+    _createTimeLabel.text = [NSString getTimeStringWithTimestamp:model.createTime];
     if (model.params && model.params.length == 20) {
-        SchedulerModel *scheduler = [[SchedulerModel alloc] initWithSchedulerDataAndSceneIdData:[LibTools nsstringToHex:model.params]];
+        SchedulerModel *scheduler = [[SchedulerModel alloc] initWithSchedulerDataAndSceneIdData:[TelinkLibTools nsstringToHex:model.params]];
         _paramsLabel.text = scheduler.getDetailString;
     } else {
         _paramsLabel.text = @"[no params]";

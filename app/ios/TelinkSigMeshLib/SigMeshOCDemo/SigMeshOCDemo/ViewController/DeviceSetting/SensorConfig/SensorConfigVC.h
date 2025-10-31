@@ -28,6 +28,7 @@ NS_ASSUME_NONNULL_BEGIN
 @interface SensorConfigVC : BaseViewController
 
 @property (nonatomic,strong) SigNodeModel *model;
+@property (nonatomic, assign) BOOL hiddenPublishSet;
 
 @end
 

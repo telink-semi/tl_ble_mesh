@@ -294,7 +294,7 @@ typedef void(^ResultHandler)(NSError *error);
     [self.responseAddresses removeAllObjects];
     //pair
     __weak typeof(self) weakSelf = self;
-    [SDKLibCommand sendSigEnOceanPairMacAddressAndKeyRequestMessageWithDestinationAddress:destinationAddress unicastAddressOfEnOcean:self.nodeModel.address macAddressDataOfEnOcean:[LibTools turnOverData:[LibTools nsstringToHex:self.oldEnOceanInfo.staticSourceAddress]] keyOfEnOcean:[LibTools nsstringToHex:self.oldEnOceanInfo.securityKey] successCallback:^(UInt16 source, UInt16 destination, SigMeshMessage * _Nonnull responseMessage) {
+    [SDKLibCommand sendSigEnOceanPairMacAddressAndKeyRequestMessageWithDestinationAddress:destinationAddress unicastAddressOfEnOcean:self.nodeModel.address macAddressDataOfEnOcean:[TelinkLibTools turnOverData:[TelinkLibTools nsstringToHex:self.oldEnOceanInfo.staticSourceAddress]] keyOfEnOcean:[TelinkLibTools nsstringToHex:self.oldEnOceanInfo.securityKey] successCallback:^(UInt16 source, UInt16 destination, SigMeshMessage * _Nonnull responseMessage) {
         if (weakSelf.isRegisterPairing && [weakSelf.registerPairAddresses containsObject:@(source)]) {
             SigEnOceanResponseMessage *message = [[SigEnOceanResponseMessage alloc] initWithParameters:responseMessage.parameters];
             if (message && message.vendorSubOpCode == VendorSubOpCode_pairMacAddressAndKey) {

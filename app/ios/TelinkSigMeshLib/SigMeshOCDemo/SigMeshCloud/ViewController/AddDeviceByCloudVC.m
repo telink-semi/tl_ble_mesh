@@ -191,8 +191,8 @@
     }
     if (mArray.count > 0) {
         __weak typeof(self) weakSelf = self;
-        NSOperationQueue *oprationQueue = [[NSOperationQueue alloc] init];
-        [oprationQueue addOperationWithBlock:^{
+        NSOperationQueue *operationQueue = [[NSOperationQueue alloc] init];
+        [operationQueue addOperationWithBlock:^{
             //这个block语句块在子线程中执行
             dispatch_semaphore_t semaphore = dispatch_semaphore_create(0);
             for (AddDeviceModel *model in mArray) {
@@ -209,7 +209,7 @@
     }
 }
 
-#pragma mark call API of addDevice in SigMeshLib.a
+#pragma mark call API of addDevice in TelinkSigMeshLib.framework
 
 - (void)addModel:(AddDeviceModel *)model resultBlock:(resultHandle)resultBlock {
     SigPlatformTelinkDeviceUuidModel *uuid = model.scanRspModel.getPlatformTelinkDeviceUuid;
@@ -217,7 +217,7 @@
     NSData *key = [SigDataSource.share curNetKey];
     if (SigDataSource.share.curNetkeyModel.phase == distributingKeys) {
         if (SigDataSource.share.curNetkeyModel.oldKey) {
-            key = [LibTools nsstringToHex:SigDataSource.share.curNetkeyModel.oldKey];
+            key = [TelinkLibTools nsstringToHex:SigDataSource.share.curNetkeyModel.oldKey];
         }
     }
 
@@ -237,10 +237,10 @@
             NSData *staticOOBData = nil;
             if (oobModel && oobModel.OOBString && (oobModel.OOBString.length == 32 || oobModel.OOBString.length == 64)) {
                 provisionType = ProvisionType_StaticOOB;
-                staticOOBData = [LibTools nsstringToHex:oobModel.OOBString];
+                staticOOBData = [TelinkLibTools nsstringToHex:oobModel.OOBString];
             }
-            NSOperationQueue *oprationQueue = [[NSOperationQueue alloc] init];
-            [oprationQueue addOperationWithBlock:^{
+            NSOperationQueue *operationQueue = [[NSOperationQueue alloc] init];
+            [operationQueue addOperationWithBlock:^{
                 dispatch_semaphore_t semaphore = dispatch_semaphore_create(0);
                 __block NSError *error = nil;
                 __block UInt8 currentElementCount = 0;

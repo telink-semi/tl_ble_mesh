@@ -44,7 +44,7 @@
     __weak typeof(self) weakSelf = self;
     //set recall scene block
     [cell setClickRecallBlock:^{
-        [DemoCommand recallSceneWithAddress:kMeshAddress_allNodes sceneId:[LibTools uint16From16String:model.number] responseMaxCount:1 ack:YES successCallback:^(UInt16 source, UInt16 destination, SigSceneStatus * _Nonnull responseMessage) {
+        [DemoCommand recallSceneWithAddress:kMeshAddress_allNodes sceneId:[TelinkLibTools uint16FromHexString:model.number] responseMaxCount:1 ack:YES successCallback:^(UInt16 source, UInt16 destination, SigSceneStatus * _Nonnull responseMessage) {
             TelinkLogDebug(@"recall scene:%hu,status:%d",responseMessage.targetScene,responseMessage.statusCode);
         } resultCallback:^(BOOL isResponseAll, NSError * _Nonnull error) {
 
@@ -71,7 +71,7 @@
             view.nameLabel.text = [NSString stringWithFormat:@"name: %@\nelement address: 0x%04X", node.name, action.address];
             [cell.contentView addSubview:view];
             [view.playButton addAction:^(UIButton *button) {
-                [DemoCommand recallSceneWithAddress:action.address sceneId:[LibTools uint16From16String:model.number] responseMaxCount:1 ack:YES successCallback:^(UInt16 source, UInt16 destination, SigSceneStatus * _Nonnull responseMessage) {
+                [DemoCommand recallSceneWithAddress:action.address sceneId:[TelinkLibTools uint16FromHexString:model.number] responseMaxCount:1 ack:YES successCallback:^(UInt16 source, UInt16 destination, SigSceneStatus * _Nonnull responseMessage) {
                     TelinkLogDebug(@"recall scene:%hu,status:%d",responseMessage.targetScene,responseMessage.statusCode);
                 } resultCallback:^(BOOL isResponseAll, NSError * _Nonnull error) {
 
@@ -100,6 +100,12 @@
 - (void)refreshTableViewUI {
     self.source = [[NSMutableArray alloc] initWithArray:SigDataSource.share.scenes];
     [self.tableView performSelectorOnMainThread:@selector(reloadData) withObject:nil waitUntilDone:YES];
+    [self setListEmptyHidden:SigDataSource.share.scenes.count != 0];
+    self.tableView.hidden = SigDataSource.share.scenes.count == 0;
+    __weak typeof(self) weakSelf = self;
+    [self.addNewItemButton addAction:^(UIButton *button) {
+        [weakSelf clickAdd];
+    }];
 }
 
 - (void)normalSetting{
@@ -194,7 +200,7 @@
             while (delArray.count > 0) {
                 dispatch_semaphore_t semaphore = dispatch_semaphore_create(0);
                 ActionModel *curAction = delArray.firstObject;
-                [DemoCommand delSceneWithAddress:curAction.address sceneId:[LibTools uint16From16String:scene.number] responseMaxCount:1 ack:YES successCallback:^(UInt16 source, UInt16 destination, SigSceneRegisterStatus * _Nonnull responseMessage) {
+                [DemoCommand delSceneWithAddress:curAction.address sceneId:[TelinkLibTools uint16FromHexString:scene.number] responseMaxCount:1 ack:YES successCallback:^(UInt16 source, UInt16 destination, SigSceneRegisterStatus * _Nonnull responseMessage) {
                     TelinkLogDebug(@"responseMessage.statusCode=%d",responseMessage.statusCode);
                     [delArray removeObject:curAction];
                     dispatch_semaphore_signal(semaphore);
@@ -215,8 +221,8 @@
 - (void)showDeleteSceneSuccess:(SigSceneModel *)scene{
     TelinkLogDebug(@"delect success");
     [[SigDataSource share] deleteSceneModelWithModel:scene];
-    [self refreshTableViewUI];
     dispatch_async(dispatch_get_main_queue(), ^{
+        [self refreshTableViewUI];
         [ShowTipsHandle.share show:Tip_DeleteSceneSuccess];
         [ShowTipsHandle.share delayHidden:0.5];
     });

@@ -366,7 +366,7 @@ extern const NSString * CSToastPositionBottom;
 + (void)setSharedStyle:(CSToastStyle *)sharedStyle;
 
 /**
- Gets the shared style from the singlton. By default, this is
+ Gets the shared style from the singleton. By default, this is
  `CSToastStyle`'s default style.
  
  @return the shared style

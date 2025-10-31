@@ -26,6 +26,7 @@
 #import "NetworkListVC.h"
 #import "UIImage+Extension.h"
 #import "LoginVC.h"
+#import "UIDevice+Extension.h"
 
 @implementation BaseViewController
 
@@ -82,7 +83,7 @@
     if (@available(iOS 15.0, *)) {
         UITabBarAppearance *bar = [[UITabBarAppearance alloc] init];
         bar.backgroundColor = [UIColor colorNamed:@"telinkTabBarBackgroundColor"];
-        bar.shadowImage = [UIImage createImageWithColor:[UIColor colorNamed:@"telinkTabBarshadowImageColor"]];
+        bar.shadowImage = [UIImage createImageWithColor:[UIColor colorNamed:@"telinkTabBarShadowImageColor"]];
         self.tabBarController.tabBar.scrollEdgeAppearance = bar;
         self.tabBarController.tabBar.standardAppearance = bar;
     }
@@ -99,8 +100,7 @@
         // 磨砂效果
         app.backgroundEffect = [UIBlurEffect effectWithStyle:UIBlurEffectStyleSystemMaterial];
         // 导航条底部分割线图片（这里设置为透明）
-        UIImage *image = [UIImage createImageWithColor:[UIColor clearColor]];
-        app.shadowImage = image;
+        app.shadowColor = [UIColor clearColor];
         // 导航条富文本设置
         app.titleTextAttributes = @{NSFontAttributeName : [UIFont boldSystemFontOfSize:17.0f], NSForegroundColorAttributeName : [UIColor whiteColor]};
         // 当可滚动内容的边缘与导航栏的边缘对齐时，导航栏的外观设置。
@@ -151,13 +151,55 @@
         UITabBarAppearance *appearance = self.tabBarController.tabBar.standardAppearance.copy;
         appearance.backgroundImage = [UIImage createImageWithColor:[UIColor colorNamed:@"telinkTabBarBackgroundColor"]];
         appearance.backgroundColor = [UIColor colorNamed:@"telinkTabBarBackgroundColor"];
-        appearance.shadowImage = [UIImage createImageWithColor:[UIColor colorNamed:@"telinkTabBarshadowImageColor"]];
-        appearance.shadowColor = [UIColor colorNamed:@"telinkTabBarshadowImageColor"];
+        appearance.shadowImage = [UIImage createImageWithColor:[UIColor colorNamed:@"telinkTabBarShadowImageColor"]];
+        appearance.shadowColor = [UIColor colorNamed:@"telinkTabBarShadowImageColor"];
         self.tabBarController.tabBar.standardAppearance = appearance;
     }
 
     [self configTabBarForiOS15];
     [self configNavigationBarForiOS15];
+    [self AddListEmptyUI];
+    [self setListEmptyHidden:YES];
+}
+
+/// 顶部导航栏+顶部状态栏
+- (CGFloat)getRectNavAndStatusHeight {
+    return UIDevice.vg_navigationFullHeight;
+}
+
+/// 顶部导航栏+顶部状态栏+底部安全区
+- (CGFloat)getRectNavAndStatusHeightAndSafeDistanceBottom {
+    return UIDevice.vg_navigationFullHeight + UIDevice.vg_safeDistanceBottom;
+}
+
+/// 顶部导航栏+顶部状态栏+底部导航栏+底部安全区
+- (CGFloat)getRectNavAndStatusHeightAndTabBarFullHeight {
+    return UIDevice.vg_navigationFullHeight + UIDevice.vg_tabBarFullHeight;
+}
+
+- (void)AddListEmptyUI {
+    self.listEmptyImageView = [[UIImageView alloc] initWithFrame:CGRectMake(0, 0, 50, 50)];
+    self.listEmptyImageView.image = [UIImage imageNamed:@"ic_sad"];
+    [self.view addSubview:self.listEmptyImageView];
+    self.listEmptyImageView.center = CGPointMake(self.view.frame.size.width/2, self.view.frame.size.height/2-50);
+    
+    self.listEmptyLabel = [[UILabel alloc] initWithFrame:CGRectMake(0, self.listEmptyImageView.frame.origin.y+50+20, self.view.bounds.size.width, 20.0)];
+    self.listEmptyLabel.text = @"List Empty!";
+    self.listEmptyLabel.textAlignment = NSTextAlignmentCenter;
+    [self.view addSubview:self.listEmptyLabel];
+    
+    self.addNewItemButton = [[UIButton alloc] initWithFrame:CGRectMake(self.view.bounds.size.width/2-25, self.listEmptyLabel.frame.origin.y+20+10, 50, 50)];
+    [self.addNewItemButton setTitle:@"ADD" forState:UIControlStateNormal];
+    [self.addNewItemButton setTitleColor:UIColor.telinkButtonBlue forState:UIControlStateNormal];
+    [self.view addSubview:self.addNewItemButton];
+}
+
+- (void)setListEmptyHidden:(BOOL)hidden {
+    dispatch_async(dispatch_get_main_queue(), ^{
+        self.listEmptyImageView.hidden = hidden;
+        self.listEmptyLabel.hidden = hidden;
+        self.addNewItemButton.hidden = hidden;
+    });
 }
 
 /// Set block
@@ -248,15 +290,15 @@
     NSMutableArray *mArray = [NSMutableArray arrayWithArray:meshList];
     BOOL update = NO;
     for (int i=0; i<meshList.count; i++) {
-        NSDictionary *d = [LibTools getDictionaryWithJSONData:meshList[i]];
+        NSDictionary *d = [TelinkLibTools getDictionaryWithJSONData:meshList[i]];
         if ([[d[@"meshUUID"] uppercaseString] isEqualToString:[dict[@"meshUUID"] uppercaseString]]) {
-            [mArray replaceObjectAtIndex:i withObject:[LibTools getJSONDataWithDictionary:dict]];
+            [mArray replaceObjectAtIndex:i withObject:[TelinkLibTools getJSONDataWithDictionary:dict]];
             update = YES;
             break;
         }
     }
     if (update == NO) {
-        [mArray addObject:[LibTools getJSONDataWithDictionary:dict]];
+        [mArray addObject:[TelinkLibTools getJSONDataWithDictionary:dict]];
     }
     [[NSUserDefaults standardUserDefaults] setValue:mArray forKey:kCacheMeshListKey];
     [[NSUserDefaults standardUserDefaults] synchronize];
@@ -274,10 +316,12 @@
             //弹框提示用户选择是否切换Mesh
             [weakSelf showAlertSureAndCancelWithTitle:kDefaultAlertTitle message:@"Share import success, switch to the new mesh?" sure:^(UIAlertAction *action) {
                 [weakSelf switchMeshActionWithMeshDictionary:dict];
+                [SigDataSource.share optimizationDataOfNLCList];
             } cancel:nil];
         } else {
             //自动切换Mesh
             [weakSelf switchMeshActionWithMeshDictionary:dict];
+            [SigDataSource.share optimizationDataOfNLCList];
         }
     } cancel:nil];
 }

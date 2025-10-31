@@ -38,15 +38,15 @@
     if (model.isSensor) {
         if (model.sensorDataArray.count > 0) {
             SigSensorDataModel *sensorData = model.sensorDataArray.firstObject;
-            tempType = [NSString stringWithFormat:@"%04X-%@", sensorData.propertyID, [LibTools convertDataToHexStr:sensorData.rawValueData]];
+            tempType = [NSString stringWithFormat:@"%04X-%@", sensorData.propertyID, [TelinkLibTools convertDataToHexStr:sensorData.rawValueData]];
         } else {
             tempType = @"Sensor-NULL";
         }
     } else {
-        if ([LibTools uint16From16String:model.cid] == kCompanyID) {
-            tempType = [NSString stringWithFormat:@"Pid-%02X",[LibTools uint16From16String:model.pid]];
+        if ([TelinkLibTools uint16FromHexString:model.cid] == kCompanyID) {
+            tempType = [NSString stringWithFormat:@"Pid-%02X",[TelinkLibTools uint16FromHexString:model.pid]];
         }else{
-            tempType = [NSString stringWithFormat:@"Cid-%04X",[LibTools uint16From16String:model.cid]];
+            tempType = [NSString stringWithFormat:@"Cid-%04X",[TelinkLibTools uint16FromHexString:model.cid]];
         }
     }
     //显示短地址+PID
@@ -62,7 +62,7 @@
     self.address.textColor = self.nodeName.textColor = [UIColor grayColor];
     //直连设备显示蓝色
     if (model.address == SigDataSource.share.unicastAddressOfConnected && SigBearer.share.isOpen) {
-        self.address.textColor = HEX(#4A87EE);
+        self.address.textColor = self.nodeName.textColor = HEX(#4A87EE);
     }
 }
 

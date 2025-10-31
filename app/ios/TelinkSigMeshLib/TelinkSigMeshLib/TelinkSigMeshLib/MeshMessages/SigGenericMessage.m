@@ -16133,7 +16133,7 @@ SigGenericDeltaSet|SigGenericDeltaSetUnacknowledged|SigGenericLevelSet|SigGeneri
             return nil;
         }
         if (parameters.length > 0) {
-            NSArray *array = [LibTools getNumberListFromUTF8EncodeData:parameters];
+            NSArray *array = [TelinkLibTools getNumberListFromUTF8EncodeData:parameters];
             if (array) {
                 _encodedMissingChunks = [NSMutableArray arrayWithArray:array];
             } else {
@@ -16214,7 +16214,7 @@ SigGenericDeltaSet|SigGenericDeltaSetUnacknowledged|SigGenericLevelSet|SigGeneri
             }
         } else if (_format == SigBLOBBlockFormatType_encodedMissingChunks) {
             if (parameters.length > 5) {
-                NSMutableArray *array = [NSMutableArray arrayWithArray:[LibTools getNumberListFromUTF8EncodeData:[parameters subdataWithRange:NSMakeRange(5, parameters.length-5)]]];
+                NSMutableArray *array = [NSMutableArray arrayWithArray:[TelinkLibTools getNumberListFromUTF8EncodeData:[parameters subdataWithRange:NSMakeRange(5, parameters.length-5)]]];
                 _encodedMissingChunksList = array;
             }
         }
@@ -16266,7 +16266,7 @@ SigGenericDeltaSet|SigGenericDeltaSetUnacknowledged|SigGenericLevelSet|SigGeneri
 //            }
         } else if (format == SigBLOBBlockFormatType_encodedMissingChunks) {
             if (encodedMissingChunksList && encodedMissingChunksList.count > 0) {
-                NSData *encodedMissingChunksListData = [LibTools getUTF8EncodeDataFromNumberList:encodedMissingChunksList];
+                NSData *encodedMissingChunksListData = [TelinkLibTools getUTF8EncodeDataFromNumberList:encodedMissingChunksList];
                 [mData appendData:encodedMissingChunksListData];
             }
         }
@@ -16606,22 +16606,13 @@ SigGenericDeltaSet|SigGenericDeltaSetUnacknowledged|SigGenericLevelSet|SigGeneri
         if (parameters) {
             self.parameters = [NSData dataWithData:parameters];
         }
-        if (parameters == nil || parameters.length != 8) {
+        if (parameters == nil || parameters.length != 1) {
             return nil;
         }
-        SigSubnetBridgeModel *model = [[SigSubnetBridgeModel alloc] initWithParameters:parameters];
-        _subnetBridge = model;
-    }
-    return self;
-}
-
-- (instancetype)initWithSubnetBridge:(SigSubnetBridgeModel *)subnetBridge {
-    /// Use the init method of the parent class to initialize some properties of the parent class of the subclass instance.
-    if (self = [super init]) {
-        /// Initialize self.
-        self.opCode = SigOpCode_SubnetBridgeStatus;
-        _subnetBridge = subnetBridge;
-        self.parameters = [NSData dataWithData:subnetBridge.parameters];
+        Byte *dataByte = (Byte *)parameters.bytes;
+        UInt8 tem8 = 0;
+        memcpy(&tem8, dataByte, 1);
+        _subnetBridgeState = tem8;
     }
     return self;
 }

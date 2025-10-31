@@ -57,7 +57,7 @@ NS_ASSUME_NONNULL_BEGIN
 #pragma  mark - Public
 
 
-/// init system CBCentralManager, developer can scan CBPeripheral when CBCentralManager.state is CBCentralManagerStatePoweredOn.
+/// init system CBCentralManager, developer can scan CBPeripheral when CBCentralManager.state is CBManagerStatePoweredOn.
 /// @param result callback when CBCentralManager had inited.
 - (void)bleInit:(bleInitSuccessCallback)result;
 

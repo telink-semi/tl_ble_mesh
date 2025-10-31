@@ -44,7 +44,7 @@
 /// - Parameter model: model of cell.
 - (void)updateContent:(SigSceneModel *)model{
     _model = model;
-    _nameLabel.text = [NSString stringWithFormat:@"name: %@\nID: 0x%04X", model.name, [LibTools uint32From16String:model.number]];
+    _nameLabel.text = [NSString stringWithFormat:@"name: %@\nID: 0x%04X", model.name, [TelinkLibTools uint32FromHexString:model.number]];
     [self configurationCornerWithBgView:_bgView];
 }
 

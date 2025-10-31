@@ -343,7 +343,7 @@
         }
         return NO;
     } else {
-        UInt64 second = [LibTools secondsFrom2000];
+        UInt64 second = [TelinkLibTools secondsFrom2000];
         [NSTimeZone resetSystemTimeZone];//重置手机系统的时区
         NSInteger offset = [NSTimeZone localTimeZone].secondsFromGMT;
         UInt8 zone_offset = offset/60/15+64;//时区=分/15+64
@@ -364,7 +364,7 @@
         }
         return NO;
     } else {
-        UInt64 second = [LibTools secondsFrom2000];
+        UInt64 second = [TelinkLibTools secondsFrom2000];
         [NSTimeZone resetSystemTimeZone];//重置手机系统的时区
         NSInteger offset = [NSTimeZone localTimeZone].secondsFromGMT;
         UInt8 zone_offset = offset/60/15+64;//时区=分/15+64

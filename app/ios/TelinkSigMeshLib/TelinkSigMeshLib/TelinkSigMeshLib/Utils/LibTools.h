@@ -27,48 +27,11 @@ NS_ASSUME_NONNULL_BEGIN
 
 @interface LibTools : NSObject
 
-/**
- 把NSString转成可写入蓝牙设备的Hex Data
-
- @param string 原始字符串数据
- @return 返回data
- */
-+ (NSData *)nsstringToHex:(NSString *)string;
-
-/**
- NSData 转  十六进制string(大写)
-
- @return NSString类型的十六进制string
- */
-+ (NSString *)convertDataToHexStr:(NSData *)data;
-
-///NSData字节翻转
-+ (NSData *)turnOverData:(NSData *)data;
-
-/**
- 计算2000.1.1 00:00:00 到现在的秒数
-
- @return 返回2000.1.1 00:00:00 到现在的秒数
- */
-+ (NSInteger )secondsFrom2000;
-
-/// 返回手机当前时间的时区
-+ (NSInteger)currentTimeZoon;
-
-/// 返回手机当前时间的时间戳
-+ (NSString *)getNowTimeTimestamp;
-
-/// 返回当前时间字符串格式："yyyy-MM-dd HH:mm:ss"
-+ (NSString *)getNowTimeTimeString;
-
-/// 返回当前时间字符串格式："HH:mm:ss"
-+ (NSString *)getNowTimeStringInFormatHHmmss;
-
-/// 返回当前时间字符串格式："YYYY-MM-ddThh:mm:ssX"，eg: @"2021-10-08T08:33:16Z". 如果要使用该特定格式，则必须将时区设置为UTC.当时北京时间为2021-10-08T16:33:16。
+/// 返回当前时间字符串格式："YYYY-MM-ddTHH:mm:ssX"，eg: @"2021-10-08T08:33:16Z". 如果要使用该特定格式，则必须将时区设置为UTC.当时北京时间为2021-10-08T16:33:16。
 + (NSString *)getNowTimeStringOfJson;
 
 /// Time string to NSDate
-/// - Parameter timeString: time string of json file, 时间字符串格式："YYYY-MM-ddThh:mm:ssX"，eg: @"2021-10-08T08:33:16Z".
+/// - Parameter timeString: time string of json file, 时间字符串格式："YYYY-MM-ddTHH:mm:ssX"，eg: @"2021-10-08T08:33:16Z".
 + (NSDate *)getDateWithTimeStringOfJson:(NSString *)timeString;
 
 /// 返回json中的SigStepResolution对应的毫秒数，只有四种值：100,1000,10000,600000.
@@ -83,49 +46,9 @@ NS_ASSUME_NONNULL_BEGIN
 /// Create 16 bytes hex as mesh UUID.
 + (NSData *)initMeshUUID;
 
-/// Create any length hex data.
-/// - Parameter length: The length value of random data.
-+ (NSData *)createRandomDataWithLength:(NSInteger)length;
-
-/// 返回带冒号的mac
-+ (NSString *)getMacStringWithMac:(NSString *)mac;
-
-/// NSData转Uint8
-+ (UInt8)uint8FromBytes:(NSData *)fData;
-
-/// NSData转Uint16
-+ (UInt16)uint16FromBytes:(NSData *)fData;
-
-/// NSData转Uint32
-+ (UInt32)uint32FromBytes:(NSData *)fData;
-
-/// NSData转Uint64
-+ (UInt64)uint64FromBytes:(NSData *)fData;
-
-/// 16进制NSString转Uint8
-+ (UInt8)uint8From16String:(NSString *)string;
-
-/// 16进制NSString转Uint16
-+ (UInt16)uint16From16String:(NSString *)string;
-
-/// 16进制NSString转Uint32
-+ (UInt32)uint32From16String:(NSString *)string;
-
-/// 16进制NSString转Uint64
-+ (UInt64)uint64From16String:(NSString *)string;
-
 /// Get Virtual Address Of LabelUUID
 /// - Parameter string: The LabelUUID string.
 + (UInt16)getVirtualAddressOfLabelUUID:(NSString *)string;
-
-/// D7C5BD18-4282-F31A-0CE0-0468BC0B8DE8 -> D7C5BD184282F31A0CE00468BC0B8DE8
-+ (NSString *)meshUUIDToUUID:(NSString *)uuid;
-
-/// D7C5BD184282F31A0CE00468BC0B8DE8 -> D7C5BD18-4282-F31A-0CE0-0468BC0B8DE8
-+ (NSString *)UUIDToMeshUUID:(NSString *)meshUUID;
-
-/// xxxx -> 0000xxxx-0000-1000-8000-008505f9b34fb or xxxxxxxx -> xxxxxxxx-0000-1000-8000-008505f9b34fb
-+ (NSString *)change16BitsUUIDTO128Bits:(NSString *)uuid;
 
 /// Change Uint16 Lightness to UInt8 Lum.
 /// @param lightness ligheness is the ligheness value that send to node by SDKCommand, range is 0x0000~0xFFFF.
@@ -167,105 +90,8 @@ NS_ASSUME_NONNULL_BEGIN
 /// @param val The Sint16 value.
 + (SInt16)sint16ToUInt16:(SInt16)val;
 
-///（四舍五入，保留两位小数）
-+ (float)roundFloat:(float)price;
-
 /// 通过周期对象SigPeriodModel获取周期时间，单位为秒。
 + (SigStepResolution)getSigStepResolutionWithSigPeriodModel:(SigPeriodModel *)periodModel;
-
-#pragma mark - JSON相关
-
-/**
- *  字典数据转换成JSON字符串（没有可读性）
- *
- *  @param dictionary 待转换的字典数据
- *  @return JSON字符串
- */
-+ (nullable NSString *)getJSONStringWithDictionary:(NSDictionary *)dictionary;
-
-/**
- *  字典数据转换成JSON字符串（有可读性）
- *
- *  @param dictionary 待转换的字典数据
- *  @return JSON字符串
- */
-+ (nullable NSString *)getReadableJSONStringWithDictionary:(NSDictionary *)dictionary;
-
-/**
- *  字典数据转换成JSON数据
- *
- *  @param dictionary 待转换的字典数据
- *  @return JSON数据
- */
-+ (nullable NSData *)getJSONDataWithDictionary:(NSDictionary *)dictionary;
-
-/**
-*  NSData数据转换成字典数据
-*
-*  @param data 待转换的NSData数据
-*  @return 字典数据
-*/
-+(NSDictionary *)getDictionaryWithJSONData:(NSData*)data;
-
-/**
-*  JSON字符串转换成字典数据
-*
-*  @param jsonString 待转换的JSON字符串
-*  @return 字典数据
-*/
-+ (nullable NSDictionary *)getDictionaryWithJsonString:(NSString *)jsonString;
-
-#pragma mark - CRC相关
-
-unsigned short crc16 (unsigned char *pD, int len);
-
-+ (UInt32)getCRC32OfData:(NSData *)data;
-
-#pragma mark - AES相关
-
-/**
- * @brief   128 bit AES ECB encryption on specified plaintext and keys
- * @param   inData    Pointer to specified plaintext.
- * @param   in_len    The length of specified plaintext.
- * @param   key    keys to encrypt the plaintext.
- * @param   outData    Pointer to binary encrypted data.
- * @return  Result of aes128_ecb_encrypt, kCCSuccess=0 means encrypt success, other means fail.
- */
-int aes128_ecb_encrypt(const unsigned char *inData, int in_len, const unsigned char *key, unsigned char *outData);
-
-/**
- * @brief   128 bit AES ECB decryption on specified encrypted data and keys
- * @param   inData    Pointer to encrypted data.
- * @param   in_len    The length of encrypted data.
- * @param   key    keys to decrypt the encrypted data.
- * @param   outData    Pointer to plain data.
- * @return  Result of aes128_ecb_encrypt, kCCSuccess=0 means decrypt success, other means fail.
- */
-int aes128_ecb_decrypt(const unsigned char *inData, int in_len, const unsigned char *key, unsigned char *outData);
-
-#pragma mark - 正则表达式相关
-
-+ (BOOL)validateUUID:(NSString *)uuidString;
-
-+ (BOOL)validateHex:(NSString *)uuidString;
-
-+ (BOOL)validateNumberString:(NSString *)numberString;
-
-+ (BOOL)validateFloatString:(NSString *)numberString;
-
-#pragma mark - UTF-8相关
-
-+ (NSArray <NSNumber *>*)getNumberListFromUTF8EncodeData:(NSData *)UTF8EncodeData;
-
-+ (NSData *)getUTF8EncodeDataFromNumberList:(NSArray <NSNumber *>*)numberList;
-
-#pragma mark - 文件相关
-
-+ (NSArray <NSString *>*)getAllFileNameWithFileType:(NSString *)fileType;
-+ (NSData *)getDataWithFileName:(NSString *)fileName fileType:(NSString * _Nullable )fileType;
-
-// 获取手机剩余的存储空间大小
-+ (long)freeDiskSpaceInBytes;
 
 #pragma mark - Telink定义的6字节MAC转16字节的UUID算法
 
@@ -279,8 +105,13 @@ int aes128_ecb_decrypt(const unsigned char *inData, int in_len, const unsigned c
 
 #pragma mark - Device property相关
 
-/// Get value length with propertyID
-/// - Parameter propertyID: device propertyID
+/// 根据设备属性ID获取对应的值长度
+///
+/// 此方法通过一系列的条件判断来确定给定设备属性ID对应的值长度。
+/// 不同的属性ID可能对应不同的数据长度，这取决于属性的数据类型和用途。
+///
+/// @param propertyID 设备属性ID
+/// @return 对应的值长度（1、2、3或4字节）
 + (UInt8)valueLengthOfDevicePropertyID:(DevicePropertyID)propertyID;
 
 @end

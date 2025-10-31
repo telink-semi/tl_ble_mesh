@@ -25,7 +25,6 @@
 #import "UIViewController+Message.h"
 
 @interface ReKeyBindViewController()
-@property (nonatomic, assign) BOOL hasClickKickOut;
 @property (nonatomic, assign) BOOL hasClickKeyBind;
 @property (weak, nonatomic) IBOutlet UILabel *detailLabel;
 @property (weak, nonatomic) IBOutlet UIButton *kickOutButton;
@@ -37,15 +36,18 @@
 
 - (IBAction)kickOut:(UIButton *)sender {
     TelinkLogDebug(@"");
-    self.hasClickKickOut = YES;
-    [ShowTipsHandle.share show:Tip_KickOutDevice];
-
-    if (SigBearer.share.isOpen) {
-        [self kickoutAction];
-    } else {
-        [SigDataSource.share deleteNodeFromMeshNetworkWithDeviceAddress:self.model.address];
-        [self pop];
-    }
+    //add a alert for kickOut device.
+    __weak typeof(self) weakSelf = self;
+    NSString *message = (SigBearer.share.isOpen && self.model.state != DeviceStateOutOfLine) ? @"Confirm to remove device?" : @"This node is outline, confirm to remove device?";
+    [self showAlertSureAndCancelWithTitle:kDefaultAlertTitle message:message sure:^(UIAlertAction *action) {
+        [ShowTipsHandle.share show:Tip_KickOutDevice];
+        if (SigBearer.share.isOpen) {
+            [weakSelf kickOutAction];
+        } else {
+            [SigDataSource.share deleteNodeFromMeshNetworkWithDeviceAddress:weakSelf.model.address];
+            [weakSelf pop];
+        }
+    } cancel:nil];
 }
 
 - (IBAction)keyBind:(UIButton *)sender {
@@ -57,7 +59,7 @@
     if (SigBearer.share.isOpen) {
         NSNumber *type = [[NSUserDefaults standardUserDefaults] valueForKey:kKeyBindType];
         UInt8 keyBindType = type.integerValue;
-        UInt16 productID = [LibTools uint16From16String:self.model.pid];
+        UInt16 productID = [TelinkLibTools uint16FromHexString:self.model.pid];
         DeviceTypeModel *deviceType = [SigDataSource.share getNodeInfoWithCID:kCompanyID PID:productID];
         NSData *cpsData = deviceType.defaultCompositionData.parameters;
         if (keyBindType == KeyBindType_Fast) {
@@ -111,7 +113,6 @@
 }
 
 - (void)kickoutConnectPeripheralWithUUIDTimeout{
-    self.hasClickKickOut = NO;
     [ShowTipsHandle.share hidden];
     [SigDataSource.share deleteNodeFromMeshNetworkWithDeviceAddress:self.model.address];
     [self pop];
@@ -136,33 +137,34 @@
     } cancel:nil];
 }
 
-- (void)kickoutAction{
-    TelinkLogDebug(@"send kickout.");
+- (void)kickOutAction{
+    TelinkLogDebug(@"send kickOut.");
     __weak typeof(self) weakSelf = self;
     _messageHandle = [SDKLibCommand resetNodeWithDestination:self.model.address retryCount:SigDataSource.share.defaultRetryCount responseMaxCount:1 successCallback:^(UInt16 source, UInt16 destination, SigConfigNodeResetStatus * _Nonnull responseMessage) {
 
     } resultCallback:^(BOOL isResponseAll, NSError * _Nullable error) {
         if (isResponseAll) {
-            TelinkLogDebug(@"kickout success.");
+            TelinkLogDebug(@"kickOut success.");
+            [weakSelf kickOutSuccessAction];
         } else {
-            TelinkLogDebug(@"kickout fail.");
+            TelinkLogDebug(@"kickOut fail.");
+            // v4.1.0.4之后，如果App端没有接收到SigConfigNodeResetStatus，有可能是没有移除成功或者移除成功但回包丢失了，所以新增超时弹框让用户选择是否删除数据。
+            [weakSelf showAlertSureAndCancelWithTitle:kDefaultAlertTitle message:@"The APP did not receive the message NodeResetStatus, confirm to remove device?" sure:^(UIAlertAction *action) {
+                [weakSelf kickOutSuccessAction];
+            } cancel:nil];
         }
-        [SigDataSource.share deleteNodeFromMeshNetworkWithDeviceAddress:weakSelf.model.address];
-        dispatch_async(dispatch_get_main_queue(), ^{
-            [NSObject cancelPreviousPerformRequestsWithTarget:weakSelf];
-            [weakSelf pop];
-        });
     }];
-    dispatch_async(dispatch_get_main_queue(), ^{
-        [NSObject cancelPreviousPerformRequestsWithTarget:self selector:@selector(resetNodeTimeout) object:nil];
-        [self performSelector:@selector(resetNodeTimeout) withObject:nil afterDelay:5.0];
-    });
 }
 
-- (void)resetNodeTimeout {
+- (void)kickOutSuccessAction {
+    if (self.model.hasPublishFunction && self.model.hasOpenPublish) {
+        [SigPublishManager.share stopCheckOfflineTimerWithAddress:@(self.model.address)];
+    }
     [SigDataSource.share deleteNodeFromMeshNetworkWithDeviceAddress:self.model.address];
-    [NSObject cancelPreviousPerformRequestsWithTarget:self];
-    [self pop];
+    dispatch_async(dispatch_get_main_queue(), ^{
+        [NSObject cancelPreviousPerformRequestsWithTarget:self];
+        [self pop];
+    });
 }
 
 - (void)pop{

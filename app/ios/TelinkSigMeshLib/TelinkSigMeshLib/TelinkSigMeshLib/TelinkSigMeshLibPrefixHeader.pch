@@ -29,8 +29,13 @@
 
 #import <CoreBluetooth/CoreBluetooth.h>
 
-#import "BackgroundTimer.h"
-#import "SigLogger.h"
+// 导入方式1：导入TelinkToolsLib.framework库
+//#import "TelinkToolsLib/TelinkToolsLib.h"
+
+// 导入方式2：导入TelinkToolsLib.xcodeproj工程
+#import "TelinkToolsLib.h"
+
+
 #import "SigEnumeration.h"
 #import "SigStruct.h"
 #import "SigModel.h"

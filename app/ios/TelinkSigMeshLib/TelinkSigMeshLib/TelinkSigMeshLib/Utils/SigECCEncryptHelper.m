@@ -23,7 +23,6 @@
 
 #import "SigECCEncryptHelper.h"
 #import <Security/Security.h>
-#import "GMEllipticCurveCrypto.h"
 
 static const UInt8 publicKeyIdentifier[] = "com.apple.sample.publickey/0";
 static const UInt8 privateKeyIdentifier[] = "com.apple.sample.privatekey/0";
@@ -37,10 +36,6 @@ static const UInt8 privateKeyIdentifier[] = "com.apple.sample.privatekey/0";
 
 @interface SigECCEncryptHelper ()
 @property (nonatomic, strong) SigSeckeyModel *seckeyModel;
-@property (nonatomic, strong) NSData *publicKeyLowIos10;
-@property (nonatomic, strong) NSData *privateKeyLowIos10;
-@property (nonatomic, strong) GMEllipticCurveCrypto *crypto;
-
 @end
 
 @implementation SigECCEncryptHelper
@@ -67,60 +62,31 @@ static const UInt8 privateKeyIdentifier[] = "com.apple.sample.privatekey/0";
 - (void)eccInit {
 //    __weak typeof(self) weakSelf = self;
     [self getECCKeyPair:^(NSData * _Nonnull publicKey, NSData * _Nonnull privateKey) {
-        if (@available(iOS 10.0, *)) {
 //            TelinkLogVerbose(@"init ECC bigger than ios10, publicKey=%@,privateKey=%@",weakSelf.seckeyModel.publicKey,weakSelf.seckeyModel.privateKey);
-        } else {
-//            TelinkLogVerbose(@"init ECC lower than ios10, publicKey=%@,privateKey=%@",weakSelf.publicKeyLowIos10,weakSelf.privateKeyLowIos10);
-        }
     }];
 }
 
 ///返回手机端64字节的ECC公钥
 - (NSData * _Nullable)getPublicKeyData {
-    if (@available(iOS 10.0, *)) {
-        if (self.seckeyModel && self.seckeyModel.publicKey) {
-            NSData *pub = [self getPublicKeyBitsFromKey:self.seckeyModel.publicKey];
-            return [pub subdataWithRange:NSMakeRange(1, pub.length-1)];
-        } else {
-            return nil;
-        }
+    if (self.seckeyModel && self.seckeyModel.publicKey) {
+        NSData *pub = [self getPublicKeyBitsFromKey:self.seckeyModel.publicKey];
+        return [pub subdataWithRange:NSMakeRange(1, pub.length-1)];
     } else {
-        return self.publicKeyLowIos10;
+        return nil;
     }
 }
 
-- (void)getECCKeyPair:(keyPair)pair{
-    if (@available(iOS 10.0, *)) {
-        [self getECCKeyPairWithKeySize:256 keyPair:pair];
-    } else {
-        _crypto = [GMEllipticCurveCrypto generateKeyPairForCurve:GMEllipticCurveSecp256r1];
-        _crypto.compressedPublicKey = NO;
-        self.publicKeyLowIos10 = [_crypto.publicKey subdataWithRange:NSMakeRange(1, _crypto.publicKey.length-1)];
-        self.privateKeyLowIos10 = _crypto.privateKey;
-        if (pair) {
-            pair(self.publicKeyLowIos10,self.privateKeyLowIos10);
-        }
-    }
+- (void)getECCKeyPair:(KeyPairCallback)pair{
+    [self getECCKeyPairWithKeySize:256 keyPair:pair];
 }
 
 - (NSData *)getSharedSecretWithDevicePublicKey:(NSData *)devicePublicKey {
-    if (@available(iOS 10.0, *)) {
-        return [self calculateSharedSecretWithPublicKey:devicePublicKey];
-    } else {
-        UInt8 tem = 0x04;
-        NSMutableData *devicePublicKeyData = [NSMutableData dataWithBytes:&tem length:1];
-        [devicePublicKeyData appendData:devicePublicKey];
-        GMEllipticCurveCrypto *deviceKeyCrypto = [GMEllipticCurveCrypto cryptoForKey:devicePublicKeyData];
-        deviceKeyCrypto.compressedPublicKey = YES;
-        NSData *sharedSecretKeyData = [_crypto sharedSecretForPublicKey:deviceKeyCrypto.publicKey];
-    //    TelinkLogInfo(@"sharedSecretKeyData=%@",sharedSecretKeyData);
-        return sharedSecretKeyData;
-    }
+    return [self calculateSharedSecretWithPublicKey:devicePublicKey];
 }
 
 #pragma mark -  =============苹果自带方法=====================
 
-- (void)getECCKeyPairWithKeySize:(int)keySize keyPair:(keyPair)pair {
+- (void)getECCKeyPairWithKeySize:(int)keySize keyPair:(KeyPairCallback)pair {
     OSStatus status = noErr;
     if (keySize == 256 || keySize == 512 || keySize == 1024 || keySize == 2048) {
 

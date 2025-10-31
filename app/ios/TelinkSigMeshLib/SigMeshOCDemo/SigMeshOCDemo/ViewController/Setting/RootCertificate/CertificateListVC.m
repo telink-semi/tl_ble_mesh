@@ -43,7 +43,7 @@
 
     self.saveButton.backgroundColor = UIColor.telinkButtonBlue;
     self.title = @"Root Certificate";
-    self.dataArray = [NSMutableArray arrayWithArray:[LibTools getAllFileNameWithFileType:@"der"]];
+    self.dataArray = [NSMutableArray arrayWithArray:[TelinkLibTools getAllFileNameWithFileType:@"der"]];
     _selectIndex = -1;
     //demo v3.3.4新增certificate-base Provision使用的默认根证书文件名，demo不重新赋值则默认使用PTS的root.der。
     NSString *rootCertificateName = [[NSUserDefaults standardUserDefaults] valueForKey:kRootCertificateName];
@@ -83,7 +83,7 @@
         [self showTips:@"Change to default Root Certificate successful!"];
     } else {
         NSString *selectName = self.dataArray[self.selectIndex];
-        NSData *selectData = [LibTools getDataWithFileName:selectName fileType:nil];
+        NSData *selectData = [TelinkLibTools getDataWithFileName:selectName fileType:@"der"];
         if (selectData && selectData.length > 0) {
             SigDataSource.share.defaultRootCertificateData = selectData;
             [[NSUserDefaults standardUserDefaults] setValue:selectName forKey:kRootCertificateName];
@@ -115,7 +115,7 @@
 - (void)configureCell:(UITableViewCell *)cell forRowAtIndexPath:(NSIndexPath *)indexPath{
     MeshOTAItemCell *itemCell = (MeshOTAItemCell *)cell;
     __weak typeof(self) weakSelf = self;
-    itemCell.titleLabel.text = self.dataArray[indexPath.row];
+    itemCell.titleLabel.text = [NSString stringWithFormat:@"%@.der", self.dataArray[indexPath.row]];;
     itemCell.selectButton.selected = indexPath.row == _selectIndex;
     [itemCell.selectButton addAction:^(UIButton *button) {
         weakSelf.selectIndex = button.selected ? indexPath.row : -1;

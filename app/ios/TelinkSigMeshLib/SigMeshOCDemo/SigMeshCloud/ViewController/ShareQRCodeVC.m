@@ -65,7 +65,7 @@
                 NSDictionary *dict = [NSDictionary dictionaryWithDictionary:dic[@"data"]];
                 NSInteger shareId = [dict[@"id"] intValue];
                 NSDictionary *shareDict = @{@"networkName":weakSelf.networkName, @"shareLinkId":@(shareId), @"userName":AppDataSource.share.userInfo.name};
-                [weakSelf loadQrCodeString:[LibTools getJSONStringWithDictionary:shareDict] timeout:validPeriod];
+                [weakSelf loadQrCodeString:[TelinkLibTools getJSONStringWithDictionary:shareDict] timeout:validPeriod];
             } else {
                 TelinkLogInfo(@"createShareLink result = %@", dic);
                 [weakSelf showTips:[NSString stringWithFormat:@"createShareLink errorCode = %d, message = %@", code, dic[@"message"]]];

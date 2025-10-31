@@ -62,9 +62,7 @@ typedef enum : UInt16 {
 @property (nonatomic, copy) ErrorBlock failBlock;
 @property (nonatomic, assign) BOOL isProvisionning;
 @property (nonatomic, assign) UInt16 totalLength;
-//@property (nonatomic, strong) NSMutableData *deviceCertificateData;
 @property (nonatomic, strong) SigProvisioningRecordsListPdu *recordsListPdu;
-@property (nonatomic, strong) NSMutableDictionary <NSNumber *,NSData *>*certificateDict;
 @property (nonatomic, assign) UInt16 currentRecordID;
 
 @property (nonatomic,strong) NSData *devicePublicKey;//certificate-base获取到的devicePublicKey
@@ -115,6 +113,7 @@ typedef enum : UInt16 {
 - (void)setState:(ProvisioningState)state{
     _state = state;
     if (state == ProvisioningState_fail) {
+        self.isContinueWithoutInvite = NO;
         SigBluetooth.share.bluetoothDisconnectCallback = self.oldBluetoothDisconnectCallback;
         [self reset];
         __weak typeof(self) weakSelf = self;
@@ -136,6 +135,7 @@ typedef enum : UInt16 {
 }
 
 - (void)provisionSuccess{
+    self.isContinueWithoutInvite = NO;
     UInt16 address = self.provisioningData.unicastAddress;
     UInt8 ele_count = self.provisioningCapabilities.numberOfElements;
     NSData *devKeyData = self.provisioningData.deviceKey;
@@ -147,7 +147,7 @@ typedef enum : UInt16 {
 
     SigNodeModel *model = [[SigNodeModel alloc] init];
     [model setAddress:address];
-    model.deviceKey = [LibTools convertDataToHexStr:devKeyData];
+    model.deviceKey = [TelinkLibTools convertDataToHexStr:devKeyData];
     model.peripheralUUID = nil;
     model.UUID = self.unprovisionedDevice.advUuid;
     //Attention: There isn't scanModel at remote add, so develop need add macAddress in provisionSuccessCallback.
@@ -183,7 +183,7 @@ typedef enum : UInt16 {
     [self.provisioningData provisionerDidObtainAuthValue:data];
     NSData *provisionerConfirmationData = [self.provisioningData provisionerConfirmation];
     SigProvisioningConfirmationPdu *pdu = [[SigProvisioningConfirmationPdu alloc] initWithConfirmation:provisionerConfirmationData];
-//    TelinkLogInfo(@"app端的Confirmation=%@",[LibTools convertDataToHexStr:provisionerConfirmationData]);
+//    TelinkLogInfo(@"app端的Confirmation=%@",[TelinkLibTools convertDataToHexStr:provisionerConfirmationData]);
 
     [self sendPdu:pdu];
 }
@@ -244,7 +244,7 @@ typedef enum : UInt16 {
     SigNetkeyModel *provisionNet = nil;
     NSArray *netKeys = [NSArray arrayWithArray:SigMeshLib.share.dataSource.netKeys];
     for (SigNetkeyModel *net in netKeys) {
-        if (([networkKey isEqualToData:[LibTools nsstringToHex:net.key]] || (net.phase == distributingKeys && [networkKey isEqualToData:[LibTools nsstringToHex:net.oldKey]])) && netkeyIndex == net.index) {
+        if (([networkKey isEqualToData:[TelinkLibTools nsstringToHex:net.key]] || (net.phase == distributingKeys && [networkKey isEqualToData:[TelinkLibTools nsstringToHex:net.oldKey]])) && netkeyIndex == net.index) {
             provisionNet = net;
             break;
         }
@@ -254,7 +254,9 @@ typedef enum : UInt16 {
         return;
     }
     __weak typeof(self) weakSelf = self;
-    [self reset];
+    if (!self.isContinueWithoutInvite) {
+        [self reset];
+    }
     [SigBearer.share setBearerProvisioned:NO];
     self.networkKey = provisionNet;
     self.isProvisionning = YES;
@@ -273,10 +275,13 @@ typedef enum : UInt16 {
             }
         }
     }];
-    [self getCapabilitiesWithTimeout:kGetCapabilitiesTimeout callback:^(SigProvisioningPdu * _Nullable response) {
-        [weakSelf getCapabilitiesResultWithResponse:response];
-    }];
-
+    if (self.isContinueWithoutInvite) {
+        [self getCapabilitiesResultWithResponse:self.provisioningCapabilities];
+    } else {
+        [self getCapabilitiesWithTimeout:kGetCapabilitiesTimeout callback:^(SigProvisioningPdu * _Nullable response) {
+            [weakSelf getCapabilitiesResultWithResponse:response];
+        }];
+    }
 }
 
 /**
@@ -334,7 +339,7 @@ typedef enum : UInt16 {
     SigNetkeyModel *provisionNet = nil;
     NSArray *netKeys = [NSArray arrayWithArray:SigMeshLib.share.dataSource.netKeys];
     for (SigNetkeyModel *net in netKeys) {
-        if (([networkKey isEqualToData:[LibTools nsstringToHex:net.key]] || (net.phase == distributingKeys && [networkKey isEqualToData:[LibTools nsstringToHex:net.oldKey]])) && netkeyIndex == net.index) {
+        if (([networkKey isEqualToData:[TelinkLibTools nsstringToHex:net.key]] || (net.phase == distributingKeys && [networkKey isEqualToData:[TelinkLibTools nsstringToHex:net.oldKey]])) && netkeyIndex == net.index) {
             provisionNet = net;
             break;
         }
@@ -343,19 +348,25 @@ typedef enum : UInt16 {
         TelinkLogError(@"error network key.");
         return;
     }
-    self.certificateDict = [NSMutableDictionary dictionary];
-    self.currentRecordID = 0;
-
-    [self reset];
+    if (!self.isContinueWithoutInvite) {
+        self.certificateDictionary = [NSMutableDictionary dictionary];
+        self.currentRecordID = 0;
+        [self reset];
+    }
     [SigBearer.share setBearerProvisioned:NO];
     self.networkKey = provisionNet;
     self.isProvisionning = YES;
     TelinkLogInfo(@"start certificateBasedProvision.");
 
     __weak typeof(self) weakSelf = self;
-    [self sentProvisioningRecordsGetWithTimeout:kProvisioningRecordsGetTimeout callback:^(SigProvisioningPdu * _Nullable response) {
-        [weakSelf sentProvisioningRecordsGetWithResponse:response];
-    }];
+    if (self.isContinueWithoutInvite) {
+        [self checkCertificatePublicKeyAndStartProvision];
+    } else {
+        TelinkLogVerbose(@"start RecordsGet.");
+        [self sentProvisioningRecordsGetWithTimeout:kProvisioningRecordsGetTimeout callback:^(SigProvisioningPdu * _Nullable response) {
+            [weakSelf sentProvisioningRecordsGetWithResponse:response];
+        }];
+    }
 }
 
 - (void)provisionWithUnicastAddress:(UInt16)unicastAddress networkKey:(NSData *)networkKey netkeyIndex:(UInt16)netkeyIndex provisionSuccess:(addDevice_provisionSuccessCallBack)provisionSuccess fail:(ErrorBlock)fail {
@@ -370,7 +381,7 @@ typedef enum : UInt16 {
     SigNetkeyModel *provisionNet = nil;
     NSArray *netKeys = [NSArray arrayWithArray:SigMeshLib.share.dataSource.netKeys];
     for (SigNetkeyModel *net in netKeys) {
-        if (([networkKey isEqualToData:[LibTools nsstringToHex:net.key]] || (net.phase == distributingKeys && [networkKey isEqualToData:[LibTools nsstringToHex:net.oldKey]])) && netkeyIndex == net.index) {
+        if (([networkKey isEqualToData:[TelinkLibTools nsstringToHex:net.key]] || (net.phase == distributingKeys && [networkKey isEqualToData:[TelinkLibTools nsstringToHex:net.oldKey]])) && netkeyIndex == net.index) {
             provisionNet = net;
             break;
         }
@@ -380,7 +391,9 @@ typedef enum : UInt16 {
         return;
     }
     __weak typeof(self) weakSelf = self;
-    [self reset];
+    if (!self.isContinueWithoutInvite) {
+        [self reset];
+    }
     [SigBearer.share setBearerProvisioned:NO];
     self.networkKey = provisionNet;
     self.isProvisionning = YES;
@@ -399,9 +412,13 @@ typedef enum : UInt16 {
             }
         }
     }];
-    [self getCapabilitiesWithTimeout:kGetCapabilitiesTimeout callback:^(SigProvisioningPdu * _Nullable response) {
-        [weakSelf getCapabilitiesResultWithResponse:response];
-    }];
+    if (self.isContinueWithoutInvite) {
+        [self getCapabilitiesResultWithResponse:self.provisioningCapabilities];
+    } else {
+        [self getCapabilitiesWithTimeout:kGetCapabilitiesTimeout callback:^(SigProvisioningPdu * _Nullable response) {
+            [weakSelf getCapabilitiesResultWithResponse:response];
+        }];
+    }
 }
 
 - (void)provisionWithUnicastAddress:(UInt16)unicastAddress networkKey:(NSData *)networkKey netkeyIndex:(UInt16)netkeyIndex staticOobData:(NSData *)oobData provisionSuccess:(addDevice_provisionSuccessCallBack)provisionSuccess fail:(ErrorBlock)fail {
@@ -416,7 +433,7 @@ typedef enum : UInt16 {
     SigNetkeyModel *provisionNet = nil;
     NSArray *netKeys = [NSArray arrayWithArray:SigMeshLib.share.dataSource.netKeys];
     for (SigNetkeyModel *net in netKeys) {
-        if (([networkKey isEqualToData:[LibTools nsstringToHex:net.key]] || (net.phase == distributingKeys && [networkKey isEqualToData:[LibTools nsstringToHex:net.oldKey]])) && netkeyIndex == net.index) {
+        if (([networkKey isEqualToData:[TelinkLibTools nsstringToHex:net.key]] || (net.phase == distributingKeys && [networkKey isEqualToData:[TelinkLibTools nsstringToHex:net.oldKey]])) && netkeyIndex == net.index) {
             provisionNet = net;
             break;
         }
@@ -426,7 +443,9 @@ typedef enum : UInt16 {
         return;
     }
     __weak typeof(self) weakSelf = self;
-    [self reset];
+    if (!self.isContinueWithoutInvite) {
+        [self reset];
+    }
     [SigBearer.share setBearerProvisioned:NO];
     self.networkKey = provisionNet;
     self.isProvisionning = YES;
@@ -445,10 +464,13 @@ typedef enum : UInt16 {
             }
         }
     }];
-    [self getCapabilitiesWithTimeout:kGetCapabilitiesTimeout callback:^(SigProvisioningPdu * _Nullable response) {
-        [weakSelf getCapabilitiesResultWithResponse:response];
-    }];
-
+    if (self.isContinueWithoutInvite) {
+        [self getCapabilitiesResultWithResponse:self.provisioningCapabilities];
+    } else {
+        [self getCapabilitiesWithTimeout:kGetCapabilitiesTimeout callback:^(SigProvisioningPdu * _Nullable response) {
+            [weakSelf getCapabilitiesResultWithResponse:response];
+        }];
+    }
 }
 
 /// founcation3: provision (If CBPeripheral isn't CBPeripheralStateConnected, SDK will connect CBPeripheral in this api. )
@@ -501,7 +523,7 @@ typedef enum : UInt16 {
     SigNetkeyModel *provisionNet = nil;
     NSArray *netKeys = [NSArray arrayWithArray:SigMeshLib.share.dataSource.netKeys];
     for (SigNetkeyModel *net in netKeys) {
-        if (([networkKey isEqualToData:[LibTools nsstringToHex:net.key]] || (net.phase == distributingKeys && [networkKey isEqualToData:[LibTools nsstringToHex:net.oldKey]])) && netkeyIndex == net.index) {
+        if (([networkKey isEqualToData:[TelinkLibTools nsstringToHex:net.key]] || (net.phase == distributingKeys && [networkKey isEqualToData:[TelinkLibTools nsstringToHex:net.oldKey]])) && netkeyIndex == net.index) {
             provisionNet = net;
             break;
         }
@@ -510,21 +532,27 @@ typedef enum : UInt16 {
         TelinkLogError(@"error network key.");
         return;
     }
-    self.certificateDict = [NSMutableDictionary dictionary];
+    self.certificateDictionary = [NSMutableDictionary dictionary];
     self.currentRecordID = 0;
 
     __weak typeof(self) weakSelf = self;
-    [self reset];
+    if (!self.isContinueWithoutInvite) {
+        [self reset];
+    }
     [SigBearer.share setBearerProvisioned:NO];
     self.networkKey = provisionNet;
     self.isProvisionning = YES;
     TelinkLogInfo(@"start certificateBasedProvision.");
 
     if (peripheral.state == CBPeripheralStateConnected) {
-        TelinkLogVerbose(@"start RecordsGet.");
-        [self sentProvisioningRecordsGetWithTimeout:kProvisioningRecordsGetTimeout callback:^(SigProvisioningPdu * _Nullable response) {
-            [weakSelf sentProvisioningRecordsGetWithResponse:response];
-        }];
+        if (self.isContinueWithoutInvite) {
+            [self checkCertificatePublicKeyAndStartProvision];
+        } else {
+            TelinkLogVerbose(@"start RecordsGet.");
+            [self sentProvisioningRecordsGetWithTimeout:kProvisioningRecordsGetTimeout callback:^(SigProvisioningPdu * _Nullable response) {
+                [weakSelf sentProvisioningRecordsGetWithResponse:response];
+            }];
+        }
     } else {
         TelinkLogVerbose(@"start connect for provision.");
         [SigBearer.share connectAndReadServicesWithPeripheral:peripheral result:^(BOOL successful) {
@@ -541,8 +569,35 @@ typedef enum : UInt16 {
     }
 }
 
+#pragma mark step0:getCertificateDictionary
+- (void)getCertificateDictionaryWithTimeout:(NSTimeInterval)timeout callback:(ProvisionCertificateDictionaryCallBack)block {
+    TelinkLogInfo(@"\n\n==========provision:step0\n\n");
+    self.provisionCertificateDictionaryBlock = block;
+    TelinkLogVerbose(@"start RecordsGet.");
+    __weak typeof(self) weakSelf = self;
+    [self sentProvisioningRecordsGetWithTimeout:kProvisioningRecordsGetTimeout callback:^(SigProvisioningPdu * _Nullable response) {
+        [weakSelf sentProvisioningRecordsGetWithResponse:response];
+    }];
+    dispatch_async(dispatch_get_main_queue(), ^{
+        [NSObject cancelPreviousPerformRequestsWithTarget:self selector:@selector(getCertificateDictionaryTimeout) object:nil];
+        [self performSelector:@selector(getCertificateDictionaryTimeout) withObject:nil afterDelay:timeout];
+    });
+}
+
+- (void)getCertificateDictionaryTimeout {
+    TelinkLogInfo(@"getCertificateDictionaryTimeout");
+    dispatch_async(dispatch_get_main_queue(), ^{
+        [NSObject cancelPreviousPerformRequestsWithTarget:self selector:@selector(getCertificateDictionaryTimeout) object:nil];
+    });
+    if (self.provisionCertificateDictionaryBlock) {
+        NSError *error = [NSError errorWithDomain:@"get certificate dictionary timeout" code:1 userInfo:nil];
+        self.provisionCertificateDictionaryBlock(nil, error);
+        self.provisionCertificateDictionaryBlock = nil;
+    }
+}
+
 #pragma mark step1:getCapabilities
-- (void)getCapabilitiesWithTimeout:(NSTimeInterval)timeout callback:(prvisionResponseCallBack)block {
+- (void)getCapabilitiesWithTimeout:(NSTimeInterval)timeout callback:(provisionResponseCallBack)block {
     TelinkLogInfo(@"\n\n==========provision:step1\n\n");
     self.provisionResponseBlock = block;
     dispatch_async(dispatch_get_main_queue(), ^{
@@ -553,7 +608,7 @@ typedef enum : UInt16 {
 }
 
 #pragma mark step2:start
-- (void)sentStartNoOobProvisionPduAndPublicKeyPduWithTimeout:(NSTimeInterval)timeout callback:(prvisionResponseCallBack)block {
+- (void)sentStartNoOobProvisionPduAndPublicKeyPduWithTimeout:(NSTimeInterval)timeout callback:(provisionResponseCallBack)block {
     TelinkLogInfo(@"\n\n==========provision:step2(noOob)\n\n");
     // Is the Provisioner Manager in the right state?
     if (self.state != ProvisioningState_capabilitiesReceived) {
@@ -596,14 +651,14 @@ typedef enum : UInt16 {
         [NSObject cancelPreviousPerformRequestsWithTarget:self selector:@selector(sentStartProvisionPduAndPublicKeyPduTimeout) object:nil];
         [self performSelector:@selector(sentStartProvisionPduAndPublicKeyPduTimeout) withObject:nil afterDelay:timeout];
         if (self.provisioningCapabilities.publicKeyType == PublicKeyType_oobPublicKey) {
-            //if use oob public key, needn`t waith devicePublicKey response, use devicePublicKey from certificate.
+            //if use oob public key, no need to wait devicePublicKey response, use devicePublicKey from certificate.
             SigProvisioningPublicKeyPdu *devicePublicKeyPdu = [[SigProvisioningPublicKeyPdu alloc] initWithPublicKey:self.devicePublicKey];
             [self sentStartProvisionPduAndPublicKeyPduWithResponse:devicePublicKeyPdu];
         }
     });
 }
 
-- (void)sentStartStaticOobProvisionPduAndPublicKeyPduWithStaticOobData:(NSData *)oobData timeout:(NSTimeInterval)timeout callback:(prvisionResponseCallBack)block {
+- (void)sentStartStaticOobProvisionPduAndPublicKeyPduWithStaticOobData:(NSData *)oobData timeout:(NSTimeInterval)timeout callback:(provisionResponseCallBack)block {
     TelinkLogInfo(@"\n\n==========provision:step2(staticOob)\n\n");
     // Is the Provisioner Manager in the right state?
     if (self.state != ProvisioningState_capabilitiesReceived) {
@@ -647,7 +702,7 @@ typedef enum : UInt16 {
         [NSObject cancelPreviousPerformRequestsWithTarget:self selector:@selector(sentStartProvisionPduAndPublicKeyPduTimeout) object:nil];
         [self performSelector:@selector(sentStartProvisionPduAndPublicKeyPduTimeout) withObject:nil afterDelay:timeout];
         if (self.provisioningCapabilities.publicKeyType == PublicKeyType_oobPublicKey) {
-            //if use oob public key, needn`t waith devicePublicKey response, use devicePublicKey from certificate.
+            //if use oob public key, no need to wait devicePublicKey response, use devicePublicKey from certificate.
             SigProvisioningPublicKeyPdu *devicePublicKeyPdu = [[SigProvisioningPublicKeyPdu alloc] initWithPublicKey:self.devicePublicKey];
             [self sentStartProvisionPduAndPublicKeyPduWithResponse:devicePublicKeyPdu];
         }
@@ -655,7 +710,7 @@ typedef enum : UInt16 {
 }
 
 #pragma mark step3:Confirmation
-- (void)sentProvisionConfirmationPduWithTimeout:(NSTimeInterval)timeout callback:(prvisionResponseCallBack)block {
+- (void)sentProvisionConfirmationPduWithTimeout:(NSTimeInterval)timeout callback:(provisionResponseCallBack)block {
     TelinkLogInfo(@"\n\n==========provision:step3\n\n");
     self.provisionResponseBlock = block;
     NSData *authValue = nil;
@@ -682,7 +737,7 @@ typedef enum : UInt16 {
 }
 
 #pragma mark step4:Random
-- (void)sentProvisionRandomPduWithTimeout:(NSTimeInterval)timeout callback:(prvisionResponseCallBack)block {
+- (void)sentProvisionRandomPduWithTimeout:(NSTimeInterval)timeout callback:(provisionResponseCallBack)block {
     TelinkLogInfo(@"\n\n==========provision:step4\n\n");
     self.provisionResponseBlock = block;
     SigProvisioningRandomPdu *pdu = [[SigProvisioningRandomPdu alloc] initWithRandom:self.provisioningData.provisionerRandom];
@@ -696,7 +751,7 @@ typedef enum : UInt16 {
 }
 
 #pragma mark step5:EncryptedData
-- (void)sentProvisionEncryptedDataWithMicPduWithTimeout:(NSTimeInterval)timeout callback:(prvisionResponseCallBack)block {
+- (void)sentProvisionEncryptedDataWithMicPduWithTimeout:(NSTimeInterval)timeout callback:(provisionResponseCallBack)block {
     TelinkLogInfo(@"\n\n==========provision:step5\n\n");
     self.provisionResponseBlock = block;
     NSData *provisioningData = self.provisioningData.getProvisioningData;
@@ -785,11 +840,11 @@ typedef enum : UInt16 {
     });
     if (response.provisionType == SigProvisioningPduType_publicKey) {
         SigProvisioningPublicKeyPdu *publicKeyPdu = (SigProvisioningPublicKeyPdu *)response;
-        TelinkLogInfo(@"device public key back:%@",[LibTools convertDataToHexStr:publicKeyPdu.publicKey]);
+        TelinkLogInfo(@"device public key back:%@",[TelinkLibTools convertDataToHexStr:publicKeyPdu.publicKey]);
         self.provisioningData.devicePublicKey = publicKeyPdu.publicKey;
         [self.provisioningData provisionerDidObtainWithDevicePublicKey:publicKeyPdu.publicKey];
         if (self.provisioningData.sharedSecret && self.provisioningData.sharedSecret.length > 0) {
-            TelinkLogInfo(@"APP端SharedSecret=%@",[LibTools convertDataToHexStr:self.provisioningData.sharedSecret]);
+            TelinkLogInfo(@"APP端SharedSecret=%@",[TelinkLibTools convertDataToHexStr:self.provisioningData.sharedSecret]);
             __weak typeof(self) weakSelf = self;
             [self sentProvisionConfirmationPduWithTimeout:kProvisionConfirmationTimeout callback:^(SigProvisioningPdu * _Nullable response) {
                 [weakSelf sentProvisionConfirmationPduWithResponse:response];
@@ -823,7 +878,7 @@ typedef enum : UInt16 {
     });
     if (response.provisionType == SigProvisioningPduType_confirmation) {
         SigProvisioningConfirmationPdu *confirmationPdu = (SigProvisioningConfirmationPdu *)response;
-        TelinkLogInfo(@"device confirmation back:%@",[LibTools convertDataToHexStr:confirmationPdu.confirmation]);
+        TelinkLogInfo(@"device confirmation back:%@",[TelinkLibTools convertDataToHexStr:confirmationPdu.confirmation]);
         [self.provisioningData provisionerDidObtainWithDeviceConfirmation:confirmationPdu.confirmation];
         if ([[self.provisioningData provisionerConfirmation] isEqualToData:confirmationPdu.confirmation]) {
             TelinkLogDebug(@"Confirmation of device is equal to confirmation of provisioner!");
@@ -936,7 +991,7 @@ typedef enum : UInt16 {
 /// @param fragmentMaximumSize The maximum size of the provisioning record fragment that the Provisioner can receive.
 /// @param timeout timeout of this pdu.
 /// @param block response of this pdu.
-- (void)sentProvisioningRecordRequestWithRecordID:(UInt16)recordID fragmentOffset:(UInt16)fragmentOffset fragmentMaximumSize:(UInt16)fragmentMaximumSize timeout:(NSTimeInterval)timeout callback:(prvisionResponseCallBack)block {
+- (void)sentProvisioningRecordRequestWithRecordID:(UInt16)recordID fragmentOffset:(UInt16)fragmentOffset fragmentMaximumSize:(UInt16)fragmentMaximumSize timeout:(NSTimeInterval)timeout callback:(provisionResponseCallBack)block {
     TelinkLogInfo(@"\n\n==========provision: Record Request PDU\n\n");
     self.provisionResponseBlock = block;
     dispatch_async(dispatch_get_main_queue(), ^{
@@ -957,9 +1012,9 @@ typedef enum : UInt16 {
         SigProvisioningRecordResponsePdu *recordResponsePdu = (SigProvisioningRecordResponsePdu *)response;
         self.state = ProvisioningState_recordResponse;
         self.totalLength = recordResponsePdu.totalLength;
-        NSMutableData *mData = [NSMutableData dataWithData:self.certificateDict[@(self.currentRecordID)]];
+        NSMutableData *mData = [NSMutableData dataWithData:self.certificateDictionary[@(self.currentRecordID)]];
         [mData appendData:recordResponsePdu.data];
-        self.certificateDict[@(self.currentRecordID)] = mData;
+        self.certificateDictionary[@(self.currentRecordID)] = mData;
     }else if (!response || response.provisionType == SigProvisioningPduType_failed) {
         self.state = ProvisioningState_fail;
         SigProvisioningFailedPdu *failedPdu = (SigProvisioningFailedPdu *)response;
@@ -982,7 +1037,7 @@ typedef enum : UInt16 {
 /// The Provisioner sends a Provisioning Records Get PDU to request the list of IDs of the provisioning records that are stored on a device.
 /// @param timeout timeout of this pdu.
 /// @param block response of this pdu.
-- (void)sentProvisioningRecordsGetWithTimeout:(NSTimeInterval)timeout callback:(prvisionResponseCallBack)block {
+- (void)sentProvisioningRecordsGetWithTimeout:(NSTimeInterval)timeout callback:(provisionResponseCallBack)block {
     TelinkLogInfo(@"\n\n==========provision: Records Get PDU\n\n");
     self.provisionResponseBlock = block;
     dispatch_async(dispatch_get_main_queue(), ^{
@@ -1031,7 +1086,7 @@ typedef enum : UInt16 {
 }
 
 - (void)getCertificate {
-    self.certificateDict = [NSMutableDictionary dictionary];
+    self.certificateDictionary = [NSMutableDictionary dictionary];
 
     __weak typeof(self) weakSelf = self;
     NSOperationQueue *operationQueue = [[NSOperationQueue alloc] init];
@@ -1043,11 +1098,11 @@ typedef enum : UInt16 {
             UInt16 recordID = (UInt16)[recordNumber intValue];
             weakSelf.currentRecordID = recordID;
             weakSelf.totalLength = 0;
-            weakSelf.certificateDict[recordNumber] = [NSMutableData data];
+            weakSelf.certificateDictionary[recordNumber] = [NSMutableData data];
             BOOL result = [weakSelf getCertificateFragmentWithRecordID:recordID];
             do {
                 if (result) {
-                    if (weakSelf.certificateDict[recordNumber].length == weakSelf.totalLength) {
+                    if (weakSelf.certificateDictionary[recordNumber].length == weakSelf.totalLength) {
                         //获取证书所有分段完成
                         break;
                     } else {
@@ -1058,25 +1113,25 @@ typedef enum : UInt16 {
                     //获取证书失败
                     break;
                 }
-            } while (weakSelf.certificateDict[recordNumber].length != weakSelf.totalLength);
+            } while (weakSelf.certificateDictionary[recordNumber].length != weakSelf.totalLength);
         }
 
-        if (weakSelf.certificateDict.count > 0) {
-            if ([weakSelf.certificateDict.allKeys containsObject:@(SigProvisioningRecordID_CertificateBasedProvisioningURI)]) {
+        if (weakSelf.certificateDictionary.count > 0) {
+            if ([weakSelf.certificateDictionary.allKeys containsObject:@(SigProvisioningRecordID_CertificateBasedProvisioningURI)]) {
                 //为过PTS测试项，未实际完成URI的方式获取证书的功能，
                 //5.6 Device Certificate retrieval over the Internet
                 //MshPRT_v1.1.pdf page.618
                 //PTS v8.5.1 build10 测试项的设备证书
-                NSData *deviceCertificateData = [LibTools nsstringToHex:@"3082028030820227A003020102020102300A06082A8648CE3D04030230818F310B30090603550406130255533113301106035504080C0A57617368696E67746F6E31163014060355040A0C0D426C7565746F6F746820534947310C300A060355040B0C03505453311F301D06035504030C16496E7465726D65646961746520417574686F726974793124302206092A864886F70D0109011615737570706F727440626C7565746F6F74682E636F6D301E170D3233303831373230353731305A170D3334313130333230353731305A30818B310B30090603550406130255533113301106035504080C0A57617368696E67746F6E31163014060355040A0C0D426C7565746F6F746820534947310C300A060355040B0C035054533141303F06035504030C3830303142444330382D313032312D304230452D304130432D30303042304530413043303020424349443A3030334620425049443A303031413059301306072A8648CE3D020106082A8648CE3D03010703420004317A6F1658447274151033625AFBC4F1B60B31A45D6F459B5076E1118644BDBD265E7F37BFFDF9C4349060237F57660EAE86D4D0587CEF36D93BA7D02B545DE2A376307430090603551D1304023000300B0603551D0F040403020308301D0603551D0E04160414DB621884A7509603221ECD80F5E98DF906C5823A301F0603551D230418301680143E74DF324729FBED18B666AC0144525B9C6584C1301A0603551D200101FF0410300E300C060A60864801650302013001300A06082A8648CE3D04030203470030440220692197DBFB23DAECEC2480331F890C2B1A9F203BE2CD85395AA1E9345A6AC82F02202309FE27118E20BCC6192F7795AB0422AAA167638C52DB577971C202521B3051"];
+                NSData *deviceCertificateData = [TelinkLibTools nsstringToHex:@"3082028030820227A003020102020102300A06082A8648CE3D04030230818F310B30090603550406130255533113301106035504080C0A57617368696E67746F6E31163014060355040A0C0D426C7565746F6F746820534947310C300A060355040B0C03505453311F301D06035504030C16496E7465726D65646961746520417574686F726974793124302206092A864886F70D0109011615737570706F727440626C7565746F6F74682E636F6D301E170D3233303831373230353731305A170D3334313130333230353731305A30818B310B30090603550406130255533113301106035504080C0A57617368696E67746F6E31163014060355040A0C0D426C7565746F6F746820534947310C300A060355040B0C035054533141303F06035504030C3830303142444330382D313032312D304230452D304130432D30303042304530413043303020424349443A3030334620425049443A303031413059301306072A8648CE3D020106082A8648CE3D03010703420004317A6F1658447274151033625AFBC4F1B60B31A45D6F459B5076E1118644BDBD265E7F37BFFDF9C4349060237F57660EAE86D4D0587CEF36D93BA7D02B545DE2A376307430090603551D1304023000300B0603551D0F040403020308301D0603551D0E04160414DB621884A7509603221ECD80F5E98DF906C5823A301F0603551D230418301680143E74DF324729FBED18B666AC0144525B9C6584C1301A0603551D200101FF0410300E300C060A60864801650302013001300A06082A8648CE3D04030203470030440220692197DBFB23DAECEC2480331F890C2B1A9F203BE2CD85395AA1E9345A6AC82F02202309FE27118E20BCC6192F7795AB0422AAA167638C52DB577971C202521B3051"];
                 //PTS v8.5.1 build10 测试项的中间证书1
-                NSData *intermediateCertificate1Data = [LibTools nsstringToHex:@"3082027B30820220A003020102020101300A06082A8648CE3D04030230819D310B30090603550406130255533113301106035504080C0A57617368696E67746F6E31163014060355040A0C0D426C7565746F6F746820534947310C300A060355040B0C03505453312D302B06035504030C2430303142444330382D313032312D304230452D304130432D3030304230453041304330303124302206092A864886F70D0109011615737570706F727440626C7565746F6F74682E636F6D301E170D3233303831373230353731305A170D3334313130333230353731305A30818F310B30090603550406130255533113301106035504080C0A57617368696E67746F6E31163014060355040A0C0D426C7565746F6F746820534947310C300A060355040B0C03505453311F301D06035504030C16496E7465726D65646961746520417574686F726974793124302206092A864886F70D0109011615737570706F727440626C7565746F6F74682E636F6D3059301306072A8648CE3D020106082A8648CE3D03010703420004E06E9269DF11118F528FA2A98DFDC4EC2AFF6105CC91783378E8D27D29A45415C5D740A90865AD350D51D607210915B72E43E5BC77B4BC552B0F5FD44DD0CE5CA35D305B301D0603551D0E041604143E74DF324729FBED18B666AC0144525B9C6584C1301F0603551D23041830168014C9C527F8E3D36EC844538CA132C7282C459DDFFF300C0603551D13040530030101FF300B0603551D0F040403020106300A06082A8648CE3D0403020349003046022100A4B6C2C54B984703617034E0E9D80F03755D1EAB8CBF450F61FF81918EA943740221009493E512C2A8AB35CC881221544E0D21740160D4217737A2BE8090F576B98852"];
-                self.certificateDict[@(SigProvisioningRecordID_DeviceCertificate)] = deviceCertificateData;
-                self.certificateDict[@(SigProvisioningRecordID_IntermediateCertificate1)] = intermediateCertificate1Data;
+                NSData *intermediateCertificate1Data = [TelinkLibTools nsstringToHex:@"3082027B30820220A003020102020101300A06082A8648CE3D04030230819D310B30090603550406130255533113301106035504080C0A57617368696E67746F6E31163014060355040A0C0D426C7565746F6F746820534947310C300A060355040B0C03505453312D302B06035504030C2430303142444330382D313032312D304230452D304130432D3030304230453041304330303124302206092A864886F70D0109011615737570706F727440626C7565746F6F74682E636F6D301E170D3233303831373230353731305A170D3334313130333230353731305A30818F310B30090603550406130255533113301106035504080C0A57617368696E67746F6E31163014060355040A0C0D426C7565746F6F746820534947310C300A060355040B0C03505453311F301D06035504030C16496E7465726D65646961746520417574686F726974793124302206092A864886F70D0109011615737570706F727440626C7565746F6F74682E636F6D3059301306072A8648CE3D020106082A8648CE3D03010703420004E06E9269DF11118F528FA2A98DFDC4EC2AFF6105CC91783378E8D27D29A45415C5D740A90865AD350D51D607210915B72E43E5BC77B4BC552B0F5FD44DD0CE5CA35D305B301D0603551D0E041604143E74DF324729FBED18B666AC0144525B9C6584C1301F0603551D23041830168014C9C527F8E3D36EC844538CA132C7282C459DDFFF300C0603551D13040530030101FF300B0603551D0F040403020106300A06082A8648CE3D0403020349003046022100A4B6C2C54B984703617034E0E9D80F03755D1EAB8CBF450F61FF81918EA943740221009493E512C2A8AB35CC881221544E0D21740160D4217737A2BE8090F576B98852"];
+                self.certificateDictionary[@(SigProvisioningRecordID_DeviceCertificate)] = deviceCertificateData;
+                self.certificateDictionary[@(SigProvisioningRecordID_IntermediateCertificate1)] = intermediateCertificate1Data;
                 //实际应该从SigProvisioningRecordID_CertificateBasedProvisioningURI获取到证书，但未实现，需要移除。
-                [self.certificateDict removeObjectForKey:@(SigProvisioningRecordID_CertificateBasedProvisioningURI)];
+                [self.certificateDictionary removeObjectForKey:@(SigProvisioningRecordID_CertificateBasedProvisioningURI)];
             }
             NSData *root = SigDataSource.share.defaultRootCertificateData;
-            BOOL result = [OpenSSLHelper.share checkUserCertificateDataList:weakSelf.certificateDict.allValues withRootCertificate:root];
+            BOOL result = [OpenSSLHelper.share checkUserCertificateDataList:weakSelf.certificateDictionary.allValues withRootCertificate:root];
             if (result == NO) {
                 TelinkLogDebug(@"=====>根证书验证失败,check certificate fail.");
                 weakSelf.state = ProvisioningState_fail;
@@ -1088,22 +1143,41 @@ typedef enum : UInt16 {
 }
 
 - (void)checkCertificatePublicKeyAndStartProvision {
-    NSData *publicKey = [OpenSSLHelper.share checkCertificate:self.certificateDict[@(SigProvisioningRecordID_DeviceCertificate)] withSuperCertificate:self.certificateDict[@(SigProvisioningRecordID_IntermediateCertificate1)]];
+    NSData *publicKey = [OpenSSLHelper.share checkCertificate:self.certificateDictionary[@(SigProvisioningRecordID_DeviceCertificate)] withSuperCertificate:self.certificateDictionary[@(SigProvisioningRecordID_IntermediateCertificate1)]];
     if (publicKey && publicKey.length == 64) {
-        NSData *tem = [OpenSSLHelper.share getStaticOOBDataFromCertificate:self.certificateDict[@(SigProvisioningRecordID_DeviceCertificate)]];
+        NSData *tem = [OpenSSLHelper.share getStaticOOBDataFromCertificate:self.certificateDictionary[@(SigProvisioningRecordID_DeviceCertificate)]];
         if (tem && tem.length) {
             self.staticOobData = [NSData dataWithData:tem];
         }
-        TelinkLogInfo(@"=====>获取证书成功,deviceCertificateData=%@,publicKey=%@,staticOOB=%@",[LibTools convertDataToHexStr:self.certificateDict[@(SigProvisioningRecordID_DeviceCertificate)]],[LibTools convertDataToHexStr:publicKey],[LibTools convertDataToHexStr:self.staticOobData])
+        TelinkLogInfo(@"=====>获取证书成功,deviceCertificateData=%@,publicKey=%@,staticOOB=%@",[TelinkLibTools convertDataToHexStr:self.certificateDictionary[@(SigProvisioningRecordID_DeviceCertificate)]],[TelinkLibTools convertDataToHexStr:publicKey],[TelinkLibTools convertDataToHexStr:self.staticOobData])
         self.devicePublicKey = publicKey;
         self.state = ProvisioningState_ready;
         __weak typeof(self) weakSelf = self;
-        [self getCapabilitiesWithTimeout:kGetCapabilitiesTimeout callback:^(SigProvisioningPdu * _Nullable response) {
-            [weakSelf getCapabilitiesResultWithResponse:response];
-        }];
+        if (self.isContinueWithoutInvite) {
+            [self getCapabilitiesResultWithResponse:self.provisioningCapabilities];
+        } else if (self.provisionCertificateDictionaryBlock) {
+            // 单独获取证书，进入这个else分支
+            dispatch_async(dispatch_get_main_queue(), ^{
+                [NSObject cancelPreviousPerformRequestsWithTarget:self selector:@selector(getCertificateDictionaryTimeout) object:nil];
+            });
+            self.provisionCertificateDictionaryBlock(self.certificateDictionary, nil);
+            self.provisionCertificateDictionaryBlock = nil;
+        } else {
+            [self getCapabilitiesWithTimeout:kGetCapabilitiesTimeout callback:^(SigProvisioningPdu * _Nullable response) {
+                [weakSelf getCapabilitiesResultWithResponse:response];
+            }];
+        }
     } else {
         TelinkLogDebug(@"=====>证书验证失败,check certificate fail.");
         self.state = ProvisioningState_fail;
+        if (self.provisionCertificateDictionaryBlock) {
+            dispatch_async(dispatch_get_main_queue(), ^{
+                [NSObject cancelPreviousPerformRequestsWithTarget:self selector:@selector(getCertificateDictionaryTimeout) object:nil];
+            });
+            NSError *error = [NSError errorWithDomain:@"check certificate fail." code:2 userInfo:nil];
+            self.provisionCertificateDictionaryBlock(nil, error);
+            self.provisionCertificateDictionaryBlock = nil;
+        }
     }
 }
 
@@ -1111,7 +1185,7 @@ typedef enum : UInt16 {
     __weak typeof(self) weakSelf = self;
     __block BOOL getSuccess = NO;
     dispatch_semaphore_t semaphore = dispatch_semaphore_create(0);
-    [self sentProvisioningRecordRequestWithRecordID:recordID fragmentOffset:self.certificateDict[@(self.currentRecordID)].length fragmentMaximumSize:kFragmentMaximumSize timeout:2 callback:^(SigProvisioningPdu * _Nullable response) {
+    [self sentProvisioningRecordRequestWithRecordID:recordID fragmentOffset:self.certificateDictionary[@(self.currentRecordID)].length fragmentMaximumSize:kFragmentMaximumSize timeout:2 callback:^(SigProvisioningPdu * _Nullable response) {
         [weakSelf sentProvisioningRecordRequestWithResponse:response];
         if (response && response.provisionType == SigProvisioningPduType_recordResponse) {
             getSuccess = YES;
@@ -1149,7 +1223,7 @@ typedef enum : UInt16 {
     }
     if (self.staticOobData && self.staticOobData.length > 16 && algorithm == Algorithm_fipsP256EllipticCurve) {
         self.staticOobData = [self.staticOobData subdataWithRange:NSMakeRange(0, 16)];
-        TelinkLogInfo(@"Change staticOobData to 0x%@", [LibTools convertDataToHexStr:self.staticOobData]);
+        TelinkLogInfo(@"Change staticOobData to 0x%@", [TelinkLibTools convertDataToHexStr:self.staticOobData]);
     }
     TelinkLogInfo(@"algorithm=%@", algorithm == Algorithm_fipsP256EllipticCurve ? @"CMAC_AES128" : @"HMAC_SHA256");
     return algorithm;

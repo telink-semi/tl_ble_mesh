@@ -3,7 +3,7 @@
     <device id="retina4_7" orientation="portrait" appearance="light"/>
     <dependencies>
         <deployment identifier="iOS"/>
-        <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="22684"/>
+        <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="22685"/>
         <capability name="Named colors" minToolsVersion="9.0"/>
         <capability name="Safe area layout guides" minToolsVersion="9.0"/>
         <capability name="System colors in document resources" minToolsVersion="11.0"/>
@@ -584,16 +584,6 @@
                         <rect key="frame" x="0.0" y="0.0" width="375" height="667"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                         <subviews>
-                            <tableView clipsSubviews="YES" contentMode="scaleToFill" alwaysBounceVertical="YES" dataMode="prototypes" style="plain" separatorStyle="none" allowsSelection="NO" rowHeight="-1" estimatedRowHeight="-1" sectionHeaderHeight="-1" estimatedSectionHeaderHeight="-1" sectionFooterHeight="-1" estimatedSectionFooterHeight="-1" translatesAutoresizingMaskIntoConstraints="NO" id="rQl-rR-OTg">
-                                <rect key="frame" x="0.0" y="94" width="375" height="410"/>
-                                <color key="backgroundColor" white="0.0" alpha="0.0" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
-                                <color key="sectionIndexBackgroundColor" name="telinkButtonRed"/>
-                                <sections/>
-                                <connections>
-                                    <outlet property="dataSource" destination="mTl-Sp-joO" id="a71-60-sh3"/>
-                                    <outlet property="delegate" destination="mTl-Sp-joO" id="15o-rf-oGo"/>
-                                </connections>
-                            </tableView>
                             <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="Sensor Items:" textAlignment="natural" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="LfB-Om-TX0">
                                 <rect key="frame" x="10" y="69" width="355" height="20"/>
                                 <fontDescription key="fontDescription" type="boldSystem" pointSize="17"/>
@@ -653,6 +643,15 @@
                                     <action selector="clickGetPublishButton:" destination="mTl-Sp-joO" eventType="touchUpInside" id="J2r-jv-YVM"/>
                                 </connections>
                             </button>
+                            <tableView clipsSubviews="YES" contentMode="scaleToFill" alwaysBounceVertical="YES" dataMode="prototypes" style="plain" separatorStyle="none" allowsSelection="NO" rowHeight="-1" estimatedRowHeight="-1" sectionHeaderHeight="-1" estimatedSectionHeaderHeight="-1" sectionFooterHeight="-1" estimatedSectionFooterHeight="-1" translatesAutoresizingMaskIntoConstraints="NO" id="rQl-rR-OTg">
+                                <rect key="frame" x="0.0" y="94" width="375" height="410"/>
+                                <color key="backgroundColor" white="0.0" alpha="0.0" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
+                                <sections/>
+                                <connections>
+                                    <outlet property="dataSource" destination="mTl-Sp-joO" id="a71-60-sh3"/>
+                                    <outlet property="delegate" destination="mTl-Sp-joO" id="15o-rf-oGo"/>
+                                </connections>
+                            </tableView>
                         </subviews>
                         <viewLayoutGuide key="safeArea" id="Pl3-Bh-HhO"/>
                         <color key="backgroundColor" name="telinkTabBarBackgroundColor"/>
@@ -668,7 +667,6 @@
                             <constraint firstItem="z96-Md-0lb" firstAttribute="trailing" secondItem="ZH2-LG-9Vv" secondAttribute="trailing" id="OnZ-w1-KCQ"/>
                             <constraint firstItem="hQd-Yb-IbA" firstAttribute="trailing" secondItem="ZH2-LG-9Vv" secondAttribute="trailing" id="PNv-xs-U3q"/>
                             <constraint firstItem="hQd-Yb-IbA" firstAttribute="top" secondItem="ZH2-LG-9Vv" secondAttribute="bottom" constant="10" id="PrN-D2-CaE"/>
-                            <constraint firstItem="HHK-9w-rq9" firstAttribute="top" secondItem="rQl-rR-OTg" secondAttribute="bottom" constant="5" id="a1m-i6-CJQ"/>
                             <constraint firstItem="z96-Md-0lb" firstAttribute="leading" secondItem="3Do-Kn-FoF" secondAttribute="trailing" constant="10" id="bjZ-Z7-Q7C"/>
                             <constraint firstItem="rQl-rR-OTg" firstAttribute="trailing" secondItem="Pl3-Bh-HhO" secondAttribute="trailing" id="e9G-TB-X3b"/>
                             <constraint firstItem="Pl3-Bh-HhO" firstAttribute="bottom" secondItem="z96-Md-0lb" secondAttribute="bottom" constant="10" id="evt-D1-dwI"/>
@@ -678,6 +676,7 @@
                             <constraint firstItem="hQd-Yb-IbA" firstAttribute="centerY" secondItem="Sub-QI-fhV" secondAttribute="centerY" id="oSC-6n-tzp"/>
                             <constraint firstItem="Pl3-Bh-HhO" firstAttribute="trailing" secondItem="ZH2-LG-9Vv" secondAttribute="trailing" constant="20" id="pHd-eg-F3d"/>
                             <constraint firstItem="FZ7-Tp-Qhu" firstAttribute="leading" secondItem="Pl3-Bh-HhO" secondAttribute="leading" constant="20" id="qOG-dz-wHM"/>
+                            <constraint firstItem="Pl3-Bh-HhO" firstAttribute="bottom" secondItem="rQl-rR-OTg" secondAttribute="bottom" constant="163" id="qpV-yL-8iS"/>
                             <constraint firstItem="ZH2-LG-9Vv" firstAttribute="leading" secondItem="FZ7-Tp-Qhu" secondAttribute="trailing" constant="5" id="rE0-BH-Ara"/>
                             <constraint firstItem="z96-Md-0lb" firstAttribute="top" secondItem="hQd-Yb-IbA" secondAttribute="bottom" constant="10" id="rvT-Yt-biq"/>
                             <constraint firstItem="Pl3-Bh-HhO" firstAttribute="trailing" secondItem="LfB-Om-TX0" secondAttribute="trailing" constant="10" id="sb6-jz-lKm"/>
@@ -687,9 +686,15 @@
                     </view>
                     <simulatedNavigationBarMetrics key="simulatedTopBarMetrics" prompted="NO"/>
                     <connections>
+                        <outlet property="getButton" destination="3Do-Kn-FoF" id="ANy-5I-mOY"/>
+                        <outlet property="periodLabel" destination="Sub-QI-fhV" id="kPB-77-dSC"/>
                         <outlet property="periodTF" destination="hQd-Yb-IbA" id="0vb-iO-X7F"/>
+                        <outlet property="publishAddressLabel" destination="FZ7-Tp-Qhu" id="yrS-e2-Cdb"/>
                         <outlet property="publishAddressTF" destination="ZH2-LG-9Vv" id="aiR-bc-I8J"/>
+                        <outlet property="sensorPublishLabel" destination="HHK-9w-rq9" id="zEv-3e-4FB"/>
+                        <outlet property="setButton" destination="z96-Md-0lb" id="0JZ-u9-MJ6"/>
                         <outlet property="tableView" destination="rQl-rR-OTg" id="jNL-Kj-5vU"/>
+                        <outlet property="tableViewBottomLayout" destination="qpV-yL-8iS" id="nIC-sS-ttc"/>
                     </connections>
                 </viewController>
                 <placeholder placeholderIdentifier="IBFirstResponder" id="cKY-AQ-FOM" userLabel="First Responder" customClass="UIResponder" sceneMemberID="firstResponder"/>

@@ -24,12 +24,13 @@
 #import "CustomAlert.h"
 #import "ChooseItemCell.h"
 #import "InputItemCell.h"
+#import "InputAndSliderItemCell.h"
 #import "UIButton+extension.h"
 
 @implementation AlertItemModel
 @end
 
-@interface CustomAlert ()<UITableViewDelegate,UITableViewDataSource>
+@interface CustomAlert ()<UITableViewDelegate,UITableViewDataSource,InputAndSliderItemCellDelegate>
 
 @end
 
@@ -43,8 +44,9 @@
     self.layer.masksToBounds = YES;
     //separatorStyle
     _tableView.separatorStyle = UITableViewCellSeparatorStyleNone;
-    [_tableView registerNib:[UINib nibWithNibName:NSStringFromClass([ChooseItemCell class]) bundle:nil] forCellReuseIdentifier:@"ChooseItemCell"];
-    [_tableView registerNib:[UINib nibWithNibName:NSStringFromClass([InputItemCell class]) bundle:nil] forCellReuseIdentifier:@"InputItemCell"];
+    [_tableView registerNib:[UINib nibWithNibName:NSStringFromClass(ChooseItemCell.class) bundle:nil] forCellReuseIdentifier:NSStringFromClass(ChooseItemCell.class)];
+    [_tableView registerNib:[UINib nibWithNibName:NSStringFromClass(InputItemCell.class) bundle:nil] forCellReuseIdentifier:NSStringFromClass(InputItemCell.class)];
+    [_tableView registerNib:[UINib nibWithNibName:NSStringFromClass(InputAndSliderItemCell.class) bundle:nil] forCellReuseIdentifier:NSStringFromClass(InputAndSliderItemCell.class)];
     _tableView.dataSource = self;
     _tableView.delegate = self;
     _itemArray = [NSMutableArray array];
@@ -62,7 +64,16 @@
 
 - (void)setItemArray:(NSMutableArray<AlertItemModel *> *)itemArray {
     _itemArray = itemArray;
-    self.tableViewHeightConstraint.constant = 45 * itemArray.count;
+    CGFloat constant = 0;
+    NSArray *array = [NSArray arrayWithArray:itemArray];
+    for (AlertItemModel *item in array) {
+        if (item.itemType == ItemType_sliderAndInput) {
+            constant += 108;
+        } else {
+            constant += 44;
+        }
+    }
+    self.tableViewHeightConstraint.constant = constant;
 }
 
 - (void)setLeftBtnTitle:(NSString *)leftBtnTitle {
@@ -80,6 +91,8 @@
     UITableViewCell *cell = [self.tableView cellForRowAtIndexPath:indexPath];
     if ([cell isKindOfClass:[InputItemCell class]]) {
         return ((InputItemCell *)cell).inputTF;
+    } else if ([cell isKindOfClass:[InputAndSliderItemCell class]]) {
+        return ((InputAndSliderItemCell *)cell).inputTF;
     }
     return nil;
 }
@@ -115,6 +128,16 @@
             cell.leftButton.selected = NO;
         }];
         return cell;
+    } else if (model.itemType == ItemType_sliderAndInput) {
+        InputAndSliderItemCell *cell = [tableView dequeueReusableCellWithIdentifier:@"InputAndSliderItemCell"];
+        cell.headerLabel.text = model.headerString;
+        cell.inputTF.text = [NSString stringWithFormat:@"%ld", (long)model.totalValueOfSlider];
+        cell.valueSlider.value = model.totalValueOfSlider/(CGFloat)model.maxValueOfSlider;
+        cell.percentLabel.text = [NSString stringWithFormat:@"%d%%", (int)[TelinkLibTools roundFloat:model.totalValueOfSlider/(CGFloat)model.maxValueOfSlider * 100]];
+        cell.model = model;
+        cell.delegate = self;
+        //滑动
+        return cell;
     } else {
         InputItemCell *cell = [tableView dequeueReusableCellWithIdentifier:@"InputItemCell"];
         cell.headerLabel.text = model.headerString;
@@ -123,5 +146,12 @@
     }
 }
 
+#pragma mark - InputAndSliderItemCellDelegate
+
+- (void)inputAndSliderItemCell:(InputAndSliderItemCell *)cell didChangedValueWithSlider:(UISlider *)slider {
+    cell.model.totalValueOfSlider = roundf(slider.value * 100)/100.0*cell.model.maxValueOfSlider;
+    cell.inputTF.text = [NSString stringWithFormat:@"%ld", (long)cell.model.totalValueOfSlider];
+    cell.percentLabel.text = [NSString stringWithFormat:@"%d%%", (int)[TelinkLibTools roundFloat:cell.model.totalValueOfSlider/(CGFloat)cell.model.maxValueOfSlider * 100]];
+}
 
 @end

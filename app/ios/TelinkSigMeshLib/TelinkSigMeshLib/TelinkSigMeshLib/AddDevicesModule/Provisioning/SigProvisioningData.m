@@ -24,7 +24,7 @@
 #import "SigProvisioningData.h"
 #import "SigModel.h"
 #import "OpenSSLHelper.h"
-#import "ec.h"
+#import "openssl/ec.h"
 #import "SigECCEncryptHelper.h"
 #import "OpenSSLHelper+EPA.h"
 
@@ -138,7 +138,7 @@ NSString *const deviceKeyOfCalculateKeys = @"deviceKeyOfCalculateKeys";
     NSData *key = self.network.curNetKey;
     if (self.network.curNetkeyModel.phase == distributingKeys) {
         if (self.network.curNetkeyModel.oldKey) {
-            key = [LibTools nsstringToHex:self.network.curNetkeyModel.oldKey];
+            key = [TelinkLibTools nsstringToHex:self.network.curNetkeyModel.oldKey];
         }
     }
 
@@ -180,12 +180,12 @@ NSString *const deviceKeyOfCalculateKeys = @"deviceKeyOfCalculateKeys";
 
 - (void)generateProvisionerRandomAndProvisionerPublicKey {
     if (self.algorithm == Algorithm_fipsP256EllipticCurve) {
-        _provisionerRandom = [LibTools createRandomDataWithLength:16];
+        _provisionerRandom = [TelinkLibTools generateRandomHexDataWithLength:16];
     } else if (self.algorithm == Algorithm_fipsP256EllipticCurve_HMAC_SHA256) {
-        _provisionerRandom = [LibTools createRandomDataWithLength:32];
+        _provisionerRandom = [TelinkLibTools generateRandomHexDataWithLength:32];
     }
     _provisionerPublicKey = [SigECCEncryptHelper.share getPublicKeyData];
-//    TelinkLogInfo(@"app端的random=%@,publickey=%@",[LibTools convertDataToHexStr:_provisionerRandom],[LibTools convertDataToHexStr:_provisionerPublicKey]);
+//    TelinkLogInfo(@"app端的random=%@,publickey=%@",[TelinkLibTools convertDataToHexStr:_provisionerRandom],[TelinkLibTools convertDataToHexStr:_provisionerPublicKey]);
 }
 
 /// This method calculates the Provisioning Confirmation based on the Confirmation Inputs, 16-byte Random and 16-byte AuthValue.
@@ -194,7 +194,7 @@ NSString *const deviceKeyOfCalculateKeys = @"deviceKeyOfCalculateKeys";
 /// @returns The Provisioning Confirmation value.
 - (NSData *)calculateConfirmationWithRandom:(NSData *)data authValue:(NSData *)authValue {
     // Calculate the Confirmation Salt = s1(confirmationInputs).
-//    TelinkLogDebug(@"confirmationInputs=%@",[LibTools convertDataToHexStr:self.confirmationInputs]);
+//    TelinkLogDebug(@"confirmationInputs=%@",[TelinkLibTools convertDataToHexStr:self.confirmationInputs]);
     NSData *confirmationSalt = [[OpenSSLHelper share] calculateSalt:self.getConfirmationInputs];
 
     // Calculate the Confirmation Key = k1(ECDH Secret, confirmationSalt, 'prck')
@@ -210,7 +210,7 @@ NSString *const deviceKeyOfCalculateKeys = @"deviceKeyOfCalculateKeys";
 
 - (NSData *)calculate_HMAC_SHA256_ConfirmationWithRandom:(NSData *)data authValue:(NSData *)authValue {
     // Calculate the Confirmation Salt = s2(confirmationInputs).
-//    TelinkLogDebug(@"confirmationInputs=%@",[LibTools convertDataToHexStr:self.confirmationInputs]);
+//    TelinkLogDebug(@"confirmationInputs=%@",[TelinkLibTools convertDataToHexStr:self.confirmationInputs]);
     NSData *confirmationSalt = [[OpenSSLHelper share] calculateSalt2:self.getConfirmationInputs];
 
     // Calculate the Confirmation Key = k5(ECDH Secret||Authvalue, confirmationSalt, 'prck256')

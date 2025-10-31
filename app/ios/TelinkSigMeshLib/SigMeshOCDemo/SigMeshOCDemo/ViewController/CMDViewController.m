@@ -53,21 +53,21 @@
     //init nameList
     self.nameList = [NSMutableArray array];
     //init @"Vendor On" IniCommandModel
-    IniCommandModel *command1 = [[IniCommandModel alloc] initVendorModelIniCommandWithNetkeyIndex:(UInt16)SigDataSource.share.curNetkeyModel.index appkeyIndex:(UInt16)SigDataSource.share.curAppkeyModel.index retryCount:2 responseMax:0 address:0xFFFF opcode:0xC2 vendorId:0x0211 responseOpcode:0xc4 tidPosition:2 tid:0 commandData:[LibTools nsstringToHex:@"0100"]];
+    IniCommandModel *command1 = [[IniCommandModel alloc] initVendorModelIniCommandWithNetkeyIndex:(UInt16)SigDataSource.share.curNetkeyModel.index appkeyIndex:(UInt16)SigDataSource.share.curAppkeyModel.index retryCount:2 responseMax:0 address:0xFFFF opcode:0xC2 vendorId:0x0211 responseOpcode:0xc4 tidPosition:2 tid:0 commandData:[TelinkLibTools nsstringToHex:@"0100"]];
     //init @"Vendor Off" IniCommandModel
-    IniCommandModel *command2 = [[IniCommandModel alloc] initVendorModelIniCommandWithNetkeyIndex:(UInt16)SigDataSource.share.curNetkeyModel.index appkeyIndex:(UInt16)SigDataSource.share.curAppkeyModel.index retryCount:2 responseMax:0 address:0xFFFF opcode:0xC2 vendorId:0x0211 responseOpcode:0xc4 tidPosition:2 tid:0 commandData:[LibTools nsstringToHex:@"0000"]];
+    IniCommandModel *command2 = [[IniCommandModel alloc] initVendorModelIniCommandWithNetkeyIndex:(UInt16)SigDataSource.share.curNetkeyModel.index appkeyIndex:(UInt16)SigDataSource.share.curAppkeyModel.index retryCount:2 responseMax:0 address:0xFFFF opcode:0xC2 vendorId:0x0211 responseOpcode:0xc4 tidPosition:2 tid:0 commandData:[TelinkLibTools nsstringToHex:@"0000"]];
     //init @"Vendor On/Off Get" IniCommandModel
     IniCommandModel *command3 = [[IniCommandModel alloc] initVendorModelIniCommandWithNetkeyIndex:(UInt16)SigDataSource.share.curNetkeyModel.index appkeyIndex:(UInt16)SigDataSource.share.curAppkeyModel.index retryCount:2 responseMax:0 address:0xFFFF opcode:0xC1 vendorId:0x0211 responseOpcode:0xc4 tidPosition:0 tid:0 commandData:nil];
     //init @"Vendor On NO-ACK" IniCommandModel
-    IniCommandModel *command4 = [[IniCommandModel alloc] initVendorModelIniCommandWithNetkeyIndex:(UInt16)SigDataSource.share.curNetkeyModel.index appkeyIndex:(UInt16)SigDataSource.share.curAppkeyModel.index retryCount:2 responseMax:0 address:0xFFFF opcode:0xC3 vendorId:0x0211 responseOpcode:0 tidPosition:2 tid:0 commandData:[LibTools nsstringToHex:@"0100"]];
+    IniCommandModel *command4 = [[IniCommandModel alloc] initVendorModelIniCommandWithNetkeyIndex:(UInt16)SigDataSource.share.curNetkeyModel.index appkeyIndex:(UInt16)SigDataSource.share.curAppkeyModel.index retryCount:2 responseMax:0 address:0xFFFF opcode:0xC3 vendorId:0x0211 responseOpcode:0 tidPosition:2 tid:0 commandData:[TelinkLibTools nsstringToHex:@"0100"]];
     //init @"Vendor Off NO-ACK" IniCommandModel
-    IniCommandModel *command5 = [[IniCommandModel alloc] initVendorModelIniCommandWithNetkeyIndex:(UInt16)SigDataSource.share.curNetkeyModel.index appkeyIndex:(UInt16)SigDataSource.share.curAppkeyModel.index retryCount:2 responseMax:0 address:0xFFFF opcode:0xC3 vendorId:0x0211 responseOpcode:0 tidPosition:2 tid:0 commandData:[LibTools nsstringToHex:@"0000"]];
+    IniCommandModel *command5 = [[IniCommandModel alloc] initVendorModelIniCommandWithNetkeyIndex:(UInt16)SigDataSource.share.curNetkeyModel.index appkeyIndex:(UInt16)SigDataSource.share.curAppkeyModel.index retryCount:2 responseMax:0 address:0xFFFF opcode:0xC3 vendorId:0x0211 responseOpcode:0 tidPosition:2 tid:0 commandData:[TelinkLibTools nsstringToHex:@"0000"]];
     //init @"Generic On" IniCommandModel
-    IniCommandModel *command6 = [[IniCommandModel alloc] initSigModelIniCommandWithNetkeyIndex:(UInt16)SigDataSource.share.curNetkeyModel.index appkeyIndex:(UInt16)SigDataSource.share.curAppkeyModel.index retryCount:2 responseMax:0 address:0xFFFF opcode:CFSwapInt16HostToBig(SigOpCode_genericOnOffSet) commandData:[LibTools nsstringToHex:@"0100"]];
+    IniCommandModel *command6 = [[IniCommandModel alloc] initSigModelIniCommandWithNetkeyIndex:(UInt16)SigDataSource.share.curNetkeyModel.index appkeyIndex:(UInt16)SigDataSource.share.curAppkeyModel.index retryCount:2 responseMax:0 address:0xFFFF opcode:CFSwapInt16HostToBig(SigOpCode_genericOnOffSet) commandData:[TelinkLibTools nsstringToHex:@"0100"]];
     command6.tidPosition = 2;
     command6.responseOpcode = SigOpCode_genericOnOffStatus;
     //init @"Generic Off" IniCommandModel
-    IniCommandModel *command7 = [[IniCommandModel alloc] initSigModelIniCommandWithNetkeyIndex:(UInt16)SigDataSource.share.curNetkeyModel.index appkeyIndex:(UInt16)SigDataSource.share.curAppkeyModel.index retryCount:2 responseMax:0 address:0xFFFF opcode:CFSwapInt16HostToBig(SigOpCode_genericOnOffSet) commandData:[LibTools nsstringToHex:@"0000"]];
+    IniCommandModel *command7 = [[IniCommandModel alloc] initSigModelIniCommandWithNetkeyIndex:(UInt16)SigDataSource.share.curNetkeyModel.index appkeyIndex:(UInt16)SigDataSource.share.curAppkeyModel.index retryCount:2 responseMax:0 address:0xFFFF opcode:CFSwapInt16HostToBig(SigOpCode_genericOnOffSet) commandData:[TelinkLibTools nsstringToHex:@"0000"]];
     command7.tidPosition = 2;
     command7.responseOpcode = SigOpCode_genericOnOffStatus;
 
@@ -142,7 +142,7 @@
 - (void)configureCell:(UITableViewCell *)cell forRowAtIndexPath:(NSIndexPath *)indexPath {
     CMDCell *itemCell = (CMDCell *)cell;
     IniCommandModel *model = self.currentCommand;
-    NSString *params = [LibTools convertDataToHexStr:model.commandData];
+    NSString *params = [TelinkLibTools convertDataToHexStr:model.commandData];
     __weak typeof(self) weakSelf = self;
 
     itemCell.valueTF.text = @"";
@@ -262,7 +262,7 @@
     if (string.length > 1) {
         //处理通过多选或者粘贴的模式来一次性修改多个字符的情况
         string = [string removeAllSpaceAndNewlines];
-        if ([LibTools validateHex:string]) {
+        if ([TelinkLibTools validateHexString:string]) {
             textField.text = [textField.text stringByReplacingCharactersInRange:range withString:string];
             if (textField.tag == 4) {
                 NSIndexPath *path = [NSIndexPath indexPathForRow:textField.tag inSection:0];
@@ -309,10 +309,10 @@
 - (void)clickSendCommand {
     [self.view endEditing:YES];
     if ([self validateCommandParameters]) {
-        [self showNewLogMessage:[NSString stringWithFormat:@"send message: opcode -- %@ params -- %@",[self getHexStringOpcodeOfCommand:self.currentCommand], [LibTools convertDataToHexStr:self.currentCommand.commandData]]];
+        [self showNewLogMessage:[NSString stringWithFormat:@"send message: opcode -- %@ params -- %@",[self getHexStringOpcodeOfCommand:self.currentCommand], [TelinkLibTools convertDataToHexStr:self.currentCommand.commandData]]];
         __weak typeof(self) weakSelf = self;
         [SDKLibCommand sendIniCommandModel:self.currentCommand successCallback:^(UInt16 source, UInt16 destination, SigMeshMessage * _Nonnull responseMessage) {
-            NSString *str = [NSString stringWithFormat:@"notify: opcode -- %@ params -- %@", [LibTools convertDataToHexStr:[LibTools turnOverData:[LibTools nsstringToHex:[NSString stringWithFormat:@"%X", responseMessage.opCode]]]], [LibTools convertDataToHexStr:responseMessage.parameters]];
+            NSString *str = [NSString stringWithFormat:@"notify: opcode -- %@ params -- %@", [TelinkLibTools convertDataToHexStr:[TelinkLibTools turnOverData:[TelinkLibTools nsstringToHex:[NSString stringWithFormat:@"%X", responseMessage.opCode]]]], [TelinkLibTools convertDataToHexStr:responseMessage.parameters]];
             TelinkLogVerbose(@"%@",str);
             [weakSelf showNewLogMessage:str];
         } resultCallback:^(BOOL isResponseAll, NSError * _Nullable error) {
@@ -403,7 +403,7 @@
         [self showTips:@"Please input destination."];
         return NO;
     }
-    UInt16 address = [LibTools uint16From16String:destination];
+    UInt16 address = [TelinkLibTools uint16FromHexString:destination];
     self.currentCommand.address = address;
 
     //check opcode
@@ -418,17 +418,17 @@
     }
     if (opcodeString.length == 6) {
         //vendor opcode
-        self.currentCommand.opcode = [LibTools uint8From16String:[opcodeString substringFromIndex:4]];
-        self.currentCommand.vendorId = [LibTools uint16From16String:[opcodeString substringToIndex:4]];
+        self.currentCommand.opcode = [TelinkLibTools uint8FromHexString:[opcodeString substringFromIndex:4]];
+        self.currentCommand.vendorId = [TelinkLibTools uint16FromHexString:[opcodeString substringToIndex:4]];
     } else {
         //sig opcode
-        self.currentCommand.opcode = [LibTools uint16From16String:opcodeString];
+        self.currentCommand.opcode = [TelinkLibTools uint16FromHexString:opcodeString];
     }
     
     //check params
     itemCell = (CMDCell *)[self.tableView cellForRowAtIndexPath:[NSIndexPath indexPathForRow:4 inSection:0]];
     NSString *paramsString = itemCell.valueTF.text;
-    self.currentCommand.commandData = [LibTools nsstringToHex:[paramsString substringWithRange:NSMakeRange(0, paramsString.length/2*2)]];
+    self.currentCommand.commandData = [TelinkLibTools nsstringToHex:[paramsString substringWithRange:NSMakeRange(0, paramsString.length/2*2)]];
 
     //check response opcode
     itemCell = (CMDCell *)[self.tableView cellForRowAtIndexPath:[NSIndexPath indexPathForRow:5 inSection:0]];
@@ -439,11 +439,11 @@
     } else if (responseOpcodeString != nil && responseOpcodeString.length != 0) {
         if (responseOpcodeString.length == 6) {
             //vendor opcode
-            self.currentCommand.responseOpcode = [LibTools uint8From16String:[responseOpcodeString substringFromIndex:4]];
-            self.currentCommand.vendorId = [LibTools uint16From16String:[responseOpcodeString substringToIndex:4]];
+            self.currentCommand.responseOpcode = [TelinkLibTools uint8FromHexString:[responseOpcodeString substringFromIndex:4]];
+            self.currentCommand.vendorId = [TelinkLibTools uint16FromHexString:[responseOpcodeString substringToIndex:4]];
         } else {
             //sig opcode
-            self.currentCommand.responseOpcode = [LibTools uint16FromBytes:[LibTools nsstringToHex:responseOpcodeString]];
+            self.currentCommand.responseOpcode = [TelinkLibTools uint16FromData:[TelinkLibTools nsstringToHex:responseOpcodeString]];
         }
     }
     
@@ -485,7 +485,7 @@
         }
         self.currentCommand.tidPosition = position;
         if (position > 0) {
-            self.currentCommand.tid = [LibTools uint8From16String:[paramsString substringWithRange:NSMakeRange(position-1, 1)]];
+            self.currentCommand.tid = [TelinkLibTools uint8FromHexString:[paramsString substringWithRange:NSMakeRange(position-1, 1)]];
         }
     }
     

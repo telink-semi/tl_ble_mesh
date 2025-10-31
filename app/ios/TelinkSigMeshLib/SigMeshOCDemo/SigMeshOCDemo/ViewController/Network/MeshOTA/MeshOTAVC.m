@@ -195,8 +195,8 @@
     NSArray *selectArray = [NSArray arrayWithArray:self.selectItemArray];
     NSMutableArray <NSNumber *>*pidArray = [NSMutableArray array];
     for (SigNodeModel *node in selectArray) {
-        if (![pidArray containsObject:@([LibTools uint16From16String:node.pid])]) {
-            [pidArray addObject:@([LibTools uint16From16String:node.pid])];
+        if (![pidArray containsObject:@([TelinkLibTools uint16FromHexString:node.pid])]) {
+            [pidArray addObject:@([TelinkLibTools uint16FromHexString:node.pid])];
         }
     }
     if (pidArray.count != 1) {
@@ -238,7 +238,7 @@
     [MeshOTAManager.share continueFirmwareUpdateWithDeviceAddresses:addresses advDistributionProgressHandle:^(SigFirmwareDistributionReceiversList *responseMessage) {
         [weakSelf showAdvDistributionProgressHandle:responseMessage];
     } finishHandle:^(NSArray<NSNumber *> *successAddresses, NSArray<NSNumber *> *failAddresses) {
-        [weakSelf showFinishHandleWithSuccessAddresses:successAddresses failAddresses:failAddresses];
+        [weakSelf showFinishHandleWithSuccessAddresses:successAddresses failAddresses:failAddresses startDate:nil];
     } errorHandle:^(NSError * _Nullable error) {
         [weakSelf showerrorHandle:error];
     }];
@@ -390,7 +390,7 @@
     if (self.selectItemArray.count > 0) {
         SigNodeModel *node = self.selectItemArray.firstObject;
         __weak typeof(self) weakSelf = self;
-        [TelinkHttpTool getLatestVersionInfoRequestWithProductId:[LibTools uint16From16String:node.pid] didLoadData:^(id  _Nullable result, NSError * _Nullable err) {
+        [TelinkHttpTool getLatestVersionInfoRequestWithProductId:[TelinkLibTools uint16FromHexString:node.pid] didLoadData:^(id  _Nullable result, NSError * _Nullable err) {
             if (err) {
                 [weakSelf showTips:[NSString stringWithFormat:@"%@", err.localizedDescription]];
             } else {
@@ -468,7 +468,7 @@
         //如果nodeArray.count = 0，则无需发送到0xFFFF获取版本号。
         if (nodeArray.count > 0) {
             dispatch_semaphore_t semaphore = dispatch_semaphore_create(0);
-            [SDKLibCommand firmwareUpdateInformationGetWithDestination:kMeshAddress_allNodes firstIndex:0 entriesLimit:1 retryCount:SigDataSource.share.defaultRetryCount responseMaxCount:0 successCallback:^(UInt16 source, UInt16 destination, SigFirmwareUpdateInformationStatus * _Nonnull responseMessage) {
+            [SDKLibCommand firmwareUpdateInformationGetWithDestination:kMeshAddress_allNodes firstIndex:0 entriesLimit:1 retryCount:SigDataSource.share.defaultRetryCount responseMaxCount:0 expectedResponseNodeList:nil successCallback:^(UInt16 source, UInt16 destination, SigFirmwareUpdateInformationStatus * _Nonnull responseMessage) {
                 if (responseMessage.firmwareInformationListCount > 0) {
                     /*
                      responseMessage.firmwareInformationList.firstObject.currentFirmwareID.length = 4: 2 bytes pid(设备类型) + 2 bytes vid(版本id).
@@ -480,7 +480,7 @@
                         if (currentFirmwareID.length >= 2) memcpy(&pid, pu, 2);
                         if (currentFirmwareID.length >= 4) memcpy(&vid, pu + 2, 2);
                         vid = CFSwapInt16HostToBig(vid);
-                        TelinkLogDebug(@"firmwareUpdateInformationGet=%@,pid=%d,vid=%d",[LibTools convertDataToHexStr:currentFirmwareID],pid,vid);
+                        TelinkLogDebug(@"firmwareUpdateInformationGet=%@,pid=%d,vid=%d",[TelinkLibTools convertDataToHexStr:currentFirmwareID],pid,vid);
                         if ([nodeArray containsObject:@(source)] && ![responseArray containsObject:@(source)]) {
                             [responseArray addObject:@(source)];
                             weakSelf.allNodeFirmwareUpdateInformationStatusDict[@(source)] = responseMessage;
@@ -500,7 +500,7 @@
         if (LPNArray && LPNArray.count) {
             for (SigNodeModel *model in LPNArray) {
                 dispatch_semaphore_t semaphore = dispatch_semaphore_create(0);
-                [SDKLibCommand firmwareUpdateInformationGetWithDestination:model.address firstIndex:0 entriesLimit:1 retryCount:SigDataSource.share.defaultRetryCount responseMaxCount:1 successCallback:^(UInt16 source, UInt16 destination, SigFirmwareUpdateInformationStatus * _Nonnull responseMessage) {
+                [SDKLibCommand firmwareUpdateInformationGetWithDestination:model.address firstIndex:0 entriesLimit:1 retryCount:SigDataSource.share.defaultRetryCount responseMaxCount:1 expectedResponseNodeList:nil successCallback:^(UInt16 source, UInt16 destination, SigFirmwareUpdateInformationStatus * _Nonnull responseMessage) {
                     if (responseMessage.firmwareInformationListCount > 0) {
                         /*
                          responseMessage.firmwareInformationList.firstObject.currentFirmwareID.length = 4: 2 bytes pid(设备类型) + 2 bytes vid(版本id).
@@ -512,7 +512,7 @@
                             if (currentFirmwareID.length >= 2) memcpy(&pid, pu, 2);
                             if (currentFirmwareID.length >= 4) memcpy(&vid, pu + 2, 2);
                             vid = CFSwapInt16HostToBig(vid);
-                            TelinkLogDebug(@"firmwareUpdateInformationGet=%@,pid=%d,vid=%d",[LibTools convertDataToHexStr:currentFirmwareID],pid,vid);
+                            TelinkLogDebug(@"firmwareUpdateInformationGet=%@,pid=%d,vid=%d",[TelinkLibTools convertDataToHexStr:currentFirmwareID],pid,vid);
                             weakSelf.allNodeFirmwareUpdateInformationStatusDict[@(source)] = responseMessage;
                             [weakSelf updateNodeModelVidWithAddress:source vid:vid];
                         }
@@ -630,7 +630,7 @@
     //如果存在非当前PID的设备选中了要进行MeshOTA，则全部取消设备的选中，让客户重新选择。
     BOOL chooseDifferent = NO;
     for (SigNodeModel *node in self.selectItemArray) {
-        if ([LibTools uint16From16String:node.pid] != pid) {
+        if ([TelinkLibTools uint16FromHexString:node.pid] != pid) {
             chooseDifferent = YES;
             break;
         }
@@ -657,8 +657,8 @@
     NSArray *selectArray = [NSArray arrayWithArray:self.selectItemArray];
     NSMutableArray <NSNumber *>*pidArray = [NSMutableArray array];
     for (SigNodeModel *node in selectArray) {
-        if (![pidArray containsObject:@([LibTools uint16From16String:node.pid])]) {
-            [pidArray addObject:@([LibTools uint16From16String:node.pid])];
+        if (![pidArray containsObject:@([TelinkLibTools uint16FromHexString:node.pid])]) {
+            [pidArray addObject:@([TelinkLibTools uint16FromHexString:node.pid])];
         }
     }
     if (pidArray.count != 1) {
@@ -731,6 +731,7 @@
     [[NSUserDefaults standardUserDefaults] synchronize];
 
     [self setReplenishPacketBlock];
+    NSDate *startDate = [NSDate date];
     [MeshOTAManager.share setFirmwareUpdateFirmwareMetadataCheckSuccessHandle:^(NSDictionary *dict) {
         [weakSelf.tableView performSelectorOnMainThread:@selector(reloadData) withObject:nil waitUntilDone:YES];
     }];
@@ -739,7 +740,7 @@
     } advDistributionProgressHandle:^(SigFirmwareDistributionReceiversList *responseMessage) {
         [weakSelf showAdvDistributionProgressHandle:responseMessage];
     } finishHandle:^(NSArray<NSNumber *> *successAddresses, NSArray<NSNumber *> *failAddresses) {
-        [weakSelf showFinishHandleWithSuccessAddresses:successAddresses failAddresses:failAddresses];
+        [weakSelf showFinishHandleWithSuccessAddresses:successAddresses failAddresses:failAddresses startDate:startDate];
     } errorHandle:^(NSError * _Nullable error) {
         [weakSelf showerrorHandle:error];
     }];
@@ -786,8 +787,11 @@
     }
 }
 
-- (void)showFinishHandleWithSuccessAddresses:(NSArray<NSNumber *> *)successAddresses  failAddresses:(NSArray<NSNumber *> *)failAddresses {
+- (void)showFinishHandleWithSuccessAddresses:(NSArray<NSNumber *> *)successAddresses  failAddresses:(NSArray<NSNumber *> *)failAddresses startDate:(NSDate *)startDate {
     NSString *tip = [NSString stringWithFormat:@"Mesh ota finish, success:%ld,fail:%ld", (long)successAddresses.count, (long)failAddresses.count];
+    if (startDate != nil) {
+        tip = [NSString stringWithFormat:@"%@,time: %.2fS", tip, [[NSDate date] timeIntervalSinceDate:startDate]];
+    }
     self.successAddresses = [NSMutableArray arrayWithArray:successAddresses];
     self.failAddresses = [NSMutableArray arrayWithArray:failAddresses];
     dispatch_async(dispatch_get_main_queue(), ^{

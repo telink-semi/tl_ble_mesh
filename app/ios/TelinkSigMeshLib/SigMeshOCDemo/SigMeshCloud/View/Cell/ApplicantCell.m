@@ -41,7 +41,7 @@
 - (void)setModel:(AppJoinedNetworkModel *)model {
     _model = model;
     _applicantLabel.text = model.applyUserName;
-    _applicationTimeLabel.text = [NSString getTimeStringWithTimeStamp:model.createTime];
+    _applicationTimeLabel.text = [NSString getTimeStringWithTimestamp:model.createTime];
     _stateLabel.text = [DemoTool getStateStringWithState:model.state];
     _stateLabel.textColor = [DemoTool getStateColorWithState:model.state];
 }

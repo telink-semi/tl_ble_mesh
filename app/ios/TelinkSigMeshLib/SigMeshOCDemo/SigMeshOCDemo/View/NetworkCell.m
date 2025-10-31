@@ -43,7 +43,7 @@
     _model = model;
     _nameLabel.text = model.name;
     _uuidLabel.text = model.uuid;
-    _createTimeLabel.text = [NSString getTimeStringWithTimeStamp:model.createTime];
+    _createTimeLabel.text = [NSString getTimeStringWithTimestamp:model.createTime];
 }
 #endif
 
