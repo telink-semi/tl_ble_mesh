@@ -46,7 +46,7 @@
     } else {
         addressString = [NSString stringWithFormat:@"0x%04X", model.scanRspModel.address];
     }
-    _nameLabel.text = [NSString stringWithFormat:@"address: %@\nuuid:%@\nmac:%@",addressString,model.scanRspModel.advUuid,[LibTools getMacStringWithMac:model.scanRspModel.macAddress]];
+    _nameLabel.text = [NSString stringWithFormat:@"address: %@\nuuid:%@\nmac:%@",addressString,model.scanRspModel.advUuid,[TelinkLibTools getMacStringWithMac:model.scanRspModel.macAddress]];
     _nameLabel.font = [UIFont systemFontOfSize:10.0];
     _icon_cert.hidden = !model.scanRspModel.advOobInformation.supportForCertificateBasedProvisioning;
     switch (model.state) {

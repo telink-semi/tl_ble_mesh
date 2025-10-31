@@ -2089,7 +2089,7 @@
     return tem;
 }
 
-/// Get Sensor Name With PropertyID>
+/// Get Sensor Name With PropertyID
 /// @param propertyID Property ID.
 - (NSString *)getSensorNameWithPropertyID:(UInt16)propertyID {
     NSString *tem = @"UnDefault Name";
@@ -2099,6 +2099,57 @@
         tem = @"Ambient Light";
     }
     return tem;
+}
+
+- (NSString *)getConfigMessageStatusDescription:(SigConfigMessageStatus)status {
+    switch (status) {
+        case SigConfigMessageStatus_success:
+            return @"success";
+        case SigConfigMessageStatus_invalidAddress:
+            return @"invalid address";
+        case SigConfigMessageStatus_invalidModel:
+            return @"invalid model";
+        case SigConfigMessageStatus_invalidAppKeyIndex:
+            return @"invalid appKey index";
+        case SigConfigMessageStatus_invalidNetKeyIndex:
+            return @"invalid netKey index";
+        case SigConfigMessageStatus_insufficientResources:
+            return @"insufficient resources";
+        case SigConfigMessageStatus_keyIndexAlreadyStored:
+            return @"key index already stored";
+        case SigConfigMessageStatus_invalidPublishParameters:
+            return @"invalid publish parameters";
+        case SigConfigMessageStatus_notASubscribeModel:
+            return @"not a subscribe model";
+        case SigConfigMessageStatus_storageFailure:
+            return @"storage failure";
+        case SigConfigMessageStatus_featureNotSupported:
+            return @"feature not supported";
+        case SigConfigMessageStatus_cannotUpdate:
+            return @"can not update";
+        case SigConfigMessageStatus_cannotRemove:
+            return @"can not remove";
+        case SigConfigMessageStatus_cannotBind:
+            return @"can not bind";
+        case SigConfigMessageStatus_temporarilyUnableToChangeState:
+            return @"temporarily unable to change state";
+        case SigConfigMessageStatus_cannotSet:
+            return @"can not set";
+        case SigConfigMessageStatus_unspecifiedError:
+            return @"unspecified error";
+        case SigConfigMessageStatus_invalidBinding:
+            return @"invalid binding";
+        case SigConfigMessageStatus_invalidPathEntry:
+            return @"invalid path entry";
+        case SigConfigMessageStatus_cannotGet:
+            return @"can not get";
+        case SigConfigMessageStatus_obsoleteInformation:
+            return @"obsolete information";
+        case SigConfigMessageStatus_invalidBearer:
+            return @"invalid bearer";
+        default:
+            return [NSString stringWithFormat:@"RSV (0x%02X)", status];
+    }
 }
 
 @end

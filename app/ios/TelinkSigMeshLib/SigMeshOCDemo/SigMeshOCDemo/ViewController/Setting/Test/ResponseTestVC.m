@@ -150,11 +150,11 @@
         [self showTips:@"Please input total count!"];
         return;
     }
-    if (![LibTools validateNumberString:self.intervalTimeTF.text.removeAllSpaceAndNewlines]) {
+    if (![TelinkLibTools validateNumberString:self.intervalTimeTF.text.removeAllSpaceAndNewlines]) {
         [self showTips:@"Please input correct interval time!"];
         return;
     }
-    if (![LibTools validateNumberString:self.totalCountTF.text.removeAllSpaceAndNewlines]) {
+    if (![TelinkLibTools validateNumberString:self.totalCountTF.text.removeAllSpaceAndNewlines]) {
         [self showTips:@"Please input correct total count!"];
         return;
     }
@@ -173,6 +173,7 @@
     __weak typeof(self) weakSelf = self;
     NSOperationQueue *operationQueue = [[NSOperationQueue alloc] init];
     [operationQueue addOperationWithBlock:^{
+        __block int successCount = 0;
         for (NSInteger i = weakSelf.commandIndex; i < weakSelf.commandIndex + weakSelf.totalCount; i ++) {
             [weakSelf showNewLogMessage:[NSString stringWithFormat:@"round start(%ld)",(long)((weakSelf.commandIndex==1)?(i):(i+1))]];
             NSInteger sendIndex = i % weakSelf.commands.count;
@@ -181,17 +182,29 @@
             NSTimeInterval beforeTime = [[NSDate date] timeIntervalSince1970];
             dispatch_semaphore_t semaphore = dispatch_semaphore_create(0);
             [weakSelf showNewLogMessage:[NSString stringWithFormat:@"send on/off - %@",sendIndex == 0?@"ON(1)":@"OFF(0)"]];
-            [DemoCommand switchOnOffWithIsOn:sendIndex == 0 address:kMeshAddress_allNodes responseMaxCount:weakSelf.isResponseTest?(int)responseMaxCount:0 ack:weakSelf.isResponseTest successCallback:^(UInt16 source, UInt16 destination, SigGenericOnOffStatus * _Nonnull responseMessage) {
+            //新版本重试0次
+            [SDKLibCommand genericOnOffSetWithDestination:kMeshAddress_allNodes isOn:sendIndex == 0 retryCount:0 responseMaxCount:weakSelf.isResponseTest?(int)responseMaxCount:0 ack:weakSelf.isResponseTest successCallback:^(UInt16 source, UInt16 destination, SigGenericOnOffStatus * _Nonnull responseMessage) {
                 weakSelf.responseCount = weakSelf.responseCount + 1;
             } resultCallback:^(BOOL isResponseAll, NSError * _Nullable error) {
                 if (weakSelf.isResponseTest) {
                     dispatch_semaphore_signal(semaphore);
                 }
             }];
+//            //旧版本重试2次
+//            [DemoCommand switchOnOffWithIsOn:sendIndex == 0 address:kMeshAddress_allNodes responseMaxCount:weakSelf.isResponseTest?(int)responseMaxCount:0 ack:weakSelf.isResponseTest successCallback:^(UInt16 source, UInt16 destination, SigGenericOnOffStatus * _Nonnull responseMessage) {
+//                weakSelf.responseCount = weakSelf.responseCount + 1;
+//            } resultCallback:^(BOOL isResponseAll, NSError * _Nullable error) {
+//                if (weakSelf.isResponseTest) {
+//                    dispatch_semaphore_signal(semaphore);
+//                }
+//            }];
             if (weakSelf.isResponseTest) {
                 //Most provide 10.0 seconds
                 dispatch_semaphore_wait(semaphore, dispatch_time(DISPATCH_TIME_NOW, NSEC_PER_SEC * 10.0));
                 [weakSelf showNewLogMessage:[NSString stringWithFormat:@"on/off msg complete: rspCut:%ld rspMax:%d success:%@",(long)weakSelf.responseCount,(int)responseMaxCount,weakSelf.responseCount >= responseMaxCount?@"true":@"false"]];
+                if (weakSelf.responseCount >= responseMaxCount) {
+                    successCount ++;
+                }
                 NSTimeInterval curTime = [[NSDate date] timeIntervalSince1970];
                 [weakSelf showNewLogMessage:[NSString stringWithFormat:@"time spent(ms):%d",(int)((curTime-beforeTime)*1000)]];
             }
@@ -203,7 +216,11 @@
                 break;
             }
         }
-        [weakSelf showNewLogMessage:@"=====test complete=====\n"];
+        if (weakSelf.isResponseTest) {
+            [weakSelf showNewLogMessage:[NSString stringWithFormat:@"=====test complete=====\nAll=%ld\tSuccess=%d\tFail=%ld\tPercent=%.02f%%\n", (long)weakSelf.totalCount, successCount, (long)(weakSelf.totalCount-successCount), 100*successCount/((float)weakSelf.totalCount)]];
+        } else {
+            [weakSelf showNewLogMessage:@"=====test complete=====\n"];
+        }
         dispatch_async(dispatch_get_main_queue(), ^{
             [weakSelf setUseEnable:YES];
         });

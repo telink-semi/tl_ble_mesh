@@ -25,6 +25,7 @@
 #import "SchedulerCell.h"
 #import "SchedulerDetailViewController.h"
 #import "UIViewController+Message.h"
+#import "UIButton+extension.h"
 
 @interface SchedulerListViewController ()<UITableViewDataSource,UITableViewDelegate>
 @property (weak, nonatomic) IBOutlet UITableView *tableView;
@@ -56,9 +57,18 @@
 - (void)viewWillAppear:(BOOL)animated{
     [super viewWillAppear:animated];
     self.tabBarController.tabBar.hidden = YES;
+    [self reloadUI];
+}
 
+- (void)reloadUI {
     self.source = [[NSMutableArray alloc] initWithArray:self.model.schedulerList];
     [self.tableView reloadData];
+    [self setListEmptyHidden:self.model.schedulerList.count != 0];
+    self.tableView.hidden = self.model.schedulerList.count == 0;
+    __weak typeof(self) weakSelf = self;
+    [self.addNewItemButton addAction:^(UIButton *button) {
+        [weakSelf clickAdd];
+    }];
 }
 
 - (void)normalSetting{
@@ -107,6 +117,7 @@
     SchedulerDetailViewController *vc = (SchedulerDetailViewController *)[UIStoryboard initVC:NSStringFromClass(SchedulerDetailViewController.class) storyboard:@"Setting"];
     vc.model = model;
     vc.device = self.model;
+    vc.isNew = YES;
     [self.navigationController pushViewController:vc animated:YES];
 }
 

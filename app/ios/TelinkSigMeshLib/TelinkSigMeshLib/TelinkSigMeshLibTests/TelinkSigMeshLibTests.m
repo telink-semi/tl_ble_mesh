@@ -65,7 +65,7 @@
 //    XCTAssertEqualObjects(SigDataSource.share.curNetkeyModel.oldKey, @"00000000000000000000000000000000");
 //    XCTAssertNotNil(SigDataSource.share.curNetkeyModel.name);
 //    XCTAssertEqualObjects(SigDataSource.share.curNetkeyModel.minSecurity, @"secure");
-//    XCTAssertEqualObjects(SigDataSource.share.curNetkeyModel.key, [LibTools meshUUIDToUUID:SigDataSource.share.meshUUID]);
+//    XCTAssertEqualObjects(SigDataSource.share.curNetkeyModel.key, [TelinkLibTools meshUUIDToUUID:SigDataSource.share.meshUUID]);
 //
 //    //2.appKey
 //    XCTAssertEqual(SigDataSource.share.appKeys.count, 1);
@@ -131,14 +131,14 @@
     NSString *str = @"308201f93082019fa00302010202021000300a06082a8648ce3d0403023045310b30090603550406130241553113301106035504080c0a536f6d652d53746174653121301f060355040a0c18496e7465726e6574205769646769747320507479204c7464301e170d3231303132373036303230365a170d3231303132393036303230365a3045310b30090603550406130241553113301106035504080c0a536f6d652d53746174653121301f060355040a0c18496e7465726e6574205769646769747320507479204c74643059301306072a8648ce3d020106082a8648ce3d0301070342000451c02670d822f087e9e40048ef6a52dd05a62d86c56440587c85e94afb87de93149bafd3d6c4fad1025c5d70c83d52559b6d59fb4e54cbc5503cfe8924f7710ba37f307d30580603551d230451304fa149a4473045310b30090603550406130241553113301106035504080c0a536f6d652d53746174653121301f060355040a0c18496e7465726e6574205769646769747320507479204c74648202100030090603551d1304023000300b0603551d0f0404030204f030090603551d1104023000300a06082a8648ce3d0403020348003045022100dd0a6a2e4db0af037f809ef919bba7390e5cd77a7be14c2bc48f4c3d74c04eee022025283264cb7c0375b39e429336dada89b245951200bc5d43dd18eef0daea8864".uppercaseString;
     //cert_self
 //    NSString *str = @"308202e7308201cfa003020102020101300d06092a864886f70d01010b050030213112301006035504030c09636572745f73656c66310b300906035504061302434e301e170d3231303330313130313335365a170d3232303330313130313335365a30213112301006035504030c09636572745f73656c66310b300906035504061302434e30820122300d06092a864886f70d01010105000382010f003082010a0282010100b939503ceb2be1a1d2f936eba0ee96790b2c779f19847f9e97c14a3f076a48ae0499ce85e50bc8c2c4de9fcc7b10dfc9935f1116e401aa8f0f81f0b1c7a58cb9a347625ea1fd8200113fb0fb2d17741230bd1d81bc5c5e63d6fd0770c48bd40b1163c6a28fc9d56e4f631fd0aa746d197d933de647b304a713bf29cd9b602f64fd545ca88a480ccf897d787c649efcaf96de1de884109c6548c94642b3d9223f92f3640cc0f2e8cc3ea57fb184643f22247983e57b4869a3f1064eb9be057a525de7394959057ac230180f65a64a0041aa103d49aa089fab610f75b0f87e93535c59f8fa729d5cd6b094d8c606998e411ebbf114a08cd9684eb2cf029a717a2d0203010001a32a3028300e0603551d0f0101ff0404030205a030160603551d250101ff040c300a06082b06010505070304300d06092a864886f70d01010b0500038201010061718ff2107ccb1f7c265f35201ee7f220e9aaa9ae280efe21b75acf8522657aed007ade7e108ccc19a82b369b91b8ebdb23793706996af499f92a1ed770f9ee56efc7fff4c41b4511509b2da54226496f9093c57e8a9b928f29c1870c2ec3b36a0bfc21ef745dd13145d96b897d593a9df7672442aba02062ee44ad0110f44fe2a700f6eb4861869e68a6101e45e0904decabc9e7a64faa4ad27a070faade31ffaac4f88127bd6631fc7144d5b0ecf69fe68b92f5121bacd6ed31b2ec7c94dbfeae031c25e8c7acd8ba67cf02495e8b58ef9d7e29cae048c25ce3e2896435ffd60ce2ee4dfc5c6fba7fab946187d0c89ff61c661e5d5a237af742ca41cd2c96".uppercaseString;
-  NSData *data = [LibTools nsstringToHex:str];
+  NSData *data = [TelinkLibTools nsstringToHex:str];
     NSData *publicKey = [OpenSSLHelper.share getStaticOOBDataFromCertificate:data];
-    TelinkLogInfo(@"=====>获取证书成功,deviceCertificateData=%@,publicKey=%@",[LibTools convertDataToHexStr:data],[LibTools convertDataToHexStr:publicKey])
+    TelinkLogInfo(@"=====>获取证书成功,deviceCertificateData=%@,publicKey=%@",[TelinkLibTools convertDataToHexStr:data],[TelinkLibTools convertDataToHexStr:publicKey])
 }
 
 - (void)testRootCertificate {
     //固件证书
-    NSData *staticOOB = [OpenSSLHelper.share getStaticOOBDataFromCertificate:[LibTools nsstringToHex:@"3082027F30820224A003020102020103300A06082A8648CE3D04030230818F310B30090603550406130255533113301106035504080C0A57617368696E67746F6E31163014060355040A0C0D426C7565746F6F746820534947310C300A060355040B0C03505453311F301D06035504030C16496E7465726D65646961746520417574686F726974793124302206092A864886F70D0109011615737570706F727440626C7565746F6F74682E636F6D301E170D3139303731383138353533365A170D3330313030343138353533365A3077310B30090603550406130255533113301106035504080C0A57617368696E67746F6E31163014060355040A0C0D426C7565746F6F746820534947310C300A060355040B0C03505453312D302B06035504030C2430303142444330382D313032312D304230452D304130432D3030304230453041304330303059301306072A8648CE3D020106082A8648CE3D03010703420004F465E43FF23D3F1B9DC7DFC04DA8758184DBC966204796ECCF0D6CF5E16500CC0201D048BCBBD899EEEFC424164E33C201C2B010CA6B4D43A8A155CAD8ECB279A3818730818430090603551D1304023000300B0603551D0F040403020308301D0603551D0E04160414E262F3584AB688EC882EA528ED8E5C442A71369F301F0603551D230418301680144ABE293903A8BB49FF1D327CFEB80985F4109C21302A06146982E19DE491EAC0C283999CAA83FD8CC3D0D3670412041000000000000000000102030405060708300A06082A8648CE3D0403020349003046022100F7B504477EC2E5796644A0C5A95D864BF001CF96A5A180E243432CCE28FC5F9E0221008D816BEE11C36CDC1890189EDB85DF9A26998063EAC8EA55330B7F75003FEB98"]];
+    NSData *staticOOB = [OpenSSLHelper.share getStaticOOBDataFromCertificate:[TelinkLibTools nsstringToHex:@"3082027F30820224A003020102020103300A06082A8648CE3D04030230818F310B30090603550406130255533113301106035504080C0A57617368696E67746F6E31163014060355040A0C0D426C7565746F6F746820534947310C300A060355040B0C03505453311F301D06035504030C16496E7465726D65646961746520417574686F726974793124302206092A864886F70D0109011615737570706F727440626C7565746F6F74682E636F6D301E170D3139303731383138353533365A170D3330313030343138353533365A3077310B30090603550406130255533113301106035504080C0A57617368696E67746F6E31163014060355040A0C0D426C7565746F6F746820534947310C300A060355040B0C03505453312D302B06035504030C2430303142444330382D313032312D304230452D304130432D3030304230453041304330303059301306072A8648CE3D020106082A8648CE3D03010703420004F465E43FF23D3F1B9DC7DFC04DA8758184DBC966204796ECCF0D6CF5E16500CC0201D048BCBBD899EEEFC424164E33C201C2B010CA6B4D43A8A155CAD8ECB279A3818730818430090603551D1304023000300B0603551D0F040403020308301D0603551D0E04160414E262F3584AB688EC882EA528ED8E5C442A71369F301F0603551D230418301680144ABE293903A8BB49FF1D327CFEB80985F4109C21302A06146982E19DE491EAC0C283999CAA83FD8CC3D0D3670412041000000000000000000102030405060708300A06082A8648CE3D0403020349003046022100F7B504477EC2E5796644A0C5A95D864BF001CF96A5A180E243432CCE28FC5F9E0221008D816BEE11C36CDC1890189EDB85DF9A26998063EAC8EA55330B7F75003FEB98"]];
     NSLog(@"staticOOB========%@",staticOOB);
 }
 
@@ -292,22 +292,22 @@
 
 - (void)testOnDemandPrivateProxy {
     SigOnDemandPrivateProxyGet *onDemandPrivateProxyGet = [[SigOnDemandPrivateProxyGet alloc] init];
-    XCTAssertEqualObjects(onDemandPrivateProxyGet.parameters, [LibTools nsstringToHex:@""]);
+    XCTAssertEqualObjects(onDemandPrivateProxyGet.parameters, [TelinkLibTools nsstringToHex:@""]);
     SigOnDemandPrivateProxySet *onDemandPrivateProxySet = [[SigOnDemandPrivateProxySet alloc] initWithOnDemandPrivateGATTProxy:0];
-    XCTAssertEqualObjects(onDemandPrivateProxySet.parameters, [LibTools nsstringToHex:@"00"]);
+    XCTAssertEqualObjects(onDemandPrivateProxySet.parameters, [TelinkLibTools nsstringToHex:@"00"]);
     onDemandPrivateProxySet = [[SigOnDemandPrivateProxySet alloc] initWithOnDemandPrivateGATTProxy:0xFF];
-    XCTAssertEqualObjects(onDemandPrivateProxySet.parameters, [LibTools nsstringToHex:@"FF"]);
-    SigOnDemandPrivateProxyStatus *onDemandPrivateProxyStatus = [[SigOnDemandPrivateProxyStatus alloc] initWithParameters:[LibTools nsstringToHex:@"00"]];
-    XCTAssertEqualObjects(onDemandPrivateProxyStatus.parameters, [LibTools nsstringToHex:@"00"]);
+    XCTAssertEqualObjects(onDemandPrivateProxySet.parameters, [TelinkLibTools nsstringToHex:@"FF"]);
+    SigOnDemandPrivateProxyStatus *onDemandPrivateProxyStatus = [[SigOnDemandPrivateProxyStatus alloc] initWithParameters:[TelinkLibTools nsstringToHex:@"00"]];
+    XCTAssertEqualObjects(onDemandPrivateProxyStatus.parameters, [TelinkLibTools nsstringToHex:@"00"]);
 }
 
 - (void)testSARConfiguration {
     SigSARTransmitterGet *SARTransmitterGet = [[SigSARTransmitterGet alloc] init];
-    XCTAssertEqualObjects(SARTransmitterGet.parameters, [LibTools nsstringToHex:@""]);
+    XCTAssertEqualObjects(SARTransmitterGet.parameters, [TelinkLibTools nsstringToHex:@""]);
 
     struct SARTransmitterStructure SARTransmitter = {};
     //1.
-//    NSData *data = [LibTools nsstringToHex:@"12345678"];
+//    NSData *data = [TelinkLibTools nsstringToHex:@"12345678"];
 //    UInt32 tem32 = 0;
 //    Byte *byte = (Byte *)data.bytes;
 //    memcpy(&tem32, byte, 4);
@@ -323,14 +323,14 @@
     SARTransmitter.RFU = 0x8;
 
     SigSARTransmitterSet *SARTransmitterSet = [[SigSARTransmitterSet alloc] initWithSARTransmitter:SARTransmitter];
-    XCTAssertEqualObjects(SARTransmitterSet.parameters, [LibTools nsstringToHex:@"12345678"]);
+    XCTAssertEqualObjects(SARTransmitterSet.parameters, [TelinkLibTools nsstringToHex:@"12345678"]);
 
     SigSARReceiverGet *SARReceiverGet = [[SigSARReceiverGet alloc] init];
-    XCTAssertEqualObjects(SARReceiverGet.parameters, [LibTools nsstringToHex:@""]);
+    XCTAssertEqualObjects(SARReceiverGet.parameters, [TelinkLibTools nsstringToHex:@""]);
 
     struct SARReceiverStructure SARReceiver = {};
     //1.
-//    NSData *data = [LibTools nsstringToHex:@"123456"];
+//    NSData *data = [TelinkLibTools nsstringToHex:@"123456"];
 //    UInt32 tem32 = 0;
 //    Byte *byte = (Byte *)data.bytes;
 //    memcpy(&tem32, byte, 3);
@@ -345,37 +345,37 @@
 
 
     SigSARReceiverSet *SARReceiverSet = [[SigSARReceiverSet alloc] initWithSARReceiver:SARReceiver];
-    XCTAssertEqualObjects(SARReceiverSet.parameters, [LibTools nsstringToHex:@"123456"]);
+    XCTAssertEqualObjects(SARReceiverSet.parameters, [TelinkLibTools nsstringToHex:@"123456"]);
 }
 
 - (void)testLargeCompositionDataMessages {
     SigLargeCompositionDataGet *largeCompositionDataGet = [[SigLargeCompositionDataGet alloc] initWithPage:0 offset:0];
-    XCTAssertEqualObjects(largeCompositionDataGet.parameters, [LibTools nsstringToHex:@"000000"]);
+    XCTAssertEqualObjects(largeCompositionDataGet.parameters, [TelinkLibTools nsstringToHex:@"000000"]);
     largeCompositionDataGet = [[SigLargeCompositionDataGet alloc] initWithPage:0x12 offset:0x6789];
-    XCTAssertEqualObjects(largeCompositionDataGet.parameters, [LibTools nsstringToHex:@"128967"]);
+    XCTAssertEqualObjects(largeCompositionDataGet.parameters, [TelinkLibTools nsstringToHex:@"128967"]);
 
-    SigLargeCompositionDataStatus *largeCompositionDataStatus = [[SigLargeCompositionDataStatus alloc] initWithParameters:[LibTools nsstringToHex:@"1234568888000102030405060708090A0B0C0D0E0F"]];
+    SigLargeCompositionDataStatus *largeCompositionDataStatus = [[SigLargeCompositionDataStatus alloc] initWithParameters:[TelinkLibTools nsstringToHex:@"1234568888000102030405060708090A0B0C0D0E0F"]];
     XCTAssertEqual(largeCompositionDataStatus.page, 0x12);
     XCTAssertEqual(largeCompositionDataStatus.offset, 0x5634);
     XCTAssertEqual(largeCompositionDataStatus.totalSize, 0x8888);
-    XCTAssertEqualObjects(largeCompositionDataStatus.data, [LibTools nsstringToHex:@"000102030405060708090A0B0C0D0E0F"]);
+    XCTAssertEqualObjects(largeCompositionDataStatus.data, [TelinkLibTools nsstringToHex:@"000102030405060708090A0B0C0D0E0F"]);
 
     SigModelsMetadataGet *modelsMetadataGet = [[SigModelsMetadataGet alloc] initWithMetadataPage:0 offset:0];
-    XCTAssertEqualObjects(modelsMetadataGet.parameters, [LibTools nsstringToHex:@"000000"]);
+    XCTAssertEqualObjects(modelsMetadataGet.parameters, [TelinkLibTools nsstringToHex:@"000000"]);
     modelsMetadataGet = [[SigModelsMetadataGet alloc] initWithMetadataPage:0x12 offset:0x6789];
-    XCTAssertEqualObjects(modelsMetadataGet.parameters, [LibTools nsstringToHex:@"128967"]);
+    XCTAssertEqualObjects(modelsMetadataGet.parameters, [TelinkLibTools nsstringToHex:@"128967"]);
 
-    SigModelsMetadataStatus *modelsMetadataStatus = [[SigModelsMetadataStatus alloc] initWithParameters:[LibTools nsstringToHex:@"1234568888000102030405060708090A0B0C0D0E0F"]];
+    SigModelsMetadataStatus *modelsMetadataStatus = [[SigModelsMetadataStatus alloc] initWithParameters:[TelinkLibTools nsstringToHex:@"1234568888000102030405060708090A0B0C0D0E0F"]];
     XCTAssertEqual(modelsMetadataStatus.metadataPage, 0x12);
     XCTAssertEqual(modelsMetadataStatus.offset, 0x5634);
     XCTAssertEqual(modelsMetadataStatus.totalSize, 0x8888);
-    XCTAssertEqualObjects(modelsMetadataStatus.data, [LibTools nsstringToHex:@"000102030405060708090A0B0C0D0E0F"]);
+    XCTAssertEqualObjects(modelsMetadataStatus.data, [TelinkLibTools nsstringToHex:@"000102030405060708090A0B0C0D0E0F"]);
 
 }
 
 - (void)testAES {
-    NSData *key = [LibTools nsstringToHex:@"0a0b0c0d0e0f101112131e1f20212223"];
-    NSData *inputData = [LibTools nsstringToHex:@"1415161718191a1b1c1d28292a2b2c2d"];
+    NSData *key = [TelinkLibTools nsstringToHex:@"0a0b0c0d0e0f101112131e1f20212223"];
+    NSData *inputData = [TelinkLibTools nsstringToHex:@"1415161718191a1b1c1d28292a2b2c2d"];
     Byte *keyByte = (Byte *)key.bytes;
     Byte *inputByte = (Byte *)inputData.bytes;
     UInt8 outputByte[16] = {};
@@ -385,8 +385,8 @@
     //input={length = 16, bytes = 0x1415161718191a1b1c1d28292a2b2c2d}
     //output={length = 16, bytes = 0x7b583f361ea37fce3795c1d40d6b9aa1}
 
-    key = [LibTools turnOverData:key];
-    inputData = [LibTools turnOverData:inputData];
+    key = [TelinkLibTools turnOverData:key];
+    inputData = [TelinkLibTools turnOverData:inputData];
     keyByte = (Byte *)key.bytes;
     inputByte = (Byte *)inputData.bytes;
     aes128_ecb_encrypt(inputByte, 16, keyByte, outputByte);

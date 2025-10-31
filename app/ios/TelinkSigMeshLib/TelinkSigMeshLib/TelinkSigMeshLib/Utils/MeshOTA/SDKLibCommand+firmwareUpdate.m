@@ -57,14 +57,16 @@
 /// Status message.
 ///   - retryCount: the retryCount of this command.
 ///   - responseMaxCount: the max response status message count of this command.
+///   - expectedResponseNodeList: the expectedResponseNodeList of this command.
 ///   - successCallback: callback when node response the status message.
 ///   - resultCallback: callback when all the response message had response or timeout.
 ///  - Returns:
 ///  A SigMessageHandle object of this command, developer can cannel the command by this SigMessageHandle object.
-+ (SigMessageHandle *)firmwareUpdateInformationGetWithDestination:(UInt16)destination firstIndex:(UInt8)firstIndex entriesLimit:(UInt8)entriesLimit retryCount:(NSInteger)retryCount responseMaxCount:(NSInteger)responseMaxCount successCallback:(responseFirmwareInformationStatusMessageBlock)successCallback resultCallback:(resultBlock)resultCallback {
++ (SigMessageHandle *)firmwareUpdateInformationGetWithDestination:(UInt16)destination firstIndex:(UInt8)firstIndex entriesLimit:(UInt8)entriesLimit retryCount:(NSInteger)retryCount responseMaxCount:(NSInteger)responseMaxCount expectedResponseNodeList:( NSArray <NSNumber *>* _Nullable )expectedResponseNodeList successCallback:(responseFirmwareInformationStatusMessageBlock)successCallback resultCallback:(resultBlock)resultCallback {
     SigFirmwareUpdateInformationGet *message = [[SigFirmwareUpdateInformationGet alloc] initWithFirstIndex:firstIndex entriesLimit:entriesLimit];
     SDKLibCommand *command = [[SDKLibCommand alloc] initWithMessage:message retryCount:retryCount responseMaxCount:responseMaxCount responseAllMessageCallBack:(responseAllMessageBlock)successCallback resultCallback:resultCallback];
     command.responseFirmwareInformationStatusCallBack = successCallback;
+    command.expectedResponseNodeList = expectedResponseNodeList;
     return [SigMeshLib.share sendMeshMessage:message fromLocalElement:nil toDestination:[[SigMeshAddress alloc] initWithAddress:destination] usingApplicationKey:SigMeshLib.share.dataSource.curAppkeyModel command:command];
 }
 
@@ -119,14 +121,16 @@
 ///   - destination: the unicastAddress of destination.
 ///   - retryCount: the retryCount of this command.
 ///   - responseMaxCount: the max response status message count of this command.
+///   - expectedResponseNodeList: the expectedResponseNodeList of this command.
 ///   - successCallback: callback when node response the status message.
 ///   - resultCallback: callback when all the response message had response or timeout.
 ///  - Returns:
 ///  A SigMessageHandle object of this command, developer can cannel the command by this SigMessageHandle object.
-+ (SigMessageHandle *)firmwareUpdateGetWithDestination:(UInt16)destination retryCount:(NSInteger)retryCount responseMaxCount:(NSInteger)responseMaxCount successCallback:(responseFirmwareUpdateStatusMessageBlock)successCallback resultCallback:(resultBlock)resultCallback {
++ (SigMessageHandle *)firmwareUpdateGetWithDestination:(UInt16)destination retryCount:(NSInteger)retryCount responseMaxCount:(NSInteger)responseMaxCount expectedResponseNodeList:( NSArray <NSNumber *>* _Nullable )expectedResponseNodeList successCallback:(responseFirmwareUpdateStatusMessageBlock)successCallback resultCallback:(resultBlock)resultCallback {
     SigFirmwareUpdateGet *message = [[SigFirmwareUpdateGet alloc] init];
     SDKLibCommand *command = [[SDKLibCommand alloc] initWithMessage:message retryCount:retryCount responseMaxCount:responseMaxCount responseAllMessageCallBack:(responseAllMessageBlock)successCallback resultCallback:resultCallback];
     command.responseFirmwareUpdateStatusCallBack = successCallback;
+    command.expectedResponseNodeList = expectedResponseNodeList;
     return [SigMeshLib.share sendMeshMessage:message fromLocalElement:nil toDestination:[[SigMeshAddress alloc] initWithAddress:destination] usingApplicationKey:SigMeshLib.share.dataSource.curAppkeyModel command:command];
 }
 
@@ -747,14 +751,16 @@
 ///   - destination: the unicastAddress of destination.
 ///   - retryCount: the retryCount of this command.
 ///   - responseMaxCount: the max response status message count of this command.
+///   - expectedResponseNodeList: the expectedResponseNodeList of this command.
 ///   - successCallback: callback when node response the status message.
 ///   - resultCallback: callback when all the response message had response or timeout.
 ///  - Returns:
 ///  A SigMessageHandle object of this command, developer can cannel the command by this SigMessageHandle object.
-+ (SigMessageHandle *)BLOBTransferGetWithDestination:(UInt16)destination retryCount:(NSInteger)retryCount responseMaxCount:(NSInteger)responseMaxCount successCallback:(responseBLOBTransferStatusMessageBlock)successCallback resultCallback:(resultBlock)resultCallback {
++ (SigMessageHandle *)BLOBTransferGetWithDestination:(UInt16)destination retryCount:(NSInteger)retryCount responseMaxCount:(NSInteger)responseMaxCount expectedResponseNodeList:( NSArray <NSNumber *>* _Nullable )expectedResponseNodeList successCallback:(responseBLOBTransferStatusMessageBlock)successCallback resultCallback:(resultBlock)resultCallback {
     SigBLOBTransferGet *message = [[SigBLOBTransferGet alloc] init];
     SDKLibCommand *command = [[SDKLibCommand alloc] initWithMessage:message retryCount:retryCount responseMaxCount:responseMaxCount responseAllMessageCallBack:(responseAllMessageBlock)successCallback resultCallback:resultCallback];
     command.responseBLOBTransferStatusCallBack = successCallback;
+    command.expectedResponseNodeList = expectedResponseNodeList;
     return [SigMeshLib.share sendMeshMessage:message fromLocalElement:nil toDestination:[[SigMeshAddress alloc] initWithAddress:destination] usingApplicationKey:SigMeshLib.share.dataSource.curAppkeyModel command:command];
 }
 
@@ -848,14 +854,16 @@
 ///   - destination: the unicastAddress of destination.
 ///   - retryCount: the retryCount of this command.
 ///   - responseMaxCount: the max response status message count of this command.
+///   - expectedResponseNodeList: the expectedResponseNodeList of this command.
 ///   - successCallback: callback when node response the status message.
 ///   - resultCallback: callback when all the response message had response or timeout.
 ///  - Returns:
 ///  A SigMessageHandle object of this command, developer can cannel the command by this SigMessageHandle object.
-+ (SigMessageHandle *)BLOBBlockGetWithDestination:(UInt16)destination retryCount:(NSInteger)retryCount responseMaxCount:(NSInteger)responseMaxCount successCallback:(responseBLOBBlockStatusMessageBlock)successCallback resultCallback:(resultBlock)resultCallback {
++ (SigMessageHandle *)BLOBBlockGetWithDestination:(UInt16)destination retryCount:(NSInteger)retryCount responseMaxCount:(NSInteger)responseMaxCount expectedResponseNodeList:( NSArray <NSNumber *>* _Nullable )expectedResponseNodeList successCallback:(responseBLOBBlockStatusMessageBlock)successCallback resultCallback:(resultBlock)resultCallback {
     SigBLOBBlockGet *message = [[SigBLOBBlockGet alloc] init];
     SDKLibCommand *command = [[SDKLibCommand alloc] initWithMessage:message retryCount:retryCount responseMaxCount:responseMaxCount responseAllMessageCallBack:(responseAllMessageBlock)successCallback resultCallback:resultCallback];
     command.responseBLOBBlockStatusCallBack = successCallback;
+    command.expectedResponseNodeList = expectedResponseNodeList;
     return [SigMeshLib.share sendMeshMessage:message fromLocalElement:nil toDestination:[[SigMeshAddress alloc] initWithAddress:destination] usingApplicationKey:SigMeshLib.share.dataSource.curAppkeyModel command:command];
 }
 
@@ -882,14 +890,16 @@
 /// Size state (see Section 7.2.1.2.2).
 ///   - retryCount: the retryCount of this command.
 ///   - responseMaxCount: the max response status message count of this command.
+///   - expectedResponseNodeList: the expectedResponseNodeList of this command.
 ///   - successCallback: callback when node response the status message.
 ///   - resultCallback: callback when all the response message had response or timeout.
 ///  - Returns:
 ///  A SigMessageHandle object of this command, developer can cannel the command by this SigMessageHandle object.
-+ (SigMessageHandle *)BLOBBlockStartWithDestination:(UInt16)destination blockNumber:(UInt16)blockNumber chunkSize:(UInt16)chunkSize retryCount:(NSInteger)retryCount responseMaxCount:(NSInteger)responseMaxCount successCallback:(responseBLOBBlockStatusMessageBlock)successCallback resultCallback:(resultBlock)resultCallback {
++ (SigMessageHandle *)BLOBBlockStartWithDestination:(UInt16)destination blockNumber:(UInt16)blockNumber chunkSize:(UInt16)chunkSize retryCount:(NSInteger)retryCount responseMaxCount:(NSInteger)responseMaxCount expectedResponseNodeList:( NSArray <NSNumber *>* _Nullable )expectedResponseNodeList successCallback:(responseBLOBBlockStatusMessageBlock)successCallback resultCallback:(resultBlock)resultCallback {
     SigBLOBBlockStart *message = [[SigBLOBBlockStart alloc] initWithBlockNumber:blockNumber chunkSize:chunkSize];
     SDKLibCommand *command = [[SDKLibCommand alloc] initWithMessage:message retryCount:retryCount responseMaxCount:responseMaxCount responseAllMessageCallBack:(responseAllMessageBlock)successCallback resultCallback:resultCallback];
     command.responseBLOBBlockStatusCallBack = successCallback;
+    command.expectedResponseNodeList = expectedResponseNodeList;
     return [SigMeshLib.share sendMeshMessage:message fromLocalElement:nil toDestination:[[SigMeshAddress alloc] initWithAddress:destination] usingApplicationKey:SigMeshLib.share.dataSource.curAppkeyModel command:command];
 }
 
@@ -947,14 +957,16 @@
 ///   - destination: the unicastAddress of destination.
 ///   - retryCount: the retryCount of this command.
 ///   - responseMaxCount: the max response status message count of this command.
+///   - expectedResponseNodeList: the expectedResponseNodeList of this command.
 ///   - successCallback: callback when node response the status message.
 ///   - resultCallback: callback when all the response message had response or timeout.
 ///  - Returns:
 ///  A SigMessageHandle object of this command, developer can cannel the command by this SigMessageHandle object.
-+ (SigMessageHandle *)BLOBInformationGetWithDestination:(UInt16)destination retryCount:(NSInteger)retryCount responseMaxCount:(NSInteger)responseMaxCount successCallback:(responseBLOBInformationStatusMessageBlock)successCallback resultCallback:(resultBlock)resultCallback {
++ (SigMessageHandle *)BLOBInformationGetWithDestination:(UInt16)destination retryCount:(NSInteger)retryCount responseMaxCount:(NSInteger)responseMaxCount expectedResponseNodeList:( NSArray <NSNumber *>* _Nullable )expectedResponseNodeList successCallback:(responseBLOBInformationStatusMessageBlock)successCallback resultCallback:(resultBlock)resultCallback {
     SigBLOBInformationGet *message = [[SigBLOBInformationGet alloc] init];
     SDKLibCommand *command = [[SDKLibCommand alloc] initWithMessage:message retryCount:retryCount responseMaxCount:responseMaxCount responseAllMessageCallBack:(responseAllMessageBlock)successCallback resultCallback:resultCallback];
     command.responseBLOBInformationStatusCallBack = successCallback;
+    command.expectedResponseNodeList = expectedResponseNodeList;
     return [SigMeshLib.share sendMeshMessage:message fromLocalElement:nil toDestination:[[SigMeshAddress alloc] initWithAddress:destination] usingApplicationKey:SigMeshLib.share.dataSource.curAppkeyModel command:command];
 }
 

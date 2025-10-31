@@ -74,6 +74,7 @@ typedef void(^SendPacketsFinishCallback)(void);
 /// SigBearerDataDelegate给用户使用，通知上层蓝牙连接成功、setFilter成功、蓝牙断开成功。
 @property (nonatomic, weak) id <SigBearerDataDelegate>dataDelegate;
 @property (nonatomic, assign) BOOL isAutoReconnect;//标记是否自动重连（ota和添加流程不需要自动重连）
+@property (nonatomic, assign) BOOL isAllowConnectSwitch;//标记是否可以连接遥控器，默认为NO。（遥控器界面需要直连时才置为YES，其它情况都为NO，意外连接上遥控器也会主动断开重新连接其它设备）
 @property (nonatomic, copy) SendPacketsFinishCallback sendPacketFinishBlock;
 @property (nonatomic, assign) BOOL isSending;//标记是否正在发送数据
 

@@ -25,7 +25,7 @@
 
 NS_ASSUME_NONNULL_BEGIN
 
-@class SigMessageHandle,SigTransitionTime,SigMeshMessage,SigBaseMeshMessage,SigPublish,SigTimeModel,SigFilterStatus,SigProvisioningCapabilitiesPdu;
+@class SigMessageHandle,SigTransitionTime,SigMeshMessage,SigBaseMeshMessage,SigPublish,SigTimeModel,SigFilterStatus,SigProvisioningCapabilitiesPdu, SigProvisioningPdu;
 @class SigConfigAppKeyStatus,SigConfigAppKeyList,SigConfigBeaconStatus,SigConfigCompositionDataStatus,SigConfigDefaultTtlStatus,SigConfigFriendStatus,SigConfigGATTProxyStatus,SigConfigKeyRefreshPhaseStatus,SigConfigModelPublicationStatus,SigConfigModelSubscriptionStatus,SigConfigNetworkTransmitStatus,SigConfigRelayStatus,SigConfigSIGModelSubscriptionList,SigConfigVendorModelSubscriptionList,SigConfigLowPowerNodePollTimeoutStatus,SigConfigHeartbeatPublicationStatus,SigConfigHeartbeatSubscriptionStatus,SigConfigModelAppStatus,SigConfigNetKeyStatus,SigConfigNetKeyList,SigConfigNodeIdentityStatus,SigConfigNodeResetStatus,SigConfigSIGModelAppList,SigConfigVendorModelAppList;
 @class SigGenericOnOffStatus,SigGenericLevelStatus,SigGenericDefaultTransitionTimeStatus,SigGenericOnPowerUpStatus,SigGenericPowerLevelStatus,SigGenericPowerLastStatus,SigGenericPowerDefaultStatus,SigGenericPowerRangeStatus,SigGenericBatteryStatus,SigSensorDescriptorStatus,SigSensorStatus,SigSensorColumnStatus,SigSensorSeriesStatus,SigSensorCadenceStatus,SigSensorSettingsStatus,SigSensorSettingStatus,SigTimeStatus,SigTimeRoleStatus,SigTimeZoneStatus,SigTAI_UTC_DeltaStatus,SigSceneStatus,SigSceneRegisterStatus,SigSchedulerActionStatus,SigSchedulerStatus,SigLightLightnessStatus,SigLightLightnessLinearStatus,SigLightLightnessLastStatus,SigLightLightnessDefaultStatus,SigLightLightnessRangeStatus,SigLightCTLStatus,SigLightCTLTemperatureRangeStatus,SigLightCTLTemperatureStatus,SigLightCTLDefaultStatus,SigLightHSLHueStatus,SigLightHSLSaturationStatus,SigLightHSLStatus,SigLightHSLTargetStatus,SigLightHSLDefaultStatus,SigLightHSLRangeStatus,SigLightXyLStatus,SigLightXyLTargetStatus,SigLightXyLDefaultStatus,SigLightXyLRangeStatus,SigLightLCModeStatus,SigLightLCOMStatus,SigLightLCLightOnOffStatus,SigLightLCPropertyStatus;
 @class SigFirmwareUpdateInformationStatus,SigFirmwareUpdateFirmwareMetadataStatus,SigFirmwareUpdateStatus,SigFirmwareDistributionStatus,SigFirmwareDistributionReceiversList,SigFirmwareDistributionReceiversStatus,SigFirmwareDistributionReceiversList,SigFirmwareDistributionCapabilitiesStatus,SigFirmwareDistributionUploadStatus,SigFirmwareDistributionFirmwareStatus;
@@ -164,6 +164,7 @@ typedef enum : UInt8 {
 @property (nonatomic,assign) SigCommandType commandType;
 @property (nonatomic,strong) SigMessageHandle *messageHandle;
 @property (nonatomic,assign) NSInteger responseMaxCount;
+@property (nonatomic,strong) NSArray <NSNumber *>*expectedResponseNodeList;//default is [].
 @property (nonatomic,strong) NSMutableArray <NSNumber *>*responseSourceArray;
 @property (nonatomic,assign) UInt8 retryCount;//default is 2.
 @property (nonatomic,assign) NSTimeInterval timeout;//default is 1.28s,SigDataSource.share.defaultReliableIntervalOfNotLPN.
@@ -171,7 +172,7 @@ typedef enum : UInt8 {
 @property (nonatomic, assign) UInt8 tidPosition;//default is 0.
 @property (nonatomic, assign) BOOL hadReceiveAllResponse;//default is NO.
 @property (nonatomic, assign) UInt8 tid;//default is 0.
-@property (nonatomic,strong,nullable) BackgroundTimer *retryTimer;
+@property (nonatomic, strong, nullable) TelinkBackgroundTimer *retryTimer;
 //这3个参数的作用是配置当前SDKLibCommand指令实际使用到的key和ivIndex，只有fastProvision流程使用了特殊的key和ivIndex，其它指令使用默认值。
 @property (nonatomic,strong) SigNetkeyModel *curNetkey;
 @property (nonatomic,strong) SigAppkeyModel *curAppkey;
@@ -183,8 +184,8 @@ typedef enum : UInt8 {
 @property (nonatomic, assign) UInt16 unsegmentedMessageLowerTransportPDUMaxLength;
 
 #pragma mark - Save call back
-@property (nonatomic,copy) resultBlock resultCallback;
-@property (nonatomic,copy) responseAllMessageBlock responseAllMessageCallBack;
+@property (nonatomic,copy,nullable) resultBlock resultCallback;
+@property (nonatomic,copy,nullable) responseAllMessageBlock responseAllMessageCallBack;
 
 @property (nonatomic,copy) responseFilterStatusMessageBlock responseFilterStatusCallBack;
 
@@ -292,6 +293,9 @@ typedef enum : UInt8 {
 @property (nonatomic,copy) responsePrivateBeaconStatusMessageBlock responsePrivateBeaconStatusCallBack;
 @property (nonatomic,copy) responsePrivateGattProxyStatusMessageBlock responsePrivateGattProxyStatusCallBack;
 @property (nonatomic,copy) responsePrivateNodeIdentityStatusMessageBlock responsePrivateNodeIdentityStatusCallBack;
+
+/// if expectedResponseNodeList != nil, check node by expectedResponseNodeList; if expectedResponseNodeList == nil, check node by
+- (BOOL)hasGetAllExpectedResponse;
 
 /**
  * @brief   Initialize SDKLibCommand object.
@@ -2744,8 +2748,14 @@ typedef enum : UInt8 {
  */
 + (void)managerGroupAddress:(UInt16)groupAddress isAdd:(BOOL)isAdd nodeAddress:(UInt16)nodeAddress modelIDList:(nullable NSArray <NSNumber *>*)modelIDList singleStatusResponseCallback:(_Nullable responseConfigModelSubscriptionStatusMessageBlock)singleStatusResponseCallback singleResultCallback:(_Nullable resultBlock)singleResultCallback finishCallback:(resultBlock)finishCallback;
 
-#pragma mark - Scan API
++ (void)getCertificateDictionaryWithTimeout:(NSTimeInterval)timeout callback:(void(^)(NSDictionary<NSNumber *,NSData *> * _Nullable certificateDictionary, NSError * __nullable error))block;
 
++ (void)sendProvisioningInvitePDUWithAttentionTime:(UInt8)attentionTime callback:(void(^)(SigProvisioningPdu * _Nullable response))block;
+
+/// 注意：如果是certificateBasedProvision的模式，且证书数据比较大的情况，可能出现失败的情况。因为证书获取完成并验证完成后再发送startProvision数据包，可能已经超过了之前identity发送的invite数据包的attention time的时间，导致设备不接受startProvision，而直接返回Provision fail数据包。(解决办法是把attention time设置得比较大即可，sendProvisioningInvitePDUWithAttentionTime和configContinueProvisionWithAttentionTime需要使用相同的attentionTime参数)
++ (void)configContinueProvisionWithAttentionTime:(UInt8)attentionTime capabilitiesPdu:(SigProvisioningCapabilitiesPdu *)capabilitiesPdu certificateDictionary:(NSDictionary *)certificateDictionary;
+
+#pragma mark - Scan API
 
 /**
  * @brief   Scan unprovisioned devices.

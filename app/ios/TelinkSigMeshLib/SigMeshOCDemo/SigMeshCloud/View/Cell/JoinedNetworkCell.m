@@ -42,7 +42,7 @@
     _model = model;
     _networkNameLabel.text = model.networkName;
     _creatorLabel.text = model.networkCreator;
-    _applicationTimeLabel.text = [NSString getTimeStringWithTimeStamp:model.createTime];
+    _applicationTimeLabel.text = [NSString getTimeStringWithTimestamp:model.createTime];
     _stateLabel.text = [DemoTool getStateStringWithState:model.state];
     _stateLabel.textColor = [DemoTool getStateColorWithState:model.state];
 }

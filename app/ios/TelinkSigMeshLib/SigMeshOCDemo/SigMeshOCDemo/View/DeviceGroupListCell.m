@@ -52,7 +52,7 @@
     BOOL isAdd = sender.isSelected;
     [ShowTipsHandle.share show:Tip_EditGroup];
     [SDKLibCommand managerGroupAddress:self.groupAddress isAdd:isAdd nodeAddress:self.model.address modelIDList:nil singleStatusResponseCallback:^(UInt16 source, UInt16 destination, SigConfigModelSubscriptionStatus * _Nonnull responseMessage) {
-        TelinkLogVerbose(@"singleStatus source=0x%x,destination=0x%x,message=%@,opCode=0x%x,parameters=%@",source, destination, responseMessage, responseMessage.opCode, [LibTools convertDataToHexStr:responseMessage.parameters]);
+        TelinkLogVerbose(@"singleStatus source=0x%x,destination=0x%x,message=%@,opCode=0x%x,parameters=%@",source, destination, responseMessage, responseMessage.opCode, [TelinkLibTools convertDataToHexStr:responseMessage.parameters]);
     } singleResultCallback:^(BOOL isResponseAll, NSError * _Nullable error) {
         TelinkLogVerbose(@"singleResult isResponseAll=%d,error=%@",isResponseAll,error);
     } finishCallback:^(BOOL isResponseAll, NSError * _Nullable error) {

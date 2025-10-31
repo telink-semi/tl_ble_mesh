@@ -101,7 +101,7 @@
             [weakSelf showTips:@"Please input new appKey index."];
             return;
         }
-        if (![LibTools validateHex:index]) {
+        if (![TelinkLibTools validateHexString:index]) {
             // Please enter a hexadecimal string
             [weakSelf showTips:@"Please enter a hexadecimal string."];
             return;
@@ -114,7 +114,7 @@
         if (index.length % 2 == 1) {
             index = [@"0" stringByAppendingString:index];
         }
-        UInt16 intIndex = [LibTools uint16From16String:index];
+        UInt16 intIndex = [TelinkLibTools uint16FromHexString:index];
         BOOL hadExist = NO;
         NSArray *temAppkeys = [NSArray arrayWithArray:weakSelf.network.appKeys];
         for (SigAppkeyModel *tem in temAppkeys) {
@@ -158,7 +158,7 @@
             [weakSelf showTips:@"Please input new bound netKey index."];
             return;
         }
-        if (![LibTools validateHex:index]) {
+        if (![TelinkLibTools validateHexString:index]) {
             // Please enter a hexadecimal string
             [weakSelf showTips:@"Please enter a hexadecimal string."];
             return;
@@ -171,7 +171,7 @@
         if (index.length % 2 == 1) {
             index = [@"0" stringByAppendingString:index];
         }
-        UInt16 boundNetKey = [LibTools uint16From16String:index];
+        UInt16 boundNetKey = [TelinkLibTools uint16FromHexString:index];
         BOOL hadExist = NO;
         NSArray *temNetkeys = [NSArray arrayWithArray:weakSelf.network.netKeys];
         for (SigNetkeyModel *tem in temNetkeys) {
@@ -208,7 +208,7 @@
             [weakSelf showTips:@"Please input new appKey value."];
             return;
         }
-        if (![LibTools validateHex:value]) {
+        if (![TelinkLibTools validateHexString:value]) {
             // Please enter a hexadecimal string
             [weakSelf showTips:@"Please enter a hexadecimal string."];
             return;

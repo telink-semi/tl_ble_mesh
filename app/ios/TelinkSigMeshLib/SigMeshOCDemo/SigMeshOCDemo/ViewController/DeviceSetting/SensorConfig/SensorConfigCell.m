@@ -40,7 +40,7 @@
 - (void)setSensorDataModel:(SigSensorDataModel *)sensorDataModel {
     _sensorDataModel = sensorDataModel;
     _propertyIdLabel.text = [NSString stringWithFormat:@"Property ID: 0x%04X（%@）", sensorDataModel.propertyID, [SigHelper.share getSensorNameWithPropertyID:sensorDataModel.propertyID]];
-    _rawDataLabel.text = [NSString stringWithFormat:@"0x%@", [LibTools convertDataToHexStr:sensorDataModel.rawValueData]];
+    _rawDataLabel.text = [NSString stringWithFormat:@"0x%@", [TelinkLibTools convertDataToHexStr:sensorDataModel.rawValueData]];
 }
 
 - (void)setSensorDescriptorModel:(SigSensorDescriptorModel *)sensorDescriptorModel {

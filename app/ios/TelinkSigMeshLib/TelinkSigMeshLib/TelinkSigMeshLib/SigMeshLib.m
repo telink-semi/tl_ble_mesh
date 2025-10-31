@@ -47,20 +47,8 @@ static SigMeshLib *shareLib = nil;
     dispatch_once(&tempOnce, ^{
         /// Initialize the Singleton configure parameters.
         shareLib = [[SigMeshLib alloc] init];
-        shareLib.isReceiveSegmentPDUing = NO;
-        shareLib.sourceOfReceiveSegmentPDU = 0;
-        shareLib.commands = [NSMutableArray array];
-        shareLib.dataSource = SigDataSource.share;
-        shareLib.sendBeaconType = AppSendBeaconType_auto;
-        [shareLib config];
-        [shareLib initDelegate];
     });
     return shareLib;
-}
-
-/// Initialize SigMessageDelegate object.
-- (void)initDelegate {
-    _delegate = shareLib;
 }
 
 /// Initialize SigMeshLib object.
@@ -88,9 +76,15 @@ static SigMeshLib *shareLib = nil;
     _retransmissionLimit = 20;
     _networkTransmitCount = 0b101;
     _networkTransmitIntervalSteps = 0b00010;
-    [self updateTheValueOfMaxNetworkTransmitInterval];
+    [self updateTheValueOfMaxNetworkTransmitIntervalAndRecommendedNetworkTransmitIntervalForMeshOTA];
     _queue = dispatch_queue_create("SigMeshLib.queue(消息收发队列)", DISPATCH_QUEUE_SERIAL);
     _delegateQueue = dispatch_queue_create("SigMeshLib.delegateQueue", DISPATCH_QUEUE_SERIAL);
+    _isReceiveSegmentPDUing = NO;
+    _sourceOfReceiveSegmentPDU = 0;
+    _commands = [NSMutableArray array];
+    _dataSource = SigDataSource.share;
+    _sendBeaconType = AppSendBeaconType_auto;
+    _delegate = self;
 }
 
 /// Set Network Transmit Interval Steps.
@@ -101,7 +95,7 @@ static SigMeshLib *shareLib = nil;
         networkTransmitIntervalSteps = 0b00010;
     }
     _networkTransmitIntervalSteps = networkTransmitIntervalSteps;
-    [self updateTheValueOfMaxNetworkTransmitInterval];
+    [self updateTheValueOfMaxNetworkTransmitIntervalAndRecommendedNetworkTransmitIntervalForMeshOTA];
 }
 
 /// Set Network Transmit Count.
@@ -112,7 +106,7 @@ static SigMeshLib *shareLib = nil;
         _networkTransmitCount = 0b101;
     }
     _networkTransmitCount = networkTransmitCount;
-    [self updateTheValueOfMaxNetworkTransmitInterval];
+    [self updateTheValueOfMaxNetworkTransmitIntervalAndRecommendedNetworkTransmitIntervalForMeshOTA];
 }
 
 /// 4.2.19 NetworkTransmit
@@ -121,10 +115,39 @@ static SigMeshLib *shareLib = nil;
 /// There is a single instance of this state for the node.
 /// maxNetworkTransmitInterval = (networkTransmitIntervalSteps +1+1)*10*(networkTransmitCount+1)
 /// default is (0b00010+1+1)*10*(0b101 + 1)=240ms.
+/// recommendedNetworkTransmitIntervalForMeshOTA = ((networkTransmitIntervalSteps +1)*10+7)*(networkTransmitCount+1)
+/// default is ((0b00010+1)*10+7)*(0b101 + 1)=222ms.
 /// @note   - seeAlso: Mesh_v1.0.pdf  (page.150),
 /// 4.2.19.1 Network Transmit Count.
-- (void)updateTheValueOfMaxNetworkTransmitInterval {
+- (void)updateTheValueOfMaxNetworkTransmitIntervalAndRecommendedNetworkTransmitIntervalForMeshOTA {
     _maxNetworkTransmitInterval = (_networkTransmitIntervalSteps + 1 + 1) * 10 / 1000.0 * (_networkTransmitCount + 1);//单位ms
+    _recommendedNetworkTransmitIntervalForMeshOTA = ((_networkTransmitIntervalSteps + 1) * 10 + 7) / 1000.0 * (_networkTransmitCount + 1);//单位ms
+}
+
+// 优化后的错误处理统一方法
+- (BOOL)validateSendConditionsForCommand:(SDKLibCommand *)command {
+    if (!SigBearer.share.isOpen) {
+        [self handleSendError:command message:@"Mesh Network is disconnected!"];
+        return NO;
+    }
+    if (self.dataSource == nil) {
+        [self handleSendError:command message:@"Mesh Network not created!"];
+        return NO;
+    }
+    if (self.dataSource.curLocationNodeModel == nil || self.dataSource.curLocationNodeModel.address == 0) {
+        [self handleSendError:command message:@"Local Provisioner has no Unicast Address assigned!"];
+        return NO;
+    }
+    return YES;
+}
+
+- (void)handleSendError:(SDKLibCommand *)command message:(NSString *)message {
+    NSError *error = [NSError errorWithDomain:message code:-1 userInfo:nil];
+    if (command.resultCallback) {
+        dispatch_async(dispatch_get_main_queue(), ^{
+            command.resultCallback(NO, error);
+        });
+    }
 }
 
 #pragma mark - Receive Mesh Messages
@@ -154,7 +177,7 @@ static SigMeshLib *shareLib = nil;
         if (_receiveSegmentTimer == nil) {
 //            TelinkLogDebug(@"==========RxBusy标志开始");
             __weak typeof(self) weakSelf = self;
-            _receiveSegmentTimer = [BackgroundTimer scheduledTimerWithTimeInterval:_receiveSegmentMessageTimeout repeats:NO block:^(BackgroundTimer * _Nonnull t) {
+            _receiveSegmentTimer = [TelinkBackgroundTimer scheduledTimerWithTimeInterval:_receiveSegmentMessageTimeout repeats:NO block:^(TelinkBackgroundTimer * _Nonnull t) {
                 [weakSelf cleanReceiveSegmentBusyStatus];
             }];
         }
@@ -172,9 +195,7 @@ static SigMeshLib *shareLib = nil;
 
 /// Clean busy status of receive segment.
 - (void)cleanReceiveSegmentBusyStatus {
-//    TelinkLogDebug(@"");
     if (self.isReceiveSegmentPDUing) {
-//        TelinkLogDebug(@"==========RxBusy标志清除");
         self.isReceiveSegmentPDUing = NO;
         self.sourceOfReceiveSegmentPDU = 0;
         if (_receiveSegmentTimer) {
@@ -209,12 +230,6 @@ static SigMeshLib *shareLib = nil;
             command.responseAllMessageCallBack(address, weakSelf.dataSource.curLocationNodeModel.address, message);
         });
     }
-    //已经废弃：不用通过SigPublishManager的callback上报状态，直接通过didReceiveMessage上报所有状态。
-//    if (SigPublishManager.share.discoverOutlineNodeCallback) {
-//        dispatch_async(dispatch_get_main_queue(), ^{
-//            SigPublishManager.share.discoverOutlineNodeCallback(@(address));
-//        });
-//    }
     if ([self.delegateForDeveloper respondsToSelector:@selector(didReceiveMessage:sentFromSource:toDestination:)]) {
         [self.delegateForDeveloper didReceiveMessage:message sentFromSource:address toDestination:weakSelf.dataSource.curLocationNodeModel.address];
     }
@@ -482,7 +497,6 @@ static SigMeshLib *shareLib = nil;
     // As the sequence number was just used, it has to be incremented.
     [SigMeshLib.share.dataSource saveLocalSolicitationSequenceNumber:sequence+1];
     SigIvIndex *index = [[SigIvIndex alloc] initWithIndex:0 updateActive:NO];
-//    SigNetworkPdu *networkPdu = [[SigNetworkPdu alloc] initWithEncodeSolicitationPDU:message.accessPdu networkKey:networkKey source:source destination:destination withSequence:sequence ivIndex:index];
     SigNetworkPdu *networkPdu = [[SigNetworkPdu alloc] initWithEncodeSolicitationPDU:[NSData data] networkKey:networkKey source:source destination:destination withSequence:sequence ivIndex:index];
     NSMutableData *mData = [NSMutableData data];
     UInt8 serviceDataAdvertisingFlag = 0x16;//AD type
@@ -527,7 +541,7 @@ static SigMeshLib *shareLib = nil;
         [SigBearer.share.getCurrentPeripheral writeValue:data forCharacteristic:onlineStatusCharacteristic type:CBCharacteristicWriteWithResponse];
         if (command.retryCount) {
             __weak typeof(self) weakSelf = self;
-            BackgroundTimer *timer = [BackgroundTimer scheduledTimerWithTimeInterval:command.timeout repeats:YES block:^(BackgroundTimer * _Nonnull t) {
+            TelinkBackgroundTimer *timer = [TelinkBackgroundTimer scheduledTimerWithTimeInterval:command.timeout repeats:YES block:^(TelinkBackgroundTimer * _Nonnull t) {
                 if (command.hadRetryCount < command.retryCount) {
                     command.hadRetryCount ++;
                     TelinkLogDebug(@"command.curMeshMessage=%@,retry count=%d",command.curMeshMessage,command.hadRetryCount);
@@ -599,27 +613,15 @@ static SigMeshLib *shareLib = nil;
 
 
 /// Add command to cache list `self.commands`
-/// - Parameter command: The SDKLibCommand object.
+/// - Parameter command: The SDKLibCommand object.getCommandWithReceiveMessage
 - (void)addCommandToCacheListWithCommand:(SDKLibCommand *)command {
-    float oldTimeout = command.timeout;
-    float newTimeout = [self getReliableIntervalWithDestination:command.destination.address responseMaxCount:command.responseMaxCount];
-    command.timeout = MAX(oldTimeout, newTimeout);
-    //command存储下来，超时或者失败，或者返回response时，从该地方拿到command，获取里面的callback，执行，再删除。
-    NSLock *lock = [[NSLock alloc] init];
-    [lock lock];
-    [self.commands addObject:command];
-    TelinkLogInfo(@"add command:%@,source=0x%X,destination=0x%X,retryCount=%d,responseMax=%d,timeout=%f,_commands.count = %d", command.curMeshMessage, command.source.unicastAddress, command.destination.address, command.retryCount, command.responseMaxCount, command.timeout, self.commands.count);
-    [lock unlock];
-//    //存在response的指令需存储
-//    if (command.responseAllMessageCallBack || command.resultCallback || (command.retryCount > 0 && command.responseMaxCount > 0)) {
-//        float oldTimeout = command.timeout;
-//        float newTimeout = [self getReliableIntervalWithDestination:command.destination.address responseMaxCount:command.responseMaxCount];
-//        command.timeout = MAX(oldTimeout, newTimeout);
-//        //command存储下来，超时或者失败，或者返回response时，从该地方拿到command，获取里面的callback，执行，再删除。
-//        [self.commands addObject:command];
-//    }
+    @synchronized (self) {
+        command.timeout = MAX(command.timeout, [self getReliableIntervalWithDestination:command.destination.address
+                                                                     responseMaxCount:command.responseMaxCount]);
+        [self.commands addObject:command];
+        TelinkLogInfo(@"add command:%@,source=0x%X,destination=0x%X,retryCount=%d,responseMax=%ld,timeout=%f,_commands.count = %lu", command.curMeshMessage, command.source.unicastAddress, command.destination.address, command.retryCount, (long)command.responseMaxCount, command.timeout, (unsigned long)self.commands.count);
+    }
 }
-
 
 /// Handle command timeout action.
 /// - Parameter command: The SDKLibCommand object.
@@ -638,6 +640,7 @@ static SigMeshLib *shareLib = nil;
         command.retryTimer = nil;
     }
     command.retryCount = 0;
+    command.hadReceiveAllResponse = YES;
     __weak typeof(self) weakSelf = self;
     if (command.commandType == SigCommandType_meshMessage || command.commandType == SigCommandType_configMessage) {
         dispatch_async(_queue, ^{
@@ -662,6 +665,12 @@ static SigMeshLib *shareLib = nil;
     NSArray *commands = [NSArray arrayWithArray:_commands];
     for (SDKLibCommand *com in commands) {
         if (com.responseMaxCount == 0 || com.responseMaxCount == 0xFF || com.hadReceiveAllResponse) {
+            if (com.retryTimer) {
+                [com.retryTimer invalidate];
+                com.retryTimer = nil;
+            }
+            com.responseAllMessageCallBack = nil;
+            com.resultCallback = nil;
             [self.commands removeObject:com];
         }
     }
@@ -694,39 +703,36 @@ static SigMeshLib *shareLib = nil;
     if (self.dataSource.defaultUnsegmentedMessageLowerTransportPDUMaxLength > kUnsegmentedMessageLowerTransportPDUMaxLength) {
         multiple = 2;
     }
-    if (destination == kMeshAddress_allNodes) {
-        unsigned long maxNum = MAX(responseMaxCount, self.dataSource.curNodes.count);
-        if (maxNum <= 50) {
-            return 2.0 * multiple;
-        } else if (maxNum <= 100) {
-            return 3.0 * multiple;
-        } else if (maxNum <= 150) {
-            return 4.0 * multiple;
-        } else {
-            return 6.0 * multiple;
-        }
-    } else {
-        if ([SigHelper.share isUnicastAddress:destination]) {
-            SigNodeModel *node = [SigDataSource.share getNodeWithAddress:destination];
-            if (node.features.lowPowerFeature != SigNodeFeaturesState_notSupported) {
-                //LPN节点，需要修正有效重试间隔。
-                return self.dataSource.defaultReliableIntervalOfLPN;
-            }
-        }
-
-        if (responseMaxCount < 10) {
-            return kCMDInterval * 4 * multiple;
-        } else if (responseMaxCount <= 50) {
-            return 2.0 * multiple;
-        } else if (responseMaxCount <= 100) {
-            return 3.0 * multiple;
-        } else if (responseMaxCount <= 150) {
-            return 4.0 * multiple;
-        } else {
-            return 6.0 * multiple;
+    
+    unsigned long maxNum = (destination == kMeshAddress_allNodes) ? MAX(responseMaxCount, self.dataSource.curNodes.count) : (unsigned long)responseMaxCount;
+    
+    float interval = [self calculateIntervalWithMaxNum:maxNum multiple:multiple];
+    
+    if (destination != kMeshAddress_allNodes && [SigHelper.share isUnicastAddress:destination]) {
+        SigNodeModel *node = [SigDataSource.share getNodeWithAddress:destination];
+        if (node && node.features.lowPowerFeature != SigNodeFeaturesState_notSupported) {
+            // LPN节点，需要修正有效重试间隔。
+            return self.dataSource.defaultReliableIntervalOfLPN;
         }
     }
+    
+    return interval;
 }
+
+- (float)calculateIntervalWithMaxNum:(unsigned long)maxNum multiple:(int)multiple {
+    if (maxNum < 10) {
+        return kCMDInterval * 4 * multiple;
+    } else if (maxNum <= 50) {
+        return 2.0 * multiple;
+    } else if (maxNum <= 100) {
+        return 3.0 * multiple;
+    } else if (maxNum <= 150) {
+        return 4.0 * multiple;
+    } else {
+        return 6.0 * multiple;
+    }
+}
+
 
 #pragma mark - Helper methods for Bearer support
 
@@ -786,7 +792,7 @@ static SigMeshLib *shareLib = nil;
     }
     if (command.responseMaxCount != 0) {
         //优化：当实际回调的response多于传入的responseMaxCount时，使用==判断即可实现只回调一次resultCallback。
-        if (command && command.responseSourceArray.count == command.responseMaxCount) {
+        if (command && (((command.expectedResponseNodeList == nil || command.expectedResponseNodeList.count == 0) && command.responseSourceArray.count == command.responseMaxCount) || (command.expectedResponseNodeList.count > 0 && command.hasGetAllExpectedResponse))) {
             [self commandResponseFinishWithCommand:command];
             dispatch_async(dispatch_get_main_queue(), ^{
                 [self handleResultCallback:command error:nil];
@@ -1084,13 +1090,60 @@ static SigMeshLib *shareLib = nil;
         }
         if (command.hadRetryCount >= command.retryCount) {
             // 重试完成，一个command.timeout没有足够response则报超时。
-            BackgroundTimer *timer = [BackgroundTimer scheduledTimerWithTimeInterval:command.timeout repeats:NO block:^(BackgroundTimer * _Nonnull t) {
-                [weakSelf commandTimeoutWithCommand:command];
+            TelinkBackgroundTimer *timer = [TelinkBackgroundTimer scheduledTimerWithTimeInterval:command.timeout repeats:NO block:^(TelinkBackgroundTimer * _Nonnull t) {
+                // 新增以下逻辑：
+                // (1)    command.commandType == SigCommandType_meshMessage;
+                // (2)command.destination 不是单播地址 超时使用单播重试
+                if (command.responseMaxCount >= 0 &&  command.commandType == SigCommandType_meshMessage && ![SigHelper.share isUnicastAddress:command.destination.address] && weakSelf.retryGroupMessageByUnicastAddress == YES) {
+                    NSLock *lock = [[NSLock alloc] init];
+                    [lock lock];
+                    [weakSelf.commands removeObject:command];
+                    [lock unlock];
+                    NSArray <SigNodeModel *>*AllNodes;
+                    if (command.expectedResponseNodeList && command.expectedResponseNodeList.count > 0) {
+                        NSMutableArray *mArray = [NSMutableArray array];
+                        for (NSNumber *addressNumber in command.expectedResponseNodeList) {
+                            SigNodeModel *node = [SigDataSource.share getNodeWithAddress:addressNumber.intValue];
+                            if (node) {
+                                [mArray addObject:node];
+                            }
+                        }
+                        AllNodes = [NSArray arrayWithArray:mArray];
+                    } else {
+                        AllNodes = [NSArray arrayWithArray:[SigDataSource.share getNodesOfDestinationAddress:command.destination.address]];
+                    }
+                    for (SigNodeModel *node in AllNodes) {
+                        if (![command.responseSourceArray containsObject:@(node.address)]) {
+                            dispatch_semaphore_t semaphore = dispatch_semaphore_create(0);
+                            SDKLibCommand *unicastCommand = [[SDKLibCommand alloc] initWithMessage:command.curMeshMessage retryCount:0 responseMaxCount:1 responseAllMessageCallBack:nil resultCallback:^(BOOL isResponseAll, NSError * _Nullable error) {
+                                //新增逻辑：单播指令却没有回包，则设置节点为离线状态
+                                if (!isResponseAll || error != nil) {
+                                    node.state = DeviceStateOutOfLine;
+                                }
+                                dispatch_semaphore_signal(semaphore);
+                            }];
+                            [weakSelf sendMeshMessage:(SigMeshMessage *)unicastCommand.curMeshMessage fromLocalElement:nil toDestination:[[SigMeshAddress alloc] initWithAddress:node.address] usingApplicationKey:SigMeshLib.share.dataSource.curAppkeyModel command:unicastCommand];
+                            //Most provide 2 seconds to retryGroupMessageByUnicastAddress
+                            dispatch_semaphore_wait(semaphore, dispatch_time(DISPATCH_TIME_NOW, NSEC_PER_SEC * 4.0));
+                        }
+                    }
+                    if (!command.hasGetAllExpectedResponse || command.responseSourceArray.count == 0) {
+                        // retryGroupMessageByUnicastAddress重试完成，一个command.timeout没有足够response则报超时。
+                        // 对于没有设备的Group，组控OnOff时ResponseMax=0，实际responseSourceArray也是0，retry=2，需要包超时。
+                        [weakSelf commandTimeoutWithCommand:command];
+                    }
+                    return;
+                } else if ([SigHelper.share isUnicastAddress:command.destination.address]) {
+                    SigNodeModel *node = [SigDataSource.share getNodeWithAddress:command.destination.address];
+                    node.state = DeviceStateOutOfLine;
+                    [weakSelf commandTimeoutWithCommand:command];
+              }
+//                [weakSelf commandTimeoutWithCommand:command];
             }];
             command.retryTimer = timer;
         } else {
             // 重试未完成，继续重试。
-            BackgroundTimer *timer = [BackgroundTimer scheduledTimerWithTimeInterval:command.timeout repeats:NO block:^(BackgroundTimer * _Nonnull t) {
+            TelinkBackgroundTimer *timer = [TelinkBackgroundTimer scheduledTimerWithTimeInterval:command.timeout repeats:NO block:^(TelinkBackgroundTimer * _Nonnull t) {
                 if (command.hadRetryCount < command.retryCount) {
                     command.hadRetryCount ++;
                     TelinkLogDebug(@"command.curMeshMessage=%@,retry count=%d",command.curMeshMessage,command.hadRetryCount);

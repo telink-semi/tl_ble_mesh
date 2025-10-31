@@ -25,7 +25,7 @@
 
 NS_ASSUME_NONNULL_BEGIN
 
-typedef void (^keyPair)(NSData *publicKey ,NSData *privateKey);
+typedef void (^KeyPairCallback)(NSData *publicKey ,NSData *privateKey);
 
 @interface SigECCEncryptHelper : NSObject
 
@@ -48,7 +48,7 @@ typedef void (^keyPair)(NSData *publicKey ,NSData *privateKey);
 
 - (NSData *)getSharedSecretWithDevicePublicKey:(NSData *)devicePublicKey;
 
-- (void)getECCKeyPair:(keyPair)pair;
+- (void)getECCKeyPair:(KeyPairCallback)pair;
 
 @end
 

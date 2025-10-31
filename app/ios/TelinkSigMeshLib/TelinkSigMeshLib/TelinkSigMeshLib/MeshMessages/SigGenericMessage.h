@@ -7834,7 +7834,7 @@ NS_ASSUME_NONNULL_BEGIN
 @end
 
 
-#pragma mark 4.3.X.3 SUBNET_BRIDGE_STATUS, opcode:0xBF72
+#pragma mark 4.3.X.3 SUBNET_BRIDGE_STATUS, opcode:0x80B3
 
 
 /// The SUBNET_BRIDGE_STATUS message is an unacknowledged message
@@ -7842,10 +7842,8 @@ NS_ASSUME_NONNULL_BEGIN
 /// @note   - seeAlso: MshPRF_SBR_CR_r03.pdf (page.10),
 /// 4.3.X.3 SUBNET_BRIDGE_STATUS.
 @interface SigSubnetBridgeStatus : SigGenericMessage
-/// Current Subnet Bridge state, size is 8 bytes.
-/// The Subnet_Bridge field indicates the current Subnet Bridge state of the node
-/// as defined in Section 4.2.X.
-@property (nonatomic,strong) SigSubnetBridgeModel *subnetBridge;
+/// Current Subnet Bridge state
+@property (nonatomic,assign) BOOL subnetBridgeState;
 
 /**
  * @brief   Initialize SigSubnetBridgeStatus object.
@@ -7853,8 +7851,6 @@ NS_ASSUME_NONNULL_BEGIN
  * @return  return `nil` when initialize SigSubnetBridgeStatus object fail.
  */
 - (instancetype)initWithParameters:(NSData *)parameters;
-
-- (instancetype)initWithSubnetBridge:(SigSubnetBridgeModel *)subnetBridge;
 
 @end
 

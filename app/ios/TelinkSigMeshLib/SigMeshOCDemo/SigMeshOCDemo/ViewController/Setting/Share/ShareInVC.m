@@ -143,7 +143,7 @@
     __weak typeof(self) weakSelf = self;
     [operation addOperationWithBlock:^{
         NSString *str = [[NSString alloc] initWithData:data encoding:NSUTF8StringEncoding];
-        NSDictionary *dict = [LibTools getDictionaryWithJsonString:str];
+        NSDictionary *dict = [TelinkLibTools getDictionaryWithJsonString:str];
         BOOL result = dict != nil;
         if (result) {
             [weakSelf handleMeshDictionaryFromShareImport:dict];
@@ -163,7 +163,7 @@
             //AnalysisShareDataVC
             if (weakSelf.selectQRCodeAndCloudButton.isSelected) {
                 NSString *uuidString = (NSString *)content;
-                if (uuidString.length && [LibTools validateUUID:uuidString]) {
+                if (uuidString.length && [TelinkLibTools validateUUID:uuidString]) {
                     [weakSelf getTelinkJsonWithUUID:uuidString];
                 }else{
                     //hasn't data
@@ -194,7 +194,7 @@
                     NSDictionary *dic = (NSDictionary *)result;
                     BOOL isSuccess = [dic[@"isSuccess"] boolValue];
                     if (isSuccess) {
-                        [weakSelf showDownloadJsonSuccess:[LibTools getDictionaryWithJsonString:dic[@"data"]] uuid:uuid];
+                        [weakSelf showDownloadJsonSuccess:[TelinkLibTools getDictionaryWithJsonString:dic[@"data"]] uuid:uuid];
                     }else{
                         [weakSelf showAlertSureWithTitle:kDefaultAlertTitle message:dic[@"msg"] sure:^(UIAlertAction *action) {
                             [[NSNotificationCenter defaultCenter] postNotificationName:@"BackToMain" object:nil];

@@ -111,8 +111,8 @@
 
 #pragma mark - 时间戳相关
 
-+ (NSString *)getTimeStringWithTimeStamp:(NSInteger)timeStap {//1684229590952
-    NSDate *confromTimesp = [NSDate dateWithTimeIntervalSince1970:timeStap/1000];
++ (NSString *)getTimeStringWithTimestamp:(NSInteger)timestamp {//1684229590952
+    NSDate *confromTimesp = [NSDate dateWithTimeIntervalSince1970:timestamp/1000];
     NSDateFormatter *dateFormatter = [[NSDateFormatter alloc] init];
     [dateFormatter setDateFormat:@"yyyy-MM-dd HH:mm:ss"];
     NSString *dateString = [dateFormatter stringFromDate:confromTimesp];

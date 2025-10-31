@@ -58,7 +58,7 @@
 }
 
 - (void)updateUI {
-    self.nodeInfoLabel.text = [NSString stringWithFormat:@"Node Info\naddress: 0x%04X\nUUID: %@\nversion: pid-0x%04X vid-0x%04X", self.model.address, self.model.UUID, CFSwapInt16HostToBig([LibTools uint16From16String:self.model.pid]), CFSwapInt16HostToBig([LibTools uint16From16String:self.model.vid])];
+    self.nodeInfoLabel.text = [NSString stringWithFormat:@"Node Info\naddress: 0x%04X\nUUID: %@\nversion: pid-0x%04X vid-0x%04X", self.model.address, self.model.UUID, CFSwapInt16HostToBig([TelinkLibTools uint16FromHexString:self.model.pid]), CFSwapInt16HostToBig([TelinkLibTools uint16FromHexString:self.model.vid])];
 }
 
 - (IBAction)clickOtaButton:(UIButton *)sender {
@@ -174,9 +174,9 @@
 - (void)addMessageToUI:(NSString *)message {
     TelinkLogInfo(@"%@", message);
     if (self.logTV.text.length > 0) {
-        self.logTV.text = [NSString stringWithFormat:@"%@\n%@ => %@", self.logTV.text, [LibTools getNowTimeStringInFormatHHmmss], message];
+        self.logTV.text = [NSString stringWithFormat:@"%@\n%@ => %@", self.logTV.text, [TelinkLibTools getDateStringWithDateFormat:@"HH:mm:ss" date:NSDate.date], message];
     } else {
-        self.logTV.text = [NSString stringWithFormat:@"%@ => %@", [LibTools getNowTimeStringInFormatHHmmss], message];
+        self.logTV.text = [NSString stringWithFormat:@"%@ => %@", [TelinkLibTools getDateStringWithDateFormat:@"HH:mm:ss" date:NSDate.date], message];
     }
 }
 
@@ -224,7 +224,7 @@
                 weakSelf.cloudNodeModel.versionInfo.vid = weakSelf.lastVersionInfoModel.vid;
                 UInt8 page0 = 0;
                 NSMutableData *mData = [NSMutableData dataWithBytes:&page0 length:1];
-                [mData appendData:[LibTools nsstringToHex:weakSelf.lastVersionInfoModel.compositionData]];
+                [mData appendData:[TelinkLibTools nsstringToHex:weakSelf.lastVersionInfoModel.compositionData]];
                 SigPage0 *page = [[SigPage0 alloc] initWithParameters:mData];
                 [weakSelf.model setCompositionData:page];
                 [weakSelf updateUI];

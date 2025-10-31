@@ -37,20 +37,7 @@
  further processing, or reject them. It also defines how a network message is encrypted and
  authenticated.
  */
-@interface SigNetworkLayer ()
-@property (nonatomic,assign) NSInteger networkTransmitCount;
-//@property (nonatomic,strong) SigNetkeyModel *proxyNetworkKey;
-@property (nonatomic,strong) NSMutableArray <BackgroundTimer *>*networkTransmitTimers;
-@end
-
 @implementation SigNetworkLayer
-
-- (NSMutableArray<BackgroundTimer *> *)networkTransmitTimers {
-    if (!_networkTransmitTimers) {
-        _networkTransmitTimers = [NSMutableArray array];
-    }
-    return _networkTransmitTimers;
-}
 
 - (instancetype)initWithNetworkManager:(SigNetworkManager *)networkManager {
     /// Use the init method of the parent class to initialize some properties of the parent class of the subclass instance.
@@ -195,25 +182,6 @@
     }else{
         [SigBearer.share sendBlePdu:networkPdu ofType:type];
     }
-
-    // SDK need use networkTransmit in gatt provision.
-    SigNetworktransmitModel *networkTransmit = _meshNetwork.curLocationNodeModel.networkTransmit;
-    if (type == SigPduType_networkPdu && networkTransmit != nil && networkTransmit.networkTransmitCount > 1 && !SigBearer.share.isProvisioned) {
-        self.networkTransmitCount = networkTransmit.networkTransmitCount;
-        __block NSInteger count = networkTransmit.networkTransmitCount;
-        __weak typeof(self) weakSelf = self;
-        BackgroundTimer *timer = [BackgroundTimer scheduledTimerWithTimeInterval:networkTransmit.networkTransmitIntervalSteps repeats:YES block:^(BackgroundTimer * _Nonnull t) {
-            [SigBearer.share sendBlePdu:networkPdu ofType:type];
-            count -= 1;
-            if (count == 0) {
-                [weakSelf.networkTransmitTimers removeObject:t];
-                if (t) {
-                    [t invalidate];
-                }
-            }
-        }];
-        [self.networkTransmitTimers addObject:timer];
-    }
 }
 
 /// This method tries to send the Proxy Configuration Message.
@@ -252,10 +220,10 @@
     if (meshPrivateBeacon.ivIndex < networkKey.ivIndex.index || ABS(meshPrivateBeacon.ivIndex-networkKey.ivIndex.index) > 42) {
         TelinkLogError(@"Discarding mesh private beacon (ivIndex: 0x%x, expected >= 0x%x)",(unsigned int)meshPrivateBeacon.ivIndex,(unsigned int)networkKey.ivIndex.index);
         if (SigMeshLib.share.dataSource.getSequenceNumberUInt32 >= 0xc00000) {
-            SigMeshPrivateBeacon *beacon = [[SigMeshPrivateBeacon alloc] initWithKeyRefreshFlag:NO ivUpdateActive:YES ivIndex:networkKey.ivIndex.index+1 randomData:[LibTools createRandomDataWithLength:13] usingNetworkKey:networkKey];
+            SigMeshPrivateBeacon *beacon = [[SigMeshPrivateBeacon alloc] initWithKeyRefreshFlag:NO ivUpdateActive:YES ivIndex:networkKey.ivIndex.index+1 randomData:[TelinkLibTools generateRandomHexDataWithLength:13] usingNetworkKey:networkKey];
             SigMeshLib.share.meshPrivateBeacon = beacon;
         } else {
-            SigMeshPrivateBeacon *beacon = [[SigMeshPrivateBeacon alloc] initWithKeyRefreshFlag:NO ivUpdateActive:NO ivIndex:networkKey.ivIndex.index randomData:[LibTools createRandomDataWithLength:13] usingNetworkKey:networkKey];
+            SigMeshPrivateBeacon *beacon = [[SigMeshPrivateBeacon alloc] initWithKeyRefreshFlag:NO ivUpdateActive:NO ivIndex:networkKey.ivIndex.index randomData:[TelinkLibTools generateRandomHexDataWithLength:13] usingNetworkKey:networkKey];
             SigMeshLib.share.meshPrivateBeacon = beacon;
         }
         if ([_networkManager.manager.delegateForDeveloper respondsToSelector:@selector(didReceiveSigMeshPrivateBeaconMessage:)]) {

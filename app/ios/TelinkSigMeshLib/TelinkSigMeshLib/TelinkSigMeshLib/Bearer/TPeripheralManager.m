@@ -56,9 +56,9 @@
 - (void)initSDK {
     _advertisingInterval = kAdvertisingInterval;
     self.peripheralManager = [[CBPeripheralManager alloc] initWithDelegate:self queue:dispatch_get_main_queue()];
-    if (self.peripheralManager.state == CBPeripheralManagerStatePoweredOn) {
+    if (self.peripheralManager.state == CBManagerStatePoweredOn) {
         [self initServices];
-    } else if (self.peripheralManager.state == CBPeripheralManagerStateUnknown) {
+    } else if (self.peripheralManager.state == CBManagerStateUnknown) {
         [self performSelector:@selector(initServices) withObject:nil afterDelay:0.2];
     } else {
         TelinkLogInfo(@"Please open Bluetooth.");
@@ -67,7 +67,7 @@
 
 /// Get Bluetooth status
 - (BOOL)isPoweredOn {
-    return self.peripheralManager.state == CBPeripheralManagerStatePoweredOn;
+    return self.peripheralManager.state == CBManagerStatePoweredOn;
 }
 
 /// Initialize Bluetooth service list.
@@ -138,9 +138,9 @@
  *  @param peripheral   The peripheral manager whose state has changed.
  *
  *  @discussion         Invoked whenever the peripheral manager's state has been updated. Commands should only be issued when the state is
- *                      <code>CBPeripheralManagerStatePoweredOn</code>. A state below <code>CBPeripheralManagerStatePoweredOn</code>
+ *                      <code>CBManagerStatePoweredOn</code>. A state below <code>CBManagerStatePoweredOn</code>
  *                      implies that advertisement has paused and any connected centrals have been disconnected. If the state moves below
- *                      <code>CBPeripheralManagerStatePoweredOff</code>, advertisement is stopped and must be explicitly restarted, and the
+ *                      <code>CBManagerStatePoweredOff</code>, advertisement is stopped and must be explicitly restarted, and the
  *                      local database is cleared and all services must be re-added.
  *
  *  @see                state
@@ -164,7 +164,6 @@
  *
  */
 - (void)peripheralManagerDidStartAdvertising:(CBPeripheralManager *)peripheral error:(NSError *)error {
-//    TeLogDebug(@"callback peripheralManagerDidStartAdvertising,self.advertisingInterval=%f",self.advertisingInterval);
     if (error) {
         TelinkLogDebug(@"error =%@",error.localizedDescription);
         [self advertisingSuccess:@(NO)];

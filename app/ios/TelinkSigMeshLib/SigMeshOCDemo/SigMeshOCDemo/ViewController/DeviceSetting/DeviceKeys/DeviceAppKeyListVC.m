@@ -224,7 +224,7 @@
     });
     NSNumber *type = [[NSUserDefaults standardUserDefaults] valueForKey:kKeyBindType];
     UInt8 keyBindType = type.integerValue;
-    UInt16 productID = [LibTools uint16From16String:self.model.pid];
+    UInt16 productID = [TelinkLibTools uint16FromHexString:self.model.pid];
     DeviceTypeModel *deviceType = [SigDataSource.share getNodeInfoWithCID:kCompanyID PID:productID];
     NSData *cpsData = deviceType.defaultCompositionData.parameters;
     if (keyBindType == KeyBindType_Fast) {

@@ -256,7 +256,7 @@
 
 
 - (void)checkValueTFPass {
-    if ([LibTools validateNumberString:self.valueTF.text]) {
+    if ([TelinkLibTools validateNumberString:self.valueTF.text]) {
         if (self.itemInfo.type != EnOceanButtonItemType_OnOff) {
             int value = [self.valueTF.text intValue];
             if (value<=0 || value > 100) {
@@ -281,8 +281,8 @@
         [self showTips:@"The max length of publish address is 4."];
         self.publishTF.text = [NSString stringWithFormat:@"%X", self.itemInfo.publishAddress];
     }
-    if ([LibTools validateHex:self.publishTF.text]) {
-        UInt16 address = [LibTools uint16From16String:self.publishTF.text];
+    if ([TelinkLibTools validateHexString:self.publishTF.text]) {
+        UInt16 address = [TelinkLibTools uint16FromHexString:self.publishTF.text];
         self.itemInfo.publishAddress = address;
     } else {
         [self showTips:@"The publish address is a hexadecimal string."];
@@ -299,8 +299,8 @@
         [self showTips:@"The max length of scene id is 2."];
         self.sceneIdTF.text = [NSString stringWithFormat:@"%02X", self.itemInfo.value];
     }
-    if ([LibTools validateHex:self.sceneIdTF.text]) {
-        UInt8 value = [LibTools uint8From16String:self.sceneIdTF.text];
+    if ([TelinkLibTools validateHexString:self.sceneIdTF.text]) {
+        UInt8 value = [TelinkLibTools uint8FromHexString:self.sceneIdTF.text];
         self.itemInfo.value = value;
     } else {
         [self showTips:@"The scene id is a hexadecimal string."];

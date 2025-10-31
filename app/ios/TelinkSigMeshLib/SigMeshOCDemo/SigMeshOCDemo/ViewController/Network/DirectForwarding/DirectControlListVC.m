@@ -182,7 +182,7 @@
     [ShowTipsHandle.share show:[NSString stringWithFormat:@"%@ address:0x%04X", Tip_SetDirectControl, node.address]];
     __weak typeof(self) weakSelf = self;
     [SDKLibCommand directControlSetWithNetKeyIndex:SigDataSource.share.curNetkeyModel.index directedForwarding:directedForwarding directedRelay:directedRelay directedProxy:directedProxy directedProxyUseDirectedDefault:directedProxy == DirectedProxy_enable ? DirectedProxyUseDirectedDefault_enable : DirectedProxyUseDirectedDefault_ignore directedFriend:directedFriend destination:node.address retryCount:SigDataSource.share.defaultRetryCount responseMaxCount:1 successCallback:^(UInt16 source, UInt16 destination, SigDirectControlStatus * _Nonnull responseMessage) {
-        TelinkLogDebug(@"directControlSet=%@,source=%d,destination=%d",[LibTools convertDataToHexStr:responseMessage.parameters],source,destination);
+        TelinkLogDebug(@"directControlSet=%@,source=%d,destination=%d",[TelinkLibTools convertDataToHexStr:responseMessage.parameters],source,destination);
         if (source == node.address) {
             dispatch_async(dispatch_get_main_queue(), ^{
                 if (responseMessage.status == SigConfigMessageStatus_success) {

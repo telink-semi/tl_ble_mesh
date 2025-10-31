@@ -71,7 +71,7 @@
     netkey.phase = 0;
     netkey.timestamp = timestamp;
     netkey.oldKey = nil;
-    netkey.key = [LibTools convertDataToHexStr:[LibTools createNetworkKey]];
+    netkey.key = [TelinkLibTools convertDataToHexStr:[LibTools createNetworkKey]];
     netkey.name = [NSString stringWithFormat:@"netkey%ld",(long)netkey.index];
     netkey.minSecurity = @"secure";
     vc.netKeyModel = netkey;

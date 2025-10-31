@@ -308,7 +308,7 @@ typedef enum : NSUInteger {
                 weakSelf.addStatus = SigAddStatusConnectFirst;
                 SigOOBModel *oobModel = [SigMeshLib.share.dataSource getSigOOBModelWithUUID:model.advUuid];
                 if (oobModel && oobModel.OOBString && oobModel.OOBString.length == 32) {
-                    weakSelf.staticOOBData = [LibTools nsstringToHex:oobModel.OOBString];
+                    weakSelf.staticOOBData = [TelinkLibTools nsstringToHex:oobModel.OOBString];
                 }
                 weakSelf.isCertificateBasedProvision = model.advOobInformation.supportForCertificateBasedProvisioning;
                 weakSelf.curPeripheral = peripheral;
@@ -362,7 +362,7 @@ typedef enum : NSUInteger {
                     currentKeyBindType = KeyBindType_Fast;
                 }else{
                     SigNodeModel *node = [SigMeshLib.share.dataSource getNodeWithAddress:weakSelf.unicastAddress];
-                    DeviceTypeModel *deviceType = [SigMeshLib.share.dataSource getNodeInfoWithCID:[LibTools uint16From16String:node.cid] PID:[LibTools uint16From16String:node.pid]];
+                    DeviceTypeModel *deviceType = [SigMeshLib.share.dataSource getNodeInfoWithCID:[TelinkLibTools uint16FromHexString:node.cid] PID:[TelinkLibTools uint16FromHexString:node.pid]];
                     if (deviceType != nil) {
                         currentKeyBindType = KeyBindType_Fast;
                     } else {

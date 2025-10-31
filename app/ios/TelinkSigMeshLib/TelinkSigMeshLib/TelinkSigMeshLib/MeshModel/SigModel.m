@@ -242,10 +242,37 @@
 /// @returns return dictionary object.
 - (NSDictionary *)getDictionaryOfSchedulerModel {
     NSMutableDictionary *dict = [NSMutableDictionary dictionary];
-    dict[@"schedulerID"] = @(self.schedulerID);
+    dict[@"year"] = @(self.year);
+    dict[@"month"] = @(self.month);
+    dict[@"day"] = @(self.day);
+    dict[@"hour"] = @(self.hour);
+    dict[@"minute"] = @(self.minute);
+    dict[@"second"] = @(self.second);
+    dict[@"week"] = @(self.week);
+    dict[@"action"] = @(self.action);
+    dict[@"transTime"] = @(self.transitionTime);
+    dict[@"index"] = @(self.schedulerID);
     dict[@"sceneId"] = @(_sceneId);
-    dict[@"schedulerData"] = [SigHelper.share getUint64String:_schedulerData];
+    dict[@"elementOffset"] = @(_elementOffset);
     return dict;
+}
+
+/// Set old dictionary before v4.1.0.1 to SchedulerModel object.
+/// @param oldDictionary Old SchedulerModel dictionary object before v4.1.0.1.
+- (void)setOldDictionaryToSchedulerModel:(NSDictionary *)oldDictionary {
+    if (oldDictionary == nil || oldDictionary.allKeys.count == 0) {
+        return;
+    }
+    NSArray *allKeys = oldDictionary.allKeys;
+    if ([allKeys containsObject:@"schedulerID"]) {
+        self.schedulerID = (UInt8)[oldDictionary[@"schedulerID"] intValue];
+    }
+    if ([allKeys containsObject:@"sceneId"]) {
+        _sceneId = (UInt64)[oldDictionary[@"sceneId"] integerValue];
+    }
+    if ([allKeys containsObject:@"schedulerData"]) {
+        _schedulerData = [TelinkLibTools uint64FromHexString:oldDictionary[@"schedulerData"]];
+    }
 }
 
 /// Set dictionary to SchedulerModel object.
@@ -255,14 +282,42 @@
         return;
     }
     NSArray *allKeys = dictionary.allKeys;
-    if ([allKeys containsObject:@"schedulerID"]) {
-        self.schedulerID = (UInt8)[dictionary[@"schedulerID"] intValue];
+    _schedulerData = 0;
+    if ([allKeys containsObject:@"year"]) {
+        [self setYear:[dictionary[@"year"] intValue]];
+    }
+    if ([allKeys containsObject:@"month"]) {
+        [self setMonth:[dictionary[@"month"] intValue]];
+    }
+    if ([allKeys containsObject:@"day"]) {
+        [self setDay:[dictionary[@"day"] intValue]];
+    }
+    if ([allKeys containsObject:@"hour"]) {
+        [self setHour:[dictionary[@"hour"] intValue]];
+    }
+    if ([allKeys containsObject:@"minute"]) {
+        [self setMinute:[dictionary[@"minute"] intValue]];
+    }
+    if ([allKeys containsObject:@"second"]) {
+        [self setSecond:[dictionary[@"second"] intValue]];
+    }
+    if ([allKeys containsObject:@"week"]) {
+        [self setWeek:[dictionary[@"week"] intValue]];
+    }
+    if ([allKeys containsObject:@"action"]) {
+        [self setAction:[dictionary[@"action"] intValue]];
+    }
+    if ([allKeys containsObject:@"transTime"]) {
+        [self setTransitionTime:[dictionary[@"transTime"] intValue]];
+    }
+    if ([allKeys containsObject:@"index"]) {
+        [self setSchedulerID:[dictionary[@"index"] intValue]];
     }
     if ([allKeys containsObject:@"sceneId"]) {
         _sceneId = (UInt64)[dictionary[@"sceneId"] integerValue];
     }
-    if ([allKeys containsObject:@"schedulerData"]) {
-        _schedulerData = [LibTools uint64From16String:dictionary[@"schedulerData"]];
+    if ([allKeys containsObject:@"elementOffset"]) {
+        _elementOffset = (UInt8)[dictionary[@"elementOffset"] integerValue];
     }
 }
 
@@ -369,6 +424,7 @@
         /// Initialize self.
         _schedulerData = 0;
         _sceneId = 0;
+        _elementOffset = 0;
         //set scheduler default time
         [self setSchedulerID:0];
         [self setYear:0x64];
@@ -699,7 +755,7 @@
                     _CID = tem16;
                 }
                 if (allData.length >= 8) {
-                    _macAddress = [LibTools convertDataToHexStr:[LibTools turnOverData:[allData subdataWithRange:NSMakeRange(2, 6)]]];
+                    _macAddress = [TelinkLibTools convertDataToHexStr:[TelinkLibTools turnOverData:[allData subdataWithRange:NSMakeRange(2, 6)]]];
                 }
                 if (allData.length >= 10) {
                     memcpy(&tem16, byte+8, 2);
@@ -718,39 +774,39 @@
                         return self;
                     }
                     NSString *suuidString = ((CBUUID *)suuids.firstObject).UUIDString;
-                    BOOL provisionAble = [suuidString  isEqualToString: kPBGATTService] || [suuidString  isEqualToString:[LibTools change16BitsUUIDTO128Bits:kPBGATTService]];
+                    BOOL provisionAble = [suuidString  isEqualToString: kPBGATTService] || [suuidString  isEqualToString:[TelinkLibTools change16BitsUUIDTO128Bits:kPBGATTService]];
                     _provisioned = !provisionAble;
                     if (provisionAble) {
                         // 未入网
                         _address = 0;//this address of unprovision node is invalid.
                         //且还需要支持fast bind的功能才有CID、PID。普通固件不广播该参数。
                         if (advDataServiceData.length >= 2) {
-                            _CID = [LibTools uint16FromBytes:[advDataServiceData subdataWithRange:NSMakeRange(0, 2)]];
+                            _CID = [TelinkLibTools uint16FromData:[advDataServiceData subdataWithRange:NSMakeRange(0, 2)]];
                         }
                         if (advDataServiceData.length >= 4) {
-                            _PID = [LibTools uint16FromBytes:[advDataServiceData subdataWithRange:NSMakeRange(2, 2)]];
+                            _PID = [TelinkLibTools uint16FromData:[advDataServiceData subdataWithRange:NSMakeRange(2, 2)]];
                         }
                         if (advDataServiceData.length >= 16) {
-                            _advUuid = [LibTools convertDataToHexStr:[advDataServiceData subdataWithRange:NSMakeRange(0, 16)]];
+                            _advUuid = [TelinkLibTools convertDataToHexStr:[advDataServiceData subdataWithRange:NSMakeRange(0, 16)]];
                             if (_macAddress == nil) {
                                 //当kCBAdvDataManufacturerData未返回时，暂时使用这个位置的数据作为MacAddress。（只有Telink的支持RP的设备才会在这里包含MacAddress）
-                                NSData *macAddress1 = [LibTools turnOverData:[advDataServiceData subdataWithRange:NSMakeRange(10, 6)]];
+                                NSData *macAddress1 = [TelinkLibTools turnOverData:[advDataServiceData subdataWithRange:NSMakeRange(10, 6)]];
                                 NSData *uuid1 = [LibTools calcUuidByMac:macAddress1];
                                 if ([uuid1 isEqualToData:[advDataServiceData subdataWithRange:NSMakeRange(0, 16)]]) {
-                                    _macAddress = [LibTools convertDataToHexStr:macAddress1];
+                                    _macAddress = [TelinkLibTools convertDataToHexStr:macAddress1];
                                 }
                             }
                         }
                         if (advDataServiceData.length >= 18) {
                             struct OobInformation oob = {};
-                            oob.value = [LibTools uint16FromBytes:[advDataServiceData subdataWithRange:NSMakeRange(16, 2)]];
+                            oob.value = [TelinkLibTools uint16FromData:[advDataServiceData subdataWithRange:NSMakeRange(16, 2)]];
                             _advOobInformation = oob;
                         }
                         _advertisementDataServiceData = [NSData dataWithData:advDataServiceData];
                     } else {
                         // 已入网
                         _advertisementDataServiceData = [NSData dataWithData:advDataServiceData];
-//                        UInt8 advType = [LibTools uint8From16String:[LibTools convertDataToHexStr:[LibTools turnOverData:[advDataServiceData subdataWithRange:NSMakeRange(0, 1)]]]];
+//                        UInt8 advType = [TelinkLibTools uint8FromHexString:[TelinkLibTools convertDataToHexStr:[TelinkLibTools turnOverData:[advDataServiceData subdataWithRange:NSMakeRange(0, 1)]]]];
 //                        if (advType == SigIdentificationType_networkID) {
 //                            if (advDataServiceData.length >= 9) {
 //                                _networkIDData = [advDataServiceData subdataWithRange:NSMakeRange(1, 8)];
@@ -772,7 +828,7 @@
 - (SigIdentificationType)getIdentificationType {
     SigIdentificationType advType = 0xFF;
     if (_advertisementDataServiceData && _advertisementDataServiceData.length) {
-        advType = [LibTools uint8From16String:[LibTools convertDataToHexStr:[LibTools turnOverData:[_advertisementDataServiceData subdataWithRange:NSMakeRange(0, 1)]]]];
+        advType = [TelinkLibTools uint8FromHexString:[TelinkLibTools convertDataToHexStr:[TelinkLibTools turnOverData:[_advertisementDataServiceData subdataWithRange:NSMakeRange(0, 1)]]]];
     }
     return advType;
 }
@@ -852,7 +908,7 @@
 - (NSString *)macAddress {
     NSString *tem = @"";
     if (_reportNodeUUID && _reportNodeUUID.length >= 6) {
-        tem = [LibTools convertDataToHexStr:[LibTools turnOverData:[_reportNodeUUID subdataWithRange:NSMakeRange(_reportNodeUUID.length - 6, 6)]]];
+        tem = [TelinkLibTools convertDataToHexStr:[TelinkLibTools turnOverData:[_reportNodeUUID subdataWithRange:NSMakeRange(_reportNodeUUID.length - 6, 6)]]];
     }
     return tem;
 }
@@ -914,7 +970,7 @@
         _state = AddDeviceModelStateScanned;
         SigScanRspModel *model = [[SigScanRspModel alloc] init];
         model.address = scanRemoteModel.reportNodeAddress;
-        model.uuid = [LibTools convertDataToHexStr:scanRemoteModel.reportNodeUUID];
+        model.uuid = [TelinkLibTools convertDataToHexStr:scanRemoteModel.reportNodeUUID];
         model.macAddress = scanRemoteModel.macAddress;
         model.advOobInformation = scanRemoteModel.oob;
         _scanRspModel = model;
@@ -1485,7 +1541,7 @@
 - (NSString *)getFirmwareIDString {
     NSString *tem = @"";
     if (_currentFirmwareID && _currentFirmwareID.length > 0) {
-        tem = [LibTools convertDataToHexStr:_currentFirmwareID];
+        tem = [TelinkLibTools convertDataToHexStr:_currentFirmwareID];
     }
     return tem;
 }
@@ -1494,7 +1550,7 @@
 - (NSString *)getUpdateURIString {
     NSString *tem = @"";
     if (_updateURL && _updateURL.length > 0) {
-        tem = [LibTools convertDataToHexStr:_updateURL];
+        tem = [TelinkLibTools convertDataToHexStr:_updateURL];
     }
     return tem;
 }
@@ -1648,7 +1704,7 @@
 
 - (instancetype)initWithHex:(NSString *)hex {
     if (hex.length == 4) {
-        return [self initWithAddress:[LibTools uint16From16String:hex]];
+        return [self initWithAddress:[TelinkLibTools uint16FromHexString:hex]];
     }else{
         CBUUID *virtualLabel = [[CBUUID alloc] initWithHex:hex];
         if (virtualLabel) {
@@ -1680,8 +1736,8 @@
 
         // Calculate the 16-bit virtual address based on the 128-bit label.
         NSData *salt = [OpenSSLHelper.share calculateSalt:[@"vtad" dataUsingEncoding:kCFStringEncodingASCII]];
-        NSData *hash = [OpenSSLHelper.share calculateCMAC:[LibTools nsstringToHex:[LibTools meshUUIDToUUID:_virtualLabel.UUIDString]] andKey:salt];
-        UInt16 address = CFSwapInt16HostToBig([LibTools uint16FromBytes:[hash subdataWithRange:NSMakeRange(14, 2)]]);
+        NSData *hash = [OpenSSLHelper.share calculateCMAC:[TelinkLibTools nsstringToHex:[TelinkLibTools meshUUIDToUUID:_virtualLabel.UUIDString]] andKey:salt];
+        UInt16 address = CFSwapInt16HostToBig([TelinkLibTools uint16FromData:[hash subdataWithRange:NSMakeRange(14, 2)]]);
         address |= 0x8000;
         address &= 0xBFFF;
         _address = address;
@@ -2354,7 +2410,7 @@
     if (_ivIndex) {
         return _ivIndex;
     }
-    _ivIndex = [[SigIvIndex alloc] initWithIndex:[LibTools uint32From16String:SigMeshLib.share.dataSource.ivIndex] updateActive:NO];
+    _ivIndex = [[SigIvIndex alloc] initWithIndex:[TelinkLibTools uint32FromHexString:SigMeshLib.share.dataSource.ivIndex] updateActive:NO];
     return _ivIndex;
 }
 
@@ -2363,7 +2419,7 @@
         // Calculate NID.
         UInt8 tem = 0;
         NSData *temData = [NSData dataWithBytes:&tem length:1];
-        NSData *hash = [OpenSSLHelper.share calculateK2WithN:[LibTools nsstringToHex:_key] andP:temData];
+        NSData *hash = [OpenSSLHelper.share calculateK2WithN:[TelinkLibTools nsstringToHex:_key] andP:temData];
         Byte *byte = (Byte *)hash.bytes;
         memcpy(&tem, byte, 1);
         _nid = tem & 0x7F;
@@ -2376,7 +2432,7 @@
         // Calculate NID.
         UInt8 tem = 2;
         NSData *temData = [NSData dataWithBytes:&tem length:1];
-        NSData *hash = [OpenSSLHelper.share calculateK2WithN:[LibTools nsstringToHex:_key] andP:temData];
+        NSData *hash = [OpenSSLHelper.share calculateK2WithN:[TelinkLibTools nsstringToHex:_key] andP:temData];
         Byte *byte = (Byte *)hash.bytes;
         memcpy(&tem, byte, 1);
         _directedSecurityNid = tem & 0x7F;
@@ -2389,7 +2445,7 @@
         // Calculate NID.
         UInt8 tem = 0;
         NSData *temData = [NSData dataWithBytes:&tem length:1];
-        NSData *hash = [OpenSSLHelper.share calculateK2WithN:[LibTools nsstringToHex:_oldKey] andP:temData];
+        NSData *hash = [OpenSSLHelper.share calculateK2WithN:[TelinkLibTools nsstringToHex:_oldKey] andP:temData];
         Byte *byte = (Byte *)hash.bytes;
         memcpy(&tem, byte, 1);
         _oldNid = tem & 0x7F;
@@ -2402,7 +2458,7 @@
         // Calculate NID.
         UInt8 tem = 2;
         NSData *temData = [NSData dataWithBytes:&tem length:1];
-        NSData *hash = [OpenSSLHelper.share calculateK2WithN:[LibTools nsstringToHex:_oldKey] andP:temData];
+        NSData *hash = [OpenSSLHelper.share calculateK2WithN:[TelinkLibTools nsstringToHex:_oldKey] andP:temData];
         Byte *byte = (Byte *)hash.bytes;
         memcpy(&tem, byte, 1);
         _directedSecurityOldNid = tem & 0x7F;
@@ -2412,28 +2468,28 @@
 
 - (SigNetkeyDerivatives *)keys {
     if (!_keys && self.key && self.key.length > 0 && ![self.key isEqualToString:@"00000000000000000000000000000000"]) {
-        _keys = [[SigNetkeyDerivatives alloc] initWithNetkeyData:[LibTools nsstringToHex:self.key] helper:OpenSSLHelper.share];
+        _keys = [[SigNetkeyDerivatives alloc] initWithNetkeyData:[TelinkLibTools nsstringToHex:self.key] helper:OpenSSLHelper.share];
     }
     return _keys;
 }
 
 - (SigNetkeyDerivatives *)oldKeys {
     if (!_oldKeys && self.oldKey && self.oldKey.length > 0 && ![self.oldKey isEqualToString:@"00000000000000000000000000000000"]) {
-        _oldKeys = [[SigNetkeyDerivatives alloc] initWithNetkeyData:[LibTools nsstringToHex:self.oldKey] helper:OpenSSLHelper.share];
+        _oldKeys = [[SigNetkeyDerivatives alloc] initWithNetkeyData:[TelinkLibTools nsstringToHex:self.oldKey] helper:OpenSSLHelper.share];
     }
     return _oldKeys;
 }
 
 - (NSData *)networkId {
     if (!_networkId && self.key && self.key.length > 0 && ![self.key isEqualToString:@"00000000000000000000000000000000"]) {
-        _networkId = [OpenSSLHelper.share calculateK3WithN:[LibTools nsstringToHex:self.key]];
+        _networkId = [OpenSSLHelper.share calculateK3WithN:[TelinkLibTools nsstringToHex:self.key]];
     }
     return _networkId;
 }
 
 - (NSData *)oldNetworkId {
     if (!_oldNetworkId && self.oldKey && self.oldKey.length > 0 && ![self.oldKey isEqualToString:@"00000000000000000000000000000000"]) {
-        _oldNetworkId = [OpenSSLHelper.share calculateK3WithN:[LibTools nsstringToHex:self.oldKey]];
+        _oldNetworkId = [OpenSSLHelper.share calculateK3WithN:[TelinkLibTools nsstringToHex:self.oldKey]];
     }
     return _oldNetworkId;
 }
@@ -2497,7 +2553,7 @@
     }
     if (_UUID) {
         if (_UUID.length == 32) {
-            dict[@"UUID"] = [LibTools UUIDToMeshUUID:_UUID];
+            dict[@"UUID"] = [TelinkLibTools UUIDToMeshUUID:_UUID];
         } else if (_UUID.length == 36) {
             dict[@"UUID"] = _UUID;
         }
@@ -2545,7 +2601,7 @@
     if ([allKeys containsObject:@"UUID"]) {
         NSString *str = [dictionary[@"UUID"] uppercaseString];
         if (str.length == 32) {
-            _UUID = [LibTools UUIDToMeshUUID:str];
+            _UUID = [TelinkLibTools UUIDToMeshUUID:str];
         } else if (str.length == 36) {
             _UUID = str;
         }
@@ -2724,12 +2780,12 @@
 
 /// Get int number of low address.
 - (NSInteger)lowIntAddress{
-    return [LibTools uint16From16String:self.lowAddress];
+    return [TelinkLibTools uint16FromHexString:self.lowAddress];
 }
 
 /// Get int number of height address.
 - (NSInteger)heightIntAddress{
-    return [LibTools uint16From16String:self.highAddress];
+    return [TelinkLibTools uint16FromHexString:self.highAddress];
 }
 
 /// Initialize SigRangeModel object.
@@ -2849,14 +2905,14 @@
 
 - (UInt8)aid {
     if (_aid == 0 && _key && _key.length > 0) {
-        _aid = [OpenSSLHelper.share calculateK4WithN:[LibTools nsstringToHex:_key]];
+        _aid = [OpenSSLHelper.share calculateK4WithN:[TelinkLibTools nsstringToHex:_key]];
     }
     return _aid;
 }
 
 - (UInt8)oldAid {
     if (_oldKey && _oldKey.length > 0 && _oldAid == 0) {
-        _oldAid = [OpenSSLHelper.share calculateK4WithN:[LibTools nsstringToHex:_oldKey]];
+        _oldAid = [OpenSSLHelper.share calculateK4WithN:[TelinkLibTools nsstringToHex:_oldKey]];
     }
     return _oldAid;
 }
@@ -2877,7 +2933,7 @@
 /// Get hex data appkey of SigAppkeyModel object.
 - (nullable NSData *)getDataKey {
     if (_key != nil && _key.length > 0 && ![_key isEqualToString:@"00000000000000000000000000000000"]) {
-        return [LibTools nsstringToHex:_key];
+        return [TelinkLibTools nsstringToHex:_key];
     }
     return nil;
 }
@@ -2885,7 +2941,7 @@
 /// Get hex data old appkey of SigAppkeyModel object.
 - (nullable NSData *)getDataOldKey {
     if (_oldKey != nil && _oldKey.length > 0 && ![_oldKey isEqualToString:@"00000000000000000000000000000000"]) {
-        return [LibTools nsstringToHex:_oldKey];
+        return [TelinkLibTools nsstringToHex:_oldKey];
     }
     return nil;
 }
@@ -3013,7 +3069,7 @@
     }
 //    if ([allKeys containsObject:@"number"]) {
 //        if ([dictionary[@"number"] isKindOfClass:[NSString class]]) {
-//            _number = [LibTools uint16From16String:dictionary[@"number"]];
+//            _number = [TelinkLibTools uint16FromHexString:dictionary[@"number"]];
 //        }
 //    }
     if ([allKeys containsObject:@"addresses"]) {
@@ -3037,7 +3093,7 @@
         NSMutableArray *actionList = [NSMutableArray array];
         for (NSString *numberStr in _addresses) {
             ActionModel *model = [[ActionModel alloc] init];
-            model.address = [LibTools uint16From16String:numberStr];
+            model.address = [TelinkLibTools uint16FromHexString:numberStr];
             [actionList addObject:model];
         }
         _actionList = actionList;
@@ -3172,7 +3228,7 @@
 
 - (UInt16)intAddress {
     if (_address && _address.length == 4) {
-        return [LibTools uint16From16String:self.address];
+        return [TelinkLibTools uint16FromHexString:self.address];
     } else {
         return [self intVirtualAddress];
     }
@@ -3352,6 +3408,7 @@
         _name = node.name;
         _deviceKey = node.deviceKey;
         _macAddress = node.macAddress;
+        _UUID = node.UUID;
 
         _elements = [NSMutableArray arrayWithArray:node.elements];
         _netKeys = [NSMutableArray arrayWithArray:node.netKeys];
@@ -3388,6 +3445,12 @@
         _NFCPINCode = info.NFCPINCode;
         _serialNumber = info.serialNumber;
         _buttonInfo = [[EnOceanButtonInfo alloc] initWithOldEnOceanButtonInfo:info.buttonInfo];
+        _configComplete = YES;
+        _UUID = [TelinkLibTools UUIDToMeshUUID:[TelinkLibTools generateRandomHexStringWithLength:32]];
+        _deviceKey = [TelinkLibTools generateRandomHexStringWithLength:32];
+        _vid = [SigHelper.share getUint16String:0x0242];
+        _cid = [SigHelper.share getUint16String:0x0211];
+        _crpl = [SigHelper.share getUint16String:0x0069];
     }
     return self;
 }
@@ -3410,6 +3473,7 @@
     device.name = self.name;
     device.deviceKey = self.deviceKey;
     device.macAddress = self.macAddress;
+    device.UUID = self.UUID;
 
     device.elements = [NSMutableArray arrayWithArray:self.elements];
     device.netKeys = [NSMutableArray arrayWithArray:self.netKeys];
@@ -3443,15 +3507,20 @@
 
 //Attention: 1.it is use peripheralUUID to compare SigNodeModel when SigScanRspModel.macAddress is nil.
 //Attention: 2.it is use macAddress to compare SigNodeModel when peripheralUUID is nil.
-- (BOOL)isEqual:(id)object{
+//Attention: 3.it is use UUID to compare SigNodeModel when macAddress is nil.
+//Attention: 4.it is use address to compare SigNodeModel when UUID is nil.
+- (BOOL)isEqual:(id)object {
     if ([object isKindOfClass:[SigNodeModel class]]) {
         SigNodeModel *tem = (SigNodeModel *)object;
         if (self.peripheralUUID && self.peripheralUUID.length > 0 && tem.peripheralUUID && tem.peripheralUUID.length > 0 && ![tem.peripheralUUID isEqual:@"00000000000000000000000000000000"]) {
             return [self.peripheralUUID isEqualToString:tem.peripheralUUID];
-        }else if (self.macAddress && self.macAddress.length > 0 && tem.macAddress && tem.macAddress.length > 0 && ![tem.macAddress isEqual:@"000000000000"]) {
+        } else if (self.macAddress && self.macAddress.length > 0 && tem.macAddress && tem.macAddress.length > 0 && ![tem.macAddress isEqual:@"000000000000"]) {
             return [self.macAddress.uppercaseString isEqualToString:tem.macAddress.uppercaseString];
+        } else if (self.UUID && self.UUID.length > 0 && tem.UUID && tem.UUID.length > 0 && ![tem.UUID isEqual:@"00000000000000000000000000000000"]) {
+            return [self.UUID.uppercaseString isEqualToString:tem.UUID.uppercaseString];
+        } else {
+            return self.address == tem.address;
         }
-        return NO;
     } else {
         return NO;
     }
@@ -3462,9 +3531,11 @@
     return self.features.lowPowerFeature == SigNodeFeaturesState_enabled;
 }
 
-/// Return whether the node is a motion sensor.
+/// Return whether the node is a motion sensor. 
+/// The sensor have kSigModel_SensorServer_ID, have not kSigModel_LightLightnessServer_ID,
+/// the gateway both have kSigModel_SensorServer_ID and kSigModel_LightLightnessServer_ID.
 - (BOOL)isSensor {
-    return [self getElementModelWithModelIds:@[@(kSigModel_SensorServer_ID)]] != nil;
+    return [self getElementModelWithModelIds:@[@(kSigModel_SensorServer_ID)]] != nil && [self getElementModelWithModelIds:@[@(kSigModel_LightLightnessServer_ID)]] == nil;
 }
 
 /// Return whether the node is a motion sensor.
@@ -3475,6 +3546,26 @@
 /// Return whether the node is a ambient light sensor.
 - (BOOL)isAmbientLightSensor {
     return [self hasPropertyID:DevicePropertyID_PresentAmbientLightLevel];
+}
+
+/// Return whether the node is a OccupancyMotionThreshold sensor.
+- (BOOL)isOccupancyMotionThresholdSensor {
+    return [self hasPropertyID:DevicePropertyID_MotionThreshold];
+}
+
+/// Return whether the node is a PeopleCount sensor.
+- (BOOL)isPeopleCountSensor {
+    return [self hasPropertyID:DevicePropertyID_PeopleCount];
+}
+
+/// Return whether the node is a PresenceDetected sensor.
+- (BOOL)isPresenceDetectedSensor {
+    return [self hasPropertyID:DevicePropertyID_PresenceDetected];
+}
+
+/// Return whether the node is a TimeSinceMotionSensed sensor.
+- (BOOL)isTimeSinceMotionSensedSensor {
+    return [self hasPropertyID:DevicePropertyID_TimeSinceMotionSensed];
 }
 
 /// Return whether the node is a EnOcean switch device.
@@ -3497,12 +3588,11 @@
 
 - (BOOL)isRemote {
     return self.getTelinkPID.majorProductType == MajorProductType_switch;
-//    return [LibTools uint16From16String:self.pid] == 0x301;
 }
 
 - (struct TelinkPID)getTelinkPID {
     struct TelinkPID telinkPid = {};
-    telinkPid.value = [LibTools uint16From16String:self.pid];
+    telinkPid.value = [TelinkLibTools uint16FromHexString:self.pid];
     return telinkPid;
 }
 
@@ -3555,6 +3645,7 @@
         model.schedulerID = scheduler.schedulerID;
         model.schedulerData = scheduler.schedulerData;
         model.sceneId = scheduler.sceneId;
+        model.elementOffset = scheduler.elementOffset;
 
         if ([self.schedulerList containsObject:scheduler]) {
             NSInteger index = [self.schedulerList indexOfObject:scheduler];
@@ -3817,7 +3908,7 @@
     }
     if (_UUID) {
         if (_UUID.length == 32) {
-            dict[@"UUID"] = [LibTools UUIDToMeshUUID:_UUID];
+            dict[@"UUID"] = [TelinkLibTools UUIDToMeshUUID:_UUID];
         } else if (_UUID.length == 36) {
             dict[@"UUID"] = _UUID;
         }
@@ -3879,7 +3970,7 @@
             NSDictionary *schedulerDict = [model getDictionaryOfSchedulerModel];
             [array addObject:schedulerDict];
         }
-        dict[@"schedulerList"] = array;
+        dict[@"schedulers"] = array;
     }
     if (_subnetBridgeList) {
         NSMutableArray *array = [NSMutableArray array];
@@ -3905,7 +3996,7 @@
         NSMutableArray *array = [NSMutableArray array];
         NSArray *sensorDataArray = [NSArray arrayWithArray:_sensorDataArray];
         for (SigSensorDataModel *model in sensorDataArray) {
-            [array addObject:[LibTools convertDataToHexStr:model.getSensorDataParameters]];
+            [array addObject:[TelinkLibTools convertDataToHexStr:model.getSensorDataParameters]];
         }
         dict[@"sensorDataArray"] = array;
     }
@@ -3913,7 +4004,7 @@
         NSMutableArray *array = [NSMutableArray array];
         NSArray *sensorDescriptorArray = [NSArray arrayWithArray:_sensorDescriptorArray];
         for (SigSensorDescriptorModel *model in sensorDescriptorArray) {
-            [array addObject:[LibTools convertDataToHexStr:model.getDescriptorParameters]];
+            [array addObject:[TelinkLibTools convertDataToHexStr:model.getDescriptorParameters]];
         }
         dict[@"sensorDescriptorArray"] = array;
     }
@@ -3921,7 +4012,7 @@
         NSMutableArray *array = [NSMutableArray array];
         NSArray *sensorCadenceArray = [NSArray arrayWithArray:_sensorCadenceArray];
         for (SigSensorCadenceModel *model in sensorCadenceArray) {
-            [array addObject:[LibTools convertDataToHexStr:model.getSensorCadenceParameters]];
+            [array addObject:[TelinkLibTools convertDataToHexStr:model.getSensorCadenceParameters]];
         }
         dict[@"sensorCadenceArray"] = array;
     }
@@ -3988,7 +4079,7 @@
     if ([allKeys containsObject:@"UUID"]) {
         NSString *str = [dictionary[@"UUID"] uppercaseString];
         if (str.length == 32) {
-            _UUID = [LibTools UUIDToMeshUUID:str];
+            _UUID = [TelinkLibTools UUIDToMeshUUID:str];
         } else if (str.length == 36) {
             _UUID = str;
         }
@@ -4057,12 +4148,23 @@
         }
         _appKeys = appKeys;
     }
-    if ([allKeys containsObject:@"schedulerList"]) {
+    if ([allKeys containsObject:@"schedulers"]) {
+        // key:"schedulers" is a new key after v4.1.0.4, Android uses the same key.
+        NSMutableArray *schedulerList = [NSMutableArray array];
+        NSArray *array = dictionary[@"schedulers"];
+        for (NSDictionary *schedulerDict in array) {
+            SchedulerModel *model = [[SchedulerModel alloc] init];
+            [model setDictionaryToSchedulerModel:schedulerDict];
+            [schedulerList addObject:model];
+        }
+        _schedulerList = schedulerList;
+    } else if ([allKeys containsObject:@"schedulerList"]) {
+        // key:"schedulerList" is a old key before v4.1.0.3, need change old dictionary to new dictionary.
         NSMutableArray *schedulerList = [NSMutableArray array];
         NSArray *array = dictionary[@"schedulerList"];
         for (NSDictionary *schedulerDict in array) {
             SchedulerModel *model = [[SchedulerModel alloc] init];
-            [model setDictionaryToSchedulerModel:schedulerDict];
+            [model setOldDictionaryToSchedulerModel:schedulerDict];
             [schedulerList addObject:model];
         }
         _schedulerList = schedulerList;
@@ -4104,7 +4206,7 @@
         NSMutableArray *sensorDataArray = [NSMutableArray array];
         NSArray *array = dictionary[@"sensorDataArray"];
         for (NSString *string in array) {
-            NSData *data = [LibTools nsstringToHex:string];
+            NSData *data = [TelinkLibTools nsstringToHex:string];
             SigSensorDataModel *model = [[SigSensorDataModel alloc] initWithSensorDataParameters:data];
             [sensorDataArray addObject:model];
         }
@@ -4114,7 +4216,7 @@
         NSMutableArray *sensorDescriptorArray = [NSMutableArray array];
         NSArray *array = dictionary[@"sensorDescriptorArray"];
         for (NSString *string in array) {
-            NSData *data = [LibTools nsstringToHex:string];
+            NSData *data = [TelinkLibTools nsstringToHex:string];
             SigSensorDescriptorModel *model = [[SigSensorDescriptorModel alloc] initWithDescriptorParameters:data];
             [sensorDescriptorArray addObject:model];
         }
@@ -4124,7 +4226,7 @@
         NSMutableArray *sensorCadenceArray = [NSMutableArray array];
         NSArray *array = dictionary[@"sensorCadenceArray"];
         for (NSString *string in array) {
-            NSData *data = [LibTools nsstringToHex:string];
+            NSData *data = [TelinkLibTools nsstringToHex:string];
             SigSensorCadenceModel *model = [[SigSensorCadenceModel alloc] initWithSensorCadenceParameters:data];
             [sensorCadenceArray addObject:model];
         }
@@ -4177,7 +4279,7 @@
     }
     if (_UUID) {
         if (_UUID.length == 32) {
-            dict[@"UUID"] = [LibTools UUIDToMeshUUID:_UUID];
+            dict[@"UUID"] = [TelinkLibTools UUIDToMeshUUID:_UUID];
         } else if (_UUID.length == 36) {
             dict[@"UUID"] = _UUID;
         }
@@ -4231,6 +4333,15 @@
             [array addObject:appkeyDict];
         }
         dict[@"appKeys"] = array;
+    }
+    if (_schedulerList && _schedulerList.count > 0) {
+        NSMutableArray *array = [NSMutableArray array];
+        NSArray *schedulerList = [NSArray arrayWithArray:_schedulerList];
+        for (SchedulerModel *model in schedulerList) {
+            NSDictionary *schedulerDict = [model getDictionaryOfSchedulerModel];
+            [array addObject:schedulerDict];
+        }
+        dict[@"schedulers"] = array;
     }
     return dict;
 }
@@ -4303,10 +4414,10 @@
 
 - (SigPage0 *)compositionData {
     SigPage0 *page0 = [[SigPage0 alloc] init];
-    page0.companyIdentifier = [LibTools uint16From16String:self.cid];
-    page0.productIdentifier = [LibTools uint16From16String:self.pid];
-    page0.versionIdentifier = [LibTools uint16From16String:self.vid];
-    page0.minimumNumberOfReplayProtectionList = [LibTools uint16From16String:self.crpl];
+    page0.companyIdentifier = [TelinkLibTools uint16FromHexString:self.cid];
+    page0.productIdentifier = [TelinkLibTools uint16FromHexString:self.pid];
+    page0.versionIdentifier = [TelinkLibTools uint16FromHexString:self.vid];
+    page0.minimumNumberOfReplayProtectionList = [TelinkLibTools uint16FromHexString:self.crpl];
     SigNodeFeatures *features = [[SigNodeFeatures alloc] init];
     features.proxyFeature = self.features.proxyFeature;
     features.friendFeature = self.features.friendFeature;
@@ -4339,12 +4450,12 @@
 
 - (void)setUnicastAddress:(NSString *)unicastAddress {
     _unicastAddress = unicastAddress;
-    _address = [LibTools uint16From16String:unicastAddress];
+    _address = [TelinkLibTools uint16FromHexString:unicastAddress];
 }
 
 - (UInt16)address {
     if (_address == 0) {
-        _address = [LibTools uint16From16String:self.unicastAddress];
+        _address = [TelinkLibTools uint16FromHexString:self.unicastAddress];
     }
     return _address;
 }
@@ -4373,7 +4484,7 @@
                 for (NSString *groupIDString in subscribe) {
                     NSNumber *groupNumber = nil;
                     if (groupIDString.length == 4) {
-                        groupNumber = @([LibTools uint16From16String:groupIDString]);
+                        groupNumber = @([TelinkLibTools uint16FromHexString:groupIDString]);
                     } else {
                         groupNumber = @([LibTools getVirtualAddressOfLabelUUID:groupIDString]);
                     }
@@ -4415,7 +4526,7 @@
                         NSMutableArray *tem = [NSMutableArray array];
                         NSArray *subscribe = [NSArray arrayWithArray:modelIDModel.subscribe];
                         for (NSString *groupIDString in subscribe) {
-                            [tem addObject:@([LibTools uint16From16String:groupIDString])];
+                            [tem addObject:@([TelinkLibTools uint16FromHexString:groupIDString])];
                         }
                         if (![tem containsObject:groupID]) {
                             [modelIDModel.subscribe addObject:[SigHelper.share getUint16String:groupAddress]];
@@ -4456,7 +4567,7 @@
                         NSMutableArray *tem = [NSMutableArray array];
                         NSArray *subscribe = [NSArray arrayWithArray:modelIDModel.subscribe];
                         for (NSString *groupIDString in subscribe) {
-                            [tem addObject:@([LibTools uint16From16String:groupIDString])];
+                            [tem addObject:@([TelinkLibTools uint16FromHexString:groupIDString])];
                         }
                         if ([tem containsObject:@(groupAddress)]) {
                             [modelIDModel.subscribe removeObjectAtIndex:[tem indexOfObject:@(groupAddress)]];
@@ -4551,7 +4662,7 @@
                 for (SigModelIDModel *modelIDModel in models) {
                     if (modelIDModel.getIntModelID == self.publishModelID) {
                         hasPublish = YES;
-                        if (modelIDModel.publish != nil && [LibTools uint16From16String:modelIDModel.publish.address] == 0xffff) {
+                        if (modelIDModel.publish != nil && [TelinkLibTools uint16FromHexString:modelIDModel.publish.address] != kMeshAddress_unassignedAddress) {
                             tem = YES;
                         }
                         break;
@@ -4579,7 +4690,7 @@
                 for (SigModelIDModel *modelIDModel in models) {
                     if (modelIDModel.getIntModelID == self.publishModelID) {
                         hasPublish = YES;
-                        if (modelIDModel.publish != nil && [LibTools uint16From16String:modelIDModel.publish.address] == 0xffff) {
+                        if (modelIDModel.publish != nil && [TelinkLibTools uint16FromHexString:modelIDModel.publish.address] != kMeshAddress_unassignedAddress) {
                             //注意：period=0时，设备状态改变主动上报；period=1时，设备状态改变主动上报且按周期上报。
                             if (modelIDModel.publish.period != 0) {
                                 tem = YES;
@@ -5204,7 +5315,7 @@
 }
 
 - (SigLocation)getSigLocation {
-    return [LibTools uint16From16String:self.location];
+    return [TelinkLibTools uint16FromHexString:self.location];
 }
 
 - (void)setSigLocation:(SigLocation)sigLocation {
@@ -5323,9 +5434,9 @@
 - (int)getIntModelID{
     int modelID = 0;
     if (self.isBluetoothSIGAssigned) {
-        modelID = [LibTools uint16From16String:self.modelId];
+        modelID = [TelinkLibTools uint16FromHexString:self.modelId];
     } else {
-        modelID = [LibTools uint32From16String:self.modelId];
+        modelID = [TelinkLibTools uint32FromHexString:self.modelId];
     }
     return modelID;
 }
@@ -5335,9 +5446,9 @@
     //ModelID+CID = vendorModelID
     UInt16 tem = 0;
     if (self.isBluetoothSIGAssigned) {
-        tem = [LibTools uint16From16String:self.modelId];
+        tem = [TelinkLibTools uint16FromHexString:self.modelId];
     } else if (self.isVendorModelID) {
-        tem = [LibTools uint16From16String:[self.modelId substringToIndex:4]];
+        tem = [TelinkLibTools uint16FromHexString:[self.modelId substringToIndex:4]];
     }
     return tem;
 }
@@ -5347,7 +5458,7 @@
     //sig model:1306 vendor model:00010211
     UInt16 tem = 0;
     if (self.isVendorModelID) {
-        tem = [LibTools uint16From16String:[self.modelId substringFromIndex:4]];
+        tem = [TelinkLibTools uint16FromHexString:[self.modelId substringFromIndex:4]];
     }
     return tem;
 }
@@ -5890,7 +6001,7 @@
         _sourceType = sourceType;
         _UUIDString = UUIDString;
         _OOBString = OOBString;
-        _lastEditTimeString = [LibTools getNowTimeTimeString];
+        _lastEditTimeString = [TelinkLibTools getDateStringWithDateFormat:@"yyyy-MM-dd HH:mm:ss" date:NSDate.date];
     }
     return self;
 }
@@ -5898,7 +6009,7 @@
 - (void)updateWithUUIDString:(NSString *)UUIDString OOBString:(NSString *)OOBString {
     _UUIDString = UUIDString;
     _OOBString = OOBString;
-    _lastEditTimeString = [LibTools getNowTimeTimeString];
+    _lastEditTimeString = [TelinkLibTools getDateStringWithDateFormat:@"yyyy-MM-dd HH:mm:ss" date:NSDate.date];
 }
 
 /// Determine if the data of two SigOOBModel is the same
@@ -5961,16 +6072,16 @@
         self.directions = (SigDirectionsFieldValues)[dictionary[@"directions"] intValue];
     }
     if ([allKeys containsObject:@"netKeyIndex1"]) {
-        _netKeyIndex1 = [LibTools uint16From16String:dictionary[@"netKeyIndex1"]];
+        _netKeyIndex1 = [TelinkLibTools uint16FromHexString:dictionary[@"netKeyIndex1"]];
     }
     if ([allKeys containsObject:@"netKeyIndex2"]) {
-        _netKeyIndex2 = [LibTools uint16From16String:dictionary[@"netKeyIndex2"]];
+        _netKeyIndex2 = [TelinkLibTools uint16FromHexString:dictionary[@"netKeyIndex2"]];
     }
     if ([allKeys containsObject:@"address1"]) {
-        _address1 = [LibTools uint16From16String:dictionary[@"address1"]];
+        _address1 = [TelinkLibTools uint16FromHexString:dictionary[@"address1"]];
     }
     if ([allKeys containsObject:@"address2"]) {
-        _address2 = [LibTools uint16From16String:dictionary[@"address2"]];
+        _address2 = [TelinkLibTools uint16FromHexString:dictionary[@"address2"]];
     }
 }
 
@@ -6807,7 +6918,7 @@
     _buttonInfo = [[EnOceanButtonInfo alloc] init];
     _buttonInfo.actionLayoutType = actionLayoutType;
     _buttonInfo.registerAddressList = registerAddressList;
-    _productId = CFSwapInt16HostToBig([LibTools uint16FromBytes:[LibTools nsstringToHex:[_staticSourceAddress substringToIndex:4]]]);
+    _productId = CFSwapInt16HostToBig([TelinkLibTools uint16FromData:[TelinkLibTools nsstringToHex:[_staticSourceAddress substringToIndex:4]]]);
     if ([[_staticSourceAddress substringToIndex:4] isEqualToString:[kDefaultPinCode substringFromIndex:4]]) {
         //4按钮开关
         EnOceanButtonItemInfo *info1 = [[EnOceanButtonItemInfo alloc] init];
@@ -6862,7 +6973,7 @@
     NSMutableDictionary *dict = [NSMutableDictionary dictionary];
     dict[@"unicastAddress"] = @(self.deviceAddress);
     dict[@"pid"] = [SigHelper.share getUint16String:self.productId];
-    dict[@"macAddress"] = [LibTools getMacStringWithMac:_staticSourceAddress];
+    dict[@"macAddress"] = [TelinkLibTools getMacStringWithMac:_staticSourceAddress];
     dict[securityKeyKey] = _securityKey;
     dict[orderingCodeKey] = _orderingCode;
     dict[stepCodeRevisionKey] = _stepCodeRevision;
@@ -6880,10 +6991,10 @@
     }
     NSArray *allKeys = dictionary.allKeys;
     if ([allKeys containsObject:@"unicastAddress"]) {
-        _deviceAddress = [LibTools uint16From16String:dictionary[@"unicastAddress"]];
+        _deviceAddress = [TelinkLibTools uint16FromHexString:dictionary[@"unicastAddress"]];
     }
     if ([allKeys containsObject:@"pid"]) {
-        _productId = [LibTools uint16From16String:dictionary[@"pid"]];
+        _productId = [TelinkLibTools uint16FromHexString:dictionary[@"pid"]];
     }
     if ([allKeys containsObject:@"macAddress"]) {
         NSString *mac = dictionary[@"macAddress"];
@@ -6974,4 +7085,100 @@
     }
     return data;
 }
+@end
+
+
+@implementation SigNLCModel
+
+- (instancetype)init {
+    if (self = [super init]) {
+        _sensorList = [NSMutableArray array];
+        _lightControlPropertyDictionary = [NSMutableDictionary dictionary];
+        _period = 2000;
+        _lightControlPropertyDictionary[[SigHelper.share getUint16String:DevicePropertyID_LightControlLightnessOn]] = @(0xFFFF);
+        _lightControlPropertyDictionary[[SigHelper.share getUint16String:DevicePropertyID_LightControlLightnessProlong]] = @(0x4000);
+        _lightControlPropertyDictionary[[SigHelper.share getUint16String:DevicePropertyID_LightControlLightnessStandby]] = @(0xCCC);
+        _lightControlPropertyDictionary[[SigHelper.share getUint16String:DevicePropertyID_LightControlTimeFadeOn]] = @(2000);
+        _lightControlPropertyDictionary[[SigHelper.share getUint16String:DevicePropertyID_LightControlTimeRunOn]] = @(5000);
+        _lightControlPropertyDictionary[[SigHelper.share getUint16String:DevicePropertyID_LightControlTimeFade]] = @(2000);
+        _lightControlPropertyDictionary[[SigHelper.share getUint16String:DevicePropertyID_LightControlTimeProlong]] = @(4000);
+        _lightControlPropertyDictionary[[SigHelper.share getUint16String:DevicePropertyID_LightControlTimeFadeStandbyAuto]] = @(3000);
+        _lightControlPropertyDictionary[[SigHelper.share getUint16String:DevicePropertyID_LightControlTimeFadeStandbyManual]] = @(3000);
+    }
+    return self;
+}
+
+- (instancetype)initWithOldSigNLCModel:(SigNLCModel *)model {
+    if (self = [super init]) {
+        _NLC_ID = model.NLC_ID;
+        _period = model.period;
+        _publishAddress = model.publishAddress;
+        _sensorList = [NSMutableArray arrayWithArray:model.sensorList];
+        _lightControlPropertyDictionary = [NSMutableDictionary dictionaryWithDictionary:model.lightControlPropertyDictionary];
+    }
+    return self;
+}
+
+/// Determine if the data of two SigNLCModel is the same
+- (BOOL)isEqual:(id)object{
+    if ([object isKindOfClass:[SigNLCModel class]]) {
+        //NLC_ID is the unique identifier of SigNLCModel.
+        return _NLC_ID == ((SigNLCModel *)object).NLC_ID;
+    } else {
+        //Two SigNLCModel object is different.
+        return NO;
+    }
+}
+
+/// Get dictionary from SigNLCModel object.(save local)
+/// @returns return dictionary object.
+- (NSDictionary *)getDictionaryOfSigNLCModel {
+    NSMutableDictionary *dict = [NSMutableDictionary dictionary];
+    dict[@"nlc_id"] = @(_NLC_ID);
+    dict[@"period"] = @(_period);
+    if (_sensorList) {
+        NSMutableArray *array = [NSMutableArray array];
+        NSMutableArray *sensorList = [NSMutableArray arrayWithArray:_sensorList];
+        for (SigNodeModel *model in sensorList) {
+            [array addObject:@(model.address)];
+        }
+        dict[@"sensorList"] = array;
+    }
+    dict[@"publishAddress"] = @(_publishAddress);
+    dict[@"lightControlPropertyDictionary"] = _lightControlPropertyDictionary;
+    return dict;
+}
+
+/// Set dictionary to SigNLCModel object.
+/// @param dictionary SigNLCModel dictionary object.
+- (void)setDictionaryToSigNLCModel:(NSDictionary *)dictionary {
+    if (dictionary == nil || dictionary.allKeys.count == 0) {
+        return;
+    }
+    NSArray *allKeys = dictionary.allKeys;
+    if ([allKeys containsObject:@"nlc_id"]) {
+        _NLC_ID = [dictionary[@"nlc_id"] intValue];
+    }
+    if ([allKeys containsObject:@"period"]) {
+        _period = [dictionary[@"period"] integerValue];
+    }
+    if ([allKeys containsObject:@"sensorList"]) {
+        NSMutableArray *sensorList = [NSMutableArray array];
+        NSArray *array = dictionary[@"sensorList"];
+        for (NSNumber *addressNumber in array) {
+            SigNodeModel *node = [SigDataSource.share getNodeWithAddress:addressNumber.intValue];
+            if (node) {
+                [sensorList addObject:node];
+            }
+        }
+        _sensorList = sensorList;
+    }
+    if ([allKeys containsObject:@"publishAddress"]) {
+        _publishAddress = [dictionary[@"publishAddress"] intValue];
+    }
+    if ([allKeys containsObject:@"lightControlPropertyDictionary"]) {
+        _lightControlPropertyDictionary = [NSMutableDictionary dictionaryWithDictionary:dictionary[@"lightControlPropertyDictionary"]];
+    }
+}
+
 @end

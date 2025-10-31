@@ -25,6 +25,7 @@
 #import "AddForwardingTableVC.h"
 #import "UIViewController+Message.h"
 #import "TableCell.h"
+#import "UIButton+extension.h"
 
 @interface DirectForwardingVC ()<UITableViewDelegate,UITableViewDataSource>
 @property (weak, nonatomic) IBOutlet UITableView *tableView;
@@ -87,7 +88,7 @@
                     dispatch_semaphore_t semaphore = dispatch_semaphore_create(0);
                     TelinkLogInfo(@"send request for ForwardingTableDelete, address:%d", address);
                     [SDKLibCommand forwardingTableDeleteWithNetKeyIndex:forwardingTable.netKeyIndex pathOrigin:pathOrigin pathDestination:pathDestination destination:address retryCount:SigDataSource.share.defaultRetryCount responseMaxCount:1 successCallback:^(UInt16 source, UInt16 destination, SigForwardingTableStatus * _Nonnull responseMessage) {
-                        TelinkLogDebug(@"forwardingTableDelete=%@,source=%d,destination=%d",[LibTools convertDataToHexStr:responseMessage.parameters],source,destination);
+                        TelinkLogDebug(@"forwardingTableDelete=%@,source=%d,destination=%d",[TelinkLibTools convertDataToHexStr:responseMessage.parameters],source,destination);
                     } resultCallback:^(BOOL isResponseAll, NSError * _Nullable error) {
                         TelinkLogInfo(@"isResponseAll=%d,error=%@",isResponseAll,error);
                         dispatch_semaphore_signal(semaphore);
@@ -133,8 +134,18 @@
 - (void)viewWillAppear:(BOOL)animated {
     [super viewWillAppear:animated];
     self.tabBarController.tabBar.hidden = YES;
+    [self refreshTableViewUI];
+}
+
+- (void)refreshTableViewUI {
     self.forwardingTableModelList = [NSMutableArray arrayWithArray:SigDataSource.share.forwardingTableModelList];
-    [self.tableView reloadData];
+    [self.tableView performSelectorOnMainThread:@selector(reloadData) withObject:nil waitUntilDone:YES];
+    [self setListEmptyHidden:SigDataSource.share.forwardingTableModelList.count != 0];
+    self.tableView.hidden = SigDataSource.share.forwardingTableModelList.count == 0;
+    __weak typeof(self) weakSelf = self;
+    [self.addNewItemButton addAction:^(UIButton *button) {
+        [weakSelf addForwardingTable:nil];
+    }];
 }
 
 -(void)dealloc{

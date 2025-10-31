@@ -38,7 +38,7 @@ typedef void(^responseAllMessageBlock)(UInt16 source,UInt16 destination,SigMeshM
 typedef void(^bleInitSuccessCallback)(CBCentralManager *central);
 
 /// callback of ble Central Update State
-typedef void(^bleCentralUpdateStateCallback)(CBCentralManagerState state);
+typedef void(^bleCentralUpdateStateCallback)(CBManagerState state);
 
 /// callback of ble Scan Peripheral response
 typedef void(^bleScanPeripheralCallback)(CBPeripheral *peripheral, NSDictionary<NSString *, id> *advertisementData, NSNumber *RSSI, BOOL unprovisioned);
@@ -318,6 +318,8 @@ typedef void(^openChannelResultCallback)(CBPeripheral *peripheral,CBL2CAPChannel
 /// add since v4.1.0.0
 /// when response from 5.2.3.3 Scheduler Action Get, YES means this Scheduler data is Invalid.
 @property (nonatomic,assign) BOOL isInvalidScheduler;
+/// element index of the scheduler, default is 0.
+@property (nonatomic,assign) UInt8 elementOffset;
 
 - (instancetype)initWithSchedulerDataAndSceneIdData:(NSData *)data;
 
@@ -352,7 +354,7 @@ typedef void(^openChannelResultCallback)(CBPeripheral *peripheral,CBL2CAPChannel
 
  PID                 2               Telink Cloud Product ID
 
- MAC                 6               MAC address, little endianess
+ MAC                 6               MAC address, little endianness
 
  RFU                 2               Reserved for future use
 
@@ -367,7 +369,7 @@ typedef void(^openChannelResultCallback)(CBPeripheral *peripheral,CBL2CAPChannel
 @property (nonatomic, assign) UInt16 tcVendorID;
 // pid of composition data.
 @property (nonatomic, assign) UInt16 pid;
-// MAC address, little endianess
+// MAC address, little endianness
 @property (nonatomic, strong) NSData *macData;
 @property (nonatomic, strong) NSData *feature_rsv2;
 @property (nonatomic, assign) UInt8 check_sum;
@@ -1373,7 +1375,7 @@ static Byte LPNByte[] = {(Byte) 0x11, (Byte) 0x02, (Byte) 0x01, (Byte) 0x02, (By
 /// property has been updated. The timestamp is based on Coordinated Universal Time (UTC) and
 /// follows the “date-time” format as defined by JSON Schema Draft 4 [3], which is based
 /// on the Internet date/time format described in Section 5.6 of RFC 3339 [6]:
-/// YYYY-MM-DDThh:mm:ssZ or YYYY-MM-DDThh:mm:ss+/- timeoffset
+/// YYYY-MM-DDTHH:mm:ssZ or YYYY-MM-DDTHH:mm:ss+/- timeoffset
 /// where “YYYY” denotes a year; “MM” denotes a two-digit month (01 to 12); “DD” denotes
 /// a two-digit day of the month (01 to 31); “hh” denotes a two-digit hour (00 to 23); “mm”
 /// denotes a two-digit minute (00 to 59);'ss" denotes a two-digit second (00 to 59); “Z” denotes
@@ -1884,12 +1886,11 @@ static Byte LPNByte[] = {(Byte) 0x11, (Byte) 0x02, (Byte) 0x01, (Byte) 0x02, (By
 @property (nonatomic, strong, nullable) SigHeartbeatSubModel *heartbeatSub;
 
 @property (nonatomic, copy, nullable) NSString *macAddress;//new add the mac to json, get mac from scanResponse's Manufacturer Data.
-
-//暂时添加到json数据中
+// add schedulers to export json
 @property (nonatomic,strong) NSMutableArray <SchedulerModel *>*schedulerList;
+// cache in local json, not share to other provisioner.
 @property (nonatomic,assign) BOOL subnetBridgeEnable;
 @property (nonatomic,strong) NSMutableArray <SigSubnetBridgeModel *>*subnetBridgeList;
-//cache in local json, not share to other provisioner.
 @property (nonatomic,assign) BOOL lightControlModeEnable;
 @property (nonatomic,assign) BOOL lightControlOccupancyModeEnable;
 @property (nonatomic,assign) BOOL lightControlLightOnOffState;
@@ -2002,6 +2003,18 @@ static Byte LPNByte[] = {(Byte) 0x11, (Byte) 0x02, (Byte) 0x01, (Byte) 0x02, (By
 
 /// Return whether the node is a ambient light sensor.
 - (BOOL)isAmbientLightSensor;
+
+/// Return whether the node is a OccupancyMotionThreshold sensor.
+- (BOOL)isOccupancyMotionThresholdSensor;
+
+/// Return whether the node is a PeopleCount sensor.
+- (BOOL)isPeopleCountSensor;
+
+/// Return whether the node is a PresenceDetected sensor.
+- (BOOL)isPresenceDetectedSensor;
+
+/// Return whether the node is a TimeSinceMotionSensed sensor.
+- (BOOL)isTimeSinceMotionSensedSensor;
 
 /// Return whether the node is a EnOcean switch device.
 - (BOOL)isEnOceanDevice;
@@ -2919,6 +2932,27 @@ static Byte LPNByte[] = {(Byte) 0x11, (Byte) 0x02, (Byte) 0x01, (Byte) 0x02, (By
 @property (nonatomic, strong) NSData *passwordData;
 - (NSData *)getCommandParameters;
 - (instancetype)initWithPasswordData:(NSData *)passwordData;
+@end
+
+
+@interface SigNLCModel : NSObject
+@property (nonatomic, assign) UInt16 NLC_ID;
+@property (nonatomic, assign) NSInteger period;
+@property (nonatomic, strong) NSMutableArray <SigNodeModel *>*sensorList;
+@property (nonatomic, assign) UInt16 publishAddress;//node.address or group.address or oxFFFF, 0 mean no set publishAddress.
+// 结构与单灯的lightControlPropertyDictionary类似，lightnessStandby等值只存储于lightControlPropertyDictionary。
+@property (nonatomic,strong) NSMutableDictionary *lightControlPropertyDictionary;//{key:PropertyID, value:Number}
+
+- (instancetype)initWithOldSigNLCModel:(SigNLCModel *)model;
+
+/// Get dictionary from SigNLCModel object.(save local)
+/// @returns return dictionary object.
+- (NSDictionary *)getDictionaryOfSigNLCModel;
+
+/// Set dictionary to SigNLCModel object.
+/// @param dictionary SigNLCModel dictionary object.
+- (void)setDictionaryToSigNLCModel:(NSDictionary *)dictionary;
+
 @end
 
 NS_ASSUME_NONNULL_END

@@ -81,7 +81,7 @@
     switch (lowerTransportPdu.type) {
         case SigLowerTransportPduType_accessMessage:
             {
-//                TelinkLogDebug(@"lowerTransportPdu.upperTransportPdu=%@,length=%d",[LibTools convertDataToHexStr:lowerTransportPdu.transportPdu],lowerTransportPdu.transportPdu.length);
+//                TelinkLogDebug(@"lowerTransportPdu.upperTransportPdu=%@,length=%d",[TelinkLibTools convertDataToHexStr:lowerTransportPdu.transportPdu],lowerTransportPdu.transportPdu.length);
                 SigAccessMessage *accessMessage = (SigAccessMessage *)lowerTransportPdu;
                 NSDictionary *dict = [SigUpperTransportPdu decodeAccessMessage:accessMessage forMeshNetwork:SigMeshLib.share.dataSource];
                 if (dict && dict.allKeys.count == 2) {

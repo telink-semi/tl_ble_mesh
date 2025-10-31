@@ -33,6 +33,8 @@ typedef enum : UInt8 {
     ProvisionMode_remoteProvision,
     //fast Provision
     ProvisionMode_fastProvision,
+    //扫描到多个设备，先点击identity按钮，再在配置时间内进行Provision操作
+    ProvisionMode_normalConfirm,
 } ProvisionMode;
 
 typedef enum : UInt8 {
@@ -208,7 +210,7 @@ typedef enum : UInt8 {
 
 #define kDefaultAlertTitle @"Warning"
 #define kDefaultAlertOK @"OK"
-#define kDefaultAlertCancel @"Cancel"
+#define kDefaultAlertCancel @"CANCEL"
 
 
 //分享使用方式(是否使用蓝牙点对点传输，YES为二维码加蓝牙点对点，NO为存二维码)

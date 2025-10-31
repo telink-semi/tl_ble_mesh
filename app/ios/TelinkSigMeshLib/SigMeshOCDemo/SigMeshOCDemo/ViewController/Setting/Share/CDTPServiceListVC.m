@@ -170,7 +170,7 @@
         } else {
             self.cdtpTipsLabel.text = [NSString stringWithFormat:@"Read finish: length=%ld", data.length];
             NSData *decompressionData = data.decompressionData;
-            NSDictionary *dict = [LibTools getDictionaryWithJSONData:decompressionData];
+            NSDictionary *dict = [TelinkLibTools getDictionaryWithJSONData:decompressionData];
             if (dict && dict.allKeys.count > 0) {
                 [self handleMeshDictionaryFromShareImport:dict];
             } else {

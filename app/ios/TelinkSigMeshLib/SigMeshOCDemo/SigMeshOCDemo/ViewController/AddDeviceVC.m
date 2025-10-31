@@ -135,7 +135,7 @@ typedef void(^resultHandle)(NSError  * _Nullable error);
             [SDKLibCommand scanUnprovisionedDevicesWithResult:^(CBPeripheral * _Nonnull peripheral, NSDictionary<NSString *,id> * _Nonnull advertisementData, NSNumber * _Nonnull RSSI, BOOL unprovisioned) {
                 if (unprovisioned) {
                     SigScanRspModel *m = [SigDataSource.share getScanRspModelWithUUID:peripheral.identifier.UUIDString];
-                    TelinkLogInfo(@"==========peripheral=%@,advertisementData=%@,RSSI=%@,unprovisioned=%d,advUuid=%@,macAddress=%@,calcUuid=%@",peripheral,advertisementData,RSSI,unprovisioned,m.advUuid,m.macAddress,[LibTools convertDataToHexStr:[LibTools calcUuidByMac:[LibTools nsstringToHex:m.macAddress]]]);
+//                    TelinkLogInfo(@"==========peripheral=%@,advertisementData=%@,RSSI=%@,unprovisioned=%d,advUuid=%@,macAddress=%@,calcUuid=%@",peripheral,advertisementData,RSSI,unprovisioned,m.advUuid,m.macAddress,[TelinkLibTools convertDataToHexStr:[LibTools calcUuidByMac:[TelinkLibTools nsstringToHex:m.macAddress]]]);
                     AddDeviceModel *model = [[AddDeviceModel alloc] init];
                     model.scanRspModel = m;
                     model.state = AddDeviceModelStateScanned;
@@ -204,114 +204,89 @@ typedef void(^resultHandle)(NSError  * _Nullable error);
     }
 }
 
-#pragma mark call API of addDevice in SigMeshLib.a
+#pragma mark call API of addDevice in TelinkSigMeshLib.framework
 
 - (void)addModel:(AddDeviceModel *)model resultBlock:(resultHandle)resultBlock {
     NSData *key = [SigDataSource.share curNetKey];
-    if (SigDataSource.share.curNetkeyModel.phase == distributingKeys) {
-        if (SigDataSource.share.curNetkeyModel.oldKey) {
-            key = [LibTools nsstringToHex:SigDataSource.share.curNetkeyModel.oldKey];
-        }
+    if (SigDataSource.share.curNetkeyModel.phase == distributingKeys && SigDataSource.share.curNetkeyModel.oldKey) {
+        key = [TelinkLibTools nsstringToHex:SigDataSource.share.curNetkeyModel.oldKey];
     }
 
     __weak typeof(self) weakSelf = self;
     [SDKLibCommand stopMeshConnectWithComplete:^(BOOL successful) {
         if (successful) {
             CBPeripheral *peripheral = model.scanRspModel.peripheral;
-            NSNumber *type = [[NSUserDefaults standardUserDefaults] valueForKey:kKeyBindType];
-            KeyBindType keyBindType = type.integerValue;
+            KeyBindType keyBindType = [[[NSUserDefaults standardUserDefaults] valueForKey:kKeyBindType] integerValue];
             model.state = AddDeviceModelStateConnecting;
             [weakSelf.tableView performSelectorOnMainThread:@selector(reloadData) withObject:nil waitUntilDone:YES];
             //选择添加新增逻辑：判断本地是否存在该UUID的OOB数据，存在则使用static OOB添加，不存在则使用no OOB添加。
             SigOOBModel *oobModel = [SigDataSource.share getSigOOBModelWithUUID:model.scanRspModel.advUuid];
             NSData *staticOOBData = nil;
             if (oobModel && oobModel.OOBString && (oobModel.OOBString.length == 32 || oobModel.OOBString.length == 64)) {
-                staticOOBData = [LibTools nsstringToHex:oobModel.OOBString];
+                staticOOBData = [TelinkLibTools nsstringToHex:oobModel.OOBString];
             }
             NSOperationQueue *operationQueue = [[NSOperationQueue alloc] init];
             [operationQueue addOperationWithBlock:^{
                 dispatch_semaphore_t semaphore = dispatch_semaphore_create(0);
                 __block NSError *error = nil;
+                
+                void (^handleStartConnect)(NSString *) = ^(NSString *identify) {
+                    model.state = AddDeviceModelStateConnecting;
+                    [weakSelf refreshTableView];
+                };
+                
+                void (^handleStartProvision)(NSString *, UInt16) = ^(NSString *identify, UInt16 address) {
+                    model.state = AddDeviceModelStateProvisioning;
+                    [weakSelf refreshTableView];
+                };
+
+                UInt16 (^handleCapabilitiesResponse)(SigProvisioningCapabilitiesPdu *) = ^UInt16(SigProvisioningCapabilitiesPdu *capabilitiesPdu) {
+                    UInt16 unicastAddress = [SigDataSource.share getProvisionAddressWithElementCount:capabilitiesPdu.numberOfElements];
+                    model.state = AddDeviceModelStateProvisioning;
+                    model.scanRspModel.address = unicastAddress;
+                    [weakSelf refreshTableView];
+                    return unicastAddress;
+                };
+
+                void (^handleProvisionSuccess)(NSString *, UInt16) = ^(NSString *identify, UInt16 address) {
+                    model.state = AddDeviceModelStateBinding;
+                    [weakSelf refreshTableView];
+                };
+                
+                void (^handleProvisionFail)(NSError *) = ^(NSError *provisionError) {
+                    model.state = AddDeviceModelStateProvisionFail;
+                    [weakSelf refreshTableView];
+                    error = provisionError;
+                    dispatch_semaphore_signal(semaphore);
+                };
+
+                void (^handleKeyBindSuccess)(NSString *, UInt16) = ^(NSString *identify, UInt16 address) {
+                    SigNodeModel *node = [SigDataSource.share getNodeWithAddress:address];
+                    if (node && node.isRemote) {
+                        [node addDefaultPublicAddressToRemote];
+                        [SigDataSource.share saveLocationData];
+                    }
+                    model.state = AddDeviceModelStateBindSuccess;
+                    [weakSelf refreshTableView];
+                    dispatch_semaphore_signal(semaphore);
+                };
+                
+                void (^handleKeyBindFail)(NSError *) = ^(NSError *bindError) {
+                    model.state = AddDeviceModelStateBindFail;
+                    [weakSelf refreshTableView];
+                    error = bindError;
+                    dispatch_semaphore_signal(semaphore);
+                };
+                        
                 if (model.scanRspModel.advOobInformation.supportForCertificateBasedProvisioning) {
-                    [SDKLibCommand startCertificateBasedWithNetworkKey:key netkeyIndex:SigDataSource.share.curNetkeyModel.index appkeyModel:SigDataSource.share.curAppkeyModel peripheral:peripheral staticOOBData:staticOOBData keyBindType:keyBindType productID:0 cpsData:nil startConnect:^(NSString * _Nonnull identify) {
-                        model.state = AddDeviceModelStateConnecting;
-                        [weakSelf.tableView performSelectorOnMainThread:@selector(reloadData) withObject:nil waitUntilDone:YES];
-                    } startProvision:^(NSString * _Nonnull identify, UInt16 address) {
-                        model.state = AddDeviceModelStateProvisioning;
-                        [weakSelf.tableView performSelectorOnMainThread:@selector(reloadData) withObject:nil waitUntilDone:YES];
-                    } capabilitiesResponse:^UInt16(SigProvisioningCapabilitiesPdu * _Nonnull capabilitiesPdu) {
-                        UInt16 unicastAddress = [SigDataSource.share getProvisionAddressWithElementCount:capabilitiesPdu.numberOfElements];
-                        model.state = AddDeviceModelStateProvisioning;
-                        model.scanRspModel.address = unicastAddress;
-                        [weakSelf.tableView performSelectorOnMainThread:@selector(reloadData) withObject:nil waitUntilDone:YES];
-                        return unicastAddress;
-                    } provisionSuccess:^(NSString * _Nonnull identify, UInt16 address) {
-                        model.state = AddDeviceModelStateBinding;
-                        [weakSelf.tableView performSelectorOnMainThread:@selector(reloadData) withObject:nil waitUntilDone:YES];
-                        [weakSelf performSelectorOnMainThread:@selector(refreshUnProvisionedLabel) withObject:nil waitUntilDone:YES];
-                    } provisionFail:^(NSError * _Nullable error) {
-                        model.state = AddDeviceModelStateProvisionFail;
-                        [weakSelf.tableView performSelectorOnMainThread:@selector(reloadData) withObject:nil waitUntilDone:YES];
-                        [weakSelf performSelectorOnMainThread:@selector(refreshUnProvisionedLabel) withObject:nil waitUntilDone:YES];
-                        error = [NSError errorWithDomain:@"provision fail." code:-1 userInfo:nil];
-                        dispatch_semaphore_signal(semaphore);
-                    } keyBindSuccess:^(NSString * _Nonnull identify, UInt16 address) {
-                        SigNodeModel *node = [SigDataSource.share getNodeWithAddress:address];
-                        if (node && node.isRemote) {
-                            [node addDefaultPublicAddressToRemote];
-                            [SigDataSource.share saveLocationData];
-                        }
-                        model.state = AddDeviceModelStateBindSuccess;
-                        [weakSelf.tableView performSelectorOnMainThread:@selector(reloadData) withObject:nil waitUntilDone:YES];
-                        dispatch_semaphore_signal(semaphore);
-                    } keyBindFail:^(NSError * _Nullable error) {
-                        model.state = AddDeviceModelStateBindFail;
-                        [weakSelf.tableView performSelectorOnMainThread:@selector(reloadData) withObject:nil waitUntilDone:YES];
-                        error = [NSError errorWithDomain:@"keybind fail." code:-1 userInfo:nil];
-                        dispatch_semaphore_signal(semaphore);
-                    }];
+                    [SDKLibCommand startCertificateBasedWithNetworkKey:key netkeyIndex:SigDataSource.share.curNetkeyModel.index appkeyModel:SigDataSource.share.curAppkeyModel peripheral:peripheral staticOOBData:staticOOBData keyBindType:keyBindType productID:0 cpsData:nil startConnect:handleStartConnect startProvision:handleStartProvision capabilitiesResponse:handleCapabilitiesResponse provisionSuccess:handleProvisionSuccess provisionFail:handleProvisionFail keyBindSuccess:handleKeyBindSuccess keyBindFail:handleKeyBindFail];
                 } else {
-                    SigAddConfigModel *config = [[SigAddConfigModel alloc] initWithCBPeripheral:peripheral networkKey:key netkeyIndex:SigDataSource.share.curNetkeyModel.index appKey:SigDataSource.share.curAppKey appkeyIndex:SigDataSource.share.curAppkeyModel.index staticOOBData:staticOOBData keyBindType:type.integerValue productID:0 cpsData:nil];
-                    [config setStartConnectBlock:^(NSString * _Nonnull identify) {
-                        model.state = AddDeviceModelStateConnecting;
-                        [weakSelf.tableView performSelectorOnMainThread:@selector(reloadData) withObject:nil waitUntilDone:YES];
-                    }];
-                    [config setStartProvisionBlock:^(NSString * _Nonnull identify, UInt16 address) {
-                        model.state = AddDeviceModelStateProvisioning;
-                        [weakSelf.tableView performSelectorOnMainThread:@selector(reloadData) withObject:nil waitUntilDone:YES];
-                    }];
-                    [SDKLibCommand startAddDeviceWithSigAddConfigModel:config capabilitiesResponse:^UInt16(SigProvisioningCapabilitiesPdu * _Nonnull capabilitiesPdu) {
-                        UInt16 unicastAddress = [SigDataSource.share getProvisionAddressWithElementCount:capabilitiesPdu.numberOfElements];
-                        model.state = AddDeviceModelStateProvisioning;
-                        model.scanRspModel.address = unicastAddress;
-                        [weakSelf.tableView performSelectorOnMainThread:@selector(reloadData) withObject:nil waitUntilDone:YES];
-                        return unicastAddress;
-                    } provisionSuccess:^(NSString * _Nonnull identify, UInt16 address) {
-                        model.state = AddDeviceModelStateBinding;
-                        [weakSelf.tableView performSelectorOnMainThread:@selector(reloadData) withObject:nil waitUntilDone:YES];
-                        [weakSelf performSelectorOnMainThread:@selector(refreshUnProvisionedLabel) withObject:nil waitUntilDone:YES];
-                    } provisionFail:^(NSError * _Nullable error) {
-                        model.state = AddDeviceModelStateProvisionFail;
-                        [weakSelf.tableView performSelectorOnMainThread:@selector(reloadData) withObject:nil waitUntilDone:YES];
-                        [weakSelf performSelectorOnMainThread:@selector(refreshUnProvisionedLabel) withObject:nil waitUntilDone:YES];
-                        error = [NSError errorWithDomain:@"provision fail." code:-1 userInfo:nil];
-                        dispatch_semaphore_signal(semaphore);
-                    } keyBindSuccess:^(NSString * _Nonnull identify, UInt16 address) {
-                        SigNodeModel *node = [SigDataSource.share getNodeWithAddress:address];
-                        if (node && node.isRemote) {
-                            [node addDefaultPublicAddressToRemote];
-                            [SigDataSource.share saveLocationData];
-                        }
-                        model.state = AddDeviceModelStateBindSuccess;
-                        [weakSelf.tableView performSelectorOnMainThread:@selector(reloadData) withObject:nil waitUntilDone:YES];
-                        dispatch_semaphore_signal(semaphore);
-                    } keyBindFail:^(NSError * _Nullable error) {
-                        model.state = AddDeviceModelStateBindFail;
-                        [weakSelf.tableView performSelectorOnMainThread:@selector(reloadData) withObject:nil waitUntilDone:YES];
-                        error = [NSError errorWithDomain:@"keybind fail." code:-1 userInfo:nil];
-                        dispatch_semaphore_signal(semaphore);
-                    }];
+                    SigAddConfigModel *config = [[SigAddConfigModel alloc] initWithCBPeripheral:peripheral networkKey:key netkeyIndex:SigDataSource.share.curNetkeyModel.index appKey:SigDataSource.share.curAppKey appkeyIndex:SigDataSource.share.curAppkeyModel.index staticOOBData:staticOOBData keyBindType:keyBindType productID:0 cpsData:nil];
+                    config.startConnectBlock = handleStartConnect;
+                    config.startProvisionBlock = handleStartProvision;
+                    [SDKLibCommand startAddDeviceWithSigAddConfigModel:config capabilitiesResponse:handleCapabilitiesResponse provisionSuccess:handleProvisionSuccess provisionFail:handleProvisionFail keyBindSuccess:handleKeyBindSuccess keyBindFail:handleKeyBindFail];
                 }
+                
                 dispatch_semaphore_wait(semaphore, DISPATCH_TIME_FOREVER);
                 if (resultBlock) {
                     resultBlock(error);
@@ -331,11 +306,15 @@ typedef void(^resultHandle)(NSError  * _Nullable error);
 #pragma mark - other
 
 - (void)scrollToBottom {
-    if (self.source.count > 0) {
-        NSInteger item = [self.tableView numberOfRowsInSection:0] - 1;
-        NSIndexPath *lastItemIndex = [NSIndexPath indexPathForRow:item inSection:0];
-        [self.tableView scrollToRowAtIndexPath:lastItemIndex atScrollPosition:UITableViewScrollPositionTop animated:YES];
-    }
+    if (self.source.count == 0) return;
+    
+    dispatch_async(dispatch_get_main_queue(), ^{
+        NSInteger lastRow = [self.tableView numberOfRowsInSection:0] - 1;
+        if (lastRow >= 0) {
+            NSIndexPath *lastIndexPath = [NSIndexPath indexPathForRow:lastRow inSection:0];
+            [self.tableView scrollToRowAtIndexPath:lastIndexPath atScrollPosition:UITableViewScrollPositionTop animated:YES];
+        }
+    });
 }
 
 - (void)setUserEnable:(BOOL)userEnable {
@@ -357,6 +336,7 @@ typedef void(^resultHandle)(NSError  * _Nullable error);
 - (void)refreshTableView {
     dispatch_async(dispatch_get_main_queue(), ^{
         [self.tableView reloadData];
+        [self refreshUnProvisionedLabel];
     });
 }
 

@@ -42,12 +42,15 @@ FOUNDATION_EXPORT const unsigned char TelinkSigMeshLibVersionString[];
 
 #import <CoreBluetooth/CoreBluetooth.h>
 
+#import <TelinkToolsLib/TelinkBackgroundTimer.h>
+#import <TelinkToolsLib/TelinkLogger.h>
+#import <TelinkToolsLib/TelinkLibTools.h>
+#import <TelinkToolsLib/TelinkToolsLibConst.h>
+
 #import <TelinkSigMeshLib/SigConst.h>
 #import <TelinkSigMeshLib/SigEnumeration.h>
 #import <TelinkSigMeshLib/SigStruct.h>
-#import <TelinkSigMeshLib/SigLogger.h>
 #import <TelinkSigMeshLib/SigModel.h>
-#import <TelinkSigMeshLib/BackgroundTimer.h>
 #import <TelinkSigMeshLib/SigBearer.h>
 #import <TelinkSigMeshLib/SigDataSource.h>
 #import <TelinkSigMeshLib/SDKLibCommand.h>

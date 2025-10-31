@@ -191,7 +191,7 @@
         self.resetNetworkBlock();
     }
     [self fastProvisionResetNetworkWithDelayMillisecond:delayMillisecond successCallback:^(UInt16 source, UInt16 destination, SigMeshMessage * _Nonnull responseMessage) {
-//        TelinkLogVerbose(@"source=0x%x,destination=0x%x,opCode=0x%x,parameters=%@",responseMessage.opCode,[LibTools convertDataToHexStr:responseMessage.parameters]);
+//        TelinkLogVerbose(@"source=0x%x,destination=0x%x,opCode=0x%x,parameters=%@",responseMessage.opCode,[TelinkLibTools convertDataToHexStr:responseMessage.parameters]);
     } resultCallback:^(BOOL isResponseAll, NSError * _Nullable error) {
 //        TelinkLogVerbose(@"isResponseAll=%d,error=%@",isResponseAll,error);
     }];
@@ -224,7 +224,7 @@
                 if ([self.productIds containsObject:@(temPid.value)]) {
                     [weakSelf.scanMacAddressList addObject:model];
                     if (weakSelf.scanResponseBlock) {
-                        weakSelf.scanResponseBlock(model.deviceKey, [LibTools convertDataToHexStr:[LibTools turnOverData:model.macAddress]], 0, model.productId);
+                        weakSelf.scanResponseBlock(model.deviceKey, [TelinkLibTools convertDataToHexStr:[TelinkLibTools turnOverData:model.macAddress]], 0, model.productId);
                     }
                 }
                 dispatch_async(dispatch_get_main_queue(), ^{
@@ -257,12 +257,12 @@
     self.fastProvisionStatus = SigFastProvisionStatus_setAddress;
     SigFastProvisionModel *model = self.scanMacAddressList.firstObject;
     if (self.setAddressRequestBlock) {
-        self.setAddressRequestBlock(model.deviceKey, [LibTools convertDataToHexStr:[LibTools turnOverData:model.macAddress]], self.provisionAddress, model.productId);
+        self.setAddressRequestBlock(model.deviceKey, [TelinkLibTools convertDataToHexStr:[TelinkLibTools turnOverData:model.macAddress]], self.provisionAddress, model.productId);
     }
     __weak typeof(self) weakSelf = self;
     __block BOOL isSuccess = NO;
     [self fastProvisionSetAddressWithProvisionAddress:self.provisionAddress macAddressData:model.macAddress toDestination:kMeshAddress_allNodes successCallback:^(UInt16 source, UInt16 destination, SigMeshMessage * _Nonnull responseMessage) {
-        TelinkLogInfo(@"source=0x%x,destination=0x%x,opCode=0x%x,parameters=%@",source,destination,responseMessage.opCode,[LibTools convertDataToHexStr:responseMessage.parameters]);
+        TelinkLogInfo(@"source=0x%x,destination=0x%x,opCode=0x%x,parameters=%@",source,destination,responseMessage.opCode,[TelinkLibTools convertDataToHexStr:responseMessage.parameters]);
         if (((responseMessage.opCode >> 16) & 0xFF) == SigOpCode_VendorID_MeshAddressSetStatus) {
             if (responseMessage.parameters.length >= 8) {
                 NSData *mac = [responseMessage.parameters subdataWithRange:NSMakeRange(0, 6)];
@@ -278,7 +278,7 @@
                     }
                     weakSelf.provisionAddress += typeModel.defaultCompositionData.elements.count;
                     if (weakSelf.setAddressResponseBlock) {
-                        self.setAddressResponseBlock(model.deviceKey, [LibTools convertDataToHexStr:[LibTools turnOverData:model.macAddress]], model.address, model.productId);
+                        self.setAddressResponseBlock(model.deviceKey, [TelinkLibTools convertDataToHexStr:[TelinkLibTools turnOverData:model.macAddress]], model.address, model.productId);
                     }
                     [weakSelf.scanMacAddressList removeObjectAtIndex:0];
                     [weakSelf performSelector:@selector(setSingleAddressFinish) withObject:nil afterDelay:0.01];
@@ -325,7 +325,7 @@
     __weak typeof(self) weakSelf = self;
     UInt16 productId = self.productIds.count > 1 ? 0xFFFF : self.productIds.firstObject.intValue;
     [self fastProvisionGetAddressRetryWithProductId:productId provisionAddress:self.provisionAddress successCallback:^(UInt16 source, UInt16 destination, SigMeshMessage * _Nonnull responseMessage) {
-//        TelinkLogInfo(@"source=0x%x,destination=0x%x,opCode=0x%x,parameters=%@",responseMessage.opCode,[LibTools convertDataToHexStr:responseMessage.parameters]);
+//        TelinkLogInfo(@"source=0x%x,destination=0x%x,opCode=0x%x,parameters=%@",responseMessage.opCode,[TelinkLibTools convertDataToHexStr:responseMessage.parameters]);
         if (((responseMessage.opCode >> 16) & 0xFF) == SigOpCode_VendorID_MeshAddressGetStatus) {
             SigFastProvisionModel *model = [[SigFastProvisionModel alloc] init];
             if (responseMessage.parameters.length >= 8) {
@@ -340,7 +340,7 @@
                 if ([self.productIds containsObject:@(temPid.value)]) {
                     [weakSelf.scanMacAddressList addObject:model];
                     if (weakSelf.scanResponseBlock) {
-                        weakSelf.scanResponseBlock(model.deviceKey, [LibTools convertDataToHexStr:[LibTools turnOverData:model.macAddress]], 0, model.productId);
+                        weakSelf.scanResponseBlock(model.deviceKey, [TelinkLibTools convertDataToHexStr:[TelinkLibTools turnOverData:model.macAddress]], 0, model.productId);
                     }
                 } else {
                     dispatch_async(dispatch_get_main_queue(), ^{
@@ -391,7 +391,7 @@
     }
     __weak typeof(self) weakSelf = self;
     [self fastProvisionSetNetworkInfoWithSuccessCallback:^(UInt16 source, UInt16 destination, SigMeshMessage * _Nonnull responseMessage) {
-//        TelinkLogInfo(@"source=0x%x,destination=0x%x,opCode=0x%x,parameters=%@",responseMessage.opCode,[LibTools convertDataToHexStr:responseMessage.parameters]);
+//        TelinkLogInfo(@"source=0x%x,destination=0x%x,opCode=0x%x,parameters=%@",responseMessage.opCode,[TelinkLibTools convertDataToHexStr:responseMessage.parameters]);
     } resultCallback:^(BOOL isResponseAll, NSError * _Nullable error) {
 //        TelinkLogInfo(@"isResponseAll=%d,error=%@",isResponseAll,error);
         dispatch_async(dispatch_get_main_queue(), ^{
@@ -407,7 +407,7 @@
     __weak typeof(self) weakSelf = self;
     __block BOOL hasResponse = NO;
     [self fastProvisionConfirmWithSuccessCallback:^(UInt16 source, UInt16 destination, SigMeshMessage * _Nonnull responseMessage) {
-//        TelinkLogInfo(@"source=0x%x,destination=0x%x,opCode=0x%x,parameters=%@",responseMessage.opCode,[LibTools convertDataToHexStr:responseMessage.parameters]);
+//        TelinkLogInfo(@"source=0x%x,destination=0x%x,opCode=0x%x,parameters=%@",responseMessage.opCode,[TelinkLibTools convertDataToHexStr:responseMessage.parameters]);
         if (((responseMessage.opCode >> 16) & 0xFF) == SigOpCode_VendorID_MeshProvisionConfirmStatus) {
             hasResponse = YES;
         }
@@ -428,7 +428,7 @@
     UInt16 delayMillisecond = 1000;
 //    __weak typeof(self) weakSelf = self;
     [self fastProvisionCompleteWithDelayMillisecond:delayMillisecond successCallback:^(UInt16 source, UInt16 destination, SigMeshMessage * _Nonnull responseMessage) {
-//        TelinkLogInfo(@"source=0x%x,destination=0x%x,opCode=0x%x,parameters=%@",responseMessage.opCode,[LibTools convertDataToHexStr:responseMessage.parameters]);
+//        TelinkLogInfo(@"source=0x%x,destination=0x%x,opCode=0x%x,parameters=%@",responseMessage.opCode,[TelinkLibTools convertDataToHexStr:responseMessage.parameters]);
     } resultCallback:^(BOOL isResponseAll, NSError * _Nullable error) {
 //        TelinkLogInfo(@"isResponseAll=%d,error=%@",isResponseAll,error);
     }];
@@ -454,10 +454,10 @@
             typeModel = [[DeviceTypeModel alloc] initWithCID:kCompanyID PID:fastModel.productId compositionData:nil];
         }
         [model setCompositionData:typeModel.defaultCompositionData];
-        model.deviceKey = [LibTools convertDataToHexStr:fastModel.deviceKey];
-        model.UUID = [LibTools convertDataToHexStr:[LibTools calcUuidByMac:[LibTools turnOverData:fastModel.macAddress]]];
+        model.deviceKey = [TelinkLibTools convertDataToHexStr:fastModel.deviceKey];
+        model.UUID = [TelinkLibTools convertDataToHexStr:[LibTools calcUuidByMac:[TelinkLibTools turnOverData:fastModel.macAddress]]];
         model.peripheralUUID = nil;
-        model.macAddress = [LibTools convertDataToHexStr:[LibTools turnOverData:fastModel.macAddress]];
+        model.macAddress = [TelinkLibTools convertDataToHexStr:[TelinkLibTools turnOverData:fastModel.macAddress]];
         SigNodeKeyModel *nodeNetkey = [[SigNodeKeyModel alloc] init];
         nodeNetkey.index = SigMeshLib.share.dataSource.curNetkeyModel.index;
         if (![model.netKeys containsObject:nodeNetkey]) {
@@ -469,7 +469,7 @@
 
     for (SigFastProvisionModel *model in setAddressList) {
         if (self.singleSuccessBlock) {
-            self.singleSuccessBlock(model.deviceKey, [LibTools convertDataToHexStr:[LibTools turnOverData:model.macAddress]], model.address, model.productId);
+            self.singleSuccessBlock(model.deviceKey, [TelinkLibTools convertDataToHexStr:[TelinkLibTools turnOverData:model.macAddress]], model.address, model.productId);
         }
     }
     if (self.finishBlock) {
@@ -639,7 +639,7 @@
     }
     temData = [NSData dataWithBytes:&flags length:1];
     [mData appendData:temData];
-    [mData appendData:[LibTools nsstringToHex:SigMeshLib.share.dataSource.ivIndex]];
+    [mData appendData:[TelinkLibTools nsstringToHex:SigMeshLib.share.dataSource.ivIndex]];
     tem = SigMeshLib.share.dataSource.curLocationNodeModel.address;
     temData = [NSData dataWithBytes:&tem length:2];
     [mData appendData:temData];

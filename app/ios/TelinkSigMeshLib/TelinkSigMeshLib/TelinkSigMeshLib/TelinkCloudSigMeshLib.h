@@ -46,12 +46,15 @@ FOUNDATION_EXPORT const unsigned char TelinkCloudSigMeshLibVersionString[];
 
 #define kIsTelinkCloudSigMeshLib
 
+#import <TelinkToolsLib/TelinkBackgroundTimer.h>
+#import <TelinkToolsLib/TelinkLogger.h>
+#import <TelinkToolsLib/TelinkLibTools.h>
+#import <TelinkToolsLib/TelinkToolsLibConst.h>
+
 #import <TelinkCloudSigMeshLib/SigConst.h>
 #import <TelinkCloudSigMeshLib/SigEnumeration.h>
 #import <TelinkCloudSigMeshLib/SigStruct.h>
-#import <TelinkCloudSigMeshLib/SigLogger.h>
 #import <TelinkCloudSigMeshLib/SigModel.h>
-#import <TelinkCloudSigMeshLib/BackgroundTimer.h>
 #import <TelinkCloudSigMeshLib/SigBearer.h>
 #import <TelinkCloudSigMeshLib/SigDataSource.h>
 #import <TelinkCloudSigMeshLib/SDKLibCommand.h>

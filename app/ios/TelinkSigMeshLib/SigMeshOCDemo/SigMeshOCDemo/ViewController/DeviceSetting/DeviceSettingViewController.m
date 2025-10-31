@@ -75,13 +75,9 @@
     TelinkLogDebug(@"");
     //add a alert for kickOut device.
     __weak typeof(self) weakSelf = self;
-    [self showAlertSureAndCancelWithTitle:kDefaultAlertTitle message:@"Confirm to remove device?" sure:^(UIAlertAction *action) {
+    NSString *message = (SigBearer.share.isOpen && self.model.state != DeviceStateOutOfLine) ? @"Confirm to remove device?" : @"This node is outline, confirm to remove device?";
+    [self showAlertSureAndCancelWithTitle:kDefaultAlertTitle message:message sure:^(UIAlertAction *action) {
         [ShowTipsHandle.share show:Tip_KickOutDevice];
-
-        if (weakSelf.model.hasPublishFunction && weakSelf.model.hasOpenPublish) {
-            [SigPublishManager.share stopCheckOfflineTimerWithAddress:@(weakSelf.model.address)];
-        }
-
         if (SigBearer.share.isOpen) {
             [weakSelf kickOutAction];
         } else {
@@ -109,21 +105,32 @@
         } resultCallback:^(BOOL isResponseAll, NSError * _Nullable error) {
             if (isResponseAll) {
                 TelinkLogDebug(@"kickout success.");
-            } else {
-                TelinkLogDebug(@"kickout fail.");
-            }
 #ifdef kIsTelinkCloudSigMeshLib
             [AppDataSource.share deleteNodeWithAddress:weakSelf.model.address resultBlock:^(NSError * _Nullable error) {
                 TelinkLogInfo(@"error = %@", error);
             }];
 #endif
-            [SigDataSource.share deleteNodeFromMeshNetworkWithDeviceAddress:weakSelf.model.address];
-            dispatch_async(dispatch_get_main_queue(), ^{
-                [NSObject cancelPreviousPerformRequestsWithTarget:weakSelf];
-                [weakSelf pop];
-            });
+                [weakSelf kickOutSuccessAction];
+            } else {
+                TelinkLogDebug(@"kickout fail.");
+                // v4.1.0.4之后，如果App端没有接收到SigConfigNodeResetStatus，有可能是没有移除成功或者移除成功但回包丢失了，所以新增超时弹框让用户选择是否删除数据。
+                [weakSelf showAlertSureAndCancelWithTitle:kDefaultAlertTitle message:@"The APP did not receive the message NodeResetStatus, confirm to remove device?" sure:^(UIAlertAction *action) {
+                    [weakSelf kickOutSuccessAction];
+                } cancel:nil];
+            }
         }];
     }
+}
+
+- (void)kickOutSuccessAction {
+    if (self.model.hasPublishFunction && self.model.hasOpenPublish) {
+        [SigPublishManager.share stopCheckOfflineTimerWithAddress:@(self.model.address)];
+    }
+    [SigDataSource.share deleteNodeFromMeshNetworkWithDeviceAddress:self.model.address];
+    dispatch_async(dispatch_get_main_queue(), ^{
+        [NSObject cancelPreviousPerformRequestsWithTarget:self];
+        [self pop];
+    });
 }
 
 - (void)pop{

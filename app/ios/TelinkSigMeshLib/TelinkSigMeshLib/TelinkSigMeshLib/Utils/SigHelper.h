@@ -203,9 +203,13 @@ NS_ASSUME_NONNULL_BEGIN
 /// @param type The SigSensorSamplingFunctionType value.
 - (NSString *)getDetailOfSigSensorSamplingFunctionType:(SigSensorSamplingFunctionType)type;
 
-/// Get Sensor Name With PropertyID>
+/// Get Sensor Name With PropertyID
 /// @param propertyID Property ID.
 - (NSString *)getSensorNameWithPropertyID:(UInt16)propertyID;
+
+/// Get description With SigConfigMessageStatus
+/// @param status value of SigConfigMessageStatus
+- (NSString *)getConfigMessageStatusDescription:(SigConfigMessageStatus)status;
 
 @end
 

@@ -54,7 +54,7 @@
     NSData *key = [SigDataSource.share curNetKey];
     if (SigDataSource.share.curNetkeyModel.phase == distributingKeys) {
         if (SigDataSource.share.curNetkeyModel.oldKey) {
-            key = [LibTools nsstringToHex:SigDataSource.share.curNetkeyModel.oldKey];
+            key = [TelinkLibTools nsstringToHex:SigDataSource.share.curNetkeyModel.oldKey];
         }
     }
     UInt16 provisionAddress = [SigDataSource.share provisionAddress];

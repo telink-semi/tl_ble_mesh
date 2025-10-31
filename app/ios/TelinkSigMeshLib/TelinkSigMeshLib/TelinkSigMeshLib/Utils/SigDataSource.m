@@ -92,6 +92,8 @@
     dispatch_once(&tempOnce, ^{
         /// Initialize the Singleton configure parameters.
         shareDS = [[SigDataSource alloc] init];
+        TelinkLogger.shared.showLibraryName = @"TelinkSigMeshLib";
+        TelinkLogger.shared.showLibraryVersion = kTelinkSigMeshLibVersion;
     });
     return shareDS;
 }
@@ -110,6 +112,7 @@
     _nodes = [NSMutableArray array];
     _groups = [NSMutableArray array];
     _scenes = [NSMutableArray array];
+    _NLCs = [NSMutableArray array];
     _netKeys = [NSMutableArray array];
     _appKeys = [NSMutableArray array];
     _scanList = [NSMutableArray array];
@@ -123,16 +126,16 @@
     _defaultNodeInfos = [NSMutableArray array];
     struct TelinkPID telinkPid_8258_CT = {};
     struct TelinkPID telinkPid_8258_HSL = {};
-    struct TelinkPID telinkPid_8258_PANNEL = {};
+    struct TelinkPID telinkPid_8258_PANEL = {};
     struct TelinkPID telinkPid_8258_LPN = {};
-    telinkPid_8258_CT.MCUChipType = telinkPid_8258_HSL.MCUChipType = telinkPid_8258_PANNEL.MCUChipType = telinkPid_8258_LPN.MCUChipType = CHIP_TYPE_8258;
-    telinkPid_8258_CT.majorProductType = telinkPid_8258_HSL.majorProductType = telinkPid_8258_PANNEL.majorProductType = MajorProductType_light;
+    telinkPid_8258_CT.MCUChipType = telinkPid_8258_HSL.MCUChipType = telinkPid_8258_PANEL.MCUChipType = telinkPid_8258_LPN.MCUChipType = CHIP_TYPE_8258;
+    telinkPid_8258_CT.majorProductType = telinkPid_8258_HSL.majorProductType = telinkPid_8258_PANEL.majorProductType = MajorProductType_light;
     telinkPid_8258_LPN.majorProductType = MajorProductType_LPN;
     telinkPid_8258_CT.minorProductType = SigNodePID_CT;
     telinkPid_8258_HSL.minorProductType = SigNodePID_HSL;
-    telinkPid_8258_PANNEL.minorProductType = SigNodePID_PANEL;
+    telinkPid_8258_PANEL.minorProductType = SigNodePID_PANEL;
     telinkPid_8258_LPN.minorProductType = SigNodePID_CT;
-    DeviceTypeModel *model1 = [[DeviceTypeModel alloc] initWithCID:kCompanyID PID:telinkPid_8258_PANNEL.value compositionData:nil];
+    DeviceTypeModel *model1 = [[DeviceTypeModel alloc] initWithCID:kCompanyID PID:telinkPid_8258_PANEL.value compositionData:nil];
     DeviceTypeModel *model2 = [[DeviceTypeModel alloc] initWithCID:kCompanyID PID:telinkPid_8258_CT.value compositionData:nil];
     DeviceTypeModel *model3 = [[DeviceTypeModel alloc] initWithCID:kCompanyID PID:telinkPid_8258_HSL.value compositionData:nil];
     DeviceTypeModel *model4 = [[DeviceTypeModel alloc] initWithCID:kCompanyID PID:telinkPid_8258_LPN.value compositionData:nil];
@@ -140,7 +143,12 @@
     [_defaultNodeInfos addObject:model2];
     [_defaultNodeInfos addObject:model3];
     [_defaultNodeInfos addObject:model4];
-    _meshUUID = [LibTools UUIDToMeshUUID:[LibTools convertDataToHexStr:[LibTools createRandomDataWithLength:16]]];
+    NSData *data1 = [TelinkLibTools generateRandomHexDataWithLength:16];
+    NSString *string1 = [TelinkLibTools convertDataToHexStr:data1];
+    NSString *string2 = [TelinkLibTools UUIDToMeshUUID:string1];
+    TelinkLogInfo(@"data1=%@, string1=%@, string2=%@", data1, string1, string2);
+
+    _meshUUID = [TelinkLibTools UUIDToMeshUUID:[TelinkLibTools convertDataToHexStr:[TelinkLibTools generateRandomHexDataWithLength:16]]];
     SigNetkeyModel *netkey = [[SigNetkeyModel alloc] init];
     netkey.key = @"7dd7364cd842ad18c17c74656c696e6b";
     netkey.index = 0;
@@ -185,9 +193,9 @@
     _defaultReliableIntervalOfNotLPN = kSDKLibCommandTimeout;
     _defaultReliableIntervalOfLPN = kSDKLibCommandTimeout * 2;
     //默认为写死的设备端的root.der根证书
-    _defaultRootCertificateData = [LibTools nsstringToHex:@"308202873082022DA00302010202147FCD3C7C01BD4649E2295D3F04668931FD4E1FA7300A06082A8648CE3D04030230819E310B300906035504061302434E3111300F06035504080C085368616E6748616931143012060355040A0C0B54656C696E6B2D53656D69310F300D060355040B0C0654656C696E6B312D302B06035504030C2430303142444330382D313032312D304230452D304130432D3030304230453041304330303126302406092A864886F70D0109011617737570706F72744074656C696E6B2D73656D692E636F6D301E170D3233313031313036303034385A170D3333313030383036303034385A30819E310B300906035504061302434E3111300F06035504080C085368616E6748616931143012060355040A0C0B54656C696E6B2D53656D69310F300D060355040B0C0654656C696E6B312D302B06035504030C2430303142444330382D313032312D304230452D304130432D3030304230453041304330303126302406092A864886F70D0109011617737570706F72744074656C696E6B2D73656D692E636F6D3059301306072A8648CE3D020106082A8648CE3D0301070342000441DBF54A701EFAFC88D34A7233C383A6406F815AE7BA9D52BB4625A12303699595A3B139D35EEDC1E65E33C128A69AB0D037BFFF985AA23A62B3218BAEB17E3FA347304530090603551D2304023000301D0603551D0E041604143C62D196F66D337D40CC7826518C1AF22F425D3B300C0603551D13040530030101FF300B0603551D0F040403020106300A06082A8648CE3D0403020348003045022100CACF7006A1C0ACC96350D00E716585AEB46B9553538487F43FB411FA56EEB86402201DA19E992E677A93FDC1609E7A8C4706A88777CE41AF626E4A95300918A7762B"];
+    _defaultRootCertificateData = [TelinkLibTools nsstringToHex:@"308202873082022DA00302010202147FCD3C7C01BD4649E2295D3F04668931FD4E1FA7300A06082A8648CE3D04030230819E310B300906035504061302434E3111300F06035504080C085368616E6748616931143012060355040A0C0B54656C696E6B2D53656D69310F300D060355040B0C0654656C696E6B312D302B06035504030C2430303142444330382D313032312D304230452D304130432D3030304230453041304330303126302406092A864886F70D0109011617737570706F72744074656C696E6B2D73656D692E636F6D301E170D3233313031313036303034385A170D3333313030383036303034385A30819E310B300906035504061302434E3111300F06035504080C085368616E6748616931143012060355040A0C0B54656C696E6B2D53656D69310F300D060355040B0C0654656C696E6B312D302B06035504030C2430303142444330382D313032312D304230452D304130432D3030304230453041304330303126302406092A864886F70D0109011617737570706F72744074656C696E6B2D73656D692E636F6D3059301306072A8648CE3D020106082A8648CE3D0301070342000441DBF54A701EFAFC88D34A7233C383A6406F815AE7BA9D52BB4625A12303699595A3B139D35EEDC1E65E33C128A69AB0D037BFFF985AA23A62B3218BAEB17E3FA347304530090603551D2304023000301D0603551D0E041604143C62D196F66D337D40CC7826518C1AF22F425D3B300C0603551D13040530030101FF300B0603551D0F040403020106300A06082A8648CE3D0403020348003045022100CACF7006A1C0ACC96350D00E716585AEB46B9553538487F43FB411FA56EEB86402201DA19E992E677A93FDC1609E7A8C4706A88777CE41AF626E4A95300918A7762B"];
     //PTS v8.5.1 build10 测试项的根证书
-//    _defaultRootCertificateData = [LibTools nsstringToHex:@"308202883082022EA003020102020100300A06082A8648CE3D04030230819D310B30090603550406130255533113301106035504080C0A57617368696E67746F6E31163014060355040A0C0D426C7565746F6F746820534947310C300A060355040B0C03505453312D302B06035504030C2430303142444330382D313032312D304230452D304130432D3030304230453041304330303124302206092A864886F70D0109011615737570706F727440626C7565746F6F74682E636F6D301E170D3233303831373230353731305A170D3334313130333230353731305A30819D310B30090603550406130255533113301106035504080C0A57617368696E67746F6E31163014060355040A0C0D426C7565746F6F746820534947310C300A060355040B0C03505453312D302B06035504030C2430303142444330382D313032312D304230452D304130432D3030304230453041304330303124302206092A864886F70D0109011615737570706F727440626C7565746F6F74682E636F6D3059301306072A8648CE3D020106082A8648CE3D030107034200046E0844268E1DA5556DA9B85D90A06DE152FB96A1521918B33B8E081F50B0274001E979A03E322BCD83E10CC447FD1124B65E71FDFEBE4BDD43712AFB5FA40D9EA35D305B301D0603551D0E04160414C9C527F8E3D36EC844538CA132C7282C459DDFFF301F0603551D23041830168014C9C527F8E3D36EC844538CA132C7282C459DDFFF300C0603551D13040530030101FF300B0603551D0F040403020106300A06082A8648CE3D0403020348003045022100D034154A3ED26CA04402534B3F11CB6D5C9174C5A31274FD06F8F7395456B4FD02203F0B86574C5AAB707573A99DC9ABF815CB7AD8A11ACBE5C8D2D80C31F74E64D7"];
+//    _defaultRootCertificateData = [TelinkLibTools nsstringToHex:@"308202883082022EA003020102020100300A06082A8648CE3D04030230819D310B30090603550406130255533113301106035504080C0A57617368696E67746F6E31163014060355040A0C0D426C7565746F6F746820534947310C300A060355040B0C03505453312D302B06035504030C2430303142444330382D313032312D304230452D304130432D3030304230453041304330303124302206092A864886F70D0109011615737570706F727440626C7565746F6F74682E636F6D301E170D3233303831373230353731305A170D3334313130333230353731305A30819D310B30090603550406130255533113301106035504080C0A57617368696E67746F6E31163014060355040A0C0D426C7565746F6F746820534947310C300A060355040B0C03505453312D302B06035504030C2430303142444330382D313032312D304230452D304130432D3030304230453041304330303124302206092A864886F70D0109011615737570706F727440626C7565746F6F74682E636F6D3059301306072A8648CE3D020106082A8648CE3D030107034200046E0844268E1DA5556DA9B85D90A06DE152FB96A1521918B33B8E081F50B0274001E979A03E322BCD83E10CC447FD1124B65E71FDFEBE4BDD43712AFB5FA40D9EA35D305B301D0603551D0E04160414C9C527F8E3D36EC844538CA132C7282C459DDFFF301F0603551D23041830168014C9C527F8E3D36EC844538CA132C7282C459DDFFF300C0603551D13040530030101FF300B0603551D0F040403020106300A06082A8648CE3D0403020348003045022100D034154A3ED26CA04402534B3F11CB6D5C9174C5A31274FD06F8F7395456B4FD02203F0B86574C5AAB707573A99DC9ABF815CB7AD8A11ACBE5C8D2D80C31F74E64D7"];
     _forwardingTableModelList = [NSMutableArray array];
     _filterModel = [[SigProxyFilterModel alloc] init];
     _sortTypeOfNodeList = SigSortType_sortByAddressAscending;
@@ -230,7 +238,7 @@
     netkey.phase = 0;
     netkey.timestamp = timestamp;
     netkey.oldKey = @"00000000000000000000000000000000";
-    netkey.key = [LibTools convertDataToHexStr:[LibTools createNetworkKey]];
+    netkey.key = [TelinkLibTools convertDataToHexStr:[LibTools createNetworkKey]];
     netkey.name = @"Default NetKey";
     netkey.minSecurity = @"secure";
     _curNetkeyModel = nil;
@@ -240,7 +248,7 @@
     //2.appKeys
     SigAppkeyModel *appkey = [[SigAppkeyModel alloc] init];
     appkey.oldKey = @"00000000000000000000000000000000";
-    appkey.key = [LibTools convertDataToHexStr:[LibTools initAppKey]];
+    appkey.key = [TelinkLibTools convertDataToHexStr:[LibTools initAppKey]];
     appkey.name = @"Default AppKey";
     appkey.boundNetKey = 0;
     appkey.index = 0;
@@ -270,11 +278,12 @@
     }
 
     [_scenes removeAllObjects];
+    [_NLCs removeAllObjects];
     [_networkExclusions removeAllObjects];
     [_encryptedArray removeAllObjects];
     [_forwardingTableModelList removeAllObjects];
 
-    _meshUUID = [LibTools UUIDToMeshUUID:[LibTools convertDataToHexStr:[LibTools createRandomDataWithLength:16]]];
+    _meshUUID = [TelinkLibTools UUIDToMeshUUID:[TelinkLibTools convertDataToHexStr:[TelinkLibTools generateRandomHexDataWithLength:16]]];
     _schema = @"http://json-schema.org/draft-04/schema#";
     _jsonFormatID = @"http://www.bluetooth.com/specifications/assigned-numbers/mesh-profile/cdb-schema.json#";
     _meshName = @"Default Mesh";
@@ -289,18 +298,24 @@
 
 /// every provisioner has at most one node that blacklisted is set to YES.
 - (void)optimizationDataOfBlacklisted {
+    // 使用Add所以有效node的方式，不要使用remove无需node的方式，因为相同UUID的node会被remove掉，而接收安卓的json数据时会有很多重复的UUID的node导致有效的node也被移除了。
+    NSMutableArray *newNodes = [NSMutableArray array];
     NSArray *provisioners = [NSArray arrayWithArray:self.provisioners];
     for (SigProvisionerModel *provisioner in provisioners) {
         NSMutableArray *nodes = [NSMutableArray arrayWithArray:[self getNodesOfProvisioner:provisioner]];
-        if (nodes && nodes.count > 0) {
-            [nodes removeLastObject];
-            for (SigNodeModel *node in nodes) {
-                if (node.excluded) {
-                    [self.nodes removeObject:node];
-                }
+        [nodes sortUsingComparator:^NSComparisonResult(id  _Nonnull obj1, id  _Nonnull obj2) {
+            return [(SigNodeModel *)obj1 address] > [(SigNodeModel *)obj2 address];
+        }];
+        for (int i=0; i<nodes.count; i++) {
+            SigNodeModel *node = nodes[i];
+            if (i == nodes.count-1) {
+                [newNodes addObject:node];
+            } else if (node.excluded == NO) {
+                [newNodes addObject:node];
             }
         }
     }
+    _nodes = newNodes;
     _curNodes = nil;
 }
 
@@ -309,9 +324,58 @@
     NSArray *nodes = [NSArray arrayWithArray:self.nodes];
     for (SigNodeModel *node in nodes) {
         if (node.name == nil || node.name.length == 0) {
-            node.name = @"Node name";
+            node.name = [NSString stringWithFormat:@"node-%04X", node.address];
         }
     }
+}
+
+/// 根据JSON数据里面sensor的publish参数生成NLC数据，NLC的lightness control使用默认参数。（只在导入Mesh时调用一次，其它情况不需要调用该方法）
+- (void)optimizationDataOfNLCList {
+    NSArray *curNodes = [NSArray arrayWithArray:self.curNodes];
+    NSMutableDictionary *nlcDict = [NSMutableDictionary dictionary];
+    for (SigNodeModel *node in curNodes) {
+        if (node.isSensor && node.hasOpenPublish) {
+            NSNumber *publishAddress = node.publishAddress.firstObject;
+            if ([nlcDict.allKeys containsObject:publishAddress]) {
+                NSMutableArray *mArray = [NSMutableArray arrayWithArray:nlcDict[publishAddress]];
+                [mArray addObject:@(node.address)];
+                nlcDict[publishAddress] = mArray;
+            } else {
+                nlcDict[publishAddress] = @[@(node.address)];
+            }
+        }
+    }
+    NSMutableArray *nlcs = [NSMutableArray array];
+    NSArray *allKeys = nlcDict.allKeys;
+    for (int i=0; i<allKeys.count; i++) {
+        NSNumber *publishAddress = allKeys[i];
+        SigNLCModel *nlc = [[SigNLCModel alloc] init];
+        nlc.NLC_ID = i;
+        nlc.publishAddress = publishAddress.intValue;
+        NSMutableArray *sensors = [NSMutableArray array];
+        for (NSNumber *sensorNumber in nlcDict[publishAddress]) {
+            SigNodeModel *sensor = [SigDataSource.share getNodeWithAddress:sensorNumber.intValue];
+            [sensors addObject:sensor];
+        }
+        nlc.sensorList = sensors;
+        [nlcs addObject:nlc];
+    }
+    _NLCs = nlcs;
+    [self saveLocationData];
+}
+
+/// 获取目标地址的设备列表，当前只考虑kMeshAddress_allNodes和GroupAddress。
+- (NSArray <SigNodeModel *>*)getNodesOfDestinationAddress:(UInt16)destinationAddress {
+    NSMutableArray *mArray = [NSMutableArray array];
+    if (destinationAddress == kMeshAddress_allNodes) {
+        [mArray addObjectsFromArray:self.curNodes];
+    } else if ([SigHelper.share isGroupAddress:destinationAddress]) {
+        SigGroupModel *group = [self getGroupModelWithGroupAddress:destinationAddress];
+        if (group) {
+            [mArray addObjectsFromArray:group.groupDevices];
+        }
+    }
+    return mArray;
 }
 
 - (NSArray <SigNodeModel *>*)getNodesOfProvisioner:(SigProvisionerModel *)provisioner {
@@ -407,7 +471,7 @@
     NSMutableDictionary *dict = [NSMutableDictionary dictionary];
     if (_meshUUID) {
         if (_meshUUID.length == 32) {
-            dict[@"meshUUID"] = [[LibTools UUIDToMeshUUID:_meshUUID] uppercaseString];
+            dict[@"meshUUID"] = [[TelinkLibTools UUIDToMeshUUID:_meshUUID] uppercaseString];
         } else if (_meshUUID.length == 36) {
             dict[@"meshUUID"] = [_meshUUID uppercaseString];
         }
@@ -482,6 +546,15 @@
         }
         dict[@"scenes"] = array;
     }
+    if (_NLCs) {
+        NSMutableArray *array = [NSMutableArray array];
+        NSArray *NLCs = [NSArray arrayWithArray:_NLCs];
+        for (SigNLCModel *model in NLCs) {
+            NSDictionary *NLCDict = [model getDictionaryOfSigNLCModel];
+            [array addObject:NLCDict];
+        }
+        dict[@"NLCs"] = array;
+    }
     if (_networkExclusions) {
         NSMutableArray *array = [NSMutableArray array];
         NSArray *networkExclusions = [NSArray arrayWithArray:_networkExclusions];
@@ -516,7 +589,7 @@
     if ([allKeys containsObject:@"meshUUID"]) {
         NSString *str = [dictionary[@"meshUUID"] uppercaseString];
         if (str.length == 32) {
-            _meshUUID = [LibTools UUIDToMeshUUID:str];
+            _meshUUID = [TelinkLibTools UUIDToMeshUUID:str];
         } else if (str.length == 36) {
             _meshUUID = str;
         }
@@ -602,6 +675,16 @@
         }
         _scenes = scenes;
     }
+    if ([allKeys containsObject:@"NLCs"]) {
+        NSMutableArray *NLCs = [NSMutableArray array];
+        NSArray *array = dictionary[@"NLCs"];
+        for (NSDictionary *NLCDict in array) {
+            SigNLCModel *model = [[SigNLCModel alloc] init];
+            [model setDictionaryToSigNLCModel:NLCDict];
+            [NLCs addObject:model];
+        }
+        _NLCs = NLCs;
+    }
     if ([allKeys containsObject:@"networkExclusions"]) {
         NSMutableArray *networkExclusions = [NSMutableArray array];
         NSArray *array = dictionary[@"networkExclusions"];
@@ -638,7 +721,7 @@
     NSMutableDictionary *dict = [NSMutableDictionary dictionary];
     if (_meshUUID) {
         if (_meshUUID.length == 32) {
-            dict[@"meshUUID"] = [[LibTools UUIDToMeshUUID:_meshUUID] uppercaseString];
+            dict[@"meshUUID"] = [[TelinkLibTools UUIDToMeshUUID:_meshUUID] uppercaseString];
         } else if (_meshUUID.length == 36) {
             dict[@"meshUUID"] = [_meshUUID uppercaseString];
         }
@@ -801,7 +884,7 @@
  */
 - (NSData *)curNetKey {
     if (self.curNetkeyModel) {
-        return [LibTools nsstringToHex:self.curNetkeyModel.key];
+        return [TelinkLibTools nsstringToHex:self.curNetkeyModel.key];
     }
     return nil;
 }
@@ -812,7 +895,7 @@
  */
 - (NSData *)curAppKey {
     if (self.curAppkeyModel) {
-        return [LibTools nsstringToHex:self.curAppkeyModel.key];
+        return [TelinkLibTools nsstringToHex:self.curAppkeyModel.key];
     }
     return nil;
 }
@@ -886,7 +969,7 @@
  * @return  ivIndex
  */
 - (UInt32)getIvIndexUInt32 {
-    return [LibTools uint32From16String:_ivIndex];
+    return [TelinkLibTools uint32FromHexString:_ivIndex];
 }
 
 /**
@@ -903,7 +986,7 @@
  * @return  SequenceNumber
  */
 - (UInt32)getSequenceNumberUInt32 {
-    return [LibTools uint32From16String:_sequenceNumber];
+    return [TelinkLibTools uint32FromHexString:_sequenceNumber];
 }
 
 /**
@@ -951,10 +1034,10 @@
         __weak typeof(self) weakSelf = self;
         dispatch_async(dispatch_get_main_queue(), ^{
             if ([weakSelf.delegate respondsToSelector:@selector(onSequenceNumberUpdate:ivIndexUpdate:)]) {
-                [weakSelf.delegate onSequenceNumberUpdate:weakSelf.sequenceNumberOnDelegate ivIndexUpdate:[LibTools uint32From16String:blockIv]];
+                [weakSelf.delegate onSequenceNumberUpdate:weakSelf.sequenceNumberOnDelegate ivIndexUpdate:[TelinkLibTools uint32FromHexString:blockIv]];
             }
             if ([weakSelf.delegate respondsToSelector:@selector(onUpdateIvIndex:)]) {
-                [weakSelf.delegate onUpdateIvIndex:[LibTools uint32From16String:blockIv]];
+                [weakSelf.delegate onUpdateIvIndex:[TelinkLibTools uint32FromHexString:blockIv]];
             }
         });
     }
@@ -978,8 +1061,9 @@
                 [weakSelf.delegate onUpdateSequenceNumber:weakSelf.sequenceNumberOnDelegate];
             }
         });
+        // 新逻辑，步长达到才本地缓存一次SequenceNumber
+        [self saveCurrentIvIndex:[self getIvIndexUInt32] sequenceNumber:sequenceNumberUInt32];
     }
-    [self saveCurrentIvIndex:[self getIvIndexUInt32] sequenceNumber:sequenceNumberUInt32];
 }
 
 /**
@@ -990,7 +1074,7 @@
     // Initialize the unique identifier UUID of the current phone, and it will only be regenerated after uninstalling and reinstalling.
     NSString *provisionerUUID = [self getCurrentProvisionerUUID];
     if (provisionerUUID == nil) {
-        [self saveCurrentProvisionerUUID:[LibTools convertDataToHexStr:[LibTools initMeshUUID]]];
+        [self saveCurrentProvisionerUUID:[TelinkLibTools convertDataToHexStr:[LibTools initMeshUUID]]];
     }
 
     NSData *locationData = [self getLocationMeshData];
@@ -1003,7 +1087,7 @@
     }else{
         //exist mesh.json, load json
         NSData *data = [self getLocationMeshData];
-        NSDictionary *meshDict = [LibTools getDictionaryWithJSONData:data];
+        NSDictionary *meshDict = [TelinkLibTools getDictionaryWithJSONData:data];
         [self setDictionaryToDataSource:meshDict];
     }
     //check provisioner
@@ -1056,7 +1140,7 @@
                 if (model.subscribe && model.subscribe.count > 0) {
                     NSArray *subscribe = [NSArray arrayWithArray:model.subscribe];
                     for (NSString *addr in subscribe) {
-                        UInt16 indAddr = [LibTools uint16From16String:addr];
+                        UInt16 indAddr = [TelinkLibTools uint16FromHexString:addr];
                         [addresses addObject:@(indAddr)];
                     }
                 }
@@ -1084,7 +1168,7 @@
         //fix the ivIndex
         NSArray *netkeys = [NSArray arrayWithArray:_netKeys];
         for (SigNetkeyModel *key in netkeys) {
-            key.ivIndex = [[SigIvIndex alloc] initWithIndex:[LibTools uint32From16String:SigMeshLib.share.dataSource.ivIndex] updateActive:NO];
+            key.ivIndex = [[SigIvIndex alloc] initWithIndex:[TelinkLibTools uint32FromHexString:SigMeshLib.share.dataSource.ivIndex] updateActive:NO];
         }
         [SigDataSource.share setSequenceNumberUInt32:SigDataSource.share.getLocalSequenceNumberUInt32 + SigDataSource.share.defaultSequenceNumberIncrement];
         [SigDataSource.share saveCurrentIvIndex:SigDataSource.share.getIvIndexUInt32 sequenceNumber:SigDataSource.share.getSequenceNumberUInt32];
@@ -1136,8 +1220,8 @@
     [elements addObject:element];
     node.elements = elements;
 
-    NSData *devicekeyData = [LibTools createRandomDataWithLength:16];
-    node.deviceKey = [LibTools convertDataToHexStr:devicekeyData];
+    NSData *devicekeyData = [TelinkLibTools generateRandomHexDataWithLength:16];
+    node.deviceKey = [TelinkLibTools convertDataToHexStr:devicekeyData];
     SigAppkeyModel *appkey = [self curAppkeyModel];
     SigNodeKeyModel *nodeAppkey = [[SigNodeKeyModel alloc] init];
     nodeAppkey.index = appkey.index;
@@ -1198,6 +1282,19 @@
                     [scene.actionList removeObject:action];
                     break;
                 }
+            }
+        }
+        NSArray *NLCs = [NSArray arrayWithArray:_NLCs];
+        for (SigNLCModel *model in NLCs) {
+            NSArray *array = [NSArray arrayWithArray:model.sensorList];
+            for (SigNodeModel *node in array) {
+                if (node.address == deviceAddress) {
+                    [model.sensorList removeObject:node];
+                    break;
+                }
+            }
+            if (model.publishAddress == deviceAddress) {
+                model.publishAddress = 0;
             }
         }
         [self optimizationDataOfBlacklisted];
@@ -1287,7 +1384,7 @@
 
     //（可选）注意：调用[SigDataSource.share resetMesh]后，filter的配置将恢复默认的白名单和本地地址+0xFFFF的配置。如果客户需要想要自定义配置，则需要再这下面进行filter相关配置。
 //    NSData *filterData = [[NSUserDefaults standardUserDefaults] valueForKey:kFilter];
-//    NSDictionary *filterDict = [LibTools getDictionaryWithJSONData:filterData];
+//    NSDictionary *filterDict = [TelinkLibTools getDictionaryWithJSONData:filterData];
 //    SigProxyFilterModel *filter = [[SigProxyFilterModel alloc] init];
 //    [filter setDictionaryToSigProxyFilterModel:filterDict];
 }
@@ -1316,19 +1413,48 @@
             return [(SigGroupModel *)obj1 intAddress] > [(SigGroupModel *)obj2 intAddress];
         }];
         [self.scenes sortUsingComparator:^NSComparisonResult(id  _Nonnull obj1, id  _Nonnull obj2) {
-            return [LibTools uint16From16String:[(SigSceneModel *)obj1 number]] > [LibTools uint16From16String:[(SigSceneModel *)obj2 number]];
+            return [TelinkLibTools uint16FromHexString:[(SigSceneModel *)obj1 number]] > [TelinkLibTools uint16FromHexString:[(SigSceneModel *)obj2 number]];
+        }];
+        [self.NLCs sortUsingComparator:^NSComparisonResult(id  _Nonnull obj1, id  _Nonnull obj2) {
+            return [(SigNLCModel *)obj1 NLC_ID] > [(SigNLCModel *)obj2 NLC_ID];
         }];
         _curNodes = nil;
         NSDictionary *meshDict = [self getDictionaryFromDataSource];
-        NSData *tempData = [LibTools getJSONDataWithDictionary:meshDict];
+        NSData *tempData = [TelinkLibTools getJSONDataWithDictionary:meshDict];
         [self saveLocationMeshData:tempData];
-        saveMeshJsonData([LibTools getReadableJSONStringWithDictionary:meshDict]);
+        [self saveMeshStringToDocumentDirectoryInEncrypt:[TelinkLibTools getReadableJSONStringWithDictionary:meshDict]];
         dispatch_async(dispatch_get_main_queue(), ^{
             if ([self.delegate respondsToSelector:@selector(onMeshNetworkUpdated:)]) {
                 [self.delegate onMeshNetworkUpdated:self];
             }
         });
     }
+}
+
+#define meshJsonDataKey @"com.telink.TelinkSDKMeshJsonData"
+
+- (void)saveMeshStringToDocumentDirectoryInEncrypt:(NSString *)meshString {
+    NSString *meshJsonFilePath = [NSSearchPathForDirectoriesInDomains(NSDocumentDirectory, NSUserDomainMask, YES).lastObject stringByAppendingPathComponent:@"TelinkSDKMeshJsonData"];
+    NSFileHandle *handle = [NSFileHandle fileHandleForUpdatingAtPath:meshJsonFilePath];
+    [handle truncateFileAtOffset:0];
+    //对缓存于iTunes共享文件夹的json文件进行加密，再保存。解密调用接口textFromBase64String.
+    NSString *encryptMeshString = [TelinkLibTools encryptBase64StringFromText:meshString password:meshJsonDataKey];
+    NSData *tempData = [encryptMeshString dataUsingEncoding:NSUTF8StringEncoding];
+    [handle writeData:tempData];
+    [handle closeFile];
+}
+
+- (NSString *)getDecryptMeshStringFromDocumentDirectory {
+    NSString *meshJsonFilePath = [NSSearchPathForDirectoriesInDomains(NSDocumentDirectory, NSUserDomainMask, YES).lastObject stringByAppendingPathComponent:@"TelinkSDKMeshJsonData"];
+    NSFileHandle *handle = [NSFileHandle fileHandleForReadingAtPath:meshJsonFilePath];
+    if (handle) {
+        NSData *data = [handle readDataToEndOfFile];
+        [handle closeFile];
+        NSString *string = [[NSString alloc] initWithData:data encoding:NSUTF8StringEncoding];
+        string = [TelinkLibTools decryptTextFromBase64String:string password:meshJsonDataKey];
+        return string;
+    }
+    return nil;
 }
 
 /**
@@ -1352,11 +1478,27 @@
     UInt16 address = 1;
     if (_scenes.count > 0) {
         [_scenes sortUsingComparator:^NSComparisonResult(id  _Nonnull obj1, id  _Nonnull obj2) {
-            return [LibTools uint16From16String:[(SigSceneModel *)obj1 number]] > [LibTools uint16From16String:[(SigSceneModel *)obj2 number]];
+            return [TelinkLibTools uint16FromHexString:[(SigSceneModel *)obj1 number]] > [TelinkLibTools uint16FromHexString:[(SigSceneModel *)obj2 number]];
         }];
-        address = [LibTools uint16From16String:_scenes.lastObject.number] + 1;
+        address = [TelinkLibTools uint16FromHexString:_scenes.lastObject.number] + 1;
     }
     return address;
+}
+
+/**
+ * @brief   Get the new NLC ID for add a new NLC object.
+ * @return  new NLC ID, min ID is 1. max ID is 0xFFFF.
+ * @note    new NLC ID = exist NLC ID + 1, min NLC ID is 1.
+ */
+- (UInt16)getNewNLC_ID {
+    UInt16 NLC_ID = 1;
+    if (_NLCs.count > 0) {
+        [_NLCs sortUsingComparator:^NSComparisonResult(id  _Nonnull obj1, id  _Nonnull obj2) {
+            return [(SigNLCModel *)obj1 NLC_ID] > [(SigNLCModel *)obj2 NLC_ID];
+        }];
+        NLC_ID = _NLCs.lastObject.NLC_ID + 1;
+    }
+    return NLC_ID;
 }
 
 /**
@@ -1384,6 +1526,26 @@
 }
 
 /**
+ * @brief   Add or Update the information of  SigNLCModel to _NLCs..
+ * @param   model    the SigNLCModel object.
+ */
+- (void)saveSigNLCModelWithModel:(SigNLCModel *)model {
+    @synchronized(self) {
+        SigNLCModel *NLC = [[SigNLCModel alloc] initWithOldSigNLCModel:model];
+        [NLC.sensorList sortUsingComparator:^NSComparisonResult(id  _Nonnull obj1, id  _Nonnull obj2) {
+            return [(SigNodeModel *)obj1 address] > [(SigNodeModel *)obj2 address];
+        }];
+        if ([self.NLCs containsObject:NLC]) {
+            NSInteger index = [self.NLCs indexOfObject:NLC];
+            self.NLCs[index] = NLC;
+        } else {
+            [self.NLCs addObject:NLC];
+        }
+        [self saveLocationData];
+    }
+}
+
+/**
  * @brief   Delete SigSceneModel from _scenes..
  * @param   model    the SigSceneModel object.
  */
@@ -1391,6 +1553,19 @@
     @synchronized(self) {
         if ([self.scenes containsObject:model]) {
             [self.scenes removeObject:model];
+            [self saveLocationData];
+        }
+    }
+}
+
+/**
+ * @brief   Delete SigNLCModel from _NLCs..
+ * @param   model    the SigNLCModel object.
+ */
+- (void)deleteSigNLCModelWithModel:(SigNLCModel *)model {
+    @synchronized(self) {
+        if ([self.NLCs containsObject:model]) {
+            [self.NLCs removeObject:model];
             [self saveLocationData];
         }
     }
@@ -1560,18 +1735,18 @@
  */
 - (BOOL)matchPrivateNetworkIdentityWithAdvertisementDataServiceData:(NSData *)advertisementDataServiceData peripheralUUIDString:(NSString *)peripheralUUIDString networkKey:(SigNetkeyModel *)networkKey {
     NSData *networkID = networkKey.networkId;
-    NSData *netKey = [LibTools nsstringToHex:networkKey.key];
+    NSData *netKey = [TelinkLibTools nsstringToHex:networkKey.key];
     NSData *identityKey = networkKey.keys.identityKey;
     if (networkKey.phase == distributingKeys) {
         if (networkKey.oldNetworkId && networkKey.oldNetworkId.length > 0) {
             networkID = networkKey.oldNetworkId;
-            netKey = [LibTools nsstringToHex:networkKey.oldKey];
+            netKey = [TelinkLibTools nsstringToHex:networkKey.oldKey];
             identityKey = networkKey.oldKeys.identityKey;
         }
     } else {
         if (networkKey.networkId && networkKey.networkId.length > 0) {
             networkID = networkKey.networkId;
-            netKey = [LibTools nsstringToHex:networkKey.key];
+            netKey = [TelinkLibTools nsstringToHex:networkKey.key];
             identityKey = networkKey.keys.identityKey;
         }
     }
@@ -1590,7 +1765,7 @@
     // If the Key refresh procedure is in place, the identity might have been generated with the old key.
     if (!isExist && networkKey.oldKey && networkKey.oldKey.length > 0 && ![networkKey.oldKey isEqualToString:@"00000000000000000000000000000000"]) {
         networkID = networkKey.oldNetworkId;
-        netKey = [LibTools nsstringToHex:networkKey.oldKey];
+        netKey = [TelinkLibTools nsstringToHex:networkKey.oldKey];
         identityKey = networkKey.oldKeys.identityKey;
         if (networkID == nil || netKey == nil || identityKey == nil) {
             return NO;
@@ -1968,6 +2143,26 @@
     return model;
 }
 
+/// Yes means connected node is switch device.
+- (BOOL)isConnectedSwitchDevice {
+    return self.getCurrentConnectedNode.isRemote;
+}
+
+/// Yes means connected node is NoProxyFeatureDevice.
+/// 节点是否有 代理转发功能标准规则判断：ADV扫描Mesh设备后，先通过数据库的cps获取直连节点的Proxy state，如果为disable，再获取直连节点的Private Proxy state或者不支持，再获取 ondemand 的时间参数，如果支持并且为0，   如果以上3个条件都满足则认为该设备不具备代理收发功能，不连接该设备。
+- (BOOL)isConnectedNoProxyFeatureDevice {
+    if ([self getLocalConfigGattProxyStateOfUnicastAddress:self.unicastAddressOfConnected]) {
+        return NO;
+    }
+    if ([self getLocalPrivateGattProxyStateOfUnicastAddress:self.unicastAddressOfConnected]) {
+        return NO;
+    }
+    if (self.getCurrentConnectedNode.onDemandPrivateGATTProxy != 0) {
+        return NO;
+    }
+    return YES;
+}
+
 #pragma mark - OOB存取相关
 
 /**
@@ -2114,7 +2309,7 @@
 - (void)updateNodeModelVidWithAddress:(UInt16)address vid:(UInt16)vid {
     SigNodeModel *node = [self getNodeWithAddress:address];
     if (node) {
-        if ([LibTools uint16From16String:node.vid] != vid) {
+        if ([TelinkLibTools uint16FromHexString:node.vid] != vid) {
             node.vid = [SigHelper.share getUint16String:vid];
             [self saveLocationData];
         }
@@ -2430,7 +2625,7 @@
     NSDictionary *dict = @{};
     NSData *data = [[NSUserDefaults standardUserDefaults] objectForKey:kLocalNetworkPrivateBeaconDictionary_key];
     if (data != nil) {
-        dict = [LibTools getDictionaryWithJSONData:data];
+        dict = [TelinkLibTools getDictionaryWithJSONData:data];
     }
     NSMutableDictionary *networkListDict = [NSMutableDictionary dictionaryWithDictionary:dict];
     NSMutableDictionary *networkDict = [NSMutableDictionary dictionary];
@@ -2444,7 +2639,7 @@
         NSDictionary *nodeDict = @{kLocalPrivateGattProxy_key:@(NO), kLocalConfigGattProxy_key:@(YES), kLocalPrivateBeacon_key:@(NO), kLocalConfigBeacon_key:@(YES)};
         networkDict[[SigHelper.share getUint16String:unicastAddress]] = nodeDict;
         networkListDict[self.meshUUID] = networkDict;
-        [[NSUserDefaults standardUserDefaults] setObject:[LibTools getJSONDataWithDictionary:networkListDict] forKey:kLocalNetworkPrivateBeaconDictionary_key];
+        [[NSUserDefaults standardUserDefaults] setObject:[TelinkLibTools getJSONDataWithDictionary:networkListDict] forKey:kLocalNetworkPrivateBeaconDictionary_key];
         [[NSUserDefaults standardUserDefaults] synchronize];
         return [nodeDict[key] boolValue];
     }
@@ -2501,7 +2696,7 @@
     NSDictionary *dict = @{};
     NSData *data = [[NSUserDefaults standardUserDefaults] objectForKey:kLocalNetworkPrivateBeaconDictionary_key];
     if (data != nil) {
-        dict = [LibTools getDictionaryWithJSONData:data];
+        dict = [TelinkLibTools getDictionaryWithJSONData:data];
     }
     NSMutableDictionary *networkListDict = [NSMutableDictionary dictionaryWithDictionary:dict];
     NSMutableDictionary *networkDict = [NSMutableDictionary dictionary];
@@ -2516,7 +2711,7 @@
         networkDict[[SigHelper.share getUint16String:unicastAddress]] = @{kLocalPrivateGattProxy_key:@(NO), kLocalConfigGattProxy_key:@(YES), kLocalPrivateBeacon_key:@(NO), kLocalConfigBeacon_key:@(YES)};
     }
     networkListDict[self.meshUUID] = networkDict;
-    [[NSUserDefaults standardUserDefaults] setObject:[LibTools getJSONDataWithDictionary:networkListDict] forKey:kLocalNetworkPrivateBeaconDictionary_key];
+    [[NSUserDefaults standardUserDefaults] setObject:[TelinkLibTools getJSONDataWithDictionary:networkListDict] forKey:kLocalNetworkPrivateBeaconDictionary_key];
     [[NSUserDefaults standardUserDefaults] synchronize];
 }
 
@@ -2526,7 +2721,7 @@
     NSDictionary *dict = @{};
     NSData *data = [[NSUserDefaults standardUserDefaults] objectForKey:kLocalNetworkPrivateBeaconDictionary_key];
     if (data != nil) {
-        dict = [LibTools getDictionaryWithJSONData:data];
+        dict = [TelinkLibTools getDictionaryWithJSONData:data];
     }
     NSMutableDictionary *networkListDict = [NSMutableDictionary dictionaryWithDictionary:dict];
     NSMutableDictionary *networkDict = [NSMutableDictionary dictionary];
@@ -2535,7 +2730,7 @@
     }
     [networkDict removeObjectForKey:[SigHelper.share getUint16String:unicastAddress]];
     networkListDict[self.meshUUID] = networkDict;
-    [[NSUserDefaults standardUserDefaults] setObject:[LibTools getJSONDataWithDictionary:networkListDict] forKey:kLocalNetworkPrivateBeaconDictionary_key];
+    [[NSUserDefaults standardUserDefaults] setObject:[TelinkLibTools getJSONDataWithDictionary:networkListDict] forKey:kLocalNetworkPrivateBeaconDictionary_key];
     [[NSUserDefaults standardUserDefaults] synchronize];
 }
 
@@ -2544,11 +2739,11 @@
     NSDictionary *dict = @{};
     NSData *data = [[NSUserDefaults standardUserDefaults] objectForKey:kLocalNetworkPrivateBeaconDictionary_key];
     if (data != nil) {
-        dict = [LibTools getDictionaryWithJSONData:data];
+        dict = [TelinkLibTools getDictionaryWithJSONData:data];
     }
     NSMutableDictionary *networkListDict = [NSMutableDictionary dictionaryWithDictionary:dict];
     [networkListDict removeObjectForKey:meshUUID];
-    [[NSUserDefaults standardUserDefaults] setObject:[LibTools getJSONDataWithDictionary:networkListDict] forKey:kLocalNetworkPrivateBeaconDictionary_key];
+    [[NSUserDefaults standardUserDefaults] setObject:[TelinkLibTools getJSONDataWithDictionary:networkListDict] forKey:kLocalNetworkPrivateBeaconDictionary_key];
     [[NSUserDefaults standardUserDefaults] synchronize];
 }
 
@@ -2630,7 +2825,7 @@
  */
 - (UInt32)getLocalSequenceNumberUInt32 {
     NSString *sequenceNumberStr = [self getLocalSequenceNumberString];
-    return [LibTools uint32From16String:sequenceNumberStr];
+    return [TelinkLibTools uint32FromHexString:sequenceNumberStr];
 }
 
 /**
@@ -2696,7 +2891,7 @@
  */
 - (void)saveCurrentProvisionerUUID:(NSString *)uuid {
     if (uuid.length == 32) {
-        uuid = [LibTools UUIDToMeshUUID:uuid];
+        uuid = [TelinkLibTools UUIDToMeshUUID:uuid];
     }
     [[NSUserDefaults standardUserDefaults] setObject:uuid forKey:self.getCurrentProvisionerUuidkey];
     [[NSUserDefaults standardUserDefaults] synchronize];
@@ -2711,7 +2906,7 @@
     NSUserDefaults *defaults = [NSUserDefaults standardUserDefaults];
     NSString *uuid = [defaults objectForKey:self.getCurrentProvisionerUuidkey];
     if (uuid.length == 32) {
-        uuid = [LibTools UUIDToMeshUUID:uuid];
+        uuid = [TelinkLibTools UUIDToMeshUUID:uuid];
     }
     return uuid;
 }

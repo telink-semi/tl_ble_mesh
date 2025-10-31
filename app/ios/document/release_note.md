@@ -2,6 +2,42 @@
 
 ------------------------------------------------------
 
+## v4.2.0.2
+release date:	2025/10/31
+
+>更新日志：
+1.feat(ios): 支持对节点里面的非primary element设置闹钟。
+2.feat(android): 支持nlc union功能。
+3.fix(ios): 优化组播reliable命令的发送机制。
+>
+>release note:
+1.feat(ios): support setting scheduler on the non-primary element.
+2.feat(ios): support nlc union function.
+3.fix(ios): optimize the sending mechanism of the multicast reliable command.
+
+------------------------------------------------------
+
+## v4.1.0.1 beta
+release date:	2024/05/24
+
+>更新日志：
+1.feat(ios): 添加设备名称和排序功能。
+2.fix(ios): Remote Provision显示上报地址和RSSI。
+3.fix(ios): NSL配置界面新增配置参数。
+4.feat(ios): 添加场景名称。
+5.feat(ios): 支持使用节点不同的element地址来配置场景。
+6.feat(ios): 支持添加telink_b91m_sig_mesh_multiple_connection_sdk的节点。
+>
+>release note:
+1.feat(ios): add node name and sort node list.
+2.fix(ios): show report address and rssi in remote provision.
+3.fix(ios): NSL has added 3+5 configurable PropertyID parameters.
+4.feat(ios): add scene name.
+5.feat(ios): support the function of configuring scenes for different element address of nodes.
+6.feat(ios): support add node of telink_b91m_sig_mesh_multiple_connection_sdk.
+
+------------------------------------------------------
+
 ## v4.1.0.0
 release date:	2023/11/10
 

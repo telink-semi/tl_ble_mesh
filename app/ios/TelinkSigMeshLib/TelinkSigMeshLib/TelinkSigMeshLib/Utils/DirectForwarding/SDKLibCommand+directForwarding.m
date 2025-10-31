@@ -392,10 +392,10 @@
     dict[@"unicastDestinationFlag"] = [NSNumber numberWithBool:_unicastDestinationFlag];
     dict[@"backwardPathValidatedFlag"] = [NSNumber numberWithBool:_backwardPathValidatedFlag];
     if (_pathOriginUnicastAddrRange && _pathOriginUnicastAddrRange.parameters) {
-        dict[@"pathOriginUnicastAddrRange"] = [LibTools convertDataToHexStr:_pathOriginUnicastAddrRange.parameters];
+        dict[@"pathOriginUnicastAddrRange"] = [TelinkLibTools convertDataToHexStr:_pathOriginUnicastAddrRange.parameters];
     }
     if (_pathTargetUnicastAddrRange && _pathTargetUnicastAddrRange.parameters) {
-        dict[@"pathTargetUnicastAddrRange"] = [LibTools convertDataToHexStr:_pathTargetUnicastAddrRange.parameters];
+        dict[@"pathTargetUnicastAddrRange"] = [TelinkLibTools convertDataToHexStr:_pathTargetUnicastAddrRange.parameters];
     }
     dict[@"multicastDestination"] = @(_multicastDestination);
     dict[@"bearerTowardPathOrigin"] = @(_bearerTowardPathOrigin);
@@ -421,11 +421,11 @@
         _backwardPathValidatedFlag = [dictionary[@"backwardPathValidatedFlag"] boolValue];
     }
     if ([allKeys containsObject:@"pathOriginUnicastAddrRange"]) {
-        SigUnicastAddressRangeFormatModel *model = [[SigUnicastAddressRangeFormatModel alloc] initWithParameters:[LibTools nsstringToHex:dictionary[@"pathOriginUnicastAddrRange"]]];
+        SigUnicastAddressRangeFormatModel *model = [[SigUnicastAddressRangeFormatModel alloc] initWithParameters:[TelinkLibTools nsstringToHex:dictionary[@"pathOriginUnicastAddrRange"]]];
         _pathOriginUnicastAddrRange = model;
     }
     if ([allKeys containsObject:@"pathTargetUnicastAddrRange"]) {
-        SigUnicastAddressRangeFormatModel *model = [[SigUnicastAddressRangeFormatModel alloc] initWithParameters:[LibTools nsstringToHex:dictionary[@"pathTargetUnicastAddrRange"]]];
+        SigUnicastAddressRangeFormatModel *model = [[SigUnicastAddressRangeFormatModel alloc] initWithParameters:[TelinkLibTools nsstringToHex:dictionary[@"pathTargetUnicastAddrRange"]]];
         _pathTargetUnicastAddrRange = model;
     }
     if ([allKeys containsObject:@"multicastDestination"]) {

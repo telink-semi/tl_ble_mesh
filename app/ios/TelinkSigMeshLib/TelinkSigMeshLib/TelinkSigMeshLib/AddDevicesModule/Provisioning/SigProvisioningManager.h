@@ -27,14 +27,18 @@ NS_ASSUME_NONNULL_BEGIN
 
 @class SigProvisioningData,SigAuthenticationModel;
 
-typedef void(^prvisionResponseCallBack)(SigProvisioningPdu * _Nullable response);
+typedef void(^provisionResponseCallBack)(SigProvisioningPdu * _Nullable response);
+typedef void(^ProvisionCertificateDictionaryCallBack)(NSDictionary<NSNumber *,NSData *> * _Nullable certificateDictionary, NSError * __nullable error);
 
 @interface SigProvisioningManager : NSObject
 @property (nonatomic,assign) AuthenticationMethod authenticationMethod;
 @property (nonatomic,strong,nullable) SigAuthenticationModel *authenticationModel;
 @property (nonatomic,strong,nullable) SigProvisioningData *provisioningData;
-@property (nonatomic,copy,nullable) prvisionResponseCallBack provisionResponseBlock;
+@property (nonatomic,copy,nullable) provisionResponseCallBack provisionResponseBlock;
 @property (nonatomic,copy,nullable) addDevice_capabilitiesWithReturnCallBack capabilitiesResponseBlock;
+@property (nonatomic,copy,nullable) ProvisionCertificateDictionaryCallBack provisionCertificateDictionaryBlock;
+@property (nonatomic, assign) BOOL isContinueWithoutInvite;
+@property (nonatomic, strong) NSMutableDictionary <NSNumber *,NSData *>*certificateDictionary;
 
 /// - seeAlso: MshPRFv1.0.1.pdf  (page.240)
 /// Attention Timer state (See Section 4.2.9), default is 0.
@@ -130,6 +134,13 @@ typedef void(^prvisionResponseCallBack)(SigProvisioningPdu * _Nullable response)
 /// @param provisionSuccess callback when provision success.
 /// @param fail callback when provision fail.
 - (void)certificateBasedProvisionWithPeripheral:(CBPeripheral *)peripheral unicastAddress:(UInt16)unicastAddress networkKey:(NSData *)networkKey netkeyIndex:(UInt16)netkeyIndex staticOOBData:(nullable NSData *)staticOOBData provisionSuccess:(addDevice_provisionSuccessCallBack)provisionSuccess fail:(ErrorBlock)fail DEPRECATED_MSG_ATTRIBUTE("Use 'certificateBasedProvisionWithPeripheral:networkKey:netkeyIndex:provisionType:staticOOBData:capabilitiesResponse:provisionSuccess:fail:' instead");
+
+/// getCertificateDictionary
+- (void)getCertificateDictionaryWithTimeout:(NSTimeInterval)timeout callback:(ProvisionCertificateDictionaryCallBack)block;
+
+/// This method get the Capabilities of the device.
+/// @param attentionDuration 0x00, Off; 0x01–0xFF, On, remaining time in seconds.
+- (void)identifyWithAttentionDuration:(UInt8)attentionDuration;
 
 @end
 

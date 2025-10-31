@@ -33,7 +33,7 @@
 - (IBAction)clear:(UIButton *)sender {
     __weak typeof(self) weakSelf = self;
     [self.operation addOperationWithBlock:^{
-        [SigLogger.share clearAllLog];
+        [TelinkLogger.shared clearAllLog];
         dispatch_async(dispatch_get_main_queue(), ^{
             weakSelf.contentText.text = nil;
         });
@@ -58,7 +58,7 @@
     __weak typeof(self) weakSelf = self;
     [self.operation addOperationWithBlock:^{
         //日志文件可能比较大，只显示最新的100K的log信息。
-        NSString *str = [SigLogger.share getLogStringWithLength:1024 * 100];
+        NSString *str = [TelinkLogger.shared getLogStringWithLength:1024 * 100];
         dispatch_async(dispatch_get_main_queue(), ^{
             weakSelf.contentText.text = str;
         });

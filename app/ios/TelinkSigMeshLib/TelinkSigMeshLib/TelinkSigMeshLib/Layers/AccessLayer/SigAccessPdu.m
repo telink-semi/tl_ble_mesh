@@ -95,7 +95,7 @@
 }
 
 - (NSString *)description {
-    return [NSString stringWithFormat:@"Access PDU, source:(0x%04X)->destination: (0x%04X) Op Code: (0x%X), accessPdu=%@ len=%lu", _source, _destination.address, (unsigned int)_opCode,[LibTools convertDataToHexStr:_accessPdu], (unsigned long)_accessPdu.length];
+    return [NSString stringWithFormat:@"Access PDU, source:(0x%04X)->destination: (0x%04X) Op Code: (0x%X), accessPdu=%@ len=%lu", _source, _destination.address, (unsigned int)_opCode,[TelinkLibTools convertDataToHexStr:_accessPdu], (unsigned long)_accessPdu.length];
 }
 
 @end

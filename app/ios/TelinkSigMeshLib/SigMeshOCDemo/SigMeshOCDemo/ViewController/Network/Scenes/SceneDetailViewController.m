@@ -59,7 +59,7 @@
                     if ([weakSelf.model.actionList containsObject:a]) {
                         //移除
                         [ShowTipsHandle.share show:@"delete scene···"];
-                        [DemoCommand delSceneWithAddress:a.address sceneId:[LibTools uint16From16String:weakSelf.model.number] responseMaxCount:1 ack:YES successCallback:^(UInt16 source, UInt16 destination, SigSceneRegisterStatus * _Nonnull responseMessage) {
+                        [DemoCommand delSceneWithAddress:a.address sceneId:[TelinkLibTools uint16FromHexString:weakSelf.model.number] responseMaxCount:1 ack:YES successCallback:^(UInt16 source, UInt16 destination, SigSceneRegisterStatus * _Nonnull responseMessage) {
                             TelinkLogDebug(@"delSceneWithAddress ResponseModel=%@",responseMessage);
                             response = responseMessage;
                         } resultCallback:^(BOOL isResponseAll, NSError * _Nonnull error) {
@@ -85,7 +85,7 @@
                     } else {
                         //添加
                         [ShowTipsHandle.share show:@"add scene···"];
-                        [DemoCommand saveSceneWithAddress:a.address sceneId:[LibTools uint16From16String:weakSelf.model.number] responseMaxCount:1 ack:YES successCallback:^(UInt16 source, UInt16 destination, SigSceneRegisterStatus * _Nonnull responseMessage) {
+                        [DemoCommand saveSceneWithAddress:a.address sceneId:[TelinkLibTools uint16FromHexString:weakSelf.model.number] responseMaxCount:1 ack:YES successCallback:^(UInt16 source, UInt16 destination, SigSceneRegisterStatus * _Nonnull responseMessage) {
                             TelinkLogDebug(@"saveSceneWithAddress ResponseModel=%@",responseMessage.parameters);
                             response = responseMessage;
                         } resultCallback:^(BOOL isResponseAll, NSError * _Nonnull error) {
@@ -114,7 +114,7 @@
             [view.refreshButton addAction:^(UIButton *button) {
                 //更新
                 [ShowTipsHandle.share show:@"update scene···"];
-                [DemoCommand saveSceneWithAddress:a.address sceneId:[LibTools uint16From16String:weakSelf.model.number] responseMaxCount:1 ack:YES successCallback:^(UInt16 source, UInt16 destination, SigSceneRegisterStatus * _Nonnull responseMessage) {
+                [DemoCommand saveSceneWithAddress:a.address sceneId:[TelinkLibTools uint16FromHexString:weakSelf.model.number] responseMaxCount:1 ack:YES successCallback:^(UInt16 source, UInt16 destination, SigSceneRegisterStatus * _Nonnull responseMessage) {
                     TelinkLogDebug(@"saveSceneWithAddress ResponseModel=%@",responseMessage.parameters);
                     response = responseMessage;
                 } resultCallback:^(BOOL isResponseAll, NSError * _Nonnull error) {

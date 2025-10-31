@@ -101,7 +101,7 @@
         SigDataSource *ds = [[SigDataSource alloc] init];
         [ds setDictionaryToDataSource:dictionary];
         _shareMeshDataSource = ds;
-        _objectData = [LibTools getJSONDataWithDictionary:dictionary].compressionData;
+        _objectData = [TelinkLibTools getJSONDataWithDictionary:dictionary].compressionData;
         //==========test==========//
 //        NSMutableData *mData = [NSMutableData dataWithData:_objectData];
 //        [mData appendData:mData];

@@ -24,6 +24,7 @@
 #import "SDKLibCommand.h"
 #import "SigECCEncryptHelper.h"
 #import "SigKeyBindManager.h"
+#import "SigProvisioningData.h"
 
 @implementation SDKLibCommand
 
@@ -35,6 +36,22 @@
         [self setDefaultCommandParameter];
     }
     return self;
+}
+
+- (BOOL)hasGetAllExpectedResponse {
+    if (_expectedResponseNodeList == nil || _expectedResponseNodeList.count == 0) {
+        return _responseMaxCount <= _responseSourceArray.count;
+    } else {
+        BOOL tem = YES;
+        NSArray *expectedList = [NSArray arrayWithArray:_expectedResponseNodeList];
+        for (NSNumber *nodeNumber in expectedList) {
+            if (![_responseSourceArray containsObject:nodeNumber]) {
+                tem = NO;
+                break;
+            }
+        }
+        return tem;
+    }
 }
 
 /**
@@ -63,6 +80,7 @@
 - (void)setDefaultCommandParameter {
     _retryCount = kAcknowledgeMessageDefaultRetryCount;
     _responseSourceArray = [NSMutableArray array];
+    _expectedResponseNodeList = [NSArray array];
     _timeout = SigDataSource.share.defaultReliableIntervalOfNotLPN;
     _hadRetryCount = 0;
     _hadReceiveAllResponse = NO;
@@ -3736,6 +3754,8 @@
     command.responseAllMessageCallBack = (responseAllMessageBlock)successCallback;
     command.responseFilterStatusCallBack = successCallback;
     command.resultCallback = finishCallback;
+    command.retryCount = SigDataSource.share.defaultRetryCount;
+    command.responseMaxCount = 1;
     [SigMeshLib.share sendSigProxyConfigurationMessage:message command:command];
 }
 
@@ -3804,7 +3824,7 @@
                 if (model.subscribe && model.subscribe.count > 0) {
                     NSArray *subscribe = [NSArray arrayWithArray:model.subscribe];
                     for (NSString *addr in subscribe) {
-                        UInt16 indAddr = [LibTools uint16From16String:addr];
+                        UInt16 indAddr = [TelinkLibTools uint16FromHexString:addr];
                         [addresses addObject:@(indAddr)];
                     }
                 }
@@ -3954,7 +3974,7 @@
         model.responseMax = 1;
         TelinkLogWarn(@"change responseMax to 1.");
     }
-    TelinkLogVerbose(@"ini data:0x%@", [LibTools convertDataToHexStr:model.commandData]);
+    TelinkLogVerbose(@"ini data:0x%@", [TelinkLibTools convertDataToHexStr:model.commandData]);
     SigIniMeshMessage *message = [[SigIniMeshMessage alloc] initWithParameters:model.commandData];
     if (model.vendorId) {
         message.opCode = (op << 16) | ((model.vendorId & 0xff) << 8) | (model.vendorId >> 8);
@@ -4119,10 +4139,10 @@
     } else {
         //APP端未接收到设备端上报的meshPrivateBeacon,需要根据APP端的SequenceNumber生成meshPrivateBeacon。
         if (SigMeshLib.share.dataSource.getSequenceNumberUInt32 >= 0xc00000) {
-            SigMeshPrivateBeacon *beacon = [[SigMeshPrivateBeacon alloc] initWithKeyRefreshFlag:NO ivUpdateActive:YES ivIndex:SigMeshLib.share.dataSource.curNetkeyModel.ivIndex.index+1 randomData:[LibTools createRandomDataWithLength:13] usingNetworkKey:SigMeshLib.share.dataSource.curNetkeyModel];
+            SigMeshPrivateBeacon *beacon = [[SigMeshPrivateBeacon alloc] initWithKeyRefreshFlag:NO ivUpdateActive:YES ivIndex:SigMeshLib.share.dataSource.curNetkeyModel.ivIndex.index+1 randomData:[TelinkLibTools generateRandomHexDataWithLength:13] usingNetworkKey:SigMeshLib.share.dataSource.curNetkeyModel];
             SigMeshLib.share.meshPrivateBeacon = beacon;
         } else {
-            SigMeshPrivateBeacon *beacon = [[SigMeshPrivateBeacon alloc] initWithKeyRefreshFlag:NO ivUpdateActive:NO ivIndex:SigMeshLib.share.dataSource.curNetkeyModel.ivIndex.index randomData:[LibTools createRandomDataWithLength:13] usingNetworkKey:SigMeshLib.share.dataSource.curNetkeyModel];
+            SigMeshPrivateBeacon *beacon = [[SigMeshPrivateBeacon alloc] initWithKeyRefreshFlag:NO ivUpdateActive:NO ivIndex:SigMeshLib.share.dataSource.curNetkeyModel.ivIndex.index randomData:[TelinkLibTools generateRandomHexDataWithLength:13] usingNetworkKey:SigMeshLib.share.dataSource.curNetkeyModel];
             SigMeshLib.share.meshPrivateBeacon = beacon;
         }
     }
@@ -4137,7 +4157,7 @@
  */
 + (void)updateIvIndexWithKeyRefreshFlag:(BOOL)keyRefreshFlag ivUpdateActive:(BOOL)ivUpdateActive networkId:(NSData *)networkId ivIndex:(UInt32)ivIndex usingNetworkKey:(SigNetkeyModel *)networkKey {
     SigSecureNetworkBeacon *beacon = [[SigSecureNetworkBeacon alloc] initWithKeyRefreshFlag:keyRefreshFlag ivUpdateActive:ivUpdateActive networkId:networkId ivIndex:ivIndex usingNetworkKey:networkKey];
-    TelinkLogInfo(@"send updateIvIndex SecureNetworkBeacon=%@",[LibTools convertDataToHexStr:beacon.pduData]);
+    TelinkLogInfo(@"send updateIvIndex SecureNetworkBeacon=%@",[TelinkLibTools convertDataToHexStr:beacon.pduData]);
     [SigBearer.share sendBlePdu:beacon ofType:SigPduType_meshBeacon];
 }
 
@@ -4147,7 +4167,7 @@
  */
 + (void)statusNowTime {
     //time_auth = 1;//每次无条件接受这个时间指令。
-    UInt64 seconds = (UInt64)[LibTools secondsFrom2000];
+    UInt64 seconds = (UInt64)[TelinkLibTools secondsFrom2000];
     [NSTimeZone resetSystemTimeZone]; // 重置手机系统的时区
     NSInteger offset = [NSTimeZone localTimeZone].secondsFromGMT;
     UInt8 zoneOffset = (UInt8)(offset/60/15+64);//时区=分/15+64
@@ -4425,6 +4445,33 @@
             finishCallback(YES, nil);
         }
     }];
+}
+
++ (void)getCertificateDictionaryWithTimeout:(NSTimeInterval)timeout callback:(ProvisionCertificateDictionaryCallBack)block {
+    [SigBearer.share setBearerProvisioned:NO];
+    SigProvisioningManager.share.state = ProvisioningState_recordsGet;
+    [SigProvisioningManager.share getCertificateDictionaryWithTimeout:timeout callback:block];
+}
+
++ (void)sendProvisioningInvitePDUWithAttentionTime:(UInt8)attentionTime callback:(void(^)(SigProvisioningPdu * _Nullable response))block {
+    [SigBearer.share setBearerProvisioned:NO];
+    SigProvisioningManager.share.state = ProvisioningState_ready;
+    SigProvisioningManager.share.provisionResponseBlock = block;
+    [SigProvisioningManager.share identifyWithAttentionDuration:attentionTime];
+}
+
+/// 注意：如果是certificateBasedProvision的模式，且证书数据比较大的情况，可能出现失败的情况。因为证书获取完成并验证完成后再发送startProvision数据包，可能已经超过了之前identity发送的invite数据包的attention time的时间，导致设备不接受startProvision，而直接返回Provision fail数据包。(解决办法是把attention time设置得比较大即可，sendProvisioningInvitePDUWithAttentionTime和configContinueProvisionWithAttentionTime需要使用相同的attentionTime参数)
++ (void)configContinueProvisionWithAttentionTime:(UInt8)attentionTime capabilitiesPdu:(SigProvisioningCapabilitiesPdu *)capabilitiesPdu certificateDictionary:(NSDictionary *)certificateDictionary {
+    SigProvisioningManager.share.state = ProvisioningState_requestingCapabilities;
+    SigProvisioningManager.share.attentionDuration = attentionTime;
+    SigProvisioningManager.share.provisioningData = [[SigProvisioningData alloc] init];
+    SigProvisioningInvitePdu *pdu = [[SigProvisioningInvitePdu alloc] initWithAttentionDuration:attentionTime];
+    SigProvisioningManager.share.provisioningData.provisioningInvitePDUValue = [pdu.pduData subdataWithRange:NSMakeRange(1, pdu.pduData.length-1)];
+    SigProvisioningManager.share.provisioningCapabilities = capabilitiesPdu;
+    SigProvisioningManager.share.isContinueWithoutInvite = YES;
+    if (certificateDictionary) {
+        SigProvisioningManager.share.certificateDictionary = [NSMutableDictionary dictionaryWithDictionary:certificateDictionary];
+    }
 }
 
 #pragma mark - Scan API

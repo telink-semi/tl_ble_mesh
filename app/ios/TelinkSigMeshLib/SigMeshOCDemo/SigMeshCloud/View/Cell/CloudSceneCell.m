@@ -42,7 +42,7 @@
     _model = model;
     _nameLabel.text = model.name;
     _sceneIdLabel.text = [NSString stringWithFormat:@"0x%04lX", (long)model.sceneId];
-    _createTimeLabel.text = [NSString getTimeStringWithTimeStamp:model.createTime];
+    _createTimeLabel.text = [NSString getTimeStringWithTimestamp:model.createTime];
 }
 
 @end

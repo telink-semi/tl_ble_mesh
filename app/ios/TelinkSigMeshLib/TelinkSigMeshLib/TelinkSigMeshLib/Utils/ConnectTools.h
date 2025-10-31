@@ -39,6 +39,7 @@ NS_ASSUME_NONNULL_BEGIN
 /// @param nodeList 需要连接的节点，需要是SigDataSource里面的节点。
 /// @param timeout 超时时间
 /// @param complete 连接结果回调
+/// @note 如果nodeList包含Switch设备或者不包含proxy功能的设备，也会直连上且不会主动断开连接，调用该接口前需要考虑是否要不Swift设备从nodeList里面剔除。
 - (void)startConnectToolsWithNodeList:(NSArray <SigNodeModel *>*)nodeList timeout:(NSInteger)timeout Complete:(nullable startMeshConnectResultBlock)complete;
 
 /// demo 自定义连接工具类，用于停止连接指定的节点流程并断开当前的连接。

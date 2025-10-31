@@ -43,7 +43,6 @@
     [super viewDidLoad];
 
     self.title = @"OOB List";
-    self.sourceArray = [NSMutableArray arrayWithArray:SigDataSource.share.OOBList];
     UIView *footerView = [[UIView alloc] initWithFrame:CGRectZero];
     self.tableView.tableFooterView = footerView;
     [self.tableView registerNib:[UINib nibWithNibName:CellIdentifiers_OOBItemCellID bundle:nil] forCellReuseIdentifier:CellIdentifiers_OOBItemCellID];
@@ -83,6 +82,18 @@
 - (void)viewWillAppear:(BOOL)animated{
     [super viewWillAppear:animated];
     self.tabBarController.tabBar.hidden = YES;
+    [self reloadUI];
+}
+
+- (void)reloadUI {
+    self.sourceArray = [NSMutableArray arrayWithArray:SigDataSource.share.OOBList];
+    [self.tableView performSelectorOnMainThread:@selector(reloadData) withObject:nil waitUntilDone:YES];
+    [self setListEmptyHidden:self.sourceArray.count != 0];
+    self.tableView.hidden = self.sourceArray.count == 0;
+    __weak typeof(self) weakSelf = self;
+    [self.addNewItemButton addAction:^(UIButton *button) {
+        [weakSelf clickAdd:button];
+    }];
 }
 
 - (void)addOobByManualInput {
@@ -91,8 +102,7 @@
     __weak typeof(self) weakSelf = self;
     [vc setBackOobModel:^(SigOOBModel * _Nonnull oobModel) {
         [SigDataSource.share addAndUpdateSigOOBModel:oobModel];
-        [weakSelf.sourceArray addObject:oobModel];
-        [weakSelf.tableView performSelectorOnMainThread:@selector(reloadData) withObject:nil waitUntilDone:YES];
+        [weakSelf performSelectorOnMainThread:@selector(reloadUI) withObject:nil waitUntilDone:YES];
     }];
     [self.navigationController pushViewController:vc animated:YES];
 }
@@ -128,22 +138,14 @@
         }
     }
     [SigDataSource.share addAndUpdateSigOOBModelList:validArray];
-    for (SigOOBModel *model in validArray) {
-        if ([self.sourceArray containsObject:model]) {
-            [self.sourceArray replaceObjectAtIndex:[self.sourceArray indexOfObject:model] withObject:model];
-        } else {
-            [self.sourceArray addObject:model];
-        }
-    }
-    [self.tableView performSelectorOnMainThread:@selector(reloadData) withObject:nil waitUntilDone:YES];
+    [self performSelectorOnMainThread:@selector(reloadUI) withObject:nil waitUntilDone:YES];
 }
 
 - (void)clickDeleteAll {
     __weak typeof(self) weakSelf = self;
     [self showAlertSureAndCancelWithTitle:kDefaultAlertTitle message:@"Wipe all oob info?" sure:^(UIAlertAction *action) {
         [SigDataSource.share deleteAllSigOOBModel];
-        weakSelf.sourceArray = [NSMutableArray array];
-        [weakSelf.tableView performSelectorOnMainThread:@selector(reloadData) withObject:nil waitUntilDone:YES];
+        [weakSelf performSelectorOnMainThread:@selector(reloadUI) withObject:nil waitUntilDone:YES];
     } cancel:nil];
 }
 
@@ -157,8 +159,7 @@
             __weak typeof(self) weakSelf = self;
             [self showAlertSureAndCancelWithTitle:kDefaultAlertTitle message:[NSString stringWithFormat:@"Delete OOB data, UUID:%@ ?",model.UUIDString] sure:^(UIAlertAction *action) {
                 [SigDataSource.share deleteSigOOBModel:model];
-                [weakSelf.sourceArray removeObject:model];
-                [weakSelf.tableView performSelectorOnMainThread:@selector(reloadData) withObject:nil waitUntilDone:YES];
+                [weakSelf performSelectorOnMainThread:@selector(reloadUI) withObject:nil waitUntilDone:YES];
             } cancel:nil];
         }
     }
@@ -183,8 +184,7 @@
                 [SigDataSource.share deleteSigOOBModel:model];
             }
             [SigDataSource.share addAndUpdateSigOOBModel:oobModel];
-            [weakSelf.sourceArray replaceObjectAtIndex:indexPath.row withObject:oobModel];
-            [weakSelf.tableView performSelectorOnMainThread:@selector(reloadData) withObject:nil waitUntilDone:YES];
+            [weakSelf performSelectorOnMainThread:@selector(reloadUI) withObject:nil waitUntilDone:YES];
         }];
         [weakSelf.navigationController pushViewController:vc animated:YES];
     }];

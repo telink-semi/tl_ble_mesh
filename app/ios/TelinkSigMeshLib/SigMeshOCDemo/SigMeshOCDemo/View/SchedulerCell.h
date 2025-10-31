@@ -21,11 +21,13 @@
  *          limitations under the License.
  *******************************************************************************************************/
 
-#import <UIKit/UIKit.h>
+#import "BaseCell.h"
 
-@interface SchedulerCell : UITableViewCell
+@interface SchedulerCell : BaseCell
 
 @property (copy, nonatomic) void(^clickEditBlock)(void);
+/// Background layer for setting rounded corners.
+@property (weak, nonatomic) IBOutlet UIView *bgView;
 
 /// Update content with model.
 /// - Parameter model: model of cell.

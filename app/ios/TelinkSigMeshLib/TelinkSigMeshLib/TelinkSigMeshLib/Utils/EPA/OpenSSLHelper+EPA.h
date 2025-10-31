@@ -29,6 +29,16 @@ NS_ASSUME_NONNULL_BEGIN
 
 - (NSData *)calculateSalt2:(NSData *)someData;
 
+/// The provisioning material derivation function k5 is used to generate the 256-bit key used in provisioning.
+///
+/// The definition of this derivation function makes use of the MAC function HMAC-SHA-256 with a 256-bit
+/// key T.
+/// @param N is 32 or more octets.
+/// @param salt is 256 bits.
+/// @param P is 1 or more octets.
+/// @return 256-bit key.
+/// * @note    - seeAlso: MshPRT_v1.1.pdf  (page.218)
+/// * 3.9.2.11 k5 provisioning material derivation function(page.193)
 - (NSData *)calculateK5WithN:(NSData *)N salt:(NSData *)salt andP:(NSData *)P;
 
 - (NSData *)calculateHMAC_SHA256:(NSData *)someData andKey:(NSData *)key;

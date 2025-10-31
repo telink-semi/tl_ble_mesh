@@ -134,7 +134,7 @@
     TelinkLogDebug(@"getCompositionData 0x%02x",self.address);
     __weak typeof(self) weakSelf = self;
     self.messageHandle = [SDKLibCommand configCompositionDataGetWithDestination:self.address retryCount:self.retryCount responseMaxCount:1 successCallback:^(UInt16 source, UInt16 destination, SigConfigCompositionDataStatus * _Nonnull responseMessage) {
-        TelinkLogInfo(@"opCode=0x%x,parameters=%@",responseMessage.opCode,[LibTools convertDataToHexStr:responseMessage.parameters]);
+        TelinkLogInfo(@"opCode=0x%x,parameters=%@",responseMessage.opCode,[TelinkLibTools convertDataToHexStr:responseMessage.parameters]);
         weakSelf.page = ((SigConfigCompositionDataStatus *)responseMessage).page;
         [weakSelf.node setCompositionData:(SigPage0 *)weakSelf.page];
         [SigDataSource.share saveLocationData];
@@ -194,7 +194,7 @@
     });
     __weak typeof(self) weakSelf = self;
     self.messageHandle = [SDKLibCommand configAppKeyAddWithDestination:self.address appkeyModel:self.appkeyModel sendBySegmentPdu:YES unsegmentedMessageLowerTransportPDUMaxLength:kUnsegmentedMessageLowerTransportPDUMaxLength retryCount:self.retryCount responseMaxCount:1 successCallback:^(UInt16 source, UInt16 destination, SigConfigAppKeyStatus * _Nonnull responseMessage) {
-//        TelinkLogInfo(@"opCode=0x%x,parameters=%@",responseMessage.opCode,[LibTools convertDataToHexStr:responseMessage.parameters]);
+//        TelinkLogInfo(@"opCode=0x%x,parameters=%@",responseMessage.opCode,[TelinkLibTools convertDataToHexStr:responseMessage.parameters]);
         if (weakSelf.isKeybinding) {
             if (((SigConfigAppKeyStatus *)responseMessage).status == SigConfigMessageStatus_success) {
                 if (weakSelf.type == KeyBindType_Normal) {
@@ -206,7 +206,7 @@
                         TelinkLogVerbose(@"init cpsData from config.cpsdata.");
                         deviceType = [[DeviceTypeModel alloc] initWithCID:kCompanyID PID:weakSelf.fastKeybindProductID compositionData:weakSelf.fastKeybindCpsData];
                     } else {
-                        deviceType = [SigMeshLib.share.dataSource getNodeInfoWithCID:[LibTools uint16From16String:weakSelf.node.cid] PID:[LibTools uint16From16String:weakSelf.node.pid]];
+                        deviceType = [SigMeshLib.share.dataSource getNodeInfoWithCID:[TelinkLibTools uint16FromHexString:weakSelf.node.cid] PID:[TelinkLibTools uint16FromHexString:weakSelf.node.pid]];
                     }
                     if (deviceType == nil) {
                         TelinkLogError(@"this node not support fast bind!!!");
@@ -418,7 +418,7 @@
             SigOpcodesAggregatorSequence *message = [[SigOpcodesAggregatorSequence alloc] initWithElementAddress:weakSelf.address items:items];
             dispatch_semaphore_t semaphore = dispatch_semaphore_create(0);
             weakSelf.messageHandle = [SDKLibCommand sendSigOpcodesAggregatorSequenceMessage:message retryCount:weakSelf.retryCount responseMaxCount:1 successCallback:^(UInt16 source, UInt16 destination, SigOpcodesAggregatorStatus * _Nonnull responseMessage) {
-                TelinkLogInfo(@"SigOpcodesAggregatorStatus=%@,source=0x%x,destination=0x%x",[LibTools convertDataToHexStr:responseMessage.parameters],source,destination);
+                TelinkLogInfo(@"SigOpcodesAggregatorStatus=%@,source=0x%x,destination=0x%x",[TelinkLibTools convertDataToHexStr:responseMessage.parameters],source,destination);
                 if (responseMessage.status != SigOpcodesAggregatorMessagesStatus_success) {
                     errorStr = [NSString stringWithFormat:@"KeyBind Fail:send AppkeyAdd And BindModel By Using OpcodesAggregatorSequence fail, status=0x%X.",responseMessage.status];
                 }
@@ -498,7 +498,7 @@
                 [SDKLibCommand configModelPublicationSetWithDestination:self.address publish:publish elementAddress:eleAdr modelIdentifier:modelID.getIntModelIdentifier companyIdentifier:modelID.getIntCompanyIdentifier retryCount:self.retryCount responseMaxCount:1 successCallback:^(UInt16 source, UInt16 destination, SigConfigModelPublicationStatus * _Nonnull responseMessage) {
                     TelinkLogInfo(@"publish time callback");
                     if (responseMessage.elementAddress == eleAdr) {
-                        if (responseMessage.status == SigConfigMessageStatus_success && [LibTools uint16From16String:responseMessage.publish.address] == kMeshAddress_allNodes) {
+                        if (responseMessage.status == SigConfigMessageStatus_success && [TelinkLibTools uint16FromHexString:responseMessage.publish.address] == kMeshAddress_allNodes) {
                             TelinkLogInfo(@"publish time success");
                         } else {
                             TelinkLogInfo(@"publish time status=%d,pubModel.publishAddress=%@",responseMessage.status,responseMessage.publish.address);

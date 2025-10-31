@@ -232,7 +232,7 @@ typedef enum : NSUInteger {
         __block BOOL hasSuccess = NO;
         dispatch_semaphore_t semaphore = dispatch_semaphore_create(0);
         [SDKLibCommand configNodeIdentitySetWithDestination:weakSelf.currentModel.address netKeyIndex:SigMeshLib.share.dataSource.curNetkeyModel.index identity:SigNodeIdentityState_enabled retryCount:SigMeshLib.share.dataSource.defaultRetryCount responseMaxCount:1 successCallback:^(UInt16 source, UInt16 destination, SigConfigNodeIdentityStatus * _Nonnull responseMessage) {
-            TelinkLogInfo(@"configNodeIdentitySetWithDestination=%@,source=%d,destination=%d",[LibTools convertDataToHexStr:responseMessage.parameters],source,destination);
+            TelinkLogInfo(@"configNodeIdentitySetWithDestination=%@,source=%d,destination=%d",[TelinkLibTools convertDataToHexStr:responseMessage.parameters],source,destination);
         } resultCallback:^(BOOL isResponseAll, NSError * _Nullable error) {
             if (!error) {
                 hasSuccess = YES;
@@ -323,7 +323,7 @@ typedef enum : NSUInteger {
     self.progress = SigGattOTAProgress_step5_setFilter;
     __weak typeof(self) weakSelf = self;
     [SDKLibCommand setFilterForProvisioner:SigMeshLib.share.dataSource.curProvisionerModel successCallback:^(UInt16 source, UInt16 destination, SigFilterStatus * _Nonnull responseMessage) {
-        TelinkLogInfo(@"setFilterForProvisioner=%@,source=%d,destination=%d",[LibTools convertDataToHexStr:responseMessage.parameters],source,destination);
+        TelinkLogInfo(@"setFilterForProvisioner=%@,source=%d,destination=%d",[TelinkLibTools convertDataToHexStr:responseMessage.parameters],source,destination);
     } finishCallback:^(BOOL isResponseAll, NSError * _Nullable error) {
         TelinkLogInfo(@"isResponseAll=%d,error=%@",isResponseAll,error);
         if (weakSelf.progress == SigGattOTAProgress_step5_setFilter) {

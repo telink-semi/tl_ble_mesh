@@ -134,8 +134,8 @@
     NSString *verificationCode = self.verificationCodeTF.text;
     
     __weak typeof(self) weakSelf = self;
-    NSOperationQueue *oprationQueue = [[NSOperationQueue alloc] init];
-    [oprationQueue addOperationWithBlock:^{
+    NSOperationQueue *operationQueue = [[NSOperationQueue alloc] init];
+    [operationQueue addOperationWithBlock:^{
         dispatch_semaphore_t semaphore = dispatch_semaphore_create(0);
         [TelinkHttpTool resetPasswordRequestWithMailAddress:emailString verificationCode:verificationCode newPassword:password.sha256String didLoadData:^(id  _Nullable result, NSError * _Nullable err) {
             if (err) {

@@ -123,7 +123,7 @@ typedef void (^TelinkHttpBlock) (TelinkHttpRequest * _Nonnull request,id _Nullab
     TelinkHttpRequest *req = [[TelinkHttpRequest alloc] init];
     req.httpBlock = block;
     NSDictionary *header = @{@"Content-Type" : @"application/x-www-form-urlencoded"};
-    NSDictionary *content = @{@"data" : [LibTools getJSONStringWithDictionary:jsonDict],@"timeout":@(timeout)};
+    NSDictionary *content = @{@"data" : [TelinkLibTools getJSONStringWithDictionary:jsonDict],@"timeout":@(timeout)};
     [req requestWithRequestType:RequestTypePOST withUrl:[NSString stringWithFormat:@"%@upload",TelinkHttpManager.share.baseUrl] withHeader:header withContent:content];
     return req;
 }

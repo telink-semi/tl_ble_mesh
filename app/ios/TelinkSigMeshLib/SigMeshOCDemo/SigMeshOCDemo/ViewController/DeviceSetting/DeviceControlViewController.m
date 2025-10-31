@@ -125,8 +125,6 @@ typedef enum : NSUInteger {
         [self.tableView registerNib:[UINib nibWithNibName:CellIdentifiers_OnOffModelCellID bundle:nil] forCellReuseIdentifier:CellIdentifiers_OnOffModelCellID];
     }
 
-    //注意：2.8.2发现RGB为255、0、0时，亮度调到100会设备颜色显示异常，暂时屏蔽亮度、色温
-
     if (self.model.lightnessAddresses.count > 0) {
         ModelType *type = [[ModelType alloc] init];
         type.uiType = ModelUITypeLum;

@@ -72,14 +72,16 @@
         if (error) {
             [weakSelf showTips:error.localizedDescription];
         } else {
-            if (AppDataSource.share.createdNetwordList.count == 0) {
-                weakSelf.tableView.hidden = YES;
-                [weakSelf showTips:@"no create netword."];
-            } else {
-                weakSelf.tableView.hidden = NO;
-                weakSelf.createdList = [NSMutableArray arrayWithArray:AppDataSource.share.createdNetwordList];
-                [weakSelf.tableView performSelectorOnMainThread:@selector(reloadData) withObject:nil waitUntilDone:YES];
-            }
+            dispatch_async(dispatch_get_main_queue(), ^{
+                if (AppDataSource.share.createdNetwordList.count == 0) {
+                    weakSelf.tableView.hidden = YES;
+                    [weakSelf showTips:@"no create network."];
+                } else {
+                    weakSelf.tableView.hidden = NO;
+                    weakSelf.createdList = [NSMutableArray arrayWithArray:AppDataSource.share.createdNetwordList];
+                    [weakSelf.tableView  reloadData];
+                }
+            });
         }
     }];
 }
@@ -175,10 +177,12 @@
             TelinkLogInfo(@"addMeshNetwork error = %@", error);
             [weakSelf showTips:[NSString stringWithFormat:@"addMeshNetwork error = %@", error.localizedDescription]];
         } else {
-            [weakSelf showTips:[NSString stringWithFormat:@"addMeshNetwork:%@ successful.", meshNetworkName]];
-            weakSelf.tableView.hidden = NO;
-            weakSelf.createdList = [NSMutableArray arrayWithArray:AppDataSource.share.createdNetwordList];
-            [weakSelf.tableView performSelectorOnMainThread:@selector(reloadData) withObject:nil waitUntilDone:YES];
+            dispatch_async(dispatch_get_main_queue(), ^{
+                [weakSelf showTips:[NSString stringWithFormat:@"addMeshNetwork:%@ successful.", meshNetworkName]];
+                weakSelf.tableView.hidden = NO;
+                weakSelf.createdList = [NSMutableArray arrayWithArray:AppDataSource.share.createdNetwordList];
+                [weakSelf.tableView reloadData];
+            });
         }
     }];
 }
@@ -197,8 +201,10 @@
                 [AppDataSource.share.createdNetwordList removeObject:network];
                 [SigDataSource.share saveLocationData];
                 [weakSelf.createdList removeObject:network];
-                [weakSelf.tableView performSelectorOnMainThread:@selector(reloadData) withObject:nil waitUntilDone:YES];
-                weakSelf.tableView.hidden = weakSelf.createdList.count == 0;
+                dispatch_async(dispatch_get_main_queue(), ^{
+                    [weakSelf.tableView reloadData];
+                    weakSelf.tableView.hidden = weakSelf.createdList.count == 0;
+                });
             }
         }];
     } cancel:^(UIAlertAction *action) {

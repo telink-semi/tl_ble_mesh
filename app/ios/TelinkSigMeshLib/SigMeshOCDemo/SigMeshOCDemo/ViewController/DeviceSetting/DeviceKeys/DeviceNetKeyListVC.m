@@ -95,7 +95,7 @@
     [ShowTipsHandle.share show:@"add NetKey to node..."];
 
     __weak typeof(self) weakSelf = self;
-    [SDKLibCommand configNetKeyAddWithDestination:self.model.address networkKeyIndex:netKey.index networkKeyData:[LibTools nsstringToHex:netKey.key] retryCount:2 responseMaxCount:1 successCallback:^(UInt16 source, UInt16 destination, SigConfigNetKeyStatus * _Nonnull responseMessage) {
+    [SDKLibCommand configNetKeyAddWithDestination:self.model.address networkKeyIndex:netKey.index networkKeyData:[TelinkLibTools nsstringToHex:netKey.key] retryCount:2 responseMaxCount:1 successCallback:^(UInt16 source, UInt16 destination, SigConfigNetKeyStatus * _Nonnull responseMessage) {
         TelinkLogInfo(@"NetKeyAdd responseMessage=%@,parameters=%@,source=0x%x,destination=0x%x",responseMessage,responseMessage.parameters,source,destination);
         if (responseMessage.status == SigConfigMessageStatus_success) {
             SigNodeKeyModel *nodeKeyModel = [[SigNodeKeyModel alloc] initWithIndex:netKey.index updated:NO];

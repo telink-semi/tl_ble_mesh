@@ -51,7 +51,7 @@
 }
 
 - (NSString *)description {
-    return[NSString stringWithFormat:@"<%p> - applicationKey:0x%@", self, [LibTools convertDataToHexStr:[self accessKey]]];
+    return[NSString stringWithFormat:@"<%p> - applicationKey:0x%@", self, [TelinkLibTools convertDataToHexStr:[self accessKey]]];
 }
 
 @end
@@ -70,7 +70,7 @@
 }
 
 - (NSData *)accessKey {
-    return [LibTools nsstringToHex:_node.deviceKey];
+    return [TelinkLibTools nsstringToHex:_node.deviceKey];
 }
 
 - (instancetype)initWithNetworkKey:(SigNetkeyModel *)networkKey node:(SigNodeModel *)node {
@@ -85,7 +85,7 @@
 }
 
 - (NSString *)description {
-    return[NSString stringWithFormat:@"<%p> - deviceKey:0x%@", self, [LibTools convertDataToHexStr:[self accessKey]]];
+    return[NSString stringWithFormat:@"<%p> - deviceKey:0x%@", self, [TelinkLibTools convertDataToHexStr:[self accessKey]]];
 }
 
 @end

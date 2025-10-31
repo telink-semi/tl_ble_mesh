@@ -1,0 +1,103 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<document type="com.apple.InterfaceBuilder3.CocoaTouch.XIB" version="3.0" toolsVersion="32700.99.1234" targetRuntime="iOS.CocoaTouch" propertyAccessControl="none" useAutolayout="YES" useTraitCollections="YES" useSafeAreas="YES" colorMatched="YES">
+    <device id="retina6_12" orientation="portrait" appearance="light"/>
+    <dependencies>
+        <deployment identifier="iOS"/>
+        <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="22685"/>
+        <capability name="Named colors" minToolsVersion="9.0"/>
+        <capability name="Safe area layout guides" minToolsVersion="9.0"/>
+        <capability name="System colors in document resources" minToolsVersion="11.0"/>
+        <capability name="documents saved in the Xcode 8 format" minToolsVersion="8.0"/>
+    </dependencies>
+    <objects>
+        <placeholder placeholderIdentifier="IBFilesOwner" id="-1" userLabel="File's Owner"/>
+        <placeholder placeholderIdentifier="IBFirstResponder" id="-2" customClass="UIResponder"/>
+        <tableViewCell contentMode="scaleToFill" selectionStyle="default" indentationWidth="10" rowHeight="74" id="KGk-i7-Jjw" customClass="LCItemHiddenCell">
+            <rect key="frame" x="0.0" y="0.0" width="320" height="74"/>
+            <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
+            <tableViewCellContentView key="contentView" opaque="NO" clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="center" tableViewCell="KGk-i7-Jjw" id="H2p-sc-9uM">
+                <rect key="frame" x="0.0" y="0.0" width="320" height="74"/>
+                <autoresizingMask key="autoresizingMask"/>
+                <subviews>
+                    <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="fsP-BU-Txk">
+                        <rect key="frame" x="7" y="7" width="306" height="60"/>
+                        <subviews>
+                            <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="NLC name" textAlignment="natural" lineBreakMode="tailTruncation" numberOfLines="0" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="Sda-Qs-fib">
+                                <rect key="frame" x="10" y="0.0" width="159" height="60"/>
+                                <fontDescription key="fontDescription" type="boldSystem" pointSize="15"/>
+                                <color key="textColor" name="telinkTitleGray"/>
+                                <nil key="highlightedColor"/>
+                            </label>
+                            <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="Label" textAlignment="right" lineBreakMode="tailTruncation" numberOfLines="0" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="l8p-6k-ZqF">
+                                <rect key="frame" x="169" y="23" width="110" height="14.333333333333336"/>
+                                <constraints>
+                                    <constraint firstAttribute="width" constant="110" id="ZSG-Uf-ick"/>
+                                </constraints>
+                                <fontDescription key="fontDescription" type="system" pointSize="12"/>
+                                <color key="textColor" name="telinkBlue"/>
+                                <nil key="highlightedColor"/>
+                            </label>
+                            <imageView clipsSubviews="YES" userInteractionEnabled="NO" contentMode="scaleAspectFit" horizontalHuggingPriority="251" verticalHuggingPriority="251" image="fb_bottom" translatesAutoresizingMaskIntoConstraints="NO" id="vx3-o1-KFH">
+                                <rect key="frame" x="284" y="26.666666666666664" width="12" height="7"/>
+                                <constraints>
+                                    <constraint firstAttribute="height" constant="7" id="XhG-xK-rjJ"/>
+                                    <constraint firstAttribute="width" constant="12" id="faU-7J-yAZ"/>
+                                </constraints>
+                            </imageView>
+                            <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="hjh-vL-Rwj">
+                                <rect key="frame" x="0.0" y="0.0" width="306" height="60"/>
+                                <constraints>
+                                    <constraint firstAttribute="height" constant="60" id="MCk-fx-AJf"/>
+                                </constraints>
+                                <state key="normal" title="Button"/>
+                                <buttonConfiguration key="configuration" style="plain" title=" "/>
+                            </button>
+                        </subviews>
+                        <color key="backgroundColor" systemColor="systemBackgroundColor"/>
+                        <constraints>
+                            <constraint firstItem="hjh-vL-Rwj" firstAttribute="leading" secondItem="fsP-BU-Txk" secondAttribute="leading" id="0lg-R4-Jw7"/>
+                            <constraint firstItem="l8p-6k-ZqF" firstAttribute="leading" secondItem="Sda-Qs-fib" secondAttribute="trailing" id="6E9-Cw-dtB"/>
+                            <constraint firstItem="vx3-o1-KFH" firstAttribute="centerY" secondItem="Sda-Qs-fib" secondAttribute="centerY" id="FhS-oe-odZ"/>
+                            <constraint firstItem="Sda-Qs-fib" firstAttribute="top" secondItem="fsP-BU-Txk" secondAttribute="top" id="Rhv-gE-xKC"/>
+                            <constraint firstItem="l8p-6k-ZqF" firstAttribute="centerY" secondItem="Sda-Qs-fib" secondAttribute="centerY" id="Tjg-wk-aVW"/>
+                            <constraint firstItem="Sda-Qs-fib" firstAttribute="leading" secondItem="fsP-BU-Txk" secondAttribute="leading" constant="10" id="W9n-Qf-atb"/>
+                            <constraint firstAttribute="trailing" secondItem="hjh-vL-Rwj" secondAttribute="trailing" id="XE4-62-c2q"/>
+                            <constraint firstItem="vx3-o1-KFH" firstAttribute="leading" secondItem="l8p-6k-ZqF" secondAttribute="trailing" constant="5" id="jCT-Cs-oZi"/>
+                            <constraint firstAttribute="bottom" secondItem="Sda-Qs-fib" secondAttribute="bottom" id="l7A-dd-VXx"/>
+                            <constraint firstItem="hjh-vL-Rwj" firstAttribute="top" secondItem="fsP-BU-Txk" secondAttribute="top" id="lrl-zk-3kL"/>
+                            <constraint firstAttribute="height" constant="60" id="qq2-0o-B2v"/>
+                            <constraint firstAttribute="trailing" secondItem="vx3-o1-KFH" secondAttribute="trailing" constant="10" id="rpA-9Q-vgy"/>
+                            <constraint firstAttribute="bottom" secondItem="hjh-vL-Rwj" secondAttribute="bottom" id="vz3-y1-HxC"/>
+                        </constraints>
+                    </view>
+                </subviews>
+                <constraints>
+                    <constraint firstAttribute="trailing" secondItem="fsP-BU-Txk" secondAttribute="trailing" constant="7" id="2Ml-py-N4k"/>
+                    <constraint firstItem="fsP-BU-Txk" firstAttribute="leading" secondItem="H2p-sc-9uM" secondAttribute="leading" constant="7" id="IcJ-9l-7Js"/>
+                    <constraint firstItem="fsP-BU-Txk" firstAttribute="top" secondItem="H2p-sc-9uM" secondAttribute="top" constant="7" id="YgI-9d-yKJ"/>
+                    <constraint firstAttribute="bottom" secondItem="fsP-BU-Txk" secondAttribute="bottom" constant="7" id="gt9-EH-gxJ"/>
+                </constraints>
+            </tableViewCellContentView>
+            <viewLayoutGuide key="safeArea" id="aW0-zy-SZf"/>
+            <connections>
+                <outlet property="bgView" destination="fsP-BU-Txk" id="Fng-7s-RDQ"/>
+                <outlet property="nameLabel" destination="Sda-Qs-fib" id="BP7-La-vy2"/>
+                <outlet property="showButton" destination="hjh-vL-Rwj" id="Yt4-jw-ZaU"/>
+                <outlet property="valueLabel" destination="l8p-6k-ZqF" id="GaS-gw-wn2"/>
+            </connections>
+            <point key="canvasLocation" x="36.641221374045799" y="30.985915492957748"/>
+        </tableViewCell>
+    </objects>
+    <resources>
+        <image name="fb_bottom" width="12" height="7"/>
+        <namedColor name="telinkBlue">
+            <color red="0.29019607843137257" green="0.52941176470588236" blue="0.93333333333333335" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
+        </namedColor>
+        <namedColor name="telinkTitleGray">
+            <color red="0.3843137254901961" green="0.3843137254901961" blue="0.3843137254901961" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
+        </namedColor>
+        <systemColor name="systemBackgroundColor">
+            <color white="1" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
+        </systemColor>
+    </resources>
+</document>

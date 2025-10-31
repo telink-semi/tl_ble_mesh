@@ -14,6 +14,8 @@ target 'SigLoopAddDemo' do
   pod 'BRPickerView'
   pod 'IQKeyboardManager' #iOS11 and later
   pod 'WMZPageController'
+  pod 'MBProgressHUD',:git => 'https://github.com/jdg/MBProgressHUD.git'
+  pod 'OpenSSL-Universal', '3.3.3001'
 
 end
 
@@ -28,6 +30,8 @@ target 'SigMeshCloud' do
   pod 'BRPickerView'
   pod 'IQKeyboardManager' #iOS11 and later
   pod 'WMZPageController'
+  pod 'MBProgressHUD',:git => 'https://github.com/jdg/MBProgressHUD.git'
+  pod 'OpenSSL-Universal', '3.3.3001'
 
 end
 
@@ -41,6 +45,8 @@ target 'SigMeshOCDemo' do
   pod 'BRPickerView'
   pod 'IQKeyboardManager' #iOS11 and later
   pod 'WMZPageController'
+  pod 'MBProgressHUD',:git => 'https://github.com/jdg/MBProgressHUD.git'
+  pod 'OpenSSL-Universal', '3.3.3001'
 
   target 'SigMeshOCDemoTests' do
     inherit! :search_paths
@@ -58,7 +64,7 @@ post_install do |installer|
   installer.generated_projects.each do |project|
       project.targets.each do |target|
         target.build_configurations.each do |config|
-          config.build_settings['IPHONEOS_DEPLOYMENT_TARGET'] = '11.0'
+          config.build_settings['IPHONEOS_DEPLOYMENT_TARGET'] = '12.0'
         end
       end
   end

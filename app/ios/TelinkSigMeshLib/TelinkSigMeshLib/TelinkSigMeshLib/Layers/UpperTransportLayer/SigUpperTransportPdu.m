@@ -33,7 +33,7 @@
     /// Use the init method of the parent class to initialize some properties of the parent class of the subclass instance.
     if (self = [super init]) {
         /// Initialize self.
-//        TelinkLogDebug(@"accessMessage.upperTransportPdu=%@,length=%lu",[LibTools convertDataToHexStr:accessMessage.transportPdu],(unsigned long)accessMessage.transportPdu.length);
+//        TelinkLogDebug(@"accessMessage.upperTransportPdu=%@,length=%lu",[TelinkLibTools convertDataToHexStr:accessMessage.transportPdu],(unsigned long)accessMessage.transportPdu.length);
         NSInteger micSize = accessMessage.transportMicSize;
         NSInteger encryptedDataSize = accessMessage.upperTransportPdu.length - micSize;
         NSData *encryptedData = [accessMessage.upperTransportPdu subdataWithRange:NSMakeRange(0, encryptedDataSize)];
@@ -147,7 +147,7 @@
 }
 
 + (nullable NSDictionary *)decodeAccessMessage:(SigAccessMessage *)accessMessage forMeshNetwork:(SigDataSource *)meshNetwork {
-//    TelinkLogDebug(@"accessMessage.upperTransportPdu=%@,length=%d",[LibTools convertDataToHexStr:accessMessage.transportPdu],accessMessage.transportPdu.length);
+//    TelinkLogDebug(@"accessMessage.upperTransportPdu=%@,length=%d",[TelinkLibTools convertDataToHexStr:accessMessage.transportPdu],accessMessage.transportPdu.length);
     // Was the message signed using Application Key?
     UInt8 aid = accessMessage.aid;
     if (accessMessage.AKF) {
@@ -203,7 +203,7 @@
         // Try decoding using source's Node Device Key. This should work if a status
         // message was sent as a response to a Config Message sent by this Provisioner.
         SigNodeModel *node = [meshNetwork getNodeWithAddress:accessMessage.source];
-        NSData *deviceKey = [LibTools nsstringToHex:node.deviceKey];
+        NSData *deviceKey = [TelinkLibTools nsstringToHex:node.deviceKey];
 //        TelinkLogVerbose(@"Try decoding using source's Node Device Key,deviceKey=%@",deviceKey);
         SigUpperTransportPdu *pdu = [[SigUpperTransportPdu alloc] initFromLowerTransportAccessMessage:accessMessage key:deviceKey];
         if (deviceKey && deviceKey.length > 0 && pdu) {
@@ -213,7 +213,7 @@
         // On the other hand, if another Provisioner is sending Config Messages,
         // they will be signed using the local Provisioner's Device Key instead.
         node = [meshNetwork getNodeWithAddress:accessMessage.destination];
-        deviceKey = [LibTools nsstringToHex:node.deviceKey];
+        deviceKey = [TelinkLibTools nsstringToHex:node.deviceKey];
         pdu = [[SigUpperTransportPdu alloc] initFromLowerTransportAccessMessage:accessMessage key:deviceKey];
         if (deviceKey && deviceKey.length > 0 && pdu) {
             SigDeviceKeySet *keySet = [[SigDeviceKeySet alloc] initWithNetworkKey:accessMessage.networkKey node:node];
@@ -233,7 +233,7 @@
 }
 
 - (NSString *)description {
-    return[NSString stringWithFormat:@"<%p> - Upper Transport PDU, source:(%04X)->destination: (%04X) Seq: (%08X), accessPdu: (%@), MIC size: (%d)bytes", self, _source,_destination,(unsigned int)_sequence,[LibTools convertDataToHexStr:_accessPdu],_transportMicSize];
+    return[NSString stringWithFormat:@"<%p> - Upper Transport PDU, source:(%04X)->destination: (%04X) Seq: (%08X), accessPdu: (%@), MIC size: (%d)bytes", self, _source,_destination,(unsigned int)_sequence,[TelinkLibTools convertDataToHexStr:_accessPdu],_transportMicSize];
 }
 
 @end

@@ -31,8 +31,14 @@
 @property (weak, nonatomic) IBOutlet UITableView *tableView;
 @property (weak, nonatomic) IBOutlet UITextField *publishAddressTF;
 @property (weak, nonatomic) IBOutlet UITextField *periodTF;
+@property (weak, nonatomic) IBOutlet UILabel *sensorPublishLabel;
+@property (weak, nonatomic) IBOutlet UILabel *publishAddressLabel;
+@property (weak, nonatomic) IBOutlet UILabel *periodLabel;
+@property (weak, nonatomic) IBOutlet UIButton *setButton;
+@property (weak, nonatomic) IBOutlet UIButton *getButton;
 @property (nonatomic, strong) NSMutableArray <SigSensorDataModel *>*source;
 @property (nonatomic, assign) UInt16 sensorAddress;
+@property (weak, nonatomic) IBOutlet NSLayoutConstraint *tableViewBottomLayout;
 
 @end
 
@@ -42,6 +48,18 @@
     [super viewDidLoad];
     // Do any additional setup after loading the view from its nib.
     self.title = @"Sensor Control";
+    if (self.hiddenPublishSet) {
+        self.tableViewBottomLayout.constant = 0;
+        self.publishAddressTF.hidden = YES;
+        self.periodTF.hidden = YES;
+        self.sensorPublishLabel.hidden = YES;
+        self.publishAddressLabel.hidden = YES;
+        self.periodLabel.hidden = YES;
+        self.setButton.hidden = YES;
+        self.getButton.hidden = YES;
+    } else {
+        self.tableViewBottomLayout.constant = 163;
+    }
     _tableView.separatorStyle = UITableViewCellSeparatorStyleNone;
     [self.tableView registerNib:[UINib nibWithNibName:NSStringFromClass(SensorConfigCell.class) bundle:nil] forCellReuseIdentifier:NSStringFromClass(SensorConfigCell.class)];
     //iOS 15中 UITableView 新增了一个属性：sectionHeaderTopPadding。此属性会给每一个 section header 增加一个默认高度，当我们使用 UITableViewStylePlain 初始化UITableView 的时候，系统默认给 section header 增高了22像素。
@@ -139,19 +157,19 @@
 
 - (IBAction)clickSetPublishButton:(UIButton *)sender {
     NSString *ttlString = self.publishAddressTF.text.removeAllSpace;
-    BOOL result = [LibTools validateHex:ttlString];
+    BOOL result = [TelinkLibTools validateHexString:ttlString];
     if (result == NO || ttlString.length == 0) {
         // need input hexadecimal char.
         [self showTips:@"Please input a hexadecimal string."];
         return;
     }
-    UInt16 value = [LibTools uint16From16String:ttlString];
+    UInt16 value = [TelinkLibTools uint16FromHexString:ttlString];
     if (value > 0xFFFF || (value >= 0x8000 && value <= 0xBFFF)) {
         [self showTips:@"The range of publication address is 0~0x7FFF and 0xC000~0xFFFF."];
         return;
     }
     NSString *msString = self.periodTF.text.removeAllSpace;
-    result = [LibTools validateNumberString:msString];
+    result = [TelinkLibTools validateNumberString:msString];
     if (result == NO || msString.length == 0) {
         // need input number char.
         [self showTips:@"Please input a number string."];

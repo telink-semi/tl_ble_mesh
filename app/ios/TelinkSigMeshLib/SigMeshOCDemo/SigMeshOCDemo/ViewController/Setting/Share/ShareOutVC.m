@@ -234,7 +234,7 @@
     if (!exist) {
         BOOL ret = [manager createFileAtPath:path contents:nil attributes:nil];
         if (ret) {
-            NSData *tempData = [LibTools getJSONDataWithDictionary:dictionary];
+            NSData *tempData = [TelinkLibTools getJSONDataWithDictionary:dictionary];
             NSFileHandle *handle = [NSFileHandle fileHandleForWritingAtPath:path];
             [handle truncateFileAtOffset:0];
             [handle writeData:tempData];

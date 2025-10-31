@@ -58,10 +58,10 @@
 - (void)clickSave {
     [self.uuidTF resignFirstResponder];
     [self.oobTF resignFirstResponder];
-    if (![LibTools validateHex:self.uuidTF.text.removeAllSpaceAndNewlines]) {
+    if (![TelinkLibTools validateHexString:self.uuidTF.text.removeAllSpaceAndNewlines]) {
         return;
     }
-    if (![LibTools validateHex:self.oobTF.text.removeAllSpaceAndNewlines]) {
+    if (![TelinkLibTools validateHexString:self.oobTF.text.removeAllSpaceAndNewlines]) {
         return;
     }
     if (self.uuidTF.text.length != 32) {
@@ -111,7 +111,7 @@
 #pragma mark - UITextFieldDelegate
 
 - (BOOL)textFieldShouldEndEditing:(UITextField *)textField{
-    if ([LibTools validateHex:textField.text.removeAllSpaceAndNewlines]) {
+    if ([TelinkLibTools validateHexString:textField.text.removeAllSpaceAndNewlines]) {
         [self refreshShowLabel];
         return YES;
     }

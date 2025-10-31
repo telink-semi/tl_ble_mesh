@@ -31,6 +31,7 @@
 #import "MeshOTAVC.h"
 #import "RemoteAddVC.h"
 #import "AddDeviceByCloudVC.h"
+#import "ConfirmAddDeviceVC.h"
 #import "CMDViewController.h"
 #import "PassiveSwitchDetailVC.h"
 
@@ -62,7 +63,10 @@
     [DemoCommand switchOnOffWithIsOn:sender.tag == 100 address:kMeshAddress_allNodes responseMaxCount:tem ack:YES successCallback:^(UInt16 source, UInt16 destination, SigGenericOnOffStatus * _Nonnull responseMessage) {
         [weakSelf delayReloadCollectionView];
     } resultCallback:^(BOOL isResponseAll, NSError * _Nonnull error) {
-
+        // 没有全部返回状态，会将设备职位离线状态，需要刷新一次。
+        if (error) {
+            [weakSelf delayReloadCollectionView];
+        }
     }];
 }
 
@@ -114,7 +118,7 @@
             [inputAlertController addAction:[UIAlertAction actionWithTitle:kDefaultAlertOK style:UIAlertActionStyleDefault handler:^(UIAlertAction * _Nonnull action) {
                 TelinkLogDebug(@"输入ivIndex完成");
                 UITextField *ivIndex = inputAlertController.textFields.firstObject;
-                UInt32 ivIndexUInt32 = [LibTools uint32From16String:ivIndex.text];
+                UInt32 ivIndexUInt32 = [TelinkLibTools uint32FromHexString:ivIndex.text];
                 [SigDataSource.share setIvIndexUInt32:ivIndexUInt32];
                 [SigDataSource.share setSequenceNumberUInt32:0];
                 [SigDataSource.share saveCurrentIvIndex:ivIndexUInt32 sequenceNumber:0];
@@ -183,6 +187,11 @@
         //fast provision
         TelinkLogVerbose(@"click fast provision add device");
         UIViewController *vc = [UIStoryboard initVC:ViewControllerIdentifiers_FastProvisionAddViewControllerID];
+        [self.navigationController pushViewController:vc animated:YES];
+    } else if (mode == ProvisionMode_normalConfirm) {
+        //confirm provision
+        TelinkLogVerbose(@"click confirm provision add device");
+        UIViewController *vc = [UIStoryboard initVC:NSStringFromClass(ConfirmAddDeviceVC.class)];
         [self.navigationController pushViewController:vc animated:YES];
     }
 #endif
@@ -315,8 +324,13 @@
     }
 
     if (model.state == DeviceStateOutOfLine || model.isKeyBindSuccess == NO) {
-        [ShowTipsHandle.share show:Tip_DeviceOutline];
-        [ShowTipsHandle.share delayHidden:2.0];
+        __weak typeof(self) weakSelf = self;
+        [ShowTipsHandle.share show:[NSString stringWithFormat:@"get OnOff status of 0x%04X", model.address]];
+        [SDKLibCommand genericOnOffGetWithDestination:model.address retryCount:0 responseMaxCount:1 successCallback:^(UInt16 source, UInt16 destination, SigGenericOnOffStatus * _Nonnull responseMessage) {
+            [weakSelf delayReloadCollectionView];
+        } resultCallback:^(BOOL isResponseAll, NSError * _Nullable error) {
+            [ShowTipsHandle.share hidden];
+        }];
         return;
     }
 
@@ -439,7 +453,7 @@
     SigBearer.share.dataDelegate = self;
     SigMeshLib.share.delegateForDeveloper = self;
     if (SigBearer.share.isOpen) {
-        if (SigDataSource.share.getCurrentConnectedNode.isRemote) {
+        if (SigDataSource.share.isConnectedSwitchDevice || SigDataSource.share.isConnectedNoProxyFeatureDevice) {
             [SigDataSource.share setAllDevicesOutline];
             [self delayReloadCollectionView];
             __weak typeof(self) weakSelf = self;
@@ -478,9 +492,6 @@
     [self.view addGestureRecognizer:gesture];
     self.source = [NSMutableArray arrayWithArray:SigDataSource.share.curNodes];
     SigBluetooth.share.delegate = self;
-//    [self showMeshOTAHits];
-    //做法1 自动登录
-//    [self checkLoginState];
 }
 
 //获取手机当前显示的ViewController
@@ -514,9 +525,9 @@
     [SigPublishManager.share setDiscoverOnlineNodeCallback:^(NSNumber * _Nonnull unicastAddress) {
         [weakSelf delayReloadCollectionView];
     }];
-    [SDKLibCommand setBluetoothCentralUpdateStateCallback:^(CBCentralManagerState state) {
+    [SDKLibCommand setBluetoothCentralUpdateStateCallback:^(CBManagerState state) {
         TelinkLogVerbose(@"setBluetoothCentralUpdateStateCallback state=%ld",(long)state);
-        if (state == CBCentralManagerStatePoweredOn) {
+        if (state == CBManagerStatePoweredOn) {
             [weakSelf workNormal];
         } else {
             weakSelf.shouldSetAllOffline = NO;
@@ -534,13 +545,18 @@
 }
 
 - (void)bearerDidOpen:(SigBearer *)bearer {
-    //非主页，重连mesh成功，是否需要获取设备的状态（v3.3.3.5版本发现meshOTA界面是需要获取状态的）(v3.3.3.6版本发现弹UIAlertController框提示@"cancel Mesh ota finish!"没有点击确定的情况下不会获取设备状态，此处再次修改)（v4.1.0.1版本发现SingleDeviceViewController界面是需要获取状态的）
+    //非主页，重连mesh成功，是否需要获取设备的状态（v3.3.3.5版本发现meshOTA界面是需要获取状态的）（v4.1.0.1版本发现SingleDeviceViewController界面是需要获取状态的）
+    // (v3.3.3.6版本发现弹UIAlertController框提示@"cancel Mesh ota finish!"没有点击确定的情况下不会获取设备状态，此处再次修改)
+     //(v4.1.0.1版本发现remoteVC时会弹出UIAlertController框提示@"Switch not connected, pls set device to adv mode",此处不应该获取状态。因为遥控器不会返回Status的)
+
     dispatch_async(dispatch_get_main_queue(), ^{
         UIViewController *vc = self.currentViewController;
-        if ([vc isMemberOfClass:[self class]] || [vc isMemberOfClass:[MeshOTAVC class]] || [vc isMemberOfClass:[UIAlertController class]] || [vc isMemberOfClass:[SingleDeviceViewController class]]) {
-            [self freshOnline:nil];
+        if ([vc isMemberOfClass:[self class]] || [vc isMemberOfClass:[MeshOTAVC class]] || [vc isMemberOfClass:[SingleDeviceViewController class]] || [vc isMemberOfClass:[UIAlertController class]]) {
+            if (!SigDataSource.share.getCurrentConnectedNode.isRemote) {
+                [self freshOnline:nil];
+            }
         } else {
-            TelinkLogInfo(@"needn`t get status.%@",vc);
+            TelinkLogInfo(@"No need to get status.%@",vc);
         }
     });
 }

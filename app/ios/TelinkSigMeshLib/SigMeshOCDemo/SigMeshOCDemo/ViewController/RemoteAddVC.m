@@ -82,7 +82,7 @@
     NSData *key = [SigDataSource.share curNetKey];
     if (SigDataSource.share.curNetkeyModel.phase == distributingKeys) {
         if (SigDataSource.share.curNetkeyModel.oldKey) {
-            key = [LibTools nsstringToHex:SigDataSource.share.curNetkeyModel.oldKey];
+            key = [TelinkLibTools nsstringToHex:SigDataSource.share.curNetkeyModel.oldKey];
         }
     }
     //选择添加新增逻辑：判断本地是否存在该UUID的OOB数据，存在则使用static OOB添加，不存在则使用no OOB添加。
@@ -90,7 +90,7 @@
     SigOOBModel *oobModel = [SigDataSource.share getSigOOBModelWithUUID:scanRspModel.advUuid];
     NSData *staticOOBData = nil;
     if (oobModel && oobModel.OOBString && (oobModel.OOBString.length == 32 || oobModel.OOBString.length == 64)) {
-        staticOOBData = [LibTools nsstringToHex:oobModel.OOBString];
+        staticOOBData = [TelinkLibTools nsstringToHex:oobModel.OOBString];
     }
 
     __block UInt16 currentProvisionAddress = 0;
@@ -190,7 +190,7 @@
     if (self.remoteSource && self.remoteSource.count > 0) {
         //存在remote扫描到的设备，开始添加
         SigRemoteScanRspModel *model = self.remoteSource.firstObject;
-        [self updateUIOfStartProvisionWithPeripheralUUID:[LibTools convertDataToHexStr:model.reportNodeUUID] macAddress:model.macAddress address:SigDataSource.share.provisionAddress scanRemoteModel:model];
+        [self updateUIOfStartProvisionWithPeripheralUUID:[TelinkLibTools convertDataToHexStr:model.reportNodeUUID] macAddress:model.macAddress address:SigDataSource.share.provisionAddress scanRemoteModel:model];
         [self remoteProvisionNodeWithRemoteScanRspModel:model];
     } else {
         //不存在remote扫描到的设备，继续扫描
@@ -207,11 +207,11 @@
     [SigRemoteAddManager.share remoteProvisionWithNReportNodeAddress:model.reportNodeAddress reportNodeUUID:model.reportNodeUUID networkKey:SigDataSource.share.curNetKey netkeyIndex:SigDataSource.share.curNetkeyModel.index provisionType:ProvisionType_NoOOB staticOOBData:nil capabilitiesResponse:^UInt16(SigProvisioningCapabilitiesPdu * _Nonnull capabilitiesPdu) {
         UInt16 unicastAddress = [SigDataSource.share getProvisionAddressWithElementCount:capabilitiesPdu.numberOfElements];
         rpAddress = unicastAddress;
-        [weakSelf updateUIOfCapabilitiesResponseWithPeripheralUUID:[LibTools convertDataToHexStr:model.reportNodeUUID] macAddress:model.macAddress address:unicastAddress scanRemoteModel:model];
+        [weakSelf updateUIOfCapabilitiesResponseWithPeripheralUUID:[TelinkLibTools convertDataToHexStr:model.reportNodeUUID] macAddress:model.macAddress address:unicastAddress scanRemoteModel:model];
         TelinkLogInfo(@"RP-Remote: Capabilities Response, uuid:%@,macAddress:%@->0x%x.",model.reportNodeUUID,model.macAddress,unicastAddress);
         return unicastAddress;
     } provisionSuccess:^(NSString * _Nonnull identify, UInt16 address) {
-        [weakSelf updateWithPeripheralUUID:[LibTools convertDataToHexStr:model.reportNodeUUID] macAddress:model.macAddress address:address provisionResult:YES scanRemoteModel:model];
+        [weakSelf updateWithPeripheralUUID:[TelinkLibTools convertDataToHexStr:model.reportNodeUUID] macAddress:model.macAddress address:address provisionResult:YES scanRemoteModel:model];
             TelinkLogInfo(@"RP-Remote:provision success, %@->0X%X",identify,address);
         SigNodeModel *node = [SigDataSource.share getNodeWithAddress:address];
         if (node) {
@@ -239,7 +239,7 @@
             [weakSelf.failSource addObject:model];
         }
         [weakSelf remoteAddSingleDeviceFinish];
-        [weakSelf updateWithPeripheralUUID:[LibTools convertDataToHexStr:model.reportNodeUUID] macAddress:model.macAddress address:rpAddress provisionResult:NO scanRemoteModel:model];
+        [weakSelf updateWithPeripheralUUID:[TelinkLibTools convertDataToHexStr:model.reportNodeUUID] macAddress:model.macAddress address:rpAddress provisionResult:NO scanRemoteModel:model];
 
         if (SigBearer.share.isOpen) {
             [SDKLibCommand remoteProvisioningLinkCloseWithDestination:model.reportNodeAddress reason:SigRemoteProvisioningLinkCloseStatus_fail retryCount:SigDataSource.share.defaultRetryCount responseMaxCount:1 successCallback:^(UInt16 source, UInt16 destination, SigRemoteProvisioningLinkStatus * _Nonnull responseMessage) {
@@ -266,7 +266,7 @@
         AddDeviceModel *model = [self getAddDeviceModelWithMacAddress:node.macAddress];
         NSNumber *type = [[NSUserDefaults standardUserDefaults] valueForKey:kKeyBindType];
         UInt8 keyBindType = type.integerValue;
-        UInt16 productID = [LibTools uint16From16String:node.pid];
+        UInt16 productID = [TelinkLibTools uint16FromHexString:node.pid];
         DeviceTypeModel *deviceType = [SigDataSource.share getNodeInfoWithCID:kCompanyID PID:productID];
         NSData *cpsData = deviceType.defaultCompositionData.parameters;
         if (keyBindType == KeyBindType_Fast) {
@@ -321,7 +321,7 @@
         [SDKLibCommand stopMeshConnectWithComplete:^(BOOL successful) {
             TelinkLogDebug(@"close success.");
             [SDKLibCommand scanUnprovisionedDevicesWithResult:^(CBPeripheral * _Nonnull peripheral, NSDictionary<NSString *,id> * _Nonnull advertisementData, NSNumber * _Nonnull RSSI, BOOL unprovisioned) {
-                TelinkLogInfo(@"==========peripheral=%@,advertisementData=%@,RSSI=%@,unprovisioned=%d",peripheral,advertisementData,RSSI,unprovisioned);
+//                TelinkLogInfo(@"==========peripheral=%@,advertisementData=%@,RSSI=%@,unprovisioned=%d",peripheral,advertisementData,RSSI,unprovisioned);
                 if (unprovisioned) {
                     //从扫描到一个设备后延时1秒，筛选1秒内RSSI信号最好的设备
                     if (weakSelf.maxRSSI == -127) {
@@ -403,7 +403,7 @@
     [self.remoteSource sortUsingComparator:^NSComparisonResult(id  _Nonnull obj1, id  _Nonnull obj2) {
         return [(SigRemoteScanRspModel *)obj1 RSSI] < [(SigRemoteScanRspModel *)obj2 RSSI];
     }];
-    [self updateUIOfScanResponseWithPeripheralUUID:[LibTools convertDataToHexStr:showModel.reportNodeUUID] macAddress:showModel.macAddress address:0x0000 scanRemoteModel:showModel];
+    [self updateUIOfScanResponseWithPeripheralUUID:[TelinkLibTools convertDataToHexStr:showModel.reportNodeUUID] macAddress:showModel.macAddress address:0x0000 scanRemoteModel:showModel];
 }
 
 - (void)updateUIOfScanResponseWithPeripheralUUID:(NSString *)peripheralUUID macAddress:(NSString *)macAddress address:(UInt16)address scanRemoteModel:(SigRemoteScanRspModel *)scanRemoteModel{

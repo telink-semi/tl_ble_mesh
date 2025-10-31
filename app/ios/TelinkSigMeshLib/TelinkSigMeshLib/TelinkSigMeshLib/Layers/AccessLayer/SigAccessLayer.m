@@ -66,11 +66,11 @@
 @end
 
 @interface SigAcknowledgmentContext : NSObject
-@property (nonatomic,strong) SigAcknowledgedMeshMessage *request;
-@property (nonatomic,assign) UInt16 source;
-@property (nonatomic,assign) UInt16 destination;
-@property (nonatomic,strong) BackgroundTimer *timeoutTimer;
-@property (nonatomic,strong,nullable) BackgroundTimer *retryTimer;
+@property (nonatomic, strong) SigAcknowledgedMeshMessage *request;
+@property (nonatomic, assign) UInt16 source;
+@property (nonatomic, assign) UInt16 destination;
+@property (nonatomic, strong) TelinkBackgroundTimer *timeoutTimer;
+@property (nonatomic, strong, nullable) TelinkBackgroundTimer *retryTimer;
 @end
 @implementation SigAcknowledgmentContext
 - (instancetype)initForRequest:(SigAcknowledgedMeshMessage *)request sentFromSource:(UInt16)source toDestination:(UInt16)destination repeatAfterDelay:(NSTimeInterval)delay repeatBlock:(void (^ _Nonnull)(void))repeatBlock timeout:(NSTimeInterval)timeout timeoutBlock:(void (^ _Nonnull)(void))timeoutBlock {
@@ -81,7 +81,7 @@
         _source = source;
         _destination = destination;
         __weak typeof(self) weakSelf = self;
-        _timeoutTimer = [BackgroundTimer scheduledTimerWithTimeInterval:timeout repeats:NO block:^(BackgroundTimer * _Nonnull t) {
+        _timeoutTimer = [TelinkBackgroundTimer scheduledTimerWithTimeInterval:timeout repeats:NO block:^(TelinkBackgroundTimer * _Nonnull t) {
             [weakSelf invalidate];
             if (timeoutBlock) {
                 timeoutBlock();
@@ -109,7 +109,7 @@
         [_retryTimer invalidate];
         _retryTimer = nil;
     }
-    _retryTimer = [BackgroundTimer scheduledTimerWithTimeInterval:delay repeats:NO block:^(BackgroundTimer * _Nonnull t) {
+    _retryTimer = [TelinkBackgroundTimer scheduledTimerWithTimeInterval:delay repeats:NO block:^(TelinkBackgroundTimer * _Nonnull t) {
         if (weakSelf.retryTimer) {
             if (callback) {
                 callback();

@@ -56,7 +56,7 @@
         }
     }
     UInt16 pid = [OTAFileSource.share getPidWithOTAData:self.localData];
-    if (pid != [LibTools uint16From16String:self.model.pid]) {
+    if (pid != [TelinkLibTools uint16FromHexString:self.model.pid]) {
         __weak typeof(self) weakSelf = self;
         [self showAlertSureAndCancelWithTitle:kDefaultAlertTitle message:@"The PID of node is different from the PID of Bin file, still OTA this node?" sure:^(UIAlertAction *action) {
             [weakSelf otaAction];
@@ -102,7 +102,7 @@
     self.otaButton.backgroundColor = UIColor.telinkButtonBlue;
     self.normalColor = UIColor.telinkButtonBlue;
     self.unableColor = [UIColor colorWithRed:185.0/255.0 green:185.0/255.0 blue:185.0/255.0 alpha:1.0];
-    self.title = [NSString stringWithFormat:@"OTA Pid:0x%X Vid:0x%X",[LibTools uint16From16String:self.model.pid], CFSwapInt16HostToBig([LibTools uint16From16String:self.model.vid])];
+    self.title = [NSString stringWithFormat:@"OTA Pid:0x%X Vid:0x%X",[TelinkLibTools uint16FromHexString:self.model.pid], CFSwapInt16HostToBig([TelinkLibTools uint16FromHexString:self.model.vid])];
     self.tableView.tableFooterView = [[UIView alloc] initWithFrame:CGRectZero];
     [self.tableView registerNib:[UINib nibWithNibName:CellIdentifiers_ChooseBinCellID bundle:nil] forCellReuseIdentifier:CellIdentifiers_ChooseBinCellID];
     self.source = [[NSMutableArray alloc] initWithArray:OTAFileSource.share.getAllBinFile];

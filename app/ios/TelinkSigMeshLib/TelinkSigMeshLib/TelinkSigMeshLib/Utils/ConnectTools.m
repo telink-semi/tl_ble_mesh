@@ -69,6 +69,7 @@ typedef enum : NSUInteger {
 /// @param nodeList 需要连接的节点，需要是SigDataSource里面的节点。
 /// @param timeout 超时时间
 /// @param complete 连接结果回调
+/// @note 如果nodeList包含Switch设备或者不包含proxy功能的设备，也会直连上且不会主动断开连接，调用该接口前需要考虑是否要不Swift设备从nodeList里面剔除。
 - (void)startConnectToolsWithNodeList:(NSArray <SigNodeModel *>*)nodeList timeout:(NSInteger)timeout Complete:(nullable startMeshConnectResultBlock)complete {
     TelinkLogInfo(@"");
     if (nodeList == nil || nodeList.count == 0) {
@@ -145,10 +146,6 @@ typedef enum : NSUInteger {
                 if (encryptedModel && encryptedModel.advertisementDataServiceData && encryptedModel.advertisementDataServiceData.length == 17 && [encryptedModel.advertisementDataServiceData isEqualToData:rspModel.advertisementDataServiceData]) {
                     TelinkLogInfo(@"start connect address:0x%X macAddress:%@",rspModel.address,rspModel.macAddress);
                     weakSelf.peripheral = peripheral;
-                    dispatch_async(dispatch_get_main_queue(), ^{
-                        [NSObject cancelPreviousPerformRequestsWithTarget:weakSelf selector:@selector(firstScanFinishAction) object:nil];
-                    });
-                    [SDKLibCommand stopScan];
                     [weakSelf connectPeripheral];
                 }
             }
@@ -158,13 +155,14 @@ typedef enum : NSUInteger {
 
 - (void)firstScanFinishAction {
     TelinkLogInfo(@"");
-    [SDKLibCommand stopScan];
     [self connectPeripheral];
 }
 
 - (void)connectPeripheral {
     TelinkLogInfo(@"");
+    [SDKLibCommand stopScan];
     dispatch_async(dispatch_get_main_queue(), ^{
+        [NSObject cancelPreviousPerformRequestsWithTarget:self selector:@selector(firstScanFinishAction) object:nil];
         [NSObject cancelPreviousPerformRequestsWithTarget:self selector:@selector(connectPeripheral) object:nil];
     });
     if (self.isEnd) {
@@ -243,13 +241,13 @@ typedef enum : NSUInteger {
                 SigNodeModel *node = array.firstObject;
                 TelinkLogVerbose(@"NodeIdentitySet:0x%X",node.address);
                 [SDKLibCommand configNodeIdentitySetWithDestination:node.address netKeyIndex:SigDataSource.share.curNetkeyModel.index identity:SigNodeIdentityState_enabled retryCount:SigMeshLib.share.dataSource.defaultRetryCount responseMaxCount:1 successCallback:^(UInt16 source, UInt16 destination, SigConfigNodeIdentityStatus * _Nonnull responseMessage) {
-                    TelinkLogInfo(@"configNodeIdentitySetWithDestination=%@,source=%d,destination=%d",[LibTools convertDataToHexStr:responseMessage.parameters],source,destination);
+                    TelinkLogInfo(@"configNodeIdentitySetWithDestination=%@,source=%d,destination=%d",[TelinkLibTools convertDataToHexStr:responseMessage.parameters],source,destination);
                 } resultCallback:^(BOOL isResponseAll, NSError * _Nullable error) {
                     [array removeObject:node];
                     TelinkLogInfo(@"isResponseAll=%d,error=%@",isResponseAll,error);
                     dispatch_semaphore_signal(semaphore);
                 }];
-                dispatch_semaphore_wait(semaphore, dispatch_time(DISPATCH_TIME_NOW, NSEC_PER_SEC * 4.0));
+                dispatch_semaphore_wait(semaphore, dispatch_time(DISPATCH_TIME_NOW, NSEC_PER_SEC * 10.0));
             }
             if (weakSelf.isEnd) {
                 return;
@@ -311,6 +309,9 @@ typedef enum : NSUInteger {
 }
 
 - (void)startMeshConnectSuccess {
+    dispatch_async(dispatch_get_main_queue(), ^{
+        [NSObject cancelPreviousPerformRequestsWithTarget:self];
+    });
     if (SigMeshLib.share.dataSource.hasNodeExistTimeModelID && SigMeshLib.share.dataSource.needPublishTimeModel) {
         [SDKLibCommand statusNowTime];
         dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(0.3 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{

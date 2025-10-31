@@ -107,14 +107,14 @@
 }
 
 - (void)anasislyOnlineStatueDataFromUUID:(NSData *)data{
-    TelinkLogInfo(@"onlineStatus解密前=%@",[LibTools convertDataToHexStr:data]);
+    TelinkLogInfo(@"onlineStatus解密前=%@",[TelinkLibTools convertDataToHexStr:data]);
     NSData *beaconKey = SigMeshLib.share.dataSource.curNetkeyModel.keys.beaconKey;
     NSData *outputData = [NSData dataWithData:[self decryptionOnlineStatusPacketWithInputData:data networkBeaconKey:beaconKey]];
     if (outputData == nil || outputData.length == 0) {
         return;
     }
     UInt8 *byte = (UInt8 *)outputData.bytes;
-    TelinkLogInfo(@"onlineStatus解密后=%@",[LibTools convertDataToHexStr:[NSData dataWithBytes:byte length:data.length]]);
+    TelinkLogInfo(@"onlineStatus解密后=%@",[TelinkLibTools convertDataToHexStr:[NSData dataWithBytes:byte length:data.length]]);
 
     UInt8 opcodeInt=0,statusDataLength=6,statusCount=0;
     memcpy(&opcodeInt, byte, 1);
@@ -253,7 +253,7 @@
 
 - (void)blockState {
     __weak typeof(self) weakSelf = self;
-//    [self.ble setBluetoothCentralUpdateStateCallback:^(CBCentralManagerState state) {
+//    [self.ble setBluetoothCentralUpdateStateCallback:^(CBManagerState state) {
 //        if (weakSelf.isOpened) {
 //            [weakSelf openWithResult:^(BOOL successful) {
 //                TelinkLogInfo(@"ble power on, open bearer %@.",successful?@"success":@"fail");
@@ -331,18 +331,18 @@
 - (void)showSendData:(NSData *)data forCharacteristic:(CBCharacteristic *)characteristic {
     if ([characteristic.UUID.UUIDString isEqualToString:kPBGATT_In_CharacteristicsID]) {
 //        TelinkLogInfo(@"---> to:GATT, length:%d",data.length);
-        TelinkLogInfo(@"---> to:GATT, length:%d,%@",data.length,[LibTools convertDataToHexStr:data]);
+        TelinkLogInfo(@"---> to:GATT, length:%d,%@",data.length,[TelinkLibTools convertDataToHexStr:data]);
     } else if ([characteristic.UUID.UUIDString isEqualToString:kPROXY_In_CharacteristicsID]) {
         TelinkLogInfo(@"---> to:PROXY, length:%d",data.length);
-//        TelinkLogInfo(@"---> to:PROXY, length:%d,%@",data.length,[LibTools convertDataToHexStr:data]);
+//        TelinkLogInfo(@"---> to:PROXY, length:%d,%@",data.length,[TelinkLibTools convertDataToHexStr:data]);
     } else if ([characteristic.UUID.UUIDString isEqualToString:kOnlineStatusCharacteristicsID]) {
-        TelinkLogInfo(@"---> to:OnlineStatusCharacteristic, length:%d,value:%@",data.length,[LibTools convertDataToHexStr:data]);
+        TelinkLogInfo(@"---> to:OnlineStatusCharacteristic, length:%d,value:%@",data.length,[TelinkLibTools convertDataToHexStr:data]);
     } else if ([characteristic.UUID.UUIDString isEqualToString:kOTA_CharacteristicsID]) {
         TelinkLogVerbose(@"---> to:GATT-OTA, length:%d",data.length);
     } else if ([characteristic.UUID.UUIDString isEqualToString:kMeshOTA_CharacteristicsID]) {
         TelinkLogInfo(@"---> to:MESH-OTA, length:%d",data.length);
     } else {
-        TelinkLogInfo(@"---> to:%@, length:%d,value:%@",characteristic.UUID.UUIDString,data.length,[LibTools convertDataToHexStr:data]);
+        TelinkLogInfo(@"---> to:%@, length:%d,value:%@",characteristic.UUID.UUIDString,data.length,[TelinkLibTools convertDataToHexStr:data]);
     }
 }
 
@@ -554,7 +554,7 @@
     self.isSending = YES;
     for (NSData *pack in packets) {
         if (c == nil) {
-            TelinkLogError(@"current characteristic is empty, needn`t send packet!");
+            TelinkLogError(@"current characteristic is empty, no need to send packet!");
             break;
         }
         dispatch_semaphore_t semaphore = dispatch_semaphore_create(0);
@@ -627,7 +627,7 @@
         self.startMeshConnectCallback = complete;
     }
     self.isAutoReconnect = YES;
-    if (self.getCurrentPeripheral && self.getCurrentPeripheral.state == CBPeripheralStateConnected && [SigBluetooth.share isWorkNormal] && [SigMeshLib.share.dataSource existPeripheralUUIDString:self.getCurrentPeripheral.identifier.UUIDString]) {
+    if (self.getCurrentPeripheral && self.getCurrentPeripheral.state == CBPeripheralStateConnected && [SigBluetooth.share isWorkNormal] && [SigMeshLib.share.dataSource existPeripheralUUIDString:self.getCurrentPeripheral.identifier.UUIDString] && !SigMeshLib.share.dataSource.isConnectedSwitchDevice && !SigMeshLib.share.dataSource.isConnectedNoProxyFeatureDevice) {
         [self startMeshConnectSuccess];
     } else {
         dispatch_async(dispatch_get_main_queue(), ^{
@@ -777,7 +777,12 @@
         //                        [weakSelf startAutoConnect];
                             } else {
                                 TelinkLogDebug(@"set filter:%@ success.",peripheral.identifier.UUIDString);
-                                [weakSelf startMeshConnectSuccess];
+                                if (!SigMeshLib.share.dataSource.isConnectedSwitchDevice && !SigMeshLib.share.dataSource.isConnectedNoProxyFeatureDevice) {
+                                    [weakSelf startMeshConnectSuccess];
+                                } else {
+                                    TelinkLogDebug(@"MeshConnectFail, isConnectedSwitchDevice=%d, isConnectedNoProxyFeatureDevice=%d", SigMeshLib.share.dataSource.isConnectedSwitchDevice, SigMeshLib.share.dataSource.isConnectedNoProxyFeatureDevice);
+                                    [weakSelf startMeshConnectFail];
+                                }
                             }
                         }];
                     });

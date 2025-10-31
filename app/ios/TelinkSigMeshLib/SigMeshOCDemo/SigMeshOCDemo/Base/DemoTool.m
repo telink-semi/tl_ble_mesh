@@ -29,7 +29,7 @@
 /// - Parameter unicastAddress: the unicast address of node
 + (UIImage *)getNodeStateImageWithUnicastAddress:(UInt16)unicastAddress {
     SigNodeModel *node = [SigDataSource.share getNodeWithAddress:unicastAddress];
-    NSString *iconName = @"";
+    NSString *iconName = @"dengo";//default icon
     switch (node.state) {
         case DeviceStateOutOfLine:
             iconName = @"dengo";

@@ -108,7 +108,9 @@ void SwizzleMethod(Class c,SEL originSEL, SEL replaceSEL) {
 #pragma mark - setter,getter
 
 - (void)setIsShowWave:(BOOL)isShowWave {
-    self.waveView.hidden = isShowWave ? NO : YES;
+    dispatch_async(dispatch_get_main_queue(), ^{
+        self.waveView.hidden = isShowWave ? NO : YES;
+    });
     objc_setAssociatedObject(self, showWave, @(isShowWave), OBJC_ASSOCIATION_ASSIGN);
 }
 

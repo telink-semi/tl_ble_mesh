@@ -32,6 +32,7 @@
 #import "SigControlMessage.h"
 #import "SigSegmentedControlMessage.h"
 #import "SigNetworkManager.h"
+#import "MeshOTAManager.h"
 
 /*
  The lower transport layer defines how upper transport layer messages are segmented and reassembled
@@ -255,7 +256,7 @@
         for (NSNumber *n in keys) {
             UInt32 key = n.intValue;
             if (((key >> 16) & 0xFFFF) == destination) {
-                BackgroundTimer *t = _incompleteTimers[n];
+                TelinkBackgroundTimer *t = _incompleteTimers[n];
                 [t invalidate];
                 [_incompleteTimers removeObjectForKey:n];
                 t = nil;
@@ -274,7 +275,7 @@
     TelinkLogInfo(@"Cancelling sending segments with seqZero:0x%X",sequenceZero);
     [_outgoingSegments removeObjectForKey:@(sequenceZero)];
     [_segmentTtl removeObjectForKey:@(sequenceZero)];
-    BackgroundTimer *timer = _segmentTransmissionTimers[@(sequenceZero)];
+    TelinkBackgroundTimer *timer = _segmentTransmissionTimers[@(sequenceZero)];
     if (timer) {
         [timer invalidate];
     }
@@ -460,12 +461,12 @@
             }
             if (networkPdu.destination == provisionerNode.address) {
                 // ...invalidate timers...
-                BackgroundTimer *timer1 = [_incompleteTimers objectForKey:@(key)];
+                TelinkBackgroundTimer *timer1 = [_incompleteTimers objectForKey:@(key)];
                 if (timer1) {
                     [timer1 invalidate];
                 }
                 [_incompleteTimers removeObjectForKey:@(key)];
-                BackgroundTimer *timer2 = [_acknowledgmentTimers objectForKey:@(key)];
+                TelinkBackgroundTimer *timer2 = [_acknowledgmentTimers objectForKey:@(key)];
                 if (timer2) {
                     [timer2 invalidate];
                 }
@@ -503,7 +504,7 @@
             // timer is inactive, it shall restart the timer. Active timer should not be restarted.
 //            if (_acknowledgmentTimers[@(key)] == nil) {
             if (_acknowledgmentTimers[@(key)] != nil) {
-                BackgroundTimer *timer5 = _acknowledgmentTimers[@(key)];
+                TelinkBackgroundTimer *timer5 = _acknowledgmentTimers[@(key)];
                 if (timer5) {
                     [timer5 invalidate];
                 }
@@ -513,13 +514,13 @@
                     ttl = _networkManager.defaultTtl;
                 }
 
-                BackgroundTimer *timer3 = [BackgroundTimer scheduledTimerWithTimeInterval:[_networkManager acknowledgmentTimerInterval:ttl] repeats:NO block:^(BackgroundTimer * _Nonnull t) {
+            TelinkBackgroundTimer *timer3 = [TelinkBackgroundTimer scheduledTimerWithTimeInterval:[_networkManager acknowledgmentTimerInterval:ttl] repeats:NO block:^(TelinkBackgroundTimer * _Nonnull t) {
                     if (weakSelf.incompleteSegments[@(key)] != nil) {
                         NSMutableArray *segments = weakSelf.incompleteSegments[@(key)];
                         UInt8 ttl2 = networkPdu.ttl > 0 ? ttl : 0;
                         [weakSelf sendAckForSegments:segments withTtl:ttl2];
                     }
-                    BackgroundTimer *timer4 = [weakSelf.acknowledgmentTimers objectForKey:@(key)];
+                TelinkBackgroundTimer *timer4 = [weakSelf.acknowledgmentTimers objectForKey:@(key)];
                     if (timer4) {
                         [timer4 invalidate];
                     }
@@ -536,19 +537,19 @@
     UInt32 key = (UInt32)[self getKeyForAddress:address sequenceZero:sequenceZero];
     // If the Lower Transport Layer receives any segment while the incomplete
     // timer is active, the timer shall be restarted.
-    BackgroundTimer *timer1 = [_incompleteTimers objectForKey:@(key)];
+    TelinkBackgroundTimer *timer1 = [_incompleteTimers objectForKey:@(key)];
     if (timer1) {
         [timer1 invalidate];
     }
     __weak typeof(self) weakSelf = self;
-    BackgroundTimer *timer2 = [BackgroundTimer scheduledTimerWithTimeInterval:_networkManager.incompleteMessageTimeout repeats:NO block:^(BackgroundTimer * _Nonnull t) {
+    TelinkBackgroundTimer *timer2 = [TelinkBackgroundTimer scheduledTimerWithTimeInterval:_networkManager.incompleteMessageTimeout repeats:NO block:^(TelinkBackgroundTimer * _Nonnull t) {
         TelinkLogDebug(@"Incomplete message timeout: cancelling message (src: 0x%x, seqZero: 0x%x)",(UInt16)(key >> 16),(UInt16)(key & 0x1FFF));
-        BackgroundTimer *timer1 = [weakSelf.incompleteTimers objectForKey:@(key)];
+        TelinkBackgroundTimer *timer1 = [weakSelf.incompleteTimers objectForKey:@(key)];
         if (timer1) {
             [timer1 invalidate];
         }
         [weakSelf.incompleteTimers removeObjectForKey:@(key)];
-        BackgroundTimer *timer2 = [weakSelf.acknowledgmentTimers objectForKey:@(key)];
+        TelinkBackgroundTimer *timer2 = [weakSelf.acknowledgmentTimers objectForKey:@(key)];
         if (timer2) {
             [timer2 invalidate];
         }
@@ -579,7 +580,7 @@
         return;
     }
     // 取消这个SegmentedMessage的Transmission定时器
-    BackgroundTimer *timer = _segmentTransmissionTimers[@(ack.sequenceZero)];
+    TelinkBackgroundTimer *timer = _segmentTransmissionTimers[@(ack.sequenceZero)];
     if (timer) {
         [timer invalidate];
     }
@@ -603,7 +604,7 @@
     if ([self segmentsArrayHasMore:_outgoingSegments[@(ack.sequenceZero)]] == NO) {
         TelinkLogInfo(@"node response SegmentAcknowledgmentMessage,all the segments were acknowledged. ack.sequenceZero = 0x%x, ack.blockAck=0x%x",ack.sequenceZero,ack.blockAck);
         UInt32 key = (UInt32)[self getKeyForAddress:ack.source sequenceZero:ack.sequenceZero];
-        BackgroundTimer *timer1 = [self.incompleteTimers objectForKey:@(key)];
+        TelinkBackgroundTimer *timer1 = [self.incompleteTimers objectForKey:@(key)];
         if (timer1) {
             [timer1 invalidate];
         }
@@ -684,7 +685,11 @@
             //1.因为非直连设备地址的segment包需要proxy节点转发到mesh网络转发时间为maxNetworkTransmitInterval，且设备不一定存在ack返回(BLOBChunkTransfer目标地址为组播地址时)，所以添加延时maxNetworkTransmitInterval。
             //2.发送到手机本地地址的PDU不需要延时。发送到直连节点即proxy节点也不需要延时。
             if (segment.destination != SigMeshLib.share.dataSource.getCurrentConnectedNode.address && segment.destination != SigMeshLib.share.dataSource.curLocationNodeModel.address) {
-                [NSThread sleepForTimeInterval:SigMeshLib.share.maxNetworkTransmitInterval];
+                if (MeshOTAManager.share.isMeshOTAing) {
+                    [NSThread sleepForTimeInterval:SigMeshLib.share.recommendedNetworkTransmitIntervalForMeshOTA];
+                } else {
+                    [NSThread sleepForTimeInterval:SigMeshLib.share.maxNetworkTransmitInterval];
+                }
             }
         }
     }
@@ -702,7 +707,7 @@
         return;
     }
 
-    BackgroundTimer *timer = [_segmentTransmissionTimers objectForKey:@(sequenceZero)];
+    TelinkBackgroundTimer *timer = [_segmentTransmissionTimers objectForKey:@(sequenceZero)];
     if (timer) {
         [timer invalidate];
     }
@@ -712,7 +717,7 @@
     if (ackExpected && segments && hasMore) {
         if (limit > 0) {
             NSTimeInterval interval = [_networkManager transmissionTimerInterval:ttl];
-            BackgroundTimer *timer2 = [BackgroundTimer scheduledTimerWithTimeInterval:interval repeats:NO block:^(BackgroundTimer * _Nonnull t) {
+            TelinkBackgroundTimer *timer2 = [TelinkBackgroundTimer scheduledTimerWithTimeInterval:interval repeats:NO block:^(TelinkBackgroundTimer * _Nonnull t) {
                 [weakSelf sendSegmentsForSequenceZero:sequenceZero limit:limit-1];
             }];
             _segmentTransmissionTimers[@(sequenceZero)] = timer2;

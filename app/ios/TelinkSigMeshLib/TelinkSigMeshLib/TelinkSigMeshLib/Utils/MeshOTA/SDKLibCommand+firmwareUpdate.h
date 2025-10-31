@@ -57,11 +57,12 @@ NS_ASSUME_NONNULL_BEGIN
 /// Status message.
 ///   - retryCount: the retryCount of this command.
 ///   - responseMaxCount: the max response status message count of this command.
+///   - expectedResponseNodeList: the expectedResponseNodeList of this command.
 ///   - successCallback: callback when node response the status message.
 ///   - resultCallback: callback when all the response message had response or timeout.
 ///  - Returns:
 ///  A SigMessageHandle object of this command, developer can cannel the command by this SigMessageHandle object.
-+ (SigMessageHandle *)firmwareUpdateInformationGetWithDestination:(UInt16)destination firstIndex:(UInt8)firstIndex entriesLimit:(UInt8)entriesLimit retryCount:(NSInteger)retryCount responseMaxCount:(NSInteger)responseMaxCount successCallback:(responseFirmwareInformationStatusMessageBlock)successCallback resultCallback:(resultBlock)resultCallback;
++ (SigMessageHandle *)firmwareUpdateInformationGetWithDestination:(UInt16)destination firstIndex:(UInt8)firstIndex entriesLimit:(UInt8)entriesLimit retryCount:(NSInteger)retryCount responseMaxCount:(NSInteger)responseMaxCount expectedResponseNodeList:( NSArray <NSNumber *>* _Nullable )expectedResponseNodeList successCallback:(responseFirmwareInformationStatusMessageBlock)successCallback resultCallback:(resultBlock)resultCallback;
 
 
 #pragma mark 8.4.1.3 Firmware Update Firmware Metadata Check, opcode:0xB603
@@ -109,11 +110,12 @@ NS_ASSUME_NONNULL_BEGIN
 ///   - destination: the unicastAddress of destination.
 ///   - retryCount: the retryCount of this command.
 ///   - responseMaxCount: the max response status message count of this command.
+///   - expectedResponseNodeList: the expectedResponseNodeList of this command.
 ///   - successCallback: callback when node response the status message.
 ///   - resultCallback: callback when all the response message had response or timeout.
 ///  - Returns:
 ///  A SigMessageHandle object of this command, developer can cannel the command by this SigMessageHandle object.
-+ (SigMessageHandle *)firmwareUpdateGetWithDestination:(UInt16)destination retryCount:(NSInteger)retryCount responseMaxCount:(NSInteger)responseMaxCount successCallback:(responseFirmwareUpdateStatusMessageBlock)successCallback resultCallback:(resultBlock)resultCallback;
++ (SigMessageHandle *)firmwareUpdateGetWithDestination:(UInt16)destination retryCount:(NSInteger)retryCount responseMaxCount:(NSInteger)responseMaxCount expectedResponseNodeList:( NSArray <NSNumber *>* _Nullable )expectedResponseNodeList successCallback:(responseFirmwareUpdateStatusMessageBlock)successCallback resultCallback:(resultBlock)resultCallback;
 
 
 #pragma mark 8.4.1.6 Firmware Update Start, opcode:0xB606
@@ -637,11 +639,12 @@ NS_ASSUME_NONNULL_BEGIN
 ///   - destination: the unicastAddress of destination.
 ///   - retryCount: the retryCount of this command.
 ///   - responseMaxCount: the max response status message count of this command.
+///   - expectedResponseNodeList: the expectedResponseNodeList of this command.
 ///   - successCallback: callback when node response the status message.
 ///   - resultCallback: callback when all the response message had response or timeout.
 ///  - Returns:
 ///  A SigMessageHandle object of this command, developer can cannel the command by this SigMessageHandle object.
-+ (SigMessageHandle *)BLOBTransferGetWithDestination:(UInt16)destination retryCount:(NSInteger)retryCount responseMaxCount:(NSInteger)responseMaxCount successCallback:(responseBLOBTransferStatusMessageBlock)successCallback resultCallback:(resultBlock)resultCallback;
++ (SigMessageHandle *)BLOBTransferGetWithDestination:(UInt16)destination retryCount:(NSInteger)retryCount responseMaxCount:(NSInteger)responseMaxCount expectedResponseNodeList:( NSArray <NSNumber *>* _Nullable )expectedResponseNodeList successCallback:(responseBLOBTransferStatusMessageBlock)successCallback resultCallback:(resultBlock)resultCallback;
 
 
 #pragma mark 7.3.1.2 BLOB Transfer Start, opcode:0xB702
@@ -723,11 +726,12 @@ NS_ASSUME_NONNULL_BEGIN
 ///   - destination: the unicastAddress of destination.
 ///   - retryCount: the retryCount of this command.
 ///   - responseMaxCount: the max response status message count of this command.
+///   - expectedResponseNodeList: the expectedResponseNodeList of this command.
 ///   - successCallback: callback when node response the status message.
 ///   - resultCallback: callback when all the response message had response or timeout.
 ///  - Returns:
 ///  A SigMessageHandle object of this command, developer can cannel the command by this SigMessageHandle object.
-+ (SigMessageHandle *)BLOBBlockGetWithDestination:(UInt16)destination retryCount:(NSInteger)retryCount responseMaxCount:(NSInteger)responseMaxCount successCallback:(responseBLOBBlockStatusMessageBlock)successCallback resultCallback:(resultBlock)resultCallback;
++ (SigMessageHandle *)BLOBBlockGetWithDestination:(UInt16)destination retryCount:(NSInteger)retryCount responseMaxCount:(NSInteger)responseMaxCount expectedResponseNodeList:( NSArray <NSNumber *>* _Nullable )expectedResponseNodeList successCallback:(responseBLOBBlockStatusMessageBlock)successCallback resultCallback:(resultBlock)resultCallback;
 
 
 #pragma mark 3.1.3.1.6 BLOB Block Start, opcode:0xB705
@@ -752,11 +756,12 @@ NS_ASSUME_NONNULL_BEGIN
 /// Size state (see Section 7.2.1.2.2).
 ///   - retryCount: the retryCount of this command.
 ///   - responseMaxCount: the max response status message count of this command.
+///   - expectedResponseNodeList: the expectedResponseNodeList of this command.
 ///   - successCallback: callback when node response the status message.
 ///   - resultCallback: callback when all the response message had response or timeout.
 ///  - Returns:
 ///  A SigMessageHandle object of this command, developer can cannel the command by this SigMessageHandle object.
-+ (SigMessageHandle *)BLOBBlockStartWithDestination:(UInt16)destination blockNumber:(UInt16)blockNumber chunkSize:(UInt16)chunkSize retryCount:(NSInteger)retryCount responseMaxCount:(NSInteger)responseMaxCount successCallback:(responseBLOBBlockStatusMessageBlock)successCallback resultCallback:(resultBlock)resultCallback;
++ (SigMessageHandle *)BLOBBlockStartWithDestination:(UInt16)destination blockNumber:(UInt16)blockNumber chunkSize:(UInt16)chunkSize retryCount:(NSInteger)retryCount responseMaxCount:(NSInteger)responseMaxCount expectedResponseNodeList:( NSArray <NSNumber *>* _Nullable )expectedResponseNodeList successCallback:(responseBLOBBlockStatusMessageBlock)successCallback resultCallback:(resultBlock)resultCallback;
 
 
 #pragma mark 3.1.3.1.8 BLOB Chunk Transfer, opcode:0x7D
@@ -803,11 +808,12 @@ NS_ASSUME_NONNULL_BEGIN
 ///   - destination: the unicastAddress of destination.
 ///   - retryCount: the retryCount of this command.
 ///   - responseMaxCount: the max response status message count of this command.
+///   - expectedResponseNodeList: the expectedResponseNodeList of this command.
 ///   - successCallback: callback when node response the status message.
 ///   - resultCallback: callback when all the response message had response or timeout.
 ///  - Returns:
 ///  A SigMessageHandle object of this command, developer can cannel the command by this SigMessageHandle object.
-+ (SigMessageHandle *)BLOBInformationGetWithDestination:(UInt16)destination retryCount:(NSInteger)retryCount responseMaxCount:(NSInteger)responseMaxCount successCallback:(responseBLOBInformationStatusMessageBlock)successCallback resultCallback:(resultBlock)resultCallback;
++ (SigMessageHandle *)BLOBInformationGetWithDestination:(UInt16)destination retryCount:(NSInteger)retryCount responseMaxCount:(NSInteger)responseMaxCount expectedResponseNodeList:( NSArray <NSNumber *>* _Nullable )expectedResponseNodeList successCallback:(responseBLOBInformationStatusMessageBlock)successCallback resultCallback:(resultBlock)resultCallback;
 
 @end
 

@@ -67,7 +67,9 @@
                 TelinkLogInfo(@"getSharedNetworkList successful! dic=%@", dic);
                 NSArray *array = dic[@"data"];
                 //show no data UI.
-                weakSelf.tableView.hidden = array.count == 0;
+                dispatch_async(dispatch_get_main_queue(), ^{
+                    weakSelf.tableView.hidden = array.count == 0;
+                });
                 if (array.count > 0) {
                     //有分享的Mesh，解析并存储本地
                     NSArray *arr = [NSArray arrayWithArray:array];

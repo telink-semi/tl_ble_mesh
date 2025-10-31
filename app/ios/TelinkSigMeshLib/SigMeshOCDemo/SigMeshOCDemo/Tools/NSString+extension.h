@@ -63,7 +63,7 @@
 
 #pragma mark - 时间戳相关
 
-+ (NSString *)getTimeStringWithTimeStamp:(NSInteger)timeStap;
++ (NSString *)getTimeStringWithTimestamp:(NSInteger)timestamp;
 
 #pragma mark - sha256相关
 

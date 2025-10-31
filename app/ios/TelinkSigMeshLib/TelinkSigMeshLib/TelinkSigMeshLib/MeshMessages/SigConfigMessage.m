@@ -355,10 +355,10 @@
     if (self = [super init]) {
         /// Initialize self.
         self.page = 0;
-        _companyIdentifier = [LibTools uint16From16String:node.cid];
-        _productIdentifier = [LibTools uint16From16String:node.pid];
-        _versionIdentifier = [LibTools uint16From16String:node.vid];
-        _minimumNumberOfReplayProtectionList = [LibTools uint16From16String:node.crpl];
+        _companyIdentifier = [TelinkLibTools uint16FromHexString:node.cid];
+        _productIdentifier = [TelinkLibTools uint16FromHexString:node.pid];
+        _versionIdentifier = [TelinkLibTools uint16FromHexString:node.vid];
+        _minimumNumberOfReplayProtectionList = [TelinkLibTools uint16FromHexString:node.crpl];
         if (node.features) {
             _features = node.features;
         } else {
@@ -453,7 +453,7 @@
         self.opCode = SigOpCode_configAppKeyAdd;
         self.applicationKeyIndex = applicationKey.index;
         self.networkKeyIndex = applicationKey.boundNetKey;
-        _key = [LibTools nsstringToHex:applicationKey.key];
+        _key = [TelinkLibTools nsstringToHex:applicationKey.key];
     }
     return self;
 }
@@ -540,7 +540,7 @@
         self.opCode = SigOpCode_configAppKeyUpdate;
         self.applicationKeyIndex = applicationKey.index;
         self.networkKeyIndex = applicationKey.boundNetKey;
-        _key = [LibTools nsstringToHex:applicationKey.key];
+        _key = [TelinkLibTools nsstringToHex:applicationKey.key];
     }
     return self;
 }
@@ -697,7 +697,7 @@
     if (self = [super init]) {
         /// Initialize self.
         self.opCode = SigOpCode_configModelPublicationSet;
-        if ([SigHelper.share isVirtualAddress:[LibTools uint16From16String:publish.address]]) {
+        if ([SigHelper.share isVirtualAddress:[TelinkLibTools uint16FromHexString:publish.address]]) {
             // ConfigModelPublicationVirtualAddressSet should be used instead.
             return nil;
         }
@@ -721,7 +721,7 @@
     if (self = [super init]) {
         /// Initialize self.
         self.opCode = SigOpCode_configModelPublicationSet;
-        if ([SigHelper.share isVirtualAddress:[LibTools uint16From16String:publish.address]]) {
+        if ([SigHelper.share isVirtualAddress:[TelinkLibTools uint16FromHexString:publish.address]]) {
             // ConfigModelPublicationVirtualAddressSet should be used instead.
             return nil;
         }
@@ -787,7 +787,7 @@
     UInt16 tem = self.elementAddress;
     NSData *data = [NSData dataWithBytes:&tem length:2];
     [mData appendData:data];
-    tem = [LibTools uint16From16String:_publish.address];
+    tem = [TelinkLibTools uint16FromHexString:_publish.address];
     data = [NSData dataWithBytes:&tem length:2];
     [mData appendData:data];
     UInt8 tem8 = 0;
@@ -2411,7 +2411,7 @@
     UInt16 tem = self.elementAddress;
     data = [NSData dataWithBytes:&tem length:2];
     [mData appendData:data];
-    tem = [LibTools uint16From16String:_publish.address];
+    tem = [TelinkLibTools uint16FromHexString:_publish.address];
     data = [NSData dataWithBytes:&tem length:2];
     [mData appendData:data];
     tem8 = _publish.index & 0xFF;
@@ -2472,7 +2472,7 @@
     if (self = [super init]) {
         /// Initialize self.
         self.opCode = SigOpCode_configModelPublicationVirtualAddressSet;
-        if ([SigHelper.share isVirtualAddress:[LibTools uint16From16String:_publish.address]]) {
+        if ([SigHelper.share isVirtualAddress:[TelinkLibTools uint16FromHexString:_publish.address]]) {
             // ConfigModelPublicationVirtualAddressSet should be used instead.
             return nil;
         }
@@ -2489,7 +2489,7 @@
     if (self = [super init]) {
         /// Initialize self.
         self.opCode = SigOpCode_configModelPublicationVirtualAddressSet;
-        if ([SigHelper.share isVirtualAddress:[LibTools uint16From16String:_publish.address]]) {
+        if ([SigHelper.share isVirtualAddress:[TelinkLibTools uint16FromHexString:_publish.address]]) {
             // ConfigModelPublicationVirtualAddressSet should be used instead.
             return nil;
         }
@@ -2518,7 +2518,7 @@
         Byte *dataByte = (Byte *)parameters.bytes;
         memcpy(&tem1, dataByte, 2);
         self.elementAddress = tem1;
-        NSString *label = [LibTools convertDataToHexStr:[parameters subdataWithRange:NSMakeRange(2, 16)]];
+        NSString *label = [TelinkLibTools convertDataToHexStr:[parameters subdataWithRange:NSMakeRange(2, 16)]];
         memcpy(&tem1, dataByte+18, 2);
         UInt16 index = tem1 & 0x0FFF;
         UInt8 tem = 0;
@@ -2647,7 +2647,7 @@
             // ConfigModelSubscriptionVirtualAddressAdd should be used instead.
             return nil;
         }
-        _address = [LibTools uint16From16String:group.address];
+        _address = [TelinkLibTools uint16FromHexString:group.address];
         self.elementAddress = elementAddress;
         self.modelIdentifier = model.getIntModelIdentifier;
         self.companyIdentifier = model.getIntCompanyIdentifier;
@@ -2771,7 +2771,7 @@
             // ConfigModelSubscriptionVirtualAddressAdd should be used instead.
             return nil;
         }
-        _address = [LibTools uint16From16String:group.address];
+        _address = [TelinkLibTools uint16FromHexString:group.address];
         self.elementAddress = elementAddress;
         self.modelIdentifier = model.getIntModelIdentifier;
         self.companyIdentifier = model.getIntCompanyIdentifier;
@@ -3005,7 +3005,7 @@
             // ConfigModelSubscriptionVirtualAddressAdd should be used instead.
             return nil;
         }
-        _address = [LibTools uint16From16String:group.address];
+        _address = [TelinkLibTools uint16FromHexString:group.address];
         self.elementAddress = elementAddress;
         self.modelIdentifier = model.getIntModelIdentifier;
         self.companyIdentifier = model.getIntCompanyIdentifier;
@@ -3163,7 +3163,7 @@
 //    if (self = [super init]) {
 //        self.opCode = SigOpCode_configModelSubscriptionStatus;
 //        _status = status;
-//        _address = [LibTools uint16From16String:group.address];
+//        _address = [TelinkLibTools uint16FromHexString:group.address];
 //        self.elementAddress = elementAddress;
 //        self.modelIdentifier = model.getIntModelIdentifier;
 //        self.companyIdentifier = model.getIntCompanyIdentifier;
@@ -5485,7 +5485,7 @@
         /// Initialize self.
         self.opCode = SigOpCode_configNetKeyAdd;
         self.networkKeyIndex = networkKey.index;
-        _key = [LibTools nsstringToHex:networkKey.key];
+        _key = [TelinkLibTools nsstringToHex:networkKey.key];
     }
     return self;
 }
@@ -5833,7 +5833,7 @@
         /// Initialize self.
         self.opCode = SigOpCode_configNetKeyUpdate;
         self.networkKeyIndex = networkKey.index;
-        _key = [LibTools nsstringToHex:networkKey.key];
+        _key = [TelinkLibTools nsstringToHex:networkKey.key];
     }
     return self;
 }

@@ -189,7 +189,7 @@
 }
 
 - (void)pairAction {
-    MiFarePasswordAuthenticationCommand *command = [[MiFarePasswordAuthenticationCommand alloc] initWithPasswordData:[LibTools nsstringToHex:kDefaultPinCode]];
+    MiFarePasswordAuthenticationCommand *command = [[MiFarePasswordAuthenticationCommand alloc] initWithPasswordData:[TelinkLibTools nsstringToHex:kDefaultPinCode]];
     if (self.miFareTag.isAvailable) {
         __weak typeof(self) weakSelf = self;
         [self.miFareTag sendMiFareCommand:command.getCommandParameters completionHandler:^(NSData * _Nonnull response, NSError * _Nullable error) {
@@ -212,7 +212,7 @@
                             NSLog(@"1readCommandWithAddress response=%@, error=%@", response, error);
                             if (error == nil) {
                                 if (response.length >= 4) {
-                                    info.staticSourceAddress = [[kDefaultPinCode substringFromIndex:4] stringByAppendingString:[LibTools convertDataToHexStr:[response subdataWithRange:NSMakeRange(0, 4)]]];
+                                    info.staticSourceAddress = [[kDefaultPinCode substringFromIndex:4] stringByAppendingString:[TelinkLibTools convertDataToHexStr:[response subdataWithRange:NSMakeRange(0, 4)]]];
                                 } else {
                                     hasFail = YES;
                                     NSError *error = [NSError errorWithDomain:@"Read static source address fail." code:-1 userInfo:nil];
@@ -256,7 +256,7 @@
                             NSLog(@"2readCommandWithAddress response=%@, error=%@", response, error);
                             if (error == nil) {
                                 if (response.length == 16) {
-                                    info.securityKey = [LibTools convertDataToHexStr:response];
+                                    info.securityKey = [TelinkLibTools convertDataToHexStr:response];
                                 } else {
                                     hasFail = YES;
                                     NSError *error = [NSError errorWithDomain:@"Read security key fail." code:-1 userInfo:nil];
