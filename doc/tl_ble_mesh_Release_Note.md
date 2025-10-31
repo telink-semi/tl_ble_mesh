@@ -1,3 +1,172 @@
+## V4.2.0.2(PR)
+
+### Version
+
+* SDK Version: tl_ble_mesh_V4.2.0.2
+* Chip Version:
+  - TLSR921X(B91): A2
+  - TL321X: A3
+* BLE SDK Version:
+  - tl_ble_sdk V4.0.4.4_patch_0002
+* Hardware EVK Version:
+  - TLSR921X: C1T213A20_V1.3
+  - TL321X: C1T335A20_V1.3  
+* Toolchain Version:
+  - TLSR921X: TL32 ELF MCULIB V5F GCC7.4 (IDE: TelinkIoTStudio_V2025.2)
+  - TL321X: TL32 ELF MCULIB V5 GCC12.2 (IDE: TelinkIoTStudio_V2025.2)
+
+### Features
+* **Firmware**
+  - added support for the TL321X A3 version chips.
+  - support privated mesh extended adv mode, user can set EXTENDED_ADV_ENABLE to 1 to enable, only effect for mesh ota messages by default.
+  - each mesh nodes can be connected by up to four masters in extended adv mode.
+* **Android/iOS**
+  - support setting scheduler on the non-primary element.
+  - support NLC union function. enabling the addition of sensor and light devices to a pre-configured NLC template.
+
+### Bug Fixes
+* N/A
+
+### Known issues
+* TL321X_mesh_gw do not support USB mode currently, use uart mode by default.
+* The B91 has a maximum retention RAM of 64KB. Thus, it does not support extended advertising mode when low power mode is enabled.
+
+### Performance Improvements
+* **Firmware**
+  -Add received broadcast packet filter functions blc_ll_leg_adv_scan_mesh and blc_ll_ext_adv_scan_mesh for legacy and extended advertising packets, respectively.
+* **Android/iOS**
+  -optimize the sending mechanism of the multicast reliable command.
+
+### BREAKING CHANGES
+* Update the flash map of mesh parameters, reserve the secure boot parameters area.
+
+### Notes
+* debugging tools: such as sig_mesh_tool.exe and Android apk, please make sure to use the tools of this release.
+* to avoid compilation errors or loss of functionality, please update all files when upgrading the SDK.
+* for the release note contents of the BLE SDK mentioned in "Version", please refer to the release note files of related SDKs.
+* support SIG Mesh single connection app TelinkBleMesh.
+  
+### CodeSize
+* TLSR921X
+  - B91_mesh(default target)
+    - Flash bin size: 157.7KB
+    - IRAM size: 58.2KB
+    - DRAM size: 0.6KB
+  - B91_mesh_gw(default target)
+    - Flash bin size: 156.9KB
+    - IRAM size: 62.5KB
+    - DRAM size: 0.6K
+  - B91_mesh_lpn(default target)
+    - Flash bin size: 153.0KB
+    - IRAM size: 53.5KB
+    - DRAM size: 0KB
+  - B91_mesh_switch(default target)
+    - Flash bin size: 144.4KB
+    - IRAM size: 54.1KB
+    - DRAM size: 0KB
+
+* TL321X
+  - TL321X_mesh(default target)
+    - Flash bin size: 173.3KB
+    - IRAM size: 61.8KB
+    - DRAM size: 0.6KB
+  - TL321X_mesh_gw(default target)
+    - Flash bin size: 173.1KB
+    - IRAM size: 66.8KB
+    - DRAM size: 0.6KB
+  - TL321X_mesh_lpn(default target)
+    - Flash bin size: 167.8KB
+    - IRAM size: 57.3KB
+    - DRAM size: 0KB
+  - TL321X_mesh_switch(default target)
+    - Flash bin size: 159.1KB
+    - IRAM size: 58.3KB
+    - DRAM size: 0KB
+  
+### Version
+
+* SDK Version: tl_ble_mesh_V4.2.0.2(PR)
+* Chip Version:
+  - TLSR921X(B91): A2
+  - TL321X: A3
+* BLE SDK Version:
+  - tl_ble_sdk V4.0.4.4_patch_0002
+* Hardware EVK Version:
+  - TLSR921X: C1T213A20_V1.3
+  - TL321X: C1T335A20_V1.3  
+* Toolchain Version:
+  - TLSR921X: TL32 ELF MCULIB V5F GCC7.4 (IDE: TelinkIoTStudio_V2025.2)
+  - TL321X: TL32 ELF MCULIB V5 GCC12.2 (IDE: TelinkIoTStudio_V2025.2)
+
+### Features
+* **固件**
+  - 添加支持TL321X A3版本芯片。
+  - 添加mesh私有扩展广播包模式，把宏EXTENDED_ADV_ENABLE设置为1打开，默认只对mesh ota消息生效。
+  - 在扩展广播模式下，一个节点可同时被4个主机连接。
+* **Android/iOS**
+  - 支持对节点里面的非primary element设置闹钟。
+  - 支持NLC union功能，即配置NLC功能模版后，再把对应sensor和light设备添加进来的功能。
+
+### Bug Fixes
+* N/A
+
+### Known issues
+* TL321X_mesh_gw 暂不支持usb模式，默认使用串口模式。
+* B91最大retention ram 64k，所以在开启低功耗模式时不支持扩展广播包模式。
+
+### Performance Improvements
+* **Firmware**
+  -加广播包接收过滤函数，blc_ll_leg_adv_scan_mesh和blc_ll_ext_adv_scan_mesh for legacy分别过滤传统广播包和扩展广播包。
+* **Android/iOS**
+  -优化组播reliable命令的发送机制。
+
+### BREAKING CHANGES
+* 更新flash的mesh参数区地址，预留security boot的参数区域。
+
+### Notes
+* 调试工具：比如sig_mesh_tool.exe和APP 安装包文件，请务必使用本次release的版本。
+* 为避免编译错误以及功能丢失，升级SDK时，请确认更新全部SDK文件。
+* “Version”里面提到的BLE SDK的release note内容，请查阅对应SDK的release note文件。
+* 支持SIG Mesh单连接app TelinkBleMesh。 
+
+### CodeSize
+* TLSR921X
+  - B91_mesh(default target)
+    - Flash bin size: 157.7KB
+    - IRAM size: 58.2KB
+    - DRAM size: 0.6KB
+  - B91_mesh_gw(default target)
+    - Flash bin size: 156.9KB
+    - IRAM size: 62.5KB
+    - DRAM size: 0.6K
+  - B91_mesh_lpn(default target)
+    - Flash bin size: 153.0KB
+    - IRAM size: 53.5KB
+    - DRAM size: 0KB
+  - B91_mesh_switch(default target)
+    - Flash bin size: 144.4KB
+    - IRAM size: 54.1KB
+    - DRAM size: 0KB
+
+* TL321X
+  - TL321X_mesh(default target)
+    - Flash bin size: 173.3KB
+    - IRAM size: 61.8KB
+    - DRAM size: 0.6KB
+  - TL321X_mesh_gw(default target)
+    - Flash bin size: 173.1KB
+    - IRAM size: 66.8KB
+    - DRAM size: 0.6KB
+  - TL321X_mesh_lpn(default target)
+    - Flash bin size: 167.8KB
+    - IRAM size: 57.3KB
+    - DRAM size: 0KB
+  - TL321X_mesh_switch(default target)
+    - Flash bin size: 159.1KB
+    - IRAM size: 58.3KB
+    - DRAM size: 0KB
+
+
 ## V4.2.0.1(PR)
 
 ### Version
