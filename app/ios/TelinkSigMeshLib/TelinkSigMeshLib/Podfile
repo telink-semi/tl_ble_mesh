@@ -8,7 +8,7 @@ target 'TelinkCloudSigMeshLib' do
   # Pods for TelinkCloudSigMeshLib
 
   pod 'AFNetworking'
-  pod 'OpenSSL-Universal', '3.3.3001'
+  pod 'OpenSSL-Universal'
 end
 
 target 'TelinkSigMeshLib' do
@@ -16,7 +16,7 @@ target 'TelinkSigMeshLib' do
   use_frameworks!
 
   # Pods for TelinkSigMeshLib
-  pod 'OpenSSL-Universal', '3.3.3001'
+  pod 'OpenSSL-Universal'
 
   target 'TelinkSigMeshLibTests' do
     # Pods for testing
