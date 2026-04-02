@@ -1,3 +1,92 @@
+## V4.2.0.2_Patch_0001
+
+### Version
+
+* SDK Version: tl_ble_mesh_V4.2.0.2_Patch_0001
+* Chip Version:
+  - TLSR921X(B91): A2
+  - TL321X: A3
+  - TLSR922X/TLSR952X(B92): A3/A4
+* BLE SDK Version:
+  - tl_ble_sdk V4.0.4.4_patch_0002
+* Hardware EVK Version:
+  - TLSR921X: C1T213A20_V1.3
+  - TLSR952X: C1T266A20_V1.3
+  - TL321X: C1T335A20_V1.3  
+* Toolchain Version:
+  - TLSR921X: TL32 ELF MCULIB V5F GCC7.4 (IDE: [TelinkIoTStudio](https://www.telink-semi.com/development-tools))
+  - TLSR922X/TLSR952X:  TL32 ELF MCULIB V5F GCC12.2  (IDE: [TelinkIoTStudio](https://www.telink-semi.com/development-tools))
+  - TL321X: TL32 ELF MCULIB V5 GCC12.2 (IDE: [TelinkIoTStudio](https://www.telink-semi.com/development-tools))
+
+### Features
+
+- N/A
+
+### Bug Fixes
+
+* **Drivers**
+  - For TL321X:
+    - Adjust the retention ldo voltage from 0.8V to 0.95V:
+        - Detailed description: When using deep retention sleep, the device would probabilistically crash after waking up with the default retention ldo setting of 0.8V.
+        - After Fix: After raising the voltage, the device can work normally after deep retention wake-up, but electric increased by approximately 0.5 uA.
+        - Update Recommendation: An update is mandatory when using deep retention sleep.
+
+### BREAKING CHANGES
+
+- N/A.
+
+### Refractor
+
+- N/A
+
+### Known Issues
+
+- N/A
+
+### Version
+
+* SDK Version: tl_ble_mesh_V4.2.0.2_Patch_0001
+* Chip Version:
+  - TLSR921X(B91): A2
+  - TL321X: A3
+  - TLSR922X/TLSR952X(B92): A3/A4
+* BLE SDK Version:
+  - tl_ble_sdk V4.0.4.4_patch_0002
+* Hardware EVK Version:
+  - TLSR921X: C1T213A20_V1.3
+  - TLSR952X: C1T266A20_V1.3
+  - TL321X: C1T335A20_V1.3  
+* Toolchain Version:
+  - TLSR921X: TL32 ELF MCULIB V5F GCC7.4 (IDE: [TelinkIoTStudio](https://www.telink-semi.com/development-tools))
+  - TLSR922X/TLSR952X:  TL32 ELF MCULIB V5F GCC12.2  (IDE: [TelinkIoTStudio](https://www.telink-semi.com/development-tools))
+  - TL321X: TL32 ELF MCULIB V5 GCC12.2 (IDE: [TelinkIoTStudio](https://www.telink-semi.com/development-tools))
+
+### Features
+
+- N/A
+
+### Bug Fixes
+
+- **Drivers**
+  - For TL321X
+    - retention ldo电压从0.8V抬到0.95V。
+      - 详细描述：使用deep retention睡眠时，用默认的retention ldo挡位0.8V会出现唤醒后低概率性死机。
+      - 修复效果：抬高电压后，deep rentention唤醒后能正常工作, 但deep rentention睡眠电流增加约0.5uA。
+      - 更新建议：在使用deep retention睡眠时，必须进行更新。
+
+### BREAKING CHANGES
+
+- N/A.
+
+### Refractor
+
+- N/A
+
+### Known Issues
+
+- N/A
+
+
 ## V4.2.0.2(PR)
 
 ### Version

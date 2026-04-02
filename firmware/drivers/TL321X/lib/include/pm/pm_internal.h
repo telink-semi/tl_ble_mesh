@@ -149,14 +149,14 @@ typedef enum
  */
 typedef enum
 {
-    RET_LDO_TRIM_0P55V = 0,
-    RET_LDO_TRIM_0P60V,
+    RET_LDO_TRIM_0P60V = 0,
     RET_LDO_TRIM_0P65V,
     RET_LDO_TRIM_0P70V,
     RET_LDO_TRIM_0P75V,
     RET_LDO_TRIM_0P80V,
     RET_LDO_TRIM_0P85V,
     RET_LDO_TRIM_0P90V,
+    RET_LDO_TRIM_0P95V,
 } pm_ret_ldo_trim_e;
 
 /**

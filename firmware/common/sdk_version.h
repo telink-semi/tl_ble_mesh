@@ -41,7 +41,7 @@
 #define SDK_VER_MAJOR        2 // SDK version, don't change!!! 
 #define SDK_VER_MINOR        0 // SDK version, don't change!!! 
 #define SDK_VER_2ND_MINOR    2 // SDK version, don't change!!!    // second minor
-#define PATCH_NUM            0
+#define PATCH_NUM            1
 
 #define CUSTOM_MAJOR_VERSION 0
 #define CUSTOM_MINOR_VERSION 0
